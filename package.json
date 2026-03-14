@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "deploy:netlify": "netlify deploy --dir=dist --prod"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
