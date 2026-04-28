@@ -1,0 +1,24 @@
+[
+  {
+    "id": "user-coach",
+    "name": "Ivan Hellequin",
+    "role": "coach",
+    "email": "ivan.hellequin@wolf-ai.local"
+  },
+  {
+    "id": "user-athlete",
+    "name": "Erik Manzano",
+    "role": "athlete",
+    "coachId": "user-coach",
+    "linkedAthleteId": "ath-you",
+    "email": "erik.manzano@wolf-ai.local"
+  },
+  {
+    "id": "user-athlete-2",
+    "name": "Laura Méndez",
+    "role": "athlete",
+    "coachId": "user-coach",
+    "linkedAthleteId": "ath-001",
+    "email": "laura.mendez@wolf-ai.local"
+  }
+]

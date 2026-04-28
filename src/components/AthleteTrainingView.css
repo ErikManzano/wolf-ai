@@ -1,0 +1,526 @@
+/* Vista atleta — Mi plan WL */
+
+.wolf-athlete-plan {
+  padding: 0 1rem 2.5rem;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* ——— Estado vacío ——— */
+.wolf-athlete-plan--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: min(52vh, 520px);
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.wolf-athlete-empty-visual {
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-accent) 22%, transparent),
+    var(--color-bg-panel)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-accent);
+}
+
+.wolf-athlete-empty-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-empty-text {
+  margin: 0;
+  max-width: 400px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+/* ——— Hero ——— */
+.wolf-athlete-hero {
+  position: relative;
+  margin-bottom: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  overflow: hidden;
+}
+
+.wolf-athlete-hero-accent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: var(--color-accent-gradient);
+  opacity: 0.95;
+}
+
+.wolf-athlete-hero-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.35rem 1.35rem 1.25rem;
+}
+
+.wolf-athlete-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-athlete-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-program-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.wolf-athlete-athlete-name {
+  margin: 0.65rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.wolf-athlete-athlete-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Disciplina */
+.wolf-athlete-discipline {
+  flex: 0 1 260px;
+  min-width: 220px;
+  align-self: center;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.wolf-athlete-discipline-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.wolf-athlete-discipline-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.wolf-athlete-discipline-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-athlete-discipline-sub {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.15rem;
+}
+
+.wolf-athlete-discipline-pct {
+  margin-left: auto;
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--color-accent);
+}
+
+.wolf-athlete-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 65%, var(--color-bg-main));
+  overflow: hidden;
+}
+
+.wolf-athlete-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent-gradient);
+  transition: width 0.35s ease;
+}
+
+/* ——— Semanas ——— */
+.wolf-athlete-week-section {
+  margin-bottom: 1.35rem;
+}
+
+.wolf-athlete-week-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.wolf-athlete-week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wolf-athlete-week-pill {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.wolf-athlete-week-pill:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-week-pill.active {
+  border-color: transparent;
+  background: var(--color-accent-gradient);
+  color: #fff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+/* ——— Lista de días ——— */
+.wolf-athlete-day-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.wolf-athlete-day-card {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  padding: 0;
+  background: var(--color-bg-panel);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wolf-athlete-day-card__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 45%, #ef4444));
+  opacity: 0.85;
+}
+
+.wolf-athlete-day-card--done {
+  border-color: color-mix(in srgb, var(--color-success) 42%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-success) 22%, transparent);
+}
+
+.wolf-athlete-day-card--done .wolf-athlete-day-card__accent {
+  background: linear-gradient(180deg, var(--color-success), color-mix(in srgb, var(--color-success) 55%, #15803d));
+}
+
+.wolf-athlete-day-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.15rem 1rem 1.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.wolf-athlete-day-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.wolf-athlete-day-badge {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-day-title {
+  margin: 0 0 0.45rem;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.wolf-athlete-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.wolf-athlete-metric svg {
+  opacity: 0.85;
+  color: var(--color-accent);
+}
+
+.wolf-athlete-metric strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.wolf-athlete-done-btn:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+}
+
+.wolf-athlete-done-btn:active {
+  transform: scale(0.98);
+}
+
+.wolf-athlete-done-btn.active {
+  background: color-mix(in srgb, var(--color-success) 14%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, var(--color-success) 55%, var(--color-border));
+  color: color-mix(in srgb, var(--color-success) 92%, #fff);
+}
+
+.wolf-athlete-done-btn.active svg {
+  color: var(--color-success);
+}
+
+/* Bloques de ejercicio */
+.wolf-athlete-blocks {
+  padding: 0.85rem 1rem 1.15rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wolf-athlete-exercise {
+  padding: 0.85rem 0.95rem;
+  border-radius: 11px;
+  background: var(--color-bg-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+}
+
+.wolf-athlete-exercise-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.65rem;
+  margin-bottom: 0.55rem;
+}
+
+.wolf-athlete-pill {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wolf-athlete-pill--complex {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.wolf-athlete-pill--single {
+  background: color-mix(in srgb, var(--color-text-muted) 25%, transparent);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.wolf-athlete-exercise-title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-set-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+.wolf-athlete-set-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem;
+  align-items: baseline;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.84rem;
+  background: var(--color-bg-panel);
+}
+
+.wolf-athlete-set-row:nth-child(even) {
+  background: color-mix(in srgb, var(--color-bg-secondary) 55%, var(--color-bg-panel));
+}
+
+.wolf-athlete-set-pct {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+  min-width: 2.75rem;
+}
+
+.wolf-athlete-set-detail {
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  min-width: 0;
+}
+
+.wolf-athlete-set-move {
+  display: inline;
+}
+
+.wolf-athlete-set-move-name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-set-move-reps {
+  margin-left: 0.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.wolf-athlete-set-sep {
+  margin: 0 0.15rem;
+  opacity: 0.45;
+}
+
+.wolf-athlete-set-simple-reps {
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-athlete-set-mult {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .wolf-athlete-hero-inner {
+    flex-direction: column;
+  }
+
+  .wolf-athlete-discipline {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .wolf-athlete-set-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wolf-athlete-set-row {
+    min-width: min(100%, 280px);
+  }
+}

@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# Wolf AI (Frontend + API)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Proyecto React + TypeScript + Vite con API Express para demos coach/athlete.
 
-Currently, two official plugins are available:
+## Local Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Frontend:
+  - `npm run dev`
+- API backend:
+  - `npm run server`
+- Health check API:
+  - `GET http://localhost:4000/health`
 
-## React Compiler
+## API Endpoints (Demo)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `POST /auth/login` (email + password demo)
+- `GET /users`
+- `GET /athletes`
+- `GET /exercises`
+- `GET /sessions`
+- `POST /sessions/generate`
+- `POST /sessions/evaluate`
+- `POST /sessions/adapt`
+- `POST /simulate/microcycle`
+- `GET /assignments`
+- `GET /assignments/athlete/:athleteProfileId`
+- `POST /assignments`
+- `PATCH /assignments/:id/program`
+- `DELETE /assignments/:id`
 
-## Expanding the ESLint configuration
+## Free Backend Deploy (Recommended: Render)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Este repo incluye `render.yaml` para desplegar gratis el backend.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Sube el repo a GitHub.
+2. En Render, crea un **Blueprint** apuntando al repo.
+3. Verifica variables:
+   - `FRONTEND_ORIGIN`: URL de tu Netlify (ej. `https://tu-app.netlify.app`)
+   - `DEMO_LOGIN_PASSWORD`: contraseña demo (`wolf2026` por defecto)
+4. Deploy.
+5. Prueba:
+   - `https://TU-BACKEND.onrender.com/health`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Notas para demo en varios dispositivos
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Al ser plan gratis, Render puede “dormir” tras inactividad.
+- Para demo en tiempo real, todos deben usar el mismo backend URL.
+- Si quieres persistencia fuerte (sin perder estado al reiniciar), conecta DB externa (Supabase/Neon).

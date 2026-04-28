@@ -1,15 +1,8 @@
 import React from 'react';
-import {
-  LayoutDashboard,
-  Users,
-  Dumbbell,
-  Calendar,
-  CalendarRange,
-  Activity,
-  LineChart,
-  BotMessageSquare as IntakeIcon
-} from 'lucide-react';
+import { LayoutDashboard, Users, CalendarRange, LineChart, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut } from 'lucide-react';
 import './Sidebar.css';
+import { useAppContext } from '../context/AppContext';
+import { useWolfAssign } from '../context/WolfAssignContext';
 
 const WolfIcon = ({ size = 28, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -24,21 +17,36 @@ interface SidebarProps {
   setActiveView: (view: string) => void;
   language: 'ES' | 'EN';
   setLanguage: (lang: 'ES' | 'EN') => void;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, setLanguage }) => {
+const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-quick', 'wl-templates', 'athletes']);
+/** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
+const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
+
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, setLanguage, onLogout }) => {
   const isEs = language === 'ES';
+  const { userRole } = useAppContext();
+  const { persona, currentUser } = useWolfAssign();
 
   const menuItems = [
     { id: 'dashboard', label: isEs ? 'Dashboard' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'my-wl-plan', label: isEs ? 'Mi plan WL' : 'My WL plan', icon: ClipboardCheck },
     { id: 'athletes', label: isEs ? 'Atletas' : 'Athletes', icon: Users },
-    { id: 'programs', label: isEs ? 'Programas' : 'Programs', icon: Dumbbell },
-    { id: 'planning', label: isEs ? 'Planificación' : 'Planning', icon: Calendar },
+    { id: 'wolf-engine', label: isEs ? 'Motor Weightlifting' : 'Weightlifting Engine', icon: Gauge },
+    { id: 'wl-quick', label: isEs ? 'Sesión rápida' : 'Quick session', icon: Zap },
+    { id: 'wl-templates', label: isEs ? 'Plantillas Pro' : 'Pro templates', icon: Dumbbell },
     { id: 'global-calendar', label: isEs ? 'Calendario' : 'Calendar', icon: CalendarRange },
-    { id: 'onboarding', label: isEs ? 'Onboarding' : 'Onboarding', icon: IntakeIcon },
-    { id: 'sessions', label: isEs ? 'Sesiones' : 'Sessions', icon: Activity },
-    { id: 'performance', label: isEs ? 'Rendimiento' : 'Performance', icon: LineChart }
+    { id: 'onboarding', label: isEs ? 'Stats y PRs' : 'Stats & PRs', icon: IntakeIcon },
+    { id: 'performance', label: isEs ? 'Rendimiento' : 'Performance', icon: LineChart },
+    { id: 'library', label: isEs ? 'Biblioteca' : 'Library', icon: BookOpen },
   ];
+
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (ATHLETE_ONLY_NAV.has(item.id)) return persona === 'athlete';
+    if (persona === 'athlete' && COACH_ONLY_NAV.has(item.id)) return false;
+    return true;
+  });
 
   return (
     <div className="sidebar">
@@ -50,14 +58,21 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, 
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map(item => (
+        {visibleMenuItems.map(item => (
           <button
             key={item.id}
             className={`nav-item ${activeView === item.id ? 'active' : ''}`}
             onClick={() => setActiveView(item.id)}
           >
-            <item.icon size={20} />
-            <span>{item.label}</span>
+            <item.icon size={20} className={item.id === 'wolf-engine' && activeView === 'wolf-engine' ? 'icon-glow' : ''} />
+            <span
+              style={{
+                fontWeight: item.id === 'wolf-engine' ? 'bold' : 'normal',
+                color: item.id === 'wolf-engine' && activeView !== 'wolf-engine' ? 'var(--color-accent)' : 'inherit',
+              }}
+            >
+              {item.label}
+            </span>
           </button>
         ))}
       </nav>
@@ -77,13 +92,34 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, 
             EN
           </button>
         </div>
-        <div className="user-profile">
-          <div className="avatar">C</div>
+        <div
+          className="user-profile"
+          style={{ transition: 'all 0.2s', border: userRole === 'admin' ? '1px solid var(--color-accent)' : '1px solid transparent' }}
+        >
+          <div className="avatar" style={{ background: userRole === 'admin' ? 'var(--color-accent-gradient)' : 'var(--color-bg-secondary)' }}>
+            {userRole === 'admin' ? <ShieldCheck size={16} /> : currentUser?.name?.[0]?.toUpperCase() ?? (persona === 'athlete' ? 'E' : 'I')}
+          </div>
           <div className="user-info">
-            <span className="name">Coach Pro</span>
-            <span className="role">Head Coach</span>
+            <span className="name">
+              {currentUser?.name ?? (persona === 'athlete' ? 'Erik Manzano' : 'Ivan Hellequin')}
+            </span>
+            <span className="role">
+              {userRole === 'admin'
+                ? isEs
+                  ? 'Administrador'
+                  : 'Administrator'
+                : persona === 'athlete'
+                  ? isEs
+                    ? 'Atleta'
+                    : 'Athlete'
+                  : 'Head Coach'}
+            </span>
           </div>
         </div>
+        <button type="button" className="sidebar-logout-btn" onClick={onLogout}>
+          <LogOut size={15} />
+          <span>{isEs ? 'Cerrar sesión' : 'Log out'}</span>
+        </button>
       </div>
     </div>
   );

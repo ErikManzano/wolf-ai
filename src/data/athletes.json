@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ath-you",
+    "name": "Erik Manzano",
+    "level": "intermediate",
+    "bodyweight": 78,
+    "oneRM": { "snatch": 85, "cleanJerk": 110, "backSquat": 150, "frontSquat": 125 },
+    "fatigueScore": 40,
+    "readinessScore": 72
+  },
+  {
+    "id": "ath-001",
+    "name": "Laura Méndez",
+    "level": "beginner",
+    "bodyweight": 58,
+    "oneRM": { "snatch": 45, "cleanJerk": 58, "backSquat": 75, "frontSquat": 62 },
+    "fatigueScore": 32,
+    "readinessScore": 78
+  },
+  {
+    "id": "ath-002",
+    "name": "Marcus Okonkwo",
+    "level": "intermediate",
+    "bodyweight": 85,
+    "oneRM": { "snatch": 100, "cleanJerk": 125, "backSquat": 165, "frontSquat": 140 },
+    "fatigueScore": 48,
+    "readinessScore": 72
+  },
+  {
+    "id": "ath-003",
+    "name": "Elena Varga",
+    "level": "advanced",
+    "bodyweight": 69,
+    "oneRM": { "snatch": 108, "cleanJerk": 132, "backSquat": 175, "frontSquat": 148 },
+    "fatigueScore": 55,
+    "readinessScore": 68
+  }
+]

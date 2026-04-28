@@ -2,9 +2,12 @@
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr var(--chat-width);
   height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
   background-color: var(--color-bg-main);
   overflow: hidden;
+  --chat-rail-width: 52px;
 }
 
 /* Layout areas */
@@ -18,9 +21,15 @@
 
 .workspace-area {
   height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 24px;
+  padding-left: max(24px, var(--safe-left));
+  padding-right: max(24px, var(--safe-right));
+  padding-bottom: max(24px, var(--safe-bottom));
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-area {
@@ -35,7 +44,8 @@
   display: none;
   background-color: var(--color-bg-panel);
   border-bottom: 1px solid var(--color-border);
-  padding: 12px 16px;
+  padding: 12px max(16px, var(--safe-right)) 12px max(16px, var(--safe-left));
+  padding-top: max(12px, var(--safe-top));
   justify-content: space-between;
   align-items: center;
   position: fixed;
@@ -43,6 +53,7 @@
   left: 0;
   right: 0;
   z-index: 40;
+  min-height: 52px;
 }
 
 .mobile-title {
@@ -53,6 +64,32 @@
 
 .mobile-btn {
   color: var(--color-text-secondary);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.mobile-btn:active {
+  background-color: var(--color-bg-hover);
+}
+
+.mobile-backdrop {
+  display: none;
+}
+
+/* Chat AI colapsado a riel estrecho (solo escritorio ancho) */
+@media (min-width: 1025px) {
+  .app-container.app-container--chat-collapsed {
+    grid-template-columns: var(--sidebar-width) 1fr var(--chat-rail-width);
+  }
+
+  .app-container--chat-collapsed .chat-area {
+    min-width: 0;
+    overflow: hidden;
+  }
 }
 
 /* Responsive */
@@ -63,49 +100,87 @@
   .chat-area {
     display: none; /* Hide chat on medium screens or implement an overlay */
   }
+
+  .app-container.app-container--chat-collapsed {
+    grid-template-columns: var(--sidebar-width) 1fr;
+  }
 }
 
 @media (max-width: 768px) {
   .app-container {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
-    padding-top: 60px; /* space for mobile header */
+    padding-top: calc(52px + var(--safe-top));
   }
   .workspace-area {
-    padding: 16px;
+    padding: 12px;
+    padding-left: max(12px, var(--safe-left));
+    padding-right: max(12px, var(--safe-right));
+    padding-bottom: max(16px, var(--safe-bottom));
   }
   .mobile-header {
     display: flex;
   }
+
+  .mobile-backdrop {
+    display: block;
+    position: fixed;
+    top: calc(52px + var(--safe-top));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    animation: wolf-backdrop-in 0.2s ease;
+  }
+
   .sidebar-area {
     position: fixed;
-    top: 60px;
+    top: calc(52px + var(--safe-top));
     bottom: 0;
     left: 0;
-    width: 280px;
+    width: min(300px, calc(100vw - 48px));
+    max-width: 100%;
+    padding-bottom: var(--safe-bottom);
     z-index: 50;
     transform: translateX(-100%);
     transition: transform var(--transition-speed);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
   }
   .sidebar-area.open {
     transform: translateX(0);
   }
-  
+
   .chat-area {
     position: fixed;
-    top: 60px;
+    top: calc(52px + var(--safe-top));
     bottom: 0;
     right: 0;
     width: 100%;
-    max-width: 400px;
+    max-width: min(420px, 100%);
+    padding-bottom: var(--safe-bottom);
     z-index: 50;
     transform: translateX(100%);
     transition: transform var(--transition-speed);
     display: flex; /* override display: none */
-    box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
   }
   .chat-area.open {
     transform: translateX(0);
+  }
+}
+
+@keyframes wolf-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

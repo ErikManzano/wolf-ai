@@ -1,27 +1,40 @@
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
   /* Color Palette - Wolf AI 2026 (Modern Orange-Red & Slate) */
-  --color-bg-main: #0a0c10;        /* Deeper black for higher contrast */
-  --color-bg-panel: #14171d;       /* Sleek dark panel */
-  --color-bg-hover: #1e222a;       
-  
-  --color-text-primary: #f8fafc;   /* Crisp off-white */
-  --color-text-secondary: #94a3b8; 
-  --color-text-muted: #475569;     
-  
+  --color-bg-main: #0a0c10;
+  /* Deeper black for higher contrast */
+  --color-bg-panel: #14171d;
+  /* Sleek dark panel */
+  --color-bg-secondary: #12151c;
+  /* Cards / nested surfaces */
+  --color-bg-hover: #1e222a;
+
+  --color-text-primary: #f8fafc;
+  /* Crisp off-white */
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #475569;
+
   /* Vibrant Orange-Red Gradient & Accents (Minimalist 2026) */
-  --color-accent: #f97316;         /* Bright Orange */
-  --color-accent-hover: #fb923c;   
-  --color-accent-glow: rgba(249, 115, 22, 0.15); 
-  --color-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%); /* Orange to Red */
-  
+  --color-accent: #f97316;
+  /* Bright Orange */
+  --color-accent-hover: #fb923c;
+  --color-accent-glow: rgba(249, 115, 22, 0.15);
+  --color-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  /* Orange to Red */
+
   --color-success: #22c55e;
   --color-warning: #facc15;
-  --color-danger: #f43f5e; /* Match the red tone */
+  --color-danger: #f43f5e;
+  /* Match the red tone */
 
-  --color-border: #334155;         /* Subtle slate border */
-  
+  --color-border: #334155;
+  /* Subtle slate border */
+
   /* Layout Settings */
   --sidebar-width: 250px;
   --chat-width: 350px;
@@ -38,12 +51,20 @@
 body {
   font-family: var(--font-family);
   background-color: var(--color-bg-main);
-  background-image: none; /* Removed noise texture */
+  background-image: none;
+  /* Removed noise texture */
   color: var(--color-text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  /* Reduce tap flash on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: 100%;
+  height: 100dvh;
 }
 
 a {
@@ -63,13 +84,92 @@ button {
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--color-bg-hover);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
+}
+
+/* Pro Editor 3-Column Layout */
+.editor-3-col-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 1px;
+  background: var(--color-border);
+}
+
+.editor-nav-col,
+.editor-main-col,
+.editor-library-col {
+  background-color: var(--color-bg-main);
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.editor-nav-col {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.editor-main-col {
+  flex: 1;
+  padding: .5rem;
+}
+
+.editor-library-col {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border);
+  padding: .5rem;
+}
+
+@media (max-width: 1024px) {
+  .editor-3-col-layout {
+    flex-direction: column;
+  }
+
+  .editor-nav-col,
+  .editor-library-col {
+    width: 100% !important;
+  }
+
+  .editor-library-col {
+    height: 300px;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-nav-col.hide-on-mobile {
+    display: none;
+  }
+}
+
+.exercise-pro-card-new {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exercise-pro-card-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.transparent-input:focus {
+  outline: none;
+  border-bottom: 1px solid var(--color-accent) !important;
+}
+
+.small-input:focus {
+  outline: none;
+  color: white !important;
 }

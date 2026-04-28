@@ -1,0 +1,1545 @@
+/* El scroll principal es .workspace-area; aquí el contenido fluye en altura natural (evita “compresión” del editor). */
+.wolf-engine {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+  min-height: 0;
+  padding-bottom: 16px;
+}
+
+.wolf-engine-sub {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  max-width: 52ch;
+}
+
+.wolf-engine-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: flex-end;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wolf-engine-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.wolf-engine-field select,
+.wolf-engine-field input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wolf-engine-field select {
+  color-scheme: dark;
+}
+
+.wolf-engine-field-wide input[type='range'] {
+  width: 100%;
+  min-height: 28px;
+  padding: 8px 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.wolf-engine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wolf-engine-band {
+  padding: 6px 0 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.wolf-engine-content {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: visible;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wolf-engine-metrics h2,
+.wolf-engine-blocks h2,
+.wolf-engine-sim h2 {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.wolf-engine-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.wolf-engine-metric-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+}
+
+.wolf-engine-metric-grid .muted {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wolf-engine-metric-grid strong {
+  font-size: 1.15rem;
+}
+
+.wolf-status--undertrained {
+  color: #38bdf8;
+}
+
+.wolf-status--optimal {
+  color: #4ade80;
+}
+
+.wolf-status--overtrained {
+  color: #fb7185;
+}
+
+.wolf-engine-block-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.wolf-engine-block-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.wolf-engine-block-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.wolf-engine-table {
+  width: 100%;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+
+.wolf-engine-table th,
+.wolf-engine-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.wolf-engine-empty {
+  color: var(--color-text-muted);
+  padding: 24px 0;
+}
+
+.wolf-engine-week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.wolf-engine-week-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+}
+
+.wolf-engine-week-head {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.wolf-engine-week-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+.wolf-engine-k-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--color-bg-secondary);
+  overflow: hidden;
+}
+
+.wolf-engine-k-fill {
+  height: 100%;
+  background: var(--color-accent-gradient);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.wolf-engine-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0 10px;
+  margin: 0;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: color-mix(in srgb, var(--color-bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.wolf-engine-tabs--3 .wolf-tab {
+  flex: 1 1 auto;
+  min-width: min(100%, 132px);
+  justify-content: center;
+}
+
+.wolf-engine-tabs--4 .wolf-tab {
+  flex: 1 1 220px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.wolf-engine-legacy-wrap {
+  min-height: 320px;
+  padding-bottom: 24px;
+}
+
+.wolf-engine-controls-card--hidden {
+  display: none;
+}
+
+.wolf-engine .panel-header {
+  flex-shrink: 0;
+}
+
+.wolf-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.wolf-tab:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.wolf-tab.active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-panel));
+  color: var(--color-text-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.wolf-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wolf-engine-shared-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  align-items: end;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Fatiga: fila completa en pantallas estrechas; 3ª columna en desktop */
+.wolf-engine-field-wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 720px) {
+  .wolf-engine-shared-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(160px, 2.2fr);
+  }
+
+  .wolf-engine-field-wide {
+    grid-column: 3;
+  }
+}
+
+.wolf-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wolf-program-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.wolf-program-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-end;
+}
+
+.wolf-prog-name input {
+  min-width: 200px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wolf-program-help {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-help--error {
+  color: var(--color-danger);
+}
+
+.wolf-program-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.wolf-program-quick-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+}
+
+.wolf-program-quick-btn {
+  padding: 7px 10px;
+  font-size: 0.78rem;
+}
+
+.wolf-program-quick-btn--active {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.wolf-program-quick-generate {
+  margin-left: auto;
+}
+
+.wolf-program-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wolf-program-meta .muted {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wolf-program-assign-flash {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: var(--color-accent);
+}
+
+.wolf-program-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.wolf-week-strip,
+.wolf-day-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wolf-week-pill,
+.wolf-day-pill {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wolf-week-pill:hover,
+.wolf-day-pill:hover {
+  border-color: var(--color-accent);
+}
+
+.wolf-week-pill.active,
+.wolf-day-pill.active {
+  background: var(--color-accent-gradient);
+  color: white;
+  border-color: transparent;
+}
+
+.wolf-week-pill:focus-visible,
+.wolf-day-pill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.wolf-tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.wolf-regen-day {
+  align-self: flex-start;
+}
+
+.wolf-program-day-eval {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.wolf-session-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wolf-se-block {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.wolf-se-block--warmup {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.wolf-se-warmup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.wolf-se-warmup input {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+}
+
+.wolf-se-block-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.wolf-se-ex-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  flex: 1;
+  min-width: 200px;
+}
+
+.wolf-se-ex-picker select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  color-scheme: dark;
+}
+
+.wolf-session-editor select {
+  background-color: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+}
+
+.wolf-session-editor select option,
+.wolf-session-editor select optgroup {
+  background-color: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wolf-se-block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.wolf-se-mode {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.wolf-se-mode:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.wolf-se-segments {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-bg-panel);
+  border: 1px dashed var(--color-border);
+}
+
+.wolf-se-segments-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  gap: 8px;
+}
+
+.wolf-se-segments-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.wolf-se-segments-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wolf-se-seg-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  min-width: 140px;
+  flex: 1;
+}
+
+.wolf-se-seg-picker select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  color-scheme: dark;
+}
+
+.wolf-se-mini-wide {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+
+.wolf-se-rep-token {
+  width: 56px;
+  min-width: 48px;
+}
+
+.wolf-se-kg-cell {
+  vertical-align: middle;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  min-width: 72px;
+}
+
+.wolf-se-kg-one strong,
+.wolf-se-kg-list strong {
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-se-kg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wolf-se-kg-list li {
+  line-height: 1.25;
+}
+
+.wolf-se-kg-short {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.wolf-se-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.wolf-se-icon:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.wolf-se-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-se-danger:hover:not(:disabled) {
+  border-color: #fb7185;
+  color: #fb7185;
+}
+
+.wolf-se-table-wrap {
+  overflow-x: auto;
+}
+
+.wolf-se-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.wolf-se-table th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.wolf-se-table td {
+  padding: 6px 8px;
+}
+
+.wolf-se-input {
+  width: 72px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wolf-se-mini {
+  min-width: 28px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  cursor: pointer;
+}
+
+.wolf-se-add-row {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.wolf-se-add-block {
+  align-self: flex-start;
+}
+
+.wolf-se-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--color-bg-panel);
+  border: 1px dashed var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Motor WL — mobile & touch UX ---- */
+.wolf-week-strip-scroll,
+.wolf-day-strip-scroll {
+  flex-wrap: nowrap !important;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.wolf-week-strip-scroll::-webkit-scrollbar,
+.wolf-day-strip-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.wolf-week-strip-scroll .wolf-week-pill,
+.wolf-day-strip-scroll .wolf-day-pill {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 768px) {
+  .wolf-engine .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-bottom: 16px;
+  }
+
+  .wolf-engine .view-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .wolf-engine-sub {
+    font-size: 0.88rem;
+    max-width: none;
+  }
+
+  .wolf-engine-tabs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 8px;
+  }
+
+  .wolf-tab {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    font-size: 0.88rem;
+  }
+
+  .wolf-engine-shared-controls {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 10px 0 12px;
+  }
+
+  .wolf-engine-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  .wolf-engine-field select,
+  .wolf-engine-field input[type='range'] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .wolf-engine-band {
+    padding: 8px 0;
+    font-size: 0.85rem;
+  }
+
+  .wolf-engine-content {
+    gap: 20px;
+    padding-top: 8px;
+  }
+
+  .wolf-quick-actions {
+    flex-direction: column;
+  }
+
+  .wolf-quick-actions .btn-primary,
+  .wolf-quick-actions .btn-secondary,
+  .wolf-quick-actions .btn-outline {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .wolf-program-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wolf-program-toolbar .btn-primary,
+  .wolf-program-toolbar .btn-outline {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .wolf-program-quick-generate {
+    margin-left: 0;
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .wolf-prog-name input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .wolf-program-export {
+    flex-direction: column;
+  }
+
+  .wolf-program-export .btn-secondary,
+  .wolf-program-export .btn-primary {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .wolf-program-nav {
+    gap: 16px;
+  }
+
+  .wolf-regen-day {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .wolf-program-day-eval {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .wolf-engine-metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .wolf-engine-week-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wolf-se-block-head {
+    flex-direction: column;
+  }
+
+  .wolf-se-ex-picker {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .wolf-se-ex-picker select {
+    font-size: 16px;
+    width: 100%;
+  }
+
+  .wolf-se-block-actions {
+    align-self: flex-end;
+  }
+
+  .wolf-se-table {
+    font-size: 0.8rem;
+  }
+
+  .wolf-se-input {
+    width: 100%;
+    max-width: 88px;
+    min-height: 40px;
+    font-size: 16px;
+  }
+
+  .wolf-se-add-row {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .wolf-se-add-block {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .wolf-se-summary {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .wolf-engine-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ——— Coach WL hero & assignments ——— */
+.wolf-coach-hero {
+  position: relative;
+  margin-bottom: 4px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  overflow: hidden;
+}
+
+.wolf-coach-hero-accent {
+  height: 3px;
+  background: var(--color-accent-gradient);
+}
+
+.wolf-coach-hero-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+
+.wolf-coach-hero-icon-wrap {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-accent);
+}
+
+.wolf-coach-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  margin-bottom: 8px;
+}
+
+.wolf-coach-title {
+  margin: 0 0 6px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.wolf-coach-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  max-width: 48ch;
+}
+
+.wolf-coach-assignments {
+  margin: 4px 0 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-secondary) 88%, var(--color-bg-panel));
+  max-height: min(260px, 36vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+}
+
+.wolf-coach-assignments--secondary {
+  margin-top: 8px;
+  max-height: min(220px, 32vh);
+  border-style: dashed;
+}
+
+.wolf-coach-assignments-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.wolf-coach-assignments::-webkit-scrollbar {
+  width: 6px;
+}
+
+.wolf-coach-assignments::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.wolf-coach-assignments-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 8px;
+  margin-top: -2px;
+  padding-top: 2px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-bg-secondary) 95%, var(--color-bg-panel)) 85%,
+    transparent
+  );
+}
+
+.wolf-coach-assignments-ico {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.wolf-coach-assignments-title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.wolf-coach-assignments-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  max-width: 62ch;
+}
+
+.wolf-coach-assignments-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  padding: 8px 0 4px;
+}
+
+.wolf-coach-assignment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wolf-coach-assignment-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wolf-coach-assignment-card--active {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.wolf-coach-assignment-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wolf-coach-assignment-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.wolf-coach-assignment-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.wolf-coach-assignment-date {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wolf-coach-assignment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wolf-coach-assignment-btn.wolf-coach-assignment-btn {
+  font-size: 0.82rem;
+}
+
+.wolf-coach-assignment-btn--danger {
+  padding: 8px 10px;
+  min-width: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
+  background: transparent;
+  color: var(--color-danger);
+}
+
+.wolf-coach-assignment-btn--danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+.wolf-engine-controls-card {
+  margin-bottom: 4px;
+  padding: 14px 16px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 14%, var(--color-border));
+  background: var(--color-bg-panel);
+  flex-shrink: 0;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-bg-main) 60%, transparent);
+}
+
+.wolf-engine-context-heading {
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-engine-controls-card .wolf-engine-shared-controls {
+  padding-top: 0;
+  border-bottom: none;
+}
+
+.wolf-coach-athlete-prs {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.wolf-coach-athlete-prs-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.wolf-coach-athlete-prs-head svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.wolf-coach-athlete-prs-title {
+  margin: 0 0 4px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.wolf-coach-athlete-prs-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  max-width: 52ch;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 84%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.wolf-coach-stats-badge {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.wolf-coach-athlete-prs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.wolf-coach-pr-item {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.wolf-coach-pr-item dt {
+  margin: 0 0 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-coach-pr-item dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.wolf-engine-band--chip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px dashed color-mix(in srgb, var(--color-border) 85%, transparent);
+  font-size: 0.82rem;
+}
+
+.wolf-engine-band-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+}
+
+.wolf-engine-band-value {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.wolf-engine-band-level {
+  color: var(--color-text-secondary);
+}
+
+.wolf-engine-quick-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wolf-stepper-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.wolf-program-inline-hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Step 3 (customization): maximize editing density for coaches */
+.wolf-step-content--customize {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wolf-engine--customize .wolf-engine-content {
+  gap: 10px;
+}
+
+.wolf-engine--customize .wolf-program-plan {
+  gap: 10px;
+}
+
+.wolf-engine--customize .wolf-program-nav {
+  position: sticky;
+  top: 56px;
+  z-index: 5;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-main) 92%, var(--color-bg-panel));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.wolf-engine--customize .wolf-program-day-eval {
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.wolf-engine--customize .wolf-session-editor {
+  gap: 10px;
+}
+
+.wolf-engine--customize .wolf-se-block {
+  padding: 10px 12px;
+}
+
+.wolf-engine--customize .wolf-se-block-head {
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.wolf-engine--customize .wolf-se-table th,
+.wolf-engine--customize .wolf-se-table td {
+  padding: 4px 6px;
+}
+
+.wolf-engine--customize .wolf-stepper-actions {
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .wolf-engine--customize .wolf-program-nav {
+    position: static;
+    top: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.wolf-engine-secondary-tools {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.wolf-engine-metrics--card,
+.wolf-engine-sim--card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+}
+
+.wolf-program-plan-intro {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.wolf-program-meso-head {
+  margin: 0 0 8px;
+}
+
+.wolf-program-meso-title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.wolf-program-meso-sub {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 62ch;
+}
+
+.wolf-program-gen-card--primary {
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-secondary));
+}
+
+.wolf-program-gen-label {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-empty-card {
+  padding: 20px 18px;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-border) 90%, var(--color-accent));
+  background: color-mix(in srgb, var(--color-bg-secondary) 92%, transparent);
+}
+
+.wolf-program-empty-lead {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.wolf-program-empty-steps {
+  margin: 0 0 14px;
+  padding-left: 1.25rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.wolf-program-empty-steps li {
+  margin-bottom: 6px;
+}
+
+.wolf-program-empty-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.wolf-program-empty-foot {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-nav-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.wolf-program-edit-banner {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.wolf-program-gen-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  margin-bottom: 4px;
+}
+
+.wolf-program-gen-card .wolf-program-toolbar {
+  margin: 0;
+}
+
+.wolf-program-live-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  margin-bottom: 12px;
+}
+
+.wolf-program-live-card .wolf-program-meta {
+  margin-bottom: 12px;
+}
+
+.wolf-program-live-card .wolf-program-meta strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.wolf-program-live-card .wolf-program-export {
+  padding-top: 4px;
+}
