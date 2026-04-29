@@ -18,6 +18,23 @@ function exName(id: string): string {
   return mockExercises.find((e) => e.id === id)?.name ?? id;
 }
 
+function oneRmForExercise(exerciseId: string, athlete?: (typeof mockAthletes)[number]): number | null {
+  if (!athlete) return null;
+  const ex = mockExercises.find((e) => e.id === exerciseId);
+  if (!ex) return null;
+  switch (ex.category) {
+    case 'snatch':
+      return athlete.oneRM.snatch;
+    case 'clean_jerk':
+      return athlete.oneRM.cleanJerk;
+    case 'squat':
+      return athlete.oneRM.backSquat;
+    case 'accessory':
+    default:
+      return athlete.oneRM.frontSquat;
+  }
+}
+
 interface AthleteTrainingViewProps {
   language: 'ES' | 'EN';
 }
@@ -58,6 +75,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       markDone: isEs ? 'Marcar realizada' : 'Mark done',
       done: isEs ? 'Realizada' : 'Done',
       reps: isEs ? 'reps' : 'reps',
+      kg: 'kg',
       complex: isEs ? 'Complejo' : 'Complex',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
@@ -189,6 +207,8 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               <div className="wolf-athlete-blocks">
                 {day.session.exercises.map((block, bi) => {
                   const complex = normalizeBlockType(block) === 'complex' && block.segments?.length;
+                  const loadBaseExerciseId = complex ? block.segments?.[0]?.exerciseId ?? block.exerciseId : block.exerciseId;
+                  const baseOneRm = oneRmForExercise(loadBaseExerciseId, athleteProfile);
                   return (
                     <article key={`${block.exerciseId}-${bi}`} className="wolf-athlete-exercise">
                       <div className="wolf-athlete-exercise-head">
@@ -208,6 +228,11 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
                       <ul className="wolf-athlete-set-list" aria-label={isEs ? 'Series' : 'Sets'}>
                         {block.sets.map((row, si) => (
                           <li key={si} className="wolf-athlete-set-row">
+                            {baseOneRm != null ? (
+                              <span className="wolf-athlete-set-load">
+                                {Math.round((baseOneRm * row.percentage) / 100)} {t.kg}
+                              </span>
+                            ) : null}
                             <span className="wolf-athlete-set-pct">{row.percentage}%</span>
                             <span className="wolf-athlete-set-detail">
                               {complex ? (

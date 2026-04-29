@@ -52,7 +52,6 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       prevStep: isEs ? 'Volver' : 'Back',
       athlete: isEs ? 'Atleta objetivo' : 'Target athlete',
       goal: isEs ? 'Objetivo' : 'Goal',
-      fatigue: isEs ? 'Fatiga (sim.)' : 'Fatigue (sim.)',
       status: isEs ? 'Estado' : 'Status',
       kBand: isEs ? 'Banda K' : 'K band',
       technique: isEs ? 'Técnica' : 'Technique',
@@ -98,7 +97,6 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     () => mockAthletes.find((a) => a.id === 'ath-you')?.id ?? mockAthletes[0]?.id ?? '',
   );
   const [goal, setGoal] = useState<SessionGoal>('strength');
-  const [fatigueOverride, setFatigueOverride] = useState(48);
   const [program, setProgram] = useState<GeneratedProgram | null>(() => readStoredProgram());
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
   /** Evita condición de carrera al generar un plan nuevo tras editar una asignación. */
@@ -156,10 +154,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
   );
   const deadliftFromStats = useMemo(() => parseIntakeDeadlift(latestStatsIntake), [latestStatsIntake]);
 
-  const athleteForEngine = useMemo(() => {
-    if (!athlete) return null;
-    return { ...athlete, fatigueScore: fatigueOverride };
-  }, [athlete, fatigueOverride]);
+  const athleteForEngine = useMemo(() => athlete, [athlete]);
 
   const kRange = athlete ? K_VALUE_RANGES[athlete.level] : null;
 
@@ -273,18 +268,6 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
                 </option>
               ))}
             </select>
-          </label>
-          <label className="wolf-engine-field wolf-engine-field-wide">
-            <span>
-              {t.fatigue}: {fatigueOverride}
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={fatigueOverride}
-              onChange={(e) => setFatigueOverride(Number(e.target.value))}
-            />
           </label>
         </div>
 
