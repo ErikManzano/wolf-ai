@@ -470,22 +470,26 @@
   color: var(--color-text-secondary);
   line-height: 1.45;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .wolf-athlete-set-move {
-  display: inline;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
 }
 
 .wolf-athlete-set-move-name {
   font-weight: 500;
   color: var(--color-text-primary);
+  overflow-wrap: anywhere;
 }
 
 .wolf-athlete-set-move-reps {
-  margin-left: 0.2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .wolf-athlete-set-sep {
@@ -495,6 +499,7 @@
 
 .wolf-athlete-set-simple-reps {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .wolf-athlete-set-mult {
@@ -502,6 +507,37 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
   font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .wolf-athlete-plan {
+    max-width: 100%;
+    padding: 0 0.65rem 1.8rem;
+  }
+
+  .wolf-athlete-hero-inner {
+    padding: 1.05rem 1rem 1rem;
+  }
+
+  .wolf-athlete-day-top {
+    padding: 1rem 0.95rem 0.9rem 1.1rem;
+  }
+
+  .wolf-athlete-blocks {
+    padding: 0.8rem 0.82rem 1rem 1.1rem;
+  }
+
+  .wolf-athlete-exercise {
+    padding: 0.8rem 0.8rem;
+  }
+
+  .wolf-athlete-set-row {
+    grid-template-columns: minmax(46px, auto) 1fr auto;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.55rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -576,12 +612,25 @@
   }
 
   .wolf-athlete-set-list {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
 
   .wolf-athlete-set-row {
-    min-width: min(100%, 280px);
+    min-width: 0;
+    grid-template-columns: minmax(44px, auto) minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.35rem 0.5rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .wolf-athlete-set-detail {
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .wolf-athlete-set-mult {
+    font-size: 0.74rem;
+    padding-top: 1px;
   }
 }
 
@@ -597,12 +646,14 @@
   }
 
   .wolf-athlete-set-row {
-    grid-template-columns: auto 1fr;
-    gap: 0.35rem 0.55rem;
+    grid-template-columns: minmax(42px, auto) minmax(0, 1fr);
+    gap: 0.3rem 0.45rem;
+    padding: 0.45rem 0.45rem;
   }
 
   .wolf-athlete-set-mult {
     grid-column: 2;
     justify-self: end;
+    margin-top: 1px;
   }
 }
