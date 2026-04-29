@@ -11,6 +11,7 @@ import type { ProgramAssignment, Session } from '../models/training';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { createTrainingRouter } from './routes';
+import { PostgresStore } from './postgresStore';
 
 const PORT = Number(process.env.PORT) || 4000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
@@ -49,19 +50,39 @@ const state = {
   assignments: seedAssignments(),
 };
 
-const app = express();
-app.use(
-  cors({
-    origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
-  }),
-);
-app.use(express.json());
-app.use(createTrainingRouter(state));
+async function bootstrap() {
+  const store = PostgresStore.fromEnv();
+  if (store) {
+    await store.init(mockUsers);
+    console.log('Postgres connected. Persisting users/assignments in DATABASE_URL.');
+  } else {
+    console.log('DATABASE_URL not set. Running in mock memory mode.');
+  }
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'wolf-ai-mock-api', frontendOrigin: FRONTEND_ORIGIN });
-});
+  const app = express();
+  app.use(
+    cors({
+      origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    }),
+  );
+  app.use(express.json());
+  app.use(createTrainingRouter(state, store ?? undefined));
 
-app.listen(PORT, () => {
-  console.log(`Wolf AI mock API listening on http://localhost:${PORT}`);
+  app.get('/health', (_req, res) => {
+    res.json({
+      ok: true,
+      service: store ? 'wolf-ai-api-postgres' : 'wolf-ai-mock-api',
+      frontendOrigin: FRONTEND_ORIGIN,
+      persistence: store ? 'postgres' : 'memory',
+    });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Wolf AI API listening on http://localhost:${PORT}`);
+  });
+}
+
+bootstrap().catch((error) => {
+  console.error('Failed to start API:', error);
+  process.exit(1);
 });

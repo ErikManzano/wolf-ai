@@ -4,6 +4,7 @@ import { generateSession } from '../services/sessionGenerator';
 import { evaluateSessionFull } from '../services/sessionEvaluator';
 import { adaptSession } from '../services/adaptiveEngine';
 import { simulateMicrocycle } from '../services/simulateMicrocycle';
+import { PostgresStore } from './postgresStore';
 
 export interface MockApiState {
   athletes: Athlete[];
@@ -18,19 +19,21 @@ const DEMO_PASSWORD = process.env.DEMO_LOGIN_PASSWORD || 'wolf2026';
 /**
  * Mock REST API — sin base de datos; `sessions` vive en memoria del proceso.
  */
-export function createTrainingRouter(state: MockApiState): IRouter {
+export function createTrainingRouter(state: MockApiState, store?: PostgresStore): IRouter {
   const router = Router();
 
-  router.get('/users', (_req, res) => {
-    const sanitized = state.users.map((u) => ({ id: u.id, name: u.name, role: u.role, email: u.email, coachId: u.coachId, linkedAthleteId: u.linkedAthleteId }));
+  router.get('/users', async (_req, res) => {
+    const users = store ? await store.getUsers() : state.users;
+    const sanitized = users.map((u) => ({ id: u.id, name: u.name, role: u.role, email: u.email, coachId: u.coachId, linkedAthleteId: u.linkedAthleteId }));
     res.json(sanitized);
   });
 
-  router.post('/auth/login', (req, res) => {
+  router.post('/auth/login', async (req, res) => {
     const body = req.body as { email?: string; password?: string };
     const email = body.email?.trim().toLowerCase();
     const password = body.password ?? '';
-    const user = state.users.find((u) => u.email?.toLowerCase() === email);
+    const users = store ? await store.getUsers() : state.users;
+    const user = users.find((u) => u.email?.toLowerCase() === email);
     if (!user || password !== DEMO_PASSWORD) {
       res.status(401).json({ error: 'Invalid credentials.' });
       return;
@@ -50,15 +53,18 @@ export function createTrainingRouter(state: MockApiState): IRouter {
     res.json(state.sessions);
   });
 
-  router.get('/assignments', (_req, res) => {
-    res.json(state.assignments);
+  router.get('/assignments', async (_req, res) => {
+    const assignments = store ? await store.getAssignments() : state.assignments;
+    res.json(assignments);
   });
 
-  router.get('/assignments/athlete/:athleteProfileId', (req, res) => {
+  router.get('/assignments/athlete/:athleteProfileId', async (req, res) => {
     const { athleteProfileId } = req.params as { athleteProfileId: string };
-    const match = state.assignments
-      .filter((a) => a.athleteProfileId === athleteProfileId)
-      .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
+    const match = store
+      ? await store.getAssignmentByAthlete(athleteProfileId)
+      : state.assignments
+          .filter((a) => a.athleteProfileId === athleteProfileId)
+          .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
     if (!match) {
       res.status(404).json({ error: 'No assignment found for athlete profile.' });
       return;
@@ -66,7 +72,7 @@ export function createTrainingRouter(state: MockApiState): IRouter {
     res.json(match);
   });
 
-  router.post('/assignments', (req, res) => {
+  router.post('/assignments', async (req, res) => {
     const body = req.body as { coachId?: string; athleteProfileId?: string; athleteUserId?: string; program?: ProgramAssignment['program'] };
     if (!body.coachId || !body.athleteProfileId || !body.program) {
       res.status(400).json({ error: 'coachId, athleteProfileId and program are required.' });
@@ -83,15 +89,29 @@ export function createTrainingRouter(state: MockApiState): IRouter {
       program: { ...body.program, athleteId: body.athleteProfileId },
       assignedAt: new Date().toISOString(),
     };
+    if (store) {
+      const created = await store.createOrReplaceAssignment(next);
+      res.status(201).json(created);
+      return;
+    }
     state.assignments = [...state.assignments.filter((x) => x.athleteProfileId !== body.athleteProfileId), next];
     res.status(201).json(next);
   });
 
-  router.patch('/assignments/:id/program', (req, res) => {
+  router.patch('/assignments/:id/program', async (req, res) => {
     const { id } = req.params as { id: string };
     const body = req.body as { program?: ProgramAssignment['program'] };
     if (!body.program) {
       res.status(400).json({ error: 'program is required.' });
+      return;
+    }
+    if (store) {
+      const updated = await store.updateAssignmentProgram(id, body.program);
+      if (!updated) {
+        res.status(404).json({ error: 'Assignment not found.' });
+        return;
+      }
+      res.json(updated);
       return;
     }
     const idx = state.assignments.findIndex((a) => a.id === id);
@@ -113,8 +133,17 @@ export function createTrainingRouter(state: MockApiState): IRouter {
     res.json(updated);
   });
 
-  router.delete('/assignments/:id', (req, res) => {
+  router.delete('/assignments/:id', async (req, res) => {
     const { id } = req.params as { id: string };
+    if (store) {
+      const removed = await store.deleteAssignment(id);
+      if (!removed) {
+        res.status(404).json({ error: 'Assignment not found.' });
+        return;
+      }
+      res.status(204).send();
+      return;
+    }
     const before = state.assignments.length;
     state.assignments = state.assignments.filter((a) => a.id !== id);
     if (state.assignments.length === before) {
