@@ -331,6 +331,13 @@
 }
 
 @media (max-width: 768px) {
+  .central-panel {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
   .panel-header {
     flex-direction: column;
     align-items: flex-start;

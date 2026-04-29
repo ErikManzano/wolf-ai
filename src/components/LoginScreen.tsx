@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ShieldCheck, UserRound } from 'lucide-react';
+import { ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 import './LoginScreen.css';
 
 type LoginIdentity = {
@@ -33,6 +33,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
       login: isEs ? 'Entrar al sistema' : 'Log in',
       quickAccess: isEs ? 'Acceso rápido de demo' : 'Demo quick access',
       invalid: isEs ? 'Credenciales inválidas para los usuarios demo.' : 'Invalid credentials for demo users.',
+      mobileLead: isEs ? 'Planifica, asigna y monitorea en tiempo real.' : 'Plan, assign, and monitor in real time.',
+      chipCoach: isEs ? 'Coach control' : 'Coach control',
+      chipAthlete: isEs ? 'Vista atleta' : 'Athlete view',
+      chipRealtime: isEs ? 'Demo multi-dispositivo' : 'Multi-device demo',
     }),
     [isEs],
   );
@@ -73,6 +77,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
 
         <main className="wolf-login-form-wrap">
           <form className="wolf-login-form" onSubmit={handleSubmit}>
+            <div className="wolf-login-mobile-visual" aria-hidden>
+              <div className="wolf-login-mobile-visual-head">
+                <Sparkles size={16} />
+                <span>Wolf AI WL</span>
+              </div>
+              <p>{t.mobileLead}</p>
+              <div className="wolf-login-mobile-chips">
+                <span>{t.chipCoach}</span>
+                <span>{t.chipAthlete}</span>
+                <span>{t.chipRealtime}</span>
+              </div>
+            </div>
+
             <h1>{t.title}</h1>
             <p>{t.subtitle}</p>
 

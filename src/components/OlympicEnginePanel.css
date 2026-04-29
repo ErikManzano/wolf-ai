@@ -261,6 +261,26 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+.wolf-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-main);
+  flex-shrink: 0;
+}
+
+.wolf-step-label {
+  white-space: nowrap;
+}
+
 .wolf-tab:hover {
   border-color: var(--color-accent);
   color: var(--color-text-primary);
@@ -273,9 +293,51 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
+.wolf-tab.active .wolf-step-dot {
+  border-color: color-mix(in srgb, var(--color-accent) 42%, transparent);
+  color: #fff;
+  background: var(--color-accent-gradient);
+}
+
+.wolf-tab.done .wolf-step-dot {
+  border-color: color-mix(in srgb, var(--color-success) 50%, transparent);
+  color: #fff;
+  background: color-mix(in srgb, var(--color-success) 75%, #15803d);
+}
+
 .wolf-tab:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.wolf-stepper-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -2px;
+}
+
+.wolf-stepper-progress-track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.wolf-stepper-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent-gradient);
+  transition: width 0.2s ease;
+}
+
+.wolf-stepper-progress-label {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  min-width: 34px;
+  text-align: right;
 }
 
 .wolf-engine-shared-controls {
@@ -768,6 +830,10 @@
 }
 
 @media (max-width: 768px) {
+  .wolf-engine {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
   .wolf-engine .panel-header {
     flex-direction: column;
     align-items: flex-start;
@@ -786,17 +852,46 @@
   }
 
   .wolf-engine-tabs {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding-top: 8px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wolf-stepper-progress {
+    margin-top: 4px;
+    margin-bottom: 2px;
   }
 
   .wolf-tab {
-    width: 100%;
-    min-height: 48px;
+    width: auto;
+    min-height: 40px;
+    padding: 8px 12px;
     justify-content: center;
-    font-size: 0.88rem;
+    font-size: 0.78rem;
+    text-align: center;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .wolf-step-dot {
+    width: 20px;
+    height: 20px;
+    font-size: 0.68rem;
+  }
+
+  .wolf-step-label {
+    font-size: 0.75rem;
+  }
+
+  .wolf-engine-tabs--4 .wolf-tab {
+    min-width: max-content;
+    flex: 0 0 auto;
   }
 
   .wolf-engine-shared-controls {
@@ -842,6 +937,7 @@
   .wolf-program-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
 
   .wolf-program-toolbar .btn-primary,
@@ -877,6 +973,20 @@
 
   .wolf-program-nav {
     gap: 16px;
+  }
+
+  .wolf-program-gen-card,
+  .wolf-program-live-card {
+    padding: 12px 12px;
+    border-radius: 12px;
+  }
+
+  .wolf-program-meso-title {
+    font-size: 1rem;
+  }
+
+  .wolf-program-meso-sub {
+    font-size: 0.82rem;
   }
 
   .wolf-regen-day {
@@ -915,11 +1025,16 @@
   }
 
   .wolf-se-block-actions {
-    align-self: flex-end;
+    align-self: stretch;
+    justify-content: flex-end;
   }
 
   .wolf-se-table {
     font-size: 0.8rem;
+  }
+
+  .wolf-se-table-wrap {
+    margin: 0 -2px;
   }
 
   .wolf-se-input {
@@ -944,11 +1059,70 @@
     flex-direction: column;
     gap: 8px;
   }
+
+  .wolf-stepper-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 7;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    margin-top: 10px;
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-bg-main) 94%, transparent) 64%,
+      transparent
+    );
+  }
+
+  .wolf-stepper-actions .btn-primary,
+  .wolf-stepper-actions .btn-secondary {
+    min-height: 46px;
+  }
+
+  .wolf-step-content--customize,
+  .wolf-step-content {
+    padding-bottom: 8px;
+  }
 }
 
 @media (max-width: 380px) {
+  .wolf-engine {
+    gap: 10px;
+  }
+
+  .wolf-coach-hero-inner {
+    padding: 10px 10px 12px;
+    gap: 8px;
+  }
+
+  .wolf-coach-title {
+    font-size: 1.18rem;
+  }
+
+  .wolf-coach-sub {
+    font-size: 0.82rem;
+  }
+
   .wolf-engine-metric-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .wolf-engine-tabs--4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .wolf-engine-tabs--4 .wolf-tab {
+    min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .wolf-step-label {
+    white-space: normal;
+    line-height: 1.2;
   }
 }
 

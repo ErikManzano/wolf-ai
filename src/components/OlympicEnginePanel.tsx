@@ -165,6 +165,28 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
 
   const coachAssignments = useMemo(() => [...assignments].reverse(), [assignments]);
   const canAdvanceToManagement = Boolean(program);
+  const canAdvanceToCustomize = Boolean(program);
+  const stepProgress = Math.round((activeStep / 4) * 100);
+
+  const goToStep = useCallback(
+    (next: StepId) => {
+      if (next === 4 && !canAdvanceToManagement) return;
+      if (next === 3 && !canAdvanceToCustomize) return;
+      setActiveStep(next);
+    },
+    [canAdvanceToManagement, canAdvanceToCustomize],
+  );
+
+  const stepItems = useMemo(
+    () =>
+      [
+        { id: 1 as StepId, label: t.step1, enabled: true },
+        { id: 2 as StepId, label: t.step2, enabled: true },
+        { id: 3 as StepId, label: t.step3, enabled: canAdvanceToCustomize },
+        { id: 4 as StepId, label: t.step4, enabled: canAdvanceToManagement },
+      ] as const,
+    [t.step1, t.step2, t.step3, t.step4, canAdvanceToCustomize, canAdvanceToManagement],
+  );
 
   const fmtDate = (iso: string) => {
     try {
@@ -198,23 +220,33 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       </header>
 
       <div className="wolf-engine-tabs wolf-engine-tabs--4" role="tablist" aria-label={t.stepperAria}>
-        <button type="button" className={`wolf-tab ${activeStep === 1 ? 'active' : ''}`} onClick={() => setActiveStep(1)}>
-          1. {t.step1}
-        </button>
-        <button type="button" className={`wolf-tab ${activeStep === 2 ? 'active' : ''}`} onClick={() => setActiveStep(2)}>
-          2. {t.step2}
-        </button>
-        <button type="button" className={`wolf-tab ${activeStep === 3 ? 'active' : ''}`} onClick={() => setActiveStep(3)}>
-          3. {t.step3}
-        </button>
-        <button
-          type="button"
-          className={`wolf-tab ${activeStep === 4 ? 'active' : ''}`}
-          onClick={() => setActiveStep(4)}
-          disabled={!canAdvanceToManagement}
-        >
-          4. {t.step4}
-        </button>
+        {stepItems.map((step) => {
+          const isActive = activeStep === step.id;
+          const isDone = activeStep > step.id;
+          return (
+            <button
+              key={step.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-current={isActive ? 'step' : undefined}
+              className={`wolf-tab ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}
+              onClick={() => goToStep(step.id)}
+              disabled={!step.enabled}
+            >
+              <span className="wolf-step-dot" aria-hidden>
+                {isDone ? '✓' : step.id}
+              </span>
+              <span className="wolf-step-label">{step.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="wolf-stepper-progress" aria-hidden>
+        <div className="wolf-stepper-progress-track">
+          <div className="wolf-stepper-progress-fill" style={{ width: `${stepProgress}%` }} />
+        </div>
+        <span className="wolf-stepper-progress-label">{stepProgress}%</span>
       </div>
 
       <div className={`wolf-engine-controls-card${activeStep === 1 ? '' : ' wolf-engine-controls-card--hidden'}`}>
@@ -312,7 +344,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
           </div>
         )}
         <div className="wolf-stepper-actions">
-          <button type="button" className="btn-primary" onClick={() => setActiveStep(2)}>
+          <button type="button" className="btn-primary" onClick={() => goToStep(2)}>
             {t.nextStep}
           </button>
         </div>
@@ -340,7 +372,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
             />
             <div className="wolf-stepper-actions">
               {activeStep > 1 && (
-                <button type="button" className="btn-secondary" onClick={() => setActiveStep((activeStep - 1) as StepId)}>
+                <button type="button" className="btn-secondary" onClick={() => goToStep((activeStep - 1) as StepId)}>
                   {t.prevStep}
                 </button>
               )}
@@ -348,14 +380,17 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
                 <button
                   type="button"
                   className="btn-primary"
-                  onClick={() => setActiveStep((activeStep + 1) as StepId)}
-                  disabled={activeStep >= 2 && !canAdvanceToManagement}
+                  onClick={() => goToStep((activeStep + 1) as StepId)}
+                  disabled={(activeStep === 2 && !canAdvanceToCustomize) || (activeStep >= 3 && !canAdvanceToManagement)}
                 >
                   {t.nextStep}
                 </button>
               )}
             </div>
-            {activeStep >= 2 && !canAdvanceToManagement && (
+            {activeStep === 2 && !canAdvanceToCustomize && (
+              <p className="wolf-program-inline-hint">{t.mustGenerateBeforeNext}</p>
+            )}
+            {activeStep >= 3 && !canAdvanceToManagement && (
               <p className="wolf-program-inline-hint">{t.mustGenerateBeforeNext}</p>
             )}
           </div>

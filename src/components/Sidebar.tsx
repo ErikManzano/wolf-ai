@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, CalendarRange, LineChart, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarRange, LineChart, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import './Sidebar.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -18,13 +18,23 @@ interface SidebarProps {
   language: 'ES' | 'EN';
   setLanguage: (lang: 'ES' | 'EN') => void;
   onLogout: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }
 
 const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-quick', 'wl-templates', 'athletes']);
 /** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
 const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, setLanguage, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  activeView,
+  setActiveView,
+  language,
+  setLanguage,
+  onLogout,
+  collapsed,
+  onToggleCollapsed,
+}) => {
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
   const { persona, currentUser } = useWolfAssign();
@@ -49,12 +59,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, 
   });
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar${collapsed ? ' compact' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
           <WolfIcon size={28} className="logo-icon" />
           <h2>Wolf AI</h2>
         </div>
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? (isEs ? 'Expandir sidebar' : 'Expand sidebar') : (isEs ? 'Colapsar sidebar' : 'Collapse sidebar')}
+        >
+          {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -63,6 +81,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, 
             key={item.id}
             className={`nav-item ${activeView === item.id ? 'active' : ''}`}
             onClick={() => setActiveView(item.id)}
+            title={item.label}
+            aria-label={item.label}
           >
             <item.icon size={20} className={item.id === 'wolf-engine' && activeView === 'wolf-engine' ? 'icon-glow' : ''} />
             <span
@@ -116,7 +136,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, language, 
             </span>
           </div>
         </div>
-        <button type="button" className="sidebar-logout-btn" onClick={onLogout}>
+        <button
+          type="button"
+          className="sidebar-logout-btn"
+          onClick={onLogout}
+          aria-label={isEs ? 'Cerrar sesión' : 'Log out'}
+          title={isEs ? 'Cerrar sesión' : 'Log out'}
+        >
           <LogOut size={15} />
           <span>{isEs ? 'Cerrar sesión' : 'Log out'}</span>
         </button>

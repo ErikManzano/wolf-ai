@@ -74,6 +74,10 @@
   gap: 12px;
 }
 
+.wolf-login-mobile-visual {
+  display: none;
+}
+
 .wolf-login-form h1 {
   margin: 0;
   font-size: 2rem;
@@ -169,5 +173,104 @@
 
   .wolf-login-brand {
     min-height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wolf-login {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .wolf-login-shell {
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  .wolf-login-brand {
+    min-height: auto;
+    padding: 16px 16px 12px;
+    gap: 8px;
+  }
+
+  .wolf-login-brand h2 {
+    font-size: 1.05rem;
+  }
+
+  .wolf-login-brand p,
+  .wolf-login-quote {
+    font-size: 0.8rem;
+    max-width: none;
+  }
+
+  .wolf-login-form-wrap {
+    padding: 16px;
+  }
+
+  .wolf-login-form {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .wolf-login-form h1 {
+    font-size: 1.55rem;
+  }
+
+  .wolf-login-mobile-visual {
+    display: block;
+    margin-bottom: 2px;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-border));
+    border-radius: 14px;
+    padding: 10px 12px;
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(249, 115, 22, 0.22), transparent 65%),
+      radial-gradient(120% 140% at 0% 100%, rgba(239, 68, 68, 0.2), transparent 70%),
+      var(--color-bg-panel);
+  }
+
+  .wolf-login-mobile-visual-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .wolf-login-mobile-visual p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .wolf-login-mobile-chips {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .wolf-login-mobile-chips span {
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
+    color: var(--color-text-secondary);
+    border-radius: 999px;
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
+    padding: 4px 8px;
+  }
+
+  .wolf-login-form input,
+  .wolf-login-submit,
+  .wolf-login-user-chip {
+    min-height: 46px;
   }
 }

@@ -505,14 +505,74 @@
 }
 
 @media (max-width: 640px) {
+  .wolf-athlete-plan {
+    padding: 0 0.35rem 1.4rem;
+  }
+
+  .wolf-athlete-hero {
+    margin-bottom: 0.95rem;
+    border-radius: 12px;
+  }
+
   .wolf-athlete-hero-inner {
     flex-direction: column;
+    gap: 0.8rem;
+    padding: 0.95rem 0.9rem 0.95rem;
+  }
+
+  .wolf-athlete-title {
+    font-size: 1.35rem;
+  }
+
+  .wolf-athlete-program-name {
+    font-size: 0.88rem;
   }
 
   .wolf-athlete-discipline {
     flex: 1 1 auto;
     width: 100%;
     min-width: 0;
+    padding: 0.8rem 0.85rem;
+  }
+
+  .wolf-athlete-week-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wolf-athlete-week-pill {
+    flex: 0 0 auto;
+    min-height: 42px;
+  }
+
+  .wolf-athlete-day-top {
+    gap: 0.7rem;
+    padding: 0.95rem 0.8rem 0.8rem 1rem;
+  }
+
+  .wolf-athlete-day-title {
+    font-size: 1rem;
+  }
+
+  .wolf-athlete-metrics {
+    gap: 6px;
+  }
+
+  .wolf-athlete-metric {
+    font-size: 0.74rem;
+    padding: 3px 8px;
+  }
+
+  .wolf-athlete-done-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .wolf-athlete-blocks {
+    padding: 0.7rem 0.7rem 0.9rem 1rem;
   }
 
   .wolf-athlete-set-list {
@@ -522,5 +582,27 @@
 
   .wolf-athlete-set-row {
     min-width: min(100%, 280px);
+  }
+}
+
+@media (max-width: 420px) {
+  .wolf-athlete-day-badge {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .wolf-athlete-exercise {
+    padding: 0.75rem 0.72rem;
+  }
+
+  .wolf-athlete-set-row {
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 0.55rem;
+  }
+
+  .wolf-athlete-set-mult {
+    grid-column: 2;
+    justify-self: end;
   }
 }
