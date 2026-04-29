@@ -13,13 +13,14 @@ export interface MockApiState {
   users: WolfUser[];
   assignments: ProgramAssignment[];
 }
+type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
 const DEMO_PASSWORD = process.env.DEMO_LOGIN_PASSWORD || 'wolf2026';
 
 /**
  * Mock REST API — sin base de datos; `sessions` vive en memoria del proceso.
  */
-export function createTrainingRouter(state: MockApiState, store?: PostgresStore): IRouter {
+export function createTrainingRouter(state: MockApiState, store?: PostgresStore, notify?: RealtimeNotifier): IRouter {
   const router = Router();
 
   router.get('/users', async (_req, res) => {
@@ -91,10 +92,12 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore)
     };
     if (store) {
       const created = await store.createOrReplaceAssignment(next);
+      notify?.('assignments:changed', { id: created.id, athleteProfileId: created.athleteProfileId });
       res.status(201).json(created);
       return;
     }
     state.assignments = [...state.assignments.filter((x) => x.athleteProfileId !== body.athleteProfileId), next];
+    notify?.('assignments:changed', { id: next.id, athleteProfileId: next.athleteProfileId });
     res.status(201).json(next);
   });
 
@@ -111,6 +114,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore)
         res.status(404).json({ error: 'Assignment not found.' });
         return;
       }
+      notify?.('assignments:changed', { id: updated.id, athleteProfileId: updated.athleteProfileId });
       res.json(updated);
       return;
     }
@@ -130,6 +134,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore)
       ],
     };
     state.assignments[idx] = updated;
+    notify?.('assignments:changed', { id: updated.id, athleteProfileId: updated.athleteProfileId });
     res.json(updated);
   });
 
@@ -141,6 +146,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore)
         res.status(404).json({ error: 'Assignment not found.' });
         return;
       }
+      notify?.('assignments:changed', { id });
       res.status(204).send();
       return;
     }
@@ -150,6 +156,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore)
       res.status(404).json({ error: 'Assignment not found.' });
       return;
     }
+    notify?.('assignments:changed', { id });
     res.status(204).send();
   });
 

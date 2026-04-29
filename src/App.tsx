@@ -31,34 +31,19 @@ function AppShell() {
     tracking: false,
   });
 
-  const { users, setCurrentUserId, currentUser } = useWolfAssign();
+  const { users, setCurrentUserId, currentUser, loginUser } = useWolfAssign();
   const { setUserRole } = useAppContext();
 
   const loginUsers = useMemo(
-    () => [
-      {
-        id: 'user-coach',
-        name: 'Ivan Hellequin',
-        email: 'ivan.hellequin@wolf-ai.local',
+    () =>
+      users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email ?? '',
         password: 'wolf2026',
-        roleLabel: language === 'ES' ? 'Head Coach' : 'Head Coach',
-      },
-      {
-        id: 'user-athlete',
-        name: 'Erik Manzano',
-        email: 'erik.manzano@wolf-ai.local',
-        password: 'wolf2026',
-        roleLabel: language === 'ES' ? 'Atleta' : 'Athlete',
-      },
-      {
-        id: 'user-athlete-2',
-        name: 'Laura Méndez',
-        email: 'laura.mendez@wolf-ai.local',
-        password: 'wolf2026',
-        roleLabel: language === 'ES' ? 'Atleta' : 'Athlete',
-      },
-    ],
-    [language],
+        roleLabel: u.role === 'athlete' ? (language === 'ES' ? 'Atleta' : 'Athlete') : 'Head Coach',
+      })),
+    [language, users],
   );
 
   useEffect(() => {
@@ -94,11 +79,16 @@ function AppShell() {
       <LoginScreen
         language={language}
         identities={loginUsers}
-        onLogin={(userId) => {
-          if (!users.some((u) => u.id === userId)) return;
-          setCurrentUserId(userId);
+        onLogin={async ({ userId, email, password }) => {
+          const resolvedUser =
+            userId != null ? users.find((u) => u.id === userId) ?? null : await loginUser(email, password);
+          if (!resolvedUser) {
+            return language === 'ES' ? 'No se pudo iniciar sesión con el backend.' : 'Could not sign in to backend.';
+          }
+          setCurrentUserId(resolvedUser.id);
           localStorage.setItem(AUTH_STORAGE, '1');
           setIsAuthenticated(true);
+          return null;
         }}
       />
     );

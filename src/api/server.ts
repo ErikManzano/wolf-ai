@@ -7,6 +7,8 @@
  */
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'node:http';
+import { WebSocketServer } from 'ws';
 import type { ProgramAssignment, Session } from '../models/training';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
@@ -66,7 +68,18 @@ async function bootstrap() {
     }),
   );
   app.use(express.json());
-  app.use(createTrainingRouter(state, store ?? undefined));
+  const server = createServer(app);
+  const wss = new WebSocketServer({ server, path: '/ws' });
+  const notify = (event: string, payload?: unknown) => {
+    const message = JSON.stringify({ event, payload, ts: Date.now() });
+    for (const client of wss.clients) {
+      if (client.readyState === 1) client.send(message);
+    }
+  };
+  app.use(createTrainingRouter(state, store ?? undefined, notify));
+  wss.on('connection', (ws) => {
+    ws.send(JSON.stringify({ event: 'connected', payload: { service: 'wolf-ai-realtime' }, ts: Date.now() }));
+  });
 
   app.get('/health', (_req, res) => {
     res.json({
@@ -77,7 +90,7 @@ async function bootstrap() {
     });
   });
 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Wolf AI API listening on http://localhost:${PORT}`);
   });
 }

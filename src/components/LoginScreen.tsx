@@ -13,7 +13,7 @@ type LoginIdentity = {
 interface LoginScreenProps {
   language: 'ES' | 'EN';
   identities: LoginIdentity[];
-  onLogin: (userId: string) => void;
+  onLogin: (params: { userId?: string; email: string; password: string }) => Promise<string | null> | string | null;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin }) => {
@@ -21,6 +21,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
   const [email, setEmail] = useState(identities[0]?.email ?? '');
   const [password, setPassword] = useState(identities[0]?.password ?? '');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const t = useMemo(
     () => ({
@@ -41,17 +42,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
     [isEs],
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const match = identities.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password,
-    );
-    if (!match) {
-      setError(t.invalid);
+    setLoading(true);
+    const result = await onLogin({ email: email.trim(), password });
+    setLoading(false);
+    if (result) {
+      setError(result);
       return;
     }
     setError('');
-    onLogin(match.id);
   };
 
   return (
@@ -104,8 +104,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
 
             {error && <p className="wolf-login-error">{error}</p>}
 
-            <button type="submit" className="wolf-login-submit">
-              {t.login}
+            <button type="submit" className="wolf-login-submit" disabled={loading}>
+              {loading ? (isEs ? 'Entrando...' : 'Signing in...') : t.login}
             </button>
 
             <div className="wolf-login-divider">{t.quickAccess}</div>
@@ -118,7 +118,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, identities, onLogin
                   onClick={() => {
                     setEmail(u.email);
                     setPassword(u.password);
-                    onLogin(u.id);
+                    setError('');
+                    void Promise.resolve(onLogin({ userId: u.id, email: u.email, password: u.password })).then((result: string | null) => {
+                      if (result) setError(result);
+                    });
                   }}
                 >
                   <UserRound size={14} />

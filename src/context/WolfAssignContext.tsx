@@ -12,6 +12,8 @@ const STORAGE_ASSIGN = 'wolf_wl_assignments_v1';
 const STORAGE_COMP = 'wolf_wl_completions_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
+const API_ENABLED = Boolean(API_BASE);
 
 function normalizeAssignment(a: ProgramAssignment): ProgramAssignment {
   return {
@@ -66,11 +68,13 @@ interface WolfAssignContextValue {
   isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number) => boolean;
   /** Asignación activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
+  loginUser: (email: string, password: string) => Promise<WolfUser | null>;
 }
 
 const WolfAssignContext = createContext<WolfAssignContextValue | null>(null);
 
 export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
+  const [users, setUsers] = useState<WolfUser[]>(mockUsers);
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
   const [currentUserId, setCurrentUserId] = useState('user-coach');
@@ -101,6 +105,66 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const loadUsersFromApi = useCallback(async () => {
+    if (!API_ENABLED) return;
+    try {
+      const res = await fetch(`${API_BASE}/users`);
+      if (!res.ok) return;
+      const list = (await res.json()) as WolfUser[];
+      if (!Array.isArray(list) || list.length === 0) return;
+      setUsers(list);
+    } catch {
+      /* fallback to mock users */
+    }
+  }, []);
+
+  const loadAssignmentsFromApi = useCallback(async () => {
+    if (!API_ENABLED) return;
+    try {
+      const res = await fetch(`${API_BASE}/assignments`);
+      if (!res.ok) return;
+      const list = (await res.json()) as ProgramAssignment[];
+      if (!Array.isArray(list)) return;
+      setAssignments(list.map(normalizeAssignment));
+    } catch {
+      /* fallback to local state */
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUsersFromApi();
+    void loadAssignmentsFromApi();
+  }, [loadUsersFromApi, loadAssignmentsFromApi]);
+
+  useEffect(() => {
+    if (!API_ENABLED) return;
+    let ws: WebSocket | null = null;
+    const wsUrl = API_BASE.replace(/^http/i, 'ws') + '/ws';
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(String(event.data)) as { event?: string };
+          if (msg.event === 'assignments:changed') {
+            void loadAssignmentsFromApi();
+          }
+        } catch {
+          /* ignore malformed messages */
+        }
+      };
+      ws.onclose = () => {
+        // fallback polling if websocket disconnects
+        const timer = window.setInterval(() => void loadAssignmentsFromApi(), 5000);
+        window.setTimeout(() => window.clearInterval(timer), 30000);
+      };
+    } catch {
+      /* websocket unavailable, keep silent fallback */
+    }
+    return () => {
+      if (ws && ws.readyState < 2) ws.close();
+    };
+  }, [loadAssignmentsFromApi]);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_ASSIGN, JSON.stringify(assignments));
@@ -124,7 +188,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       /* ignore */
     }
-    const target = mockUsers.find((u) => u.role === role);
+    const target = users.find((u) => u.role === role);
     if (target) {
       setCurrentUserId(target.id);
       try {
@@ -133,10 +197,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         /* ignore */
       }
     }
-  }, []);
+  }, [users]);
 
   const setCurrentUserIdSafe = useCallback((id: string) => {
-    const target = mockUsers.find((u) => u.id === id);
+    const target = users.find((u) => u.id === id);
     if (!target) return;
     setCurrentUserId(id);
     setPersonaState(target.role);
@@ -146,10 +210,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [users]);
 
-  const currentUser = useMemo(() => mockUsers.find((u) => u.id === currentUserId), [currentUserId]);
-  const coach = useMemo(() => mockUsers.find((u) => u.role === 'coach'), []);
+  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId), [currentUserId, users]);
+  const coach = useMemo(() => users.find((u) => u.role === 'coach'), [users]);
   const athleteUser = useMemo(
     () => (currentUser?.role === 'athlete' ? currentUser : undefined),
     [currentUser],
@@ -158,7 +222,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const assignProgramToAthlete = useCallback(
     (program: ProgramAssignment['program'], athleteProfileId: string) => {
       const id = `asg-${Date.now()}`;
-      const uid = athleteUserIdForProfile(athleteProfileId);
+      const uid =
+        users.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id ??
+        athleteUserIdForProfile(athleteProfileId);
       const next: ProgramAssignment = {
         id,
         coachId: currentUser?.role === 'coach' ? currentUser.id : 'user-coach',
@@ -169,11 +235,33 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         versionHistory: [],
         assignedAt: new Date().toISOString(),
       };
-      // Un plan activo por perfil en plantilla; no borra asignaciones de otros atletas.
       setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
+      if (API_ENABLED) {
+        void fetch(`${API_BASE}/assignments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coachId: next.coachId,
+            athleteUserId: next.athleteUserId,
+            athleteProfileId: next.athleteProfileId,
+            program: next.program,
+          }),
+        })
+          .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
+          .then((saved) => {
+            if (!saved) return;
+            setAssignments((prev) => [
+              ...prev.filter((x) => x.athleteProfileId !== saved.athleteProfileId),
+              normalizeAssignment(saved),
+            ]);
+          })
+          .catch(() => {
+            /* keep optimistic state */
+          });
+      }
       return id;
     },
-    [currentUser],
+    [currentUser, users],
   );
 
   const updateAssignmentProgram = useCallback((assignmentId: string, program: ProgramAssignment['program']) => {
@@ -196,11 +284,31 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           : a,
       ),
     );
+    if (API_ENABLED) {
+      void fetch(`${API_BASE}/assignments/${assignmentId}/program`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ program }),
+      })
+        .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
+        .then((updated) => {
+          if (!updated) return;
+          setAssignments((prev) => prev.map((a) => (a.id === updated.id ? normalizeAssignment(updated) : a)));
+        })
+        .catch(() => {
+          /* keep optimistic state */
+        });
+    }
   }, []);
 
   const removeAssignment = useCallback((assignmentId: string) => {
     setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
+    if (API_ENABLED) {
+      void fetch(`${API_BASE}/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
+        /* keep local state */
+      });
+    }
   }, []);
 
   const toggleSessionComplete = useCallback((assignmentId: string, weekNumber: number, dayNumber: number) => {
@@ -241,8 +349,29 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     return [...mine].sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
   }, [assignments, athleteUser?.linkedAthleteId]);
 
+  const loginUser = useCallback(async (email: string, password: string) => {
+    if (!API_ENABLED) {
+      const local = users.find(
+        (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && password === 'wolf2026',
+      );
+      return local ?? null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { user?: WolfUser };
+      return data.user ?? null;
+    } catch {
+      return null;
+    }
+  }, [users]);
+
   const value: WolfAssignContextValue = {
-    users: mockUsers,
+    users,
     currentUser,
     currentUserId,
     setCurrentUserId: setCurrentUserIdSafe,
@@ -258,6 +387,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     toggleSessionComplete,
     isSessionComplete,
     myAssignment,
+    loginUser,
   };
 
   return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;
