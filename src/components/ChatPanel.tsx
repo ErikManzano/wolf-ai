@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Send,
   Bot,
@@ -63,12 +63,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   ];
 
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const msgIdRef = useRef(2);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
 
+    const userId = msgIdRef.current++;
     const newUserMsg: Message = {
-      id: Date.now(),
+      id: userId,
       sender: 'user',
       text: inputText,
     };
@@ -78,7 +80,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     setTimeout(() => {
       const newAiMsg: Message = {
-        id: Date.now() + 1,
+        id: msgIdRef.current++,
         sender: 'ai',
         text: isEs
           ? 'Entendido. He aplicado los cambios. ¿Hay algo más en lo que pueda ayudar?'
@@ -90,7 +92,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const handleAction = (actionStr: string) => {
     const newUserMsg: Message = {
-      id: Date.now(),
+      id: msgIdRef.current++,
       sender: 'user',
       text: actionStr,
     };
@@ -106,7 +108,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     setTimeout(() => {
       const newAiMsg: Message = {
-        id: Date.now() + 1,
+        id: msgIdRef.current++,
         sender: 'ai',
         text: isEs
           ? `Listo Coach. Se han actualizado los parámetros para el microciclo basados en la acción: "${actionStr}".`

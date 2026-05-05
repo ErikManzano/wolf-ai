@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './CentralPanel.css';
+import './SuperDashboard.css';
 import {
   ChevronRight, Settings2, SlidersHorizontal, Share, Download, GripVertical, Plus,
   LayoutDashboard, Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp, Award,
@@ -16,6 +17,21 @@ import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { appAthleteIdForWlProfile } from '../utils/wlStatsBridge';
 import { validateIntakeStep, validateFullIntake, firstIntakeStepWithErrors } from '../utils/intakeValidation';
+import {
+  aggregateTemplateLogging,
+  aggregateWlAttendance,
+  buildAlertsAppCoach,
+  buildAlertsWl,
+  buildAppAssignmentRows,
+  buildWlAssignmentRows,
+  countIntakesSubmittedThisWeek,
+  countPrsFromIntakesThisWeek,
+  mergedAttendancePct,
+  sortAlerts,
+  volumeSparklineFromIntakes,
+  type DashboardAlert,
+} from '../utils/dashboardStats';
+import { mockAthletes } from '../data/loadMockData';
 
 interface CentralPanelProps {
   language: 'ES' | 'EN';
@@ -26,14 +42,23 @@ interface CentralPanelProps {
 
 const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setActiveView }) => {
   const isEs = language === 'ES';
-  const { persona, athleteUser } = useWolfAssign();
+  const {
+    persona,
+    athleteUser,
+    users: authUsers,
+    currentUser,
+    createUser,
+    updateUser,
+    deleteUser,
+    assignments: wlProgramAssignments,
+    completions,
+  } = useWolfAssign();
   const {
     athletes, archivedAthletes, addAthlete, updateAthlete, removeAthlete, restoreAthlete, programs,
     assignments, assignProgram, intakes, submitIntake,
     exerciseLibrary, updateExerciseLog, setSelectedExerciseId,
     userRole, customGroups, createCustomGroup, addToCustomGroup, addMasterExercise,
     addExerciseToProgramSession, selectedWeek, setSelectedWeek,
-    loadDemoData
   } = useAppContext();
   const [currentTab, setCurrentTab] = useState<'micro' | 'session'>('micro');
 
@@ -92,6 +117,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     }
   }, [persona, activeView, setActiveView]);
 
+  useEffect(() => {
+    if (activeView === 'admin-users' && currentUser?.role !== 'super_admin') {
+      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'wolf-engine');
+    }
+  }, [activeView, currentUser?.role, persona, setActiveView]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAdminAdd, setShowAdminAdd] = useState(false);
@@ -101,9 +132,144 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
   const [showGroupSelectorFor, setShowGroupSelectorFor] = useState<number | null>(null);
   const [isAthletePreview, setIsAthletePreview] = useState(false);
+  const [adminDraft, setAdminDraft] = useState({
+    name: '',
+    email: '',
+    role: 'athlete' as 'athlete' | 'coach' | 'super_admin',
+    password: 'wolf2026',
+  });
+  const [adminError, setAdminError] = useState('');
 
   // Calendar States
   const [calendarDate, setCalendarDate] = useState(new Date());
+
+  useEffect(() => {
+    setAthletePage(1);
+  }, [athleteSearch, athleteLevelFilter, athleteSortBy, athleteSortDir]);
+
+  const wlNameByProfileId = useMemo(
+    () => Object.fromEntries(mockAthletes.map((a) => [a.id, a.name] as const)),
+    [],
+  );
+
+  const dashboardData = useMemo(() => {
+    const filterAppAthleteId =
+      persona === 'athlete' && athleteUser?.linkedAthleteId
+        ? appAthleteIdForWlProfile(athleteUser.linkedAthleteId)
+        : undefined;
+
+    const athletesScope =
+      filterAppAthleteId != null ? athletes.filter((a) => a.id === filterAppAthleteId) : athletes;
+    const assignmentsScope =
+      filterAppAthleteId != null ? assignments.filter((a) => a.athleteId === filterAppAthleteId) : assignments;
+    const intakesScope =
+      filterAppAthleteId != null ? intakes.filter((i) => i.athleteId === filterAppAthleteId) : intakes;
+
+    const wlScope =
+      persona === 'athlete' && athleteUser?.linkedAthleteId
+        ? wlProgramAssignments.filter((a) => a.athleteProfileId === athleteUser.linkedAthleteId)
+        : wlProgramAssignments;
+
+    const ref = new Date();
+    const prsWeek = countPrsFromIntakesThisWeek(intakesScope, ref);
+    const intakesWeek = countIntakesSubmittedThisWeek(intakesScope, ref);
+    const tmplLog = aggregateTemplateLogging(assignmentsScope, programs);
+    const wlAtt = aggregateWlAttendance(wlScope, completions);
+    const attendancePct = mergedAttendancePct(
+      { done: tmplLog.done, total: tmplLog.total },
+      { done: wlAtt.done, total: wlAtt.total },
+    );
+
+    const appRows = buildAppAssignmentRows(athletesScope, assignmentsScope, programs);
+    const wlRows = buildWlAssignmentRows(wlScope, completions, wlNameByProfileId);
+
+    let alerts: DashboardAlert[] = [];
+    if (persona !== 'athlete') {
+      alerts = [
+        ...buildAlertsAppCoach({
+          athletes: athletesScope,
+          assignments: assignmentsScope,
+          programs,
+          intakes: intakesScope,
+          isEs,
+        }),
+        ...buildAlertsWl({ wlAssignments: wlScope, completions, isEs }),
+      ];
+    } else if (tmplLog.total > 0 && tmplLog.pct < 10) {
+      alerts = [
+        {
+          id: 'self-low-log',
+          severity: 'info',
+          title: isEs ? 'Registra tus sesiones' : 'Log your sessions',
+          description: isEs
+            ? 'Pocos bloques tienen carga/reps registradas en tu plan plantilla.'
+            : 'Few blocks have load/reps logged on your template plan.',
+          actionLabel: isEs ? 'Mi plan WL' : 'My WL plan',
+          targetView: 'my-wl-plan',
+        },
+      ];
+    }
+    alerts = sortAlerts(alerts).slice(0, 14);
+
+    const assignedAthleteCount = new Set(assignmentsScope.map((a) => a.athleteId)).size;
+
+    const latestIntake =
+      intakesScope.length === 0
+        ? null
+        : [...intakesScope].sort(
+            (a, b) => b.date.localeCompare(a.date) || Number(b.id) - Number(a.id),
+          )[0];
+    const latestIntakeAthleteName =
+      latestIntake?.athleteId != null
+        ? athletesScope.find((x) => x.id === latestIntake.athleteId)?.name
+        : undefined;
+    const volumeSpark = volumeSparklineFromIntakes(intakesScope, 8);
+
+    return {
+      prsWeek,
+      intakesWeek,
+      intakesTotal: intakesScope.length,
+      tmplLog,
+      wlAtt,
+      attendancePct,
+      appRows,
+      wlRows,
+      alerts,
+      assignedAthleteCount,
+      rosterCount: athletesScope.length,
+      wlPlanCount: wlScope.length,
+      athleteViewRestricted: Boolean(
+        persona === 'athlete' && Boolean(athleteUser?.linkedAthleteId) && filterAppAthleteId == null,
+      ),
+      latestIntake,
+      latestIntakeAthleteName,
+      volumeSpark,
+    };
+  }, [
+    persona,
+    athleteUser,
+    athletes,
+    assignments,
+    programs,
+    intakes,
+    wlProgramAssignments,
+    completions,
+    isEs,
+    wlNameByProfileId,
+  ]);
+
+  const handleDashboardNavigate = (alert: DashboardAlert) => {
+    if (alert.athleteId != null) {
+      const ath = athletes.find((a) => a.id === alert.athleteId);
+      if (ath) setSelectedAthlete(ath);
+      setActiveAthleteId(alert.athleteId);
+    }
+    setActiveView(alert.targetView);
+  };
+
+  useEffect(() => {
+    if (activeView === 'performance') setActiveView('dashboard');
+  }, [activeView, setActiveView]);
 
   if (activeView === 'none') return null;
 
@@ -145,10 +311,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     }
     cancelEditAthlete();
   };
-
-  useEffect(() => {
-    setAthletePage(1);
-  }, [athleteSearch, athleteLevelFilter, athleteSortBy, athleteSortDir]);
 
   const handleAssignProgram = (athleteId: number, programId: number) => {
     assignProgram({
@@ -574,111 +736,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     );
   };
 
-  const renderPerformanceView = () => (
-    <div className="performance-view">
-      <header className="panel-header">
-        <div className="header-left">
-          <h1 className="view-title">
-            {isEs ? 'Rendimiento' : 'Performance'}
-          </h1>
-          <p style={{ margin: '8px 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem', maxWidth: '40rem' }}>
-            {isEs
-              ? 'Historial de Stats y PRs (datos enviados por Erik o pedidos por Ivan). Las barras muestran la evolución entre envíos.'
-              : 'Stats & PR history (entries from Erik or requests from Ivan). Bars show progress across submissions.'}
-          </p>
-        </div>
-        <div className="header-actions">
-          <button type="button" className="btn-secondary glass">
-            <Download size={16} />
-            <span>{isEs ? 'Exportar Reporte' : 'Export Report'}</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="content-area">
-        <PerformanceStatsHistory
-          language={language}
-          persona={persona}
-          linkedWlAthleteId={athleteUser?.linkedAthleteId}
-          intakes={intakes}
-          appAthletes={athletes}
-          onGoToStats={() => setActiveView('onboarding')}
-        />
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '28px' }}>
-          <div className="micro-card glass">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <TrendingUp size={18} color="var(--color-success)" />
-                {isEs ? 'Volumen (demo entreno)' : 'Volume (training demo)'}
-              </h3>
-            </div>
-            <div style={{ height: '150px', display: 'flex', alignItems: 'flex-end', gap: '8px', paddingBottom: '20px' }}>
-              {[40, 65, 45, 80, 55, 90, 70, 85].map((h, i) => (
-                <div key={i} style={{ flex: 1, backgroundColor: 'var(--color-accent)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.6 + (h / 200) }}></div>
-              ))}
-            </div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>
-              {isEs ? 'Placeholder hasta conectar tonelaje real por sesión.' : 'Placeholder until real per-session tonnage is wired.'}
-            </p>
-          </div>
-
-          <div className="micro-card glass">
-            <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={18} color="var(--color-warning)" />
-              {isEs ? 'Distribución de intensidad (demo)' : 'Intensity split (demo)'}
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                { label: '85%+', color: 'var(--color-error)', width: '25%' },
-                { label: '70-85%', color: 'var(--color-warning)', width: '45%' },
-                { label: isEs ? 'Bajo 70 %' : 'Under 70%', color: 'var(--color-success)', width: '30%' },
-              ].map((item, i) => (
-                <div key={i}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.8rem' }}>
-                    <span>{item.label}</span>
-                    <span>{item.width}</span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: item.width, height: '100%', backgroundColor: item.color }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="micro-card glass">
-            <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={18} color="var(--color-accent)" />
-              {isEs ? 'Último PR registrado (Stats)' : 'Latest logged PRs (Stats)'}
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {(() => {
-                const last = [...intakes].filter((x) => x.athleteId === (appAthleteIdForWlProfile(athleteUser?.linkedAthleteId ?? 'ath-you') ?? 1)).sort((a, b) => b.date.localeCompare(a.date))[0];
-                if (!last) {
-                  return <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{isEs ? 'Sin datos.' : 'No data.'}</p>;
-                }
-                return (
-                  <>
-                    <div style={{ backgroundColor: 'var(--color-bg-main)', padding: '12px', borderRadius: '8px' }}>
-                      <span className="stat-label">Snatch</span>
-                      <p style={{ fontSize: '1.15rem', fontWeight: '700', margin: '4px 0 0' }}>{last.responses.snatch} kg</p>
-                    </div>
-                    <div style={{ backgroundColor: 'var(--color-bg-main)', padding: '12px', borderRadius: '8px' }}>
-                      <span className="stat-label">C&J</span>
-                      <p style={{ fontSize: '1.15rem', fontWeight: '700', margin: '4px 0 0' }}>{last.responses.cleanJerk} kg</p>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>{last.date}</p>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderBreadcrumbs = () => (
     <div className="breadcrumbs">
       <span>{isEs ? 'Macrociclo Olímpico 2026' : 'Olympic Macrocycle 2026'}</span>
@@ -1052,63 +1109,386 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     );
   };
 
-  const renderDashboardMock = () => (
-    <div className="mock-view">
-      <header className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 className="view-title">
-          {isEs ? 'Panel Principal (Dashboard)' : 'Main Dashboard'}
-        </h1>
-        <button
-          className="btn-accent"
-          style={{ padding: '12px 24px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(var(--color-accent-rgb), 0.3)' }}
-          onClick={() => {
-            loadDemoData();
-            setActiveView('wolf-engine');
-          }}
-        >
-          <Plus size={20} />
-          {isEs ? 'Iniciar Demo: Flujo Entrenador' : 'Start Demo: Coach Workflow'}
-        </button>
-      </header>
-      <div className="content-area" style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', paddingTop: '24px' }}>
-        <div className="micro-card glass" style={{ flex: '1', minWidth: '300px' }}>
-          <LayoutDashboard size={32} color="var(--color-accent)" />
-          <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>{isEs ? 'Atletas Activos' : 'Active Athletes'}</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>{athletes.length}</p>
-        </div>
-        <div className="micro-card glass" style={{ flex: '1', minWidth: '300px' }}>
-          <Award size={32} color="var(--color-success)" />
-          <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>{isEs ? 'Nuevos PRs esta semana' : 'New PRs this week'}</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>12</p>
-        </div>
-        <div className="micro-card glass" style={{ flex: '1', minWidth: '300px' }}>
-          <Clock size={32} color="var(--color-warning)" />
-          <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>{isEs ? 'Asistencia a Sesiones' : 'Session Attendance'}</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>94%</p>
-        </div>
-        <div className="micro-card glass" style={{ flex: '1', minWidth: '300px' }}>
-          <IntakeIcon size={32} color="var(--color-accent)" />
-          <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>{isEs ? 'Consultas Recibidas' : 'Intakes Received'}</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>{intakes.length}</p>
-        </div>
-      </div>
+  const renderDashboard = () => {
+    const d = dashboardData;
+    const { tmplLog, wlAtt } = d;
+    const attendanceSub =
+      tmplLog.total > 0 && wlAtt.total > 0
+        ? isEs
+          ? `Plantilla ${tmplLog.pct}% · Motor WL ${wlAtt.pct}%`
+          : `Template ${tmplLog.pct}% · WL engine ${wlAtt.pct}%`
+        : tmplLog.total > 0
+          ? isEs
+            ? `Plantilla: ${tmplLog.done}/${tmplLog.total} bloques`
+            : `Template: ${tmplLog.done}/${tmplLog.total} blocks`
+          : wlAtt.total > 0
+            ? isEs
+              ? `Sesiones WL: ${wlAtt.done}/${wlAtt.total}`
+              : `WL sessions: ${wlAtt.done}/${wlAtt.total}`
+            : isEs
+              ? 'Sin registros aún'
+              : 'No logs yet';
 
-      <div style={{ marginTop: '32px' }}>
-        <h2 style={{ marginBottom: '16px' }}>{isEs ? 'Alertas de Atletas' : 'Athlete Alerts'}</h2>
-        <div className="micro-card glass" style={{ borderLeft: '4px solid var(--color-error)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h4 style={{ color: 'var(--color-error)', fontWeight: 'bold' }}>{isEs ? 'Carga de Entrenamiento Crítica' : 'Critical Training Load'}</h4>
-              <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                {isEs ? 'Juan Perez ha excedido su tonelaje planificado en un 25%.' : 'Juan Perez has exceeded planned tonnage by 25%.'}
+    const alertAccent = (s: DashboardAlert['severity']) =>
+      s === 'danger' ? 'var(--color-danger)' : s === 'warning' ? 'var(--color-warning)' : 'var(--color-accent)';
+
+    const tmplPct = tmplLog.total > 0 ? tmplLog.pct : 0;
+    const wlPctRow = wlAtt.total > 0 ? wlAtt.pct : 0;
+    const adherenceRows = [
+      {
+        key: 'tpl',
+        label: isEs ? 'Plan plantilla (bloques registrados)' : 'Template plan (blocks logged)',
+        pct: tmplPct,
+        color: 'var(--color-accent)',
+      },
+      {
+        key: 'wl',
+        label: isEs ? 'Motor WL (sesiones completadas)' : 'WL engine (sessions completed)',
+        pct: wlPctRow,
+        color: 'var(--color-success)',
+      },
+    ];
+
+    const lastIntake = d.latestIntake;
+
+    return (
+      <div className="mock-view super-dashboard">
+        <header className="sd-hero" aria-labelledby="sd-main-title">
+          <div className="sd-hero__inner">
+            <div className="sd-hero__titles">
+              <p className="sd-hero__eyebrow">{isEs ? 'Resumen operativo' : 'Operations overview'}</p>
+              <h1 id="sd-main-title" className="sd-hero__title">
+                {isEs ? 'Dashboard & rendimiento' : 'Dashboard & performance'}
+              </h1>
+              <p className="sd-hero__sub">
+                {isEs
+                  ? 'Asignaciones, adherencia, alertas e historial de Stats/PRs en un solo panel — optimizado para móvil y escritorio.'
+                  : 'Assignments, adherence, alerts, and Stats/PR history in one panel — tuned for mobile and desktop.'}
               </p>
             </div>
-            <button className="btn-outline" style={{ width: 'auto', padding: '4px 12px' }}>{isEs ? 'Ver Perfil' : 'View Profile'}</button>
+            <div className="sd-hero__actions">
+              <button type="button" className="sd-btn sd-btn--ghost" title={isEs ? 'Próximamente' : 'Coming soon'} disabled>
+                <Download size={16} aria-hidden />
+                {isEs ? 'Exportar' : 'Export'}
+              </button>
+              <button type="button" className="sd-btn" onClick={() => setActiveView('onboarding')}>
+                <IntakeIcon size={16} aria-hidden />
+                {isEs ? 'Stats / PRs' : 'Stats / PRs'}
+              </button>
+            </div>
           </div>
-        </div>
+        </header>
+
+        {d.athleteViewRestricted ? (
+          <div className="sd-banner" role="status">
+            {isEs
+              ? 'Tu usuario atleta no está enlazado a un perfil de datos (Stats/plantilla). Contacta al coach.'
+              : 'Your athlete account is not linked to a data profile. Ask your coach to link linkedAthleteId.'}
+          </div>
+        ) : null}
+
+        <section className="sd-kpi-grid" aria-label={isEs ? 'Indicadores clave' : 'Key metrics'}>
+          <article className="sd-kpi">
+            <div className="sd-kpi__icon">
+              <LayoutDashboard size={28} color="var(--color-accent)" aria-hidden />
+            </div>
+            <h3 className="sd-kpi__label">{isEs ? 'Atletas en roster' : 'Roster athletes'}</h3>
+            <p className="sd-kpi__value">{d.rosterCount}</p>
+            <p className="sd-kpi__hint">
+              {isEs
+                ? `${d.assignedAthleteCount} con programa plantilla`
+                : `${d.assignedAthleteCount} with template program`}
+            </p>
+          </article>
+          <article className="sd-kpi">
+            <div className="sd-kpi__icon">
+              <Award size={28} color="var(--color-success)" aria-hidden />
+            </div>
+            <h3 className="sd-kpi__label">{isEs ? 'PRs nuevos (semana)' : 'New PRs (week)'}</h3>
+            <p className="sd-kpi__value">{d.prsWeek}</p>
+            <p className="sd-kpi__hint">
+              {isEs ? `${d.intakesWeek} envíos Stats esta semana` : `${d.intakesWeek} Stats submissions this week`}
+            </p>
+          </article>
+          <article className="sd-kpi">
+            <div className="sd-kpi__icon">
+              <Clock size={28} color="var(--color-warning)" aria-hidden />
+            </div>
+            <h3 className="sd-kpi__label">{isEs ? 'Asistencia / registro' : 'Attendance / logging'}</h3>
+            <p className="sd-kpi__value">{d.attendancePct}%</p>
+            <p className="sd-kpi__hint">{attendanceSub}</p>
+          </article>
+          <article className="sd-kpi">
+            <div className="sd-kpi__icon">
+              <BarChart3 size={28} color="var(--color-accent)" aria-hidden />
+            </div>
+            <h3 className="sd-kpi__label">{isEs ? 'Stats / planes WL' : 'Stats / WL plans'}</h3>
+            <p className="sd-kpi__value">{d.intakesTotal}</p>
+            <p className="sd-kpi__hint">
+              {isEs ? `${d.wlPlanCount} planes motor` : `${d.wlPlanCount} WL engine plans`}
+            </p>
+          </article>
+        </section>
+
+        <section className="sd-section" aria-labelledby="sd-alerts-title">
+          <div className="sd-section__head">
+            <h2 id="sd-alerts-title" className="sd-section__title">
+              {isEs ? 'Alertas' : 'Alerts'}
+            </h2>
+          </div>
+          {d.alerts.length === 0 ? (
+            <div className="sd-alert sd-alert--ok">
+              <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+                {isEs ? 'Sin alertas según los datos actuales.' : 'No alerts for the current data.'}
+              </p>
+            </div>
+          ) : (
+            <div className="sd-alert-list">
+              {d.alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className="sd-alert"
+                  style={{ borderLeft: `4px solid ${alertAccent(alert.severity)}` }}
+                >
+                  <div className="sd-alert__body">
+                    <h4>{alert.title}</h4>
+                    <p>{alert.description}</p>
+                  </div>
+                  <button type="button" className="btn-outline" onClick={() => handleDashboardNavigate(alert)}>
+                    {alert.actionLabel}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section id="sd-performance" className="sd-section" aria-labelledby="sd-perf-title">
+          <div className="sd-section__head">
+            <div>
+              <h2 id="sd-perf-title" className="sd-section__title">
+                {isEs ? 'Rendimiento & evolución' : 'Performance & trends'}
+              </h2>
+              <p className="sd-section__desc">
+                {isEs
+                  ? 'Volumen relativo (Snatch + C&J por envío), adherencia por canal y detalle completo abajo.'
+                  : 'Relative volume (Snatch + C&J per submission), adherence by channel, and full detail below.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="sd-insights">
+            <div className="sd-insight">
+              <h3>
+                <TrendingUp size={18} color="var(--color-success)" aria-hidden />
+                {isEs ? 'Volumen relativo (últimos envíos)' : 'Relative volume (recent submissions)'}
+              </h3>
+              {d.volumeSpark.length === 0 ? (
+                <p className="sd-insight__hint" style={{ margin: 0 }}>
+                  {isEs ? 'Sin envíos Stats aún.' : 'No Stats submissions yet.'}
+                </p>
+              ) : (
+                <>
+                  <div className="sd-spark" role="img" aria-label={isEs ? 'Mini gráfico de volumen' : 'Volume mini-chart'}>
+                    {d.volumeSpark.map((b) => (
+                      <div key={b.id} className="sd-spark__bar">
+                        <div className="sd-spark__fill" style={{ height: `${Math.max(8, b.h)}%` }} title={`${b.label}`} />
+                        <span className="sd-spark__label">{b.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="sd-insight__hint">
+                    {isEs ? 'Altura ∝ Snatch + C&J (últimos 8 registros).' : 'Height ∝ Snatch + C&J (last 8 records).'}
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="sd-insight">
+              <h3>
+                <BarChart3 size={18} color="var(--color-warning)" aria-hidden />
+                {isEs ? 'Adherencia por canal' : 'Adherence by channel'}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {adherenceRows.map((row) => (
+                  <div key={row.key}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                      <span>{row.label}</span>
+                      <span>{row.pct}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${row.pct}%`, height: '100%', backgroundColor: row.color, maxWidth: '100%' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="sd-insight__hint">
+                {isEs ? 'Basado en bloques logueados y sesiones WL marcadas.' : 'Based on logged blocks and marked WL sessions.'}
+              </p>
+            </div>
+
+            <div className="sd-insight">
+              <h3>
+                <Award size={18} color="var(--color-accent)" aria-hidden />
+                {isEs ? 'Último envío Stats' : 'Latest Stats entry'}
+              </h3>
+              {!lastIntake ? (
+                <p className="sd-insight__hint" style={{ margin: 0 }}>
+                  {isEs ? 'Sin datos.' : 'No data.'}
+                </p>
+              ) : (
+                <div className="sd-pr-mini">
+                  <div className="sd-pr-mini__cell">
+                    <span>Snatch</span>
+                    <p>{lastIntake.responses.snatch} kg</p>
+                  </div>
+                  <div className="sd-pr-mini__cell">
+                    <span>C&J</span>
+                    <p>{lastIntake.responses.cleanJerk} kg</p>
+                  </div>
+                  <p className="sd-pr-mini__meta">
+                    {(d.latestIntakeAthleteName ? `${d.latestIntakeAthleteName} · ` : '') + lastIntake.date}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="sd-perf-embed">
+            <PerformanceStatsHistory
+              language={language}
+              persona={persona}
+              linkedWlAthleteId={athleteUser?.linkedAthleteId}
+              intakes={intakes}
+              appAthletes={athletes}
+              embedded
+              onGoToStats={() => setActiveView('onboarding')}
+            />
+          </div>
+        </section>
+
+        <section className="sd-section" aria-labelledby="sd-tpl-title">
+          <div className="sd-section__head">
+            <h2 id="sd-tpl-title" className="sd-section__title">
+              {isEs ? 'Programas plantilla' : 'Template programs'}
+            </h2>
+          </div>
+          <div className="sd-table-shell">
+            <div className="sd-table-scroll">
+              <table className="sd-table exercise-table">
+                <thead>
+                  <tr>
+                    <th>{isEs ? 'Atleta' : 'Athlete'}</th>
+                    <th>{isEs ? 'Programa' : 'Program'}</th>
+                    <th>{isEs ? 'Inicio' : 'Start'}</th>
+                    <th>{isEs ? 'Adherencia' : 'Adherence'}</th>
+                    <th className="sd-table__actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.appRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ color: 'var(--color-text-muted)', padding: '16px' }}>
+                        {isEs ? 'No hay asignaciones. Asigna desde Atletas.' : 'No assignments. Assign from Athletes.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    d.appRows.map((row) => (
+                      <tr key={`${row.athleteId}-${row.programId}`}>
+                        <td style={{ fontWeight: 600 }}>{row.athleteName}</td>
+                        <td>
+                          {row.programName}
+                          {row.hasPersonalizedCopy ? (
+                            <span className="badge" style={{ marginLeft: '8px', fontSize: '0.65rem', background: 'var(--color-accent-glow)' }}>
+                              PERS
+                            </span>
+                          ) : null}
+                        </td>
+                        <td>{row.startDate}</td>
+                        <td>
+                          {row.exerciseSlots > 0 ? `${row.completionPct}% (${row.exercisesLogged}/${row.exerciseSlots})` : '—'}
+                        </td>
+                        <td className="sd-table__actions">
+                          <button
+                            type="button"
+                            className="btn-outline"
+                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                            onClick={() => {
+                              const ath = athletes.find((a) => a.id === row.athleteId);
+                              if (ath) setSelectedAthlete(ath);
+                              setActiveAthleteId(row.athleteId);
+                              setActiveView('athletes');
+                            }}
+                          >
+                            {isEs ? 'Atletas' : 'Athletes'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section className="sd-section" aria-labelledby="sd-wl-title">
+          <div className="sd-section__head">
+            <h2 id="sd-wl-title" className="sd-section__title">
+              {isEs ? 'Planes motor (WL)' : 'WL engine plans'}
+            </h2>
+          </div>
+          <div className="sd-table-shell">
+            <div className="sd-table-scroll">
+              <table className="sd-table exercise-table">
+                <thead>
+                  <tr>
+                    <th>{isEs ? 'Atleta' : 'Athlete'}</th>
+                    <th>{isEs ? 'Plan' : 'Plan'}</th>
+                    <th>{isEs ? 'Asignado' : 'Assigned'}</th>
+                    <th>{isEs ? 'Sesiones' : 'Sessions'}</th>
+                    <th className="sd-table__actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.wlRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ color: 'var(--color-text-muted)', padding: '16px' }}>
+                        {isEs ? 'No hay planes WL asignados.' : 'No WL engine plans assigned.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    d.wlRows.map((row) => (
+                      <tr key={row.assignmentId}>
+                        <td style={{ fontWeight: 600 }}>{row.athleteName}</td>
+                        <td>{row.programName}</td>
+                        <td>{row.assignedAt}</td>
+                        <td>
+                          {row.sessionSlots > 0
+                            ? `${row.completionPct}% (${row.sessionsDone}/${row.sessionSlots})`
+                            : '—'}
+                        </td>
+                        <td className="sd-table__actions">
+                          <button
+                            type="button"
+                            className="btn-outline"
+                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                            onClick={() => setActiveView('wolf-engine')}
+                          >
+                            {isEs ? 'Motor' : 'Engine'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderPlaceholder = (title: string, icon: React.ReactNode) => (
     <div className="mock-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>
@@ -1117,6 +1497,142 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
       <p style={{ marginTop: '8px', color: 'var(--color-text-muted)' }}>
         {isEs ? 'Módulo en desarrollo para esta demo.' : 'Module in development for this demo.'}
       </p>
+    </div>
+  );
+
+  const renderAdminUsersView = () => (
+    <div className="mock-view">
+      <header className="panel-header">
+        <div className="header-left">
+          <h1 className="view-title">{isEs ? 'Panel maestro' : 'Master panel'}</h1>
+          <p style={{ color: 'var(--color-text-muted)', marginTop: '6px' }}>
+            {isEs
+              ? 'Solo tu cuenta propietario (super_admin) ve esta pantalla: altas, roles y bajas. El registro público no puede crear super admins.'
+              : 'Only your owner account (super_admin) sees this screen: create users, roles, and removals. Public signup cannot create super admins.'}
+          </p>
+        </div>
+      </header>
+      <div className="content-area" style={{ display: 'grid', gap: '18px' }}>
+        <div className="micro-card glass" style={{ borderLeft: '3px solid var(--color-accent)' }}>
+          <h3 style={{ marginBottom: '8px' }}>{isEs ? 'Tu rol' : 'Your role'}</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+            {isEs
+              ? 'Iniciaste sesión como propietario. Desde aquí gestionas cuentas de coaches y atletas. Cambia la contraseña del propietario en la pantalla de login → «Cambiar contraseña». Con API activa, las acciones envían tu sesión al servidor.'
+              : 'You signed in as the app owner. Manage coach and athlete accounts here. Change the owner password from the login screen → «Change password». With the API enabled, actions use your server session.'}
+          </p>
+        </div>
+        <div className="micro-card glass">
+          <h3 style={{ marginBottom: '10px' }}>{isEs ? 'Crear usuario' : 'Create user'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <input
+              className="edit-input"
+              placeholder={isEs ? 'Nombre' : 'Name'}
+              value={adminDraft.name}
+              onChange={(e) => setAdminDraft((prev) => ({ ...prev, name: e.target.value }))}
+            />
+            <input
+              className="edit-input"
+              placeholder="Email"
+              value={adminDraft.email}
+              onChange={(e) => setAdminDraft((prev) => ({ ...prev, email: e.target.value }))}
+            />
+            <select
+              className="edit-input"
+              value={adminDraft.role}
+              onChange={(e) => setAdminDraft((prev) => ({ ...prev, role: e.target.value as 'athlete' | 'coach' | 'super_admin' }))}
+            >
+              <option value="athlete">{isEs ? 'Atleta' : 'Athlete'}</option>
+              <option value="coach">{isEs ? 'Coach' : 'Coach'}</option>
+              <option value="super_admin">{isEs ? 'Super Admin' : 'Super Admin'}</option>
+            </select>
+            <input
+              className="edit-input"
+              type="password"
+              placeholder={isEs ? 'Contraseña' : 'Password'}
+              value={adminDraft.password}
+              onChange={(e) => setAdminDraft((prev) => ({ ...prev, password: e.target.value }))}
+            />
+          </div>
+          <button
+            className="btn-primary"
+            style={{ marginTop: '12px' }}
+            onClick={() => {
+              void createUser(adminDraft).then((err) => {
+                if (err) {
+                  setAdminError(err);
+                  return;
+                }
+                setAdminError('');
+                setAdminDraft({ name: '', email: '', role: 'athlete', password: 'wolf2026' });
+              });
+            }}
+          >
+            {isEs ? 'Crear usuario' : 'Create user'}
+          </button>
+          {adminError ? <p style={{ marginTop: '8px', color: 'var(--color-error)' }}>{adminError}</p> : null}
+        </div>
+
+        <div className="micro-card glass">
+          <h3 style={{ marginBottom: '12px' }}>{isEs ? 'Usuarios del sistema' : 'System users'}</h3>
+          <div className="table-container">
+            <table className="exercise-table">
+              <thead>
+                <tr>
+                  <th>{isEs ? 'Nombre' : 'Name'}</th>
+                  <th>Email</th>
+                  <th>{isEs ? 'Rol' : 'Role'}</th>
+                  <th>{isEs ? 'Acciones' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {authUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <select
+                        className="edit-input"
+                        value={user.role}
+                        onChange={(e) => {
+                          const nextRole = e.target.value as 'athlete' | 'coach' | 'super_admin';
+                          void updateUser(user.id, { role: nextRole });
+                        }}
+                      >
+                        <option value="athlete">{isEs ? 'Atleta' : 'Athlete'}</option>
+                        <option value="coach">{isEs ? 'Coach' : 'Coach'}</option>
+                        <option value="super_admin">{isEs ? 'Super Admin' : 'Super Admin'}</option>
+                      </select>
+                    </td>
+                    <td style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="btn-outline"
+                        onClick={() => {
+                          const next = window.prompt(isEs ? 'Nuevo nombre:' : 'New name:', user.name);
+                          if (!next || !next.trim()) return;
+                          void updateUser(user.id, { name: next.trim() });
+                        }}
+                      >
+                        {isEs ? 'Editar' : 'Edit'}
+                      </button>
+                      <button
+                        className="btn-outline"
+                        style={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
+                        disabled={currentUser?.id === user.id}
+                        onClick={() => {
+                          if (!window.confirm(isEs ? 'Eliminar usuario?' : 'Delete user?')) return;
+                          void deleteUser(user.id);
+                        }}
+                      >
+                        {isEs ? 'Eliminar' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -1253,10 +1769,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.15rem', fontSize: '0.9rem', lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
                   <li style={{ marginBottom: '8px' }}>
-                    <strong>{isEs ? 'Rendimiento' : 'Performance'}</strong>
+                    <strong>{isEs ? 'Dashboard' : 'Dashboard'}</strong>
                     {isEs
-                      ? ': historial de cada envío con fecha (evolución de PRs).'
-                      : ': history of each submission with dates (PR progression).'}
+                      ? ': resumen, adherencia, alertas e historial de Stats en un solo lugar.'
+                      : ': overview, adherence, alerts, and Stats history in one place.'}
                   </li>
                   <li style={{ marginBottom: '8px' }}>
                     <strong>{isEs ? 'Motor WL · Programas' : 'WL engine · Programs'}</strong>
@@ -1286,10 +1802,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                   className="btn-secondary"
                   onClick={() => {
                     setIntakeSubmitSuccess(false);
-                    setActiveView('performance');
+                    setActiveView('dashboard');
                   }}
                 >
-                  {isEs ? 'Ir a Rendimiento' : 'Go to Performance'}
+                  {isEs ? 'Ir al dashboard' : 'Go to dashboard'}
                 </button>
                 <button
                   type="button"
@@ -2089,17 +2605,17 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
 
   return (
     <div className="central-panel">
-      {activeView === 'dashboard' && renderDashboardMock()}
+      {activeView === 'dashboard' && renderDashboard()}
       {activeView === 'athletes' && renderAthletesView()}
       {activeView === 'planning' && renderPlanningView()}
       {activeView === 'onboarding' && renderIntakeView()}
       {(activeView === 'micros' || activeView === 'sessions' || activeView === 'macros' || activeView === 'mesos') && renderPeriodization()}
-      {activeView === 'performance' && renderPerformanceView()}
       {activeView === 'library' && renderExerciseLibrary()}
       {activeView === 'wolf-engine' && <OlympicEnginePanel language={language} />}
       {activeView === 'wl-quick' && <QuickSessionModule language={language} />}
       {activeView === 'wl-templates' && <ProTemplatesModule language={language} />}
       {activeView === 'my-wl-plan' && <AthleteTrainingView language={language} />}
+      {activeView === 'admin-users' && renderAdminUsersView()}
       {activeView === 'global-calendar' && renderCalendarView()}
       {activeView === 'aicoach' && renderPlaceholder(isEs ? 'Interactúa en el panel derecho' : 'Interact on the right panel', <Settings2 size={64} />)}
     </div>

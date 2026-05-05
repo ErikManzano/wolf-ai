@@ -1,9 +1,17 @@
 [
   {
+    "id": "user-owner",
+    "name": "Propietario Wolf AI",
+    "role": "super_admin",
+    "email": "owner@wolf-ai.local",
+    "passwordHash": "$2b$10$eruQVodQLcqXxZOt1UJ6rOsqVfS/OKy50lMlpu3bGsfuHk9GO7Nri"
+  },
+  {
     "id": "user-coach",
     "name": "Ivan Hellequin",
     "role": "coach",
-    "email": "ivan.hellequin@wolf-ai.local"
+    "email": "ivan.hellequin@wolf-ai.local",
+    "passwordHash": "$2b$10$FPspULy7QLgAnUNKwTD8X.p5WTenESvD7HV44yJScMBTFtCQJswGi"
   },
   {
     "id": "user-athlete",
@@ -11,14 +19,7 @@
     "role": "athlete",
     "coachId": "user-coach",
     "linkedAthleteId": "ath-you",
-    "email": "erik.manzano@wolf-ai.local"
-  },
-  {
-    "id": "user-athlete-2",
-    "name": "Laura Méndez",
-    "role": "athlete",
-    "coachId": "user-coach",
-    "linkedAthleteId": "ath-001",
-    "email": "laura.mendez@wolf-ai.local"
+    "email": "erik.manzano@wolf-ai.local",
+    "passwordHash": "$2b$10$WmIF/wtRQ1jH9A.h2JsiMeVEBDsoLdb3um0xVuWPBFsfqQhQzqha6"
   }
 ]

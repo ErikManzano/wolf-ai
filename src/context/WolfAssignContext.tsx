@@ -1,19 +1,33 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ProgramAssignment, SessionCompletion, WolfAppRole, WolfUser } from '../models/training';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
+import { generatePeriodizedProgram } from '../services/programGenerator';
+import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 
 /** Usuario app enlazado a este perfil motor (p. ej. Erik ↔ ath-you). */
 function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
   return mockUsers.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id;
 }
-import { generatePeriodizedProgram } from '../services/programGenerator';
 
 const STORAGE_ASSIGN = 'wolf_wl_assignments_v1';
 const STORAGE_COMP = 'wolf_wl_completions_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
+const STORAGE_API_TOKEN = 'wolf_api_token_v1';
 const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
 const API_ENABLED = Boolean(API_BASE);
+
+function readApiToken(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_API_TOKEN);
+  } catch {
+    return null;
+  }
+}
+
+function personaFromUserRole(role: WolfAppRole): 'coach' | 'athlete' {
+  return role === 'athlete' ? 'athlete' : 'coach';
+}
 
 function normalizeAssignment(a: ProgramAssignment): ProgramAssignment {
   return {
@@ -54,7 +68,7 @@ interface WolfAssignContextValue {
   currentUser: WolfUser | undefined;
   currentUserId: string;
   setCurrentUserId: (id: string) => void;
-  persona: WolfAppRole;
+  persona: 'coach' | 'athlete';
   setPersona: (role: WolfAppRole) => void;
   coach: WolfUser | undefined;
   athleteUser: WolfUser | undefined;
@@ -69,16 +83,31 @@ interface WolfAssignContextValue {
   /** Asignación activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
+  registerUser: (payload: { name: string; email: string; password: string; role: WolfAppRole }) => Promise<string | null>;
+  changePassword: (payload: { email: string; currentPassword: string; newPassword: string }) => Promise<string | null>;
+  createUser: (payload: {
+    name: string;
+    email: string;
+    role: WolfAppRole;
+    password: string;
+    coachId?: string;
+    linkedAthleteId?: string;
+  }) => Promise<string | null>;
+  updateUser: (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => Promise<string | null>;
+  deleteUser: (userId: string) => Promise<string | null>;
+  /** Limpia token del API (p. ej. al cerrar sesión). */
+  clearApiSession: () => void;
 }
 
 const WolfAssignContext = createContext<WolfAssignContextValue | null>(null);
 
 export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
+  const [apiToken, setApiToken] = useState<string | null>(() => (typeof window !== 'undefined' ? readApiToken() : null));
   const [users, setUsers] = useState<WolfUser[]>(mockUsers);
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
   const [currentUserId, setCurrentUserId] = useState('user-coach');
-  const [persona, setPersonaState] = useState<WolfAppRole>('coach');
+  const [persona, setPersonaState] = useState<'coach' | 'athlete'>('coach');
 
   useEffect(() => {
     try {
@@ -105,18 +134,33 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const loadUsersFromApi = useCallback(async () => {
-    if (!API_ENABLED) return;
+  const clearApiSession = useCallback(() => {
+    setApiToken(null);
     try {
-      const res = await fetch(`${API_BASE}/users`);
-      if (!res.ok) return;
-      const list = (await res.json()) as WolfUser[];
-      if (!Array.isArray(list) || list.length === 0) return;
-      setUsers(list);
+      localStorage.removeItem(STORAGE_API_TOKEN);
     } catch {
-      /* fallback to mock users */
+      /* ignore */
     }
   }, []);
+
+  const loadUsersFromApi = useCallback(
+    async (authorizationOverride?: string | null) => {
+      if (!API_ENABLED) return;
+      const bearer = authorizationOverride !== undefined ? authorizationOverride : apiToken;
+      try {
+        const headers: Record<string, string> = {};
+        if (bearer) headers.Authorization = `Bearer ${bearer}`;
+        const res = await fetch(`${API_BASE}/users`, { headers });
+        if (!res.ok) return;
+        const list = (await res.json()) as WolfUser[];
+        if (!Array.isArray(list) || list.length === 0) return;
+        setUsers(list);
+      } catch {
+        /* fallback to mock users */
+      }
+    },
+    [apiToken],
+  );
 
   const loadAssignmentsFromApi = useCallback(async () => {
     if (!API_ENABLED) return;
@@ -182,13 +226,14 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [completions]);
 
   const setPersona = useCallback((role: WolfAppRole) => {
-    setPersonaState(role);
+    const mapped = personaFromUserRole(role);
+    setPersonaState(mapped);
     try {
-      localStorage.setItem(STORAGE_PERSONA, role);
+      localStorage.setItem(STORAGE_PERSONA, mapped);
     } catch {
       /* ignore */
     }
-    const target = users.find((u) => u.role === role);
+    const target = users.find((u) => personaFromUserRole(u.role) === mapped);
     if (target) {
       setCurrentUserId(target.id);
       try {
@@ -203,14 +248,62 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     const target = users.find((u) => u.id === id);
     if (!target) return;
     setCurrentUserId(id);
-    setPersonaState(target.role);
+    const mapped = personaFromUserRole(target.role);
+    setPersonaState(mapped);
     try {
       localStorage.setItem(STORAGE_CURRENT_USER, id);
-      localStorage.setItem(STORAGE_PERSONA, target.role);
+      localStorage.setItem(STORAGE_PERSONA, mapped);
     } catch {
       /* ignore */
     }
   }, [users]);
+
+  /** Sincroniza sesión cuando el usuario viene del API (p. ej. GET /auth/me) antes de que `users` esté hidratado. */
+  const applyUserSession = useCallback((u: Pick<WolfUser, 'id' | 'role'>) => {
+    setCurrentUserId(u.id);
+    const mapped = personaFromUserRole(u.role);
+    setPersonaState(mapped);
+    try {
+      localStorage.setItem(STORAGE_CURRENT_USER, u.id);
+      localStorage.setItem(STORAGE_PERSONA, mapped);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!API_ENABLED || !apiToken) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        });
+        if (cancelled) return;
+        if (res.status === 401) {
+          clearApiSession();
+          try {
+            localStorage.removeItem('wolf_auth_v1');
+          } catch {
+            /* ignore */
+          }
+          window.dispatchEvent(new CustomEvent('wolf:session-expired'));
+          return;
+        }
+        if (!res.ok) return;
+        const data = (await res.json()) as { user?: WolfUser };
+        if (!data.user) return;
+        await loadUsersFromApi();
+        if (cancelled) return;
+        applyUserSession(data.user);
+      } catch {
+        /* red: mantener sesión local */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiToken, applyUserSession, clearApiSession, loadUsersFromApi]);
 
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId), [currentUserId, users]);
   const coach = useMemo(() => users.find((u) => u.role === 'coach'), [users]);
@@ -227,7 +320,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         athleteUserIdForProfile(athleteProfileId);
       const next: ProgramAssignment = {
         id,
-        coachId: currentUser?.role === 'coach' ? currentUser.id : 'user-coach',
+        coachId: currentUser?.role === 'coach' || currentUser?.role === 'super_admin' ? currentUser.id : 'user-coach',
         ...(uid !== undefined ? { athleteUserId: uid } : {}),
         athleteProfileId,
         version: 1,
@@ -352,7 +445,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const loginUser = useCallback(async (email: string, password: string) => {
     if (!API_ENABLED) {
       const local = users.find(
-        (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && password === 'wolf2026',
+        (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && matchesStoredPassword(u, password),
       );
       return local ?? null;
     }
@@ -363,12 +456,194 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) return null;
-      const data = (await res.json()) as { user?: WolfUser };
+      const data = (await res.json()) as { user?: WolfUser; token?: string };
+      if (data.token) {
+        setApiToken(data.token);
+        try {
+          localStorage.setItem(STORAGE_API_TOKEN, data.token);
+        } catch {
+          /* ignore */
+        }
+      }
       return data.user ?? null;
     } catch {
       return null;
     }
   }, [users]);
+
+  const registerUser = useCallback(async (payload: { name: string; email: string; password: string; role: WolfAppRole }) => {
+    const email = payload.email.trim().toLowerCase();
+    if (!payload.name.trim() || !email || payload.password.trim().length < 6) {
+      return 'Invalid registration payload.';
+    }
+    if (!API_ENABLED) {
+      if (users.some((u) => u.email?.toLowerCase() === email)) return 'Email already registered.';
+      const next: WolfUser = {
+        id: `user-${Date.now()}`,
+        name: payload.name.trim(),
+        email,
+        role: payload.role === 'super_admin' ? 'athlete' : payload.role,
+        passwordHash: hashPassword(payload.password.trim()),
+      };
+      setUsers((prev) => [...prev, next]);
+      return null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not register user.';
+      }
+      const data = (await res.json()) as { user?: WolfUser; token?: string };
+      if (data.token) {
+        setApiToken(data.token);
+        try {
+          localStorage.setItem(STORAGE_API_TOKEN, data.token);
+        } catch {
+          /* ignore */
+        }
+        await loadUsersFromApi(data.token);
+      } else {
+        await loadUsersFromApi();
+      }
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [loadUsersFromApi, users]);
+
+  const changePassword = useCallback(async (payload: { email: string; currentPassword: string; newPassword: string }) => {
+    const email = payload.email.trim().toLowerCase();
+    if (!email || payload.newPassword.trim().length < 6) return 'Invalid password update request.';
+    if (!API_ENABLED) {
+      const idx = users.findIndex((u) => u.email?.toLowerCase() === email && matchesStoredPassword(u, payload.currentPassword));
+      if (idx < 0) return 'Current credentials are invalid.';
+      setUsers((prev) =>
+        prev.map((u, i) => {
+          if (i !== idx) return u;
+          const { password, passwordHash, ...rest } = u;
+          void password;
+          void passwordHash;
+          return { ...rest, passwordHash: hashPassword(payload.newPassword.trim()) };
+        }),
+      );
+      return null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not change password.';
+      }
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [users]);
+
+  const createUser = useCallback(async (payload: {
+    name: string;
+    email: string;
+    role: WolfAppRole;
+    password: string;
+    coachId?: string;
+    linkedAthleteId?: string;
+  }) => {
+    if (!API_ENABLED) {
+      if (users.some((u) => u.email?.toLowerCase() === payload.email.trim().toLowerCase())) return 'Email already exists.';
+      setUsers((prev) => [
+        ...prev,
+        {
+          id: `user-${Date.now()}`,
+          name: payload.name.trim(),
+          email: payload.email.trim().toLowerCase(),
+          role: payload.role,
+          passwordHash: hashPassword(payload.password),
+          coachId: payload.coachId,
+          linkedAthleteId: payload.linkedAthleteId,
+        },
+      ]);
+      return null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not create user.';
+      }
+      await loadUsersFromApi();
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [apiToken, loadUsersFromApi, users]);
+
+  const updateUser = useCallback(async (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => {
+    if (!API_ENABLED) {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...payload } : u)));
+      return null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not update user.';
+      }
+      await loadUsersFromApi();
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [apiToken, loadUsersFromApi]);
+
+  const deleteUser = useCallback(async (userId: string) => {
+    if (!API_ENABLED) {
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      if (currentUserId === userId) {
+        setCurrentUserIdSafe(mockUsers.some((u) => u.id === 'user-owner') ? 'user-owner' : 'user-coach');
+      }
+      return null;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/users/${userId}`, {
+        method: 'DELETE',
+        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not delete user.';
+      }
+      await loadUsersFromApi();
+      if (currentUserId === userId) {
+        setCurrentUserIdSafe(mockUsers.some((u) => u.id === 'user-owner') ? 'user-owner' : 'user-coach');
+      }
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [apiToken, currentUserId, loadUsersFromApi, setCurrentUserIdSafe]);
 
   const value: WolfAssignContextValue = {
     users,
@@ -388,6 +663,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     isSessionComplete,
     myAssignment,
     loginUser,
+    registerUser,
+    changePassword,
+    createUser,
+    updateUser,
+    deleteUser,
+    clearApiSession,
   };
 
   return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;

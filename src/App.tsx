@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import CentralPanel from './components/CentralPanel.tsx';
@@ -6,7 +6,7 @@ import ChatPanel from './components/ChatPanel';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, Menu, X } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 
@@ -19,7 +19,7 @@ function AppShell() {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('wolf_sidebar_compact_v1') === '1');
   /** Panel AI lateral colapsado solo en vista escritorio (≥1025px). */
-  const [chatDesktopCollapsed, setChatDesktopCollapsed] = useState(false);
+  const [chatDesktopCollapsed, setChatDesktopCollapsed] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem(AUTH_STORAGE) === '1');
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [isNarrowLayout, setIsNarrowLayout] = useState<boolean>(() =>
@@ -31,31 +31,29 @@ function AppShell() {
     tracking: false,
   });
 
-  const { users, setCurrentUserId, currentUser, loginUser } = useWolfAssign();
+  const { setCurrentUserId, currentUser, loginUser, registerUser, changePassword, clearApiSession } = useWolfAssign();
   const { setUserRole } = useAppContext();
-
-  const loginUsers = useMemo(
-    () =>
-      users.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email ?? '',
-        password: 'wolf2026',
-        roleLabel: u.role === 'athlete' ? (language === 'ES' ? 'Atleta' : 'Athlete') : 'Head Coach',
-      })),
-    [language, users],
-  );
 
   useEffect(() => {
     if (!isAuthenticated) return;
     if (!currentUser) return;
-    setUserRole('coach');
-    setActiveView(currentUser.role === 'athlete' ? 'my-wl-plan' : 'wolf-engine');
+    setUserRole(currentUser.role === 'super_admin' ? 'admin' : 'coach');
+    setActiveView(currentUser.role === 'athlete' ? 'my-wl-plan' : currentUser.role === 'super_admin' ? 'admin-users' : 'wolf-engine');
   }, [isAuthenticated, currentUser, setUserRole]);
 
   useEffect(() => {
     localStorage.setItem('wolf_sidebar_compact_v1', sidebarCollapsed ? '1' : '0');
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setIsAuthenticated(false);
+      setMobileMenuOpen(false);
+      setMobileChatOpen(false);
+    };
+    window.addEventListener('wolf:session-expired', onSessionExpired);
+    return () => window.removeEventListener('wolf:session-expired', onSessionExpired);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1024px)');
@@ -72,24 +70,26 @@ function AppShell() {
     return () => media.removeEventListener('change', apply);
   }, []);
 
-  const effectiveSidebarCollapsed = isNarrowLayout ? !mobileMenuOpen : sidebarCollapsed;
+  const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
 
   if (!isAuthenticated) {
     return (
       <LoginScreen
         language={language}
-        identities={loginUsers}
-        onLogin={async ({ userId, email, password }) => {
-          const resolvedUser =
-            userId != null ? users.find((u) => u.id === userId) ?? null : await loginUser(email, password);
+        onLogin={async ({ email, password }) => {
+          const resolvedUser = await loginUser(email, password);
           if (!resolvedUser) {
-            return language === 'ES' ? 'No se pudo iniciar sesión con el backend.' : 'Could not sign in to backend.';
+            return language === 'ES' ? 'Credenciales incorrectas.' : 'Invalid credentials.';
           }
           setCurrentUserId(resolvedUser.id);
           localStorage.setItem(AUTH_STORAGE, '1');
           setIsAuthenticated(true);
           return null;
         }}
+        onRegister={async ({ name, email, password, role }) => registerUser({ name, email, password, role })}
+        onChangePassword={async ({ email, currentPassword, newPassword }) =>
+          changePassword({ email, currentPassword, newPassword })
+        }
       />
     );
   }
@@ -122,7 +122,27 @@ function AppShell() {
         <div className="mobile-header">
           <button
             type="button"
-            className="mobile-btn"
+            className="mobile-header-btn mobile-header-btn--menu"
+            aria-expanded={mobileMenuOpen}
+            aria-label={
+              mobileMenuOpen
+                ? language === 'ES'
+                  ? 'Cerrar menú'
+                  : 'Close menu'
+                : language === 'ES'
+                  ? 'Abrir menú'
+                  : 'Open menu'
+            }
+            onClick={() => {
+              setMobileChatOpen(false);
+              setMobileMenuOpen((v) => !v);
+            }}
+          >
+            {mobileMenuOpen ? <X size={22} strokeWidth={2} /> : <Menu size={22} strokeWidth={2} />}
+          </button>
+          <button
+            type="button"
+            className="mobile-header-btn mobile-header-btn--chat"
             aria-expanded={mobileChatOpen}
             aria-label={mobileChatOpen ? 'Cerrar chat' : 'Abrir chat'}
             onClick={() => {
@@ -130,7 +150,7 @@ function AppShell() {
               setMobileChatOpen((v) => !v);
             }}
           >
-            {mobileChatOpen ? <X size={22} /> : <MessageSquare size={22} />}
+            {mobileChatOpen ? <X size={22} strokeWidth={2} /> : <MessageSquare size={22} strokeWidth={2} />}
           </button>
         </div>
 
@@ -146,13 +166,17 @@ function AppShell() {
           />
         )}
 
-        <div className={`sidebar-area ${mobileMenuOpen ? 'open' : ''}${effectiveSidebarCollapsed ? ' collapsed' : ''}`}>
+        <div
+          className={`sidebar-area${mobileMenuOpen ? ' open' : ''}`}
+          inert={isNarrowLayout && !mobileMenuOpen ? true : undefined}
+        >
           <Sidebar 
             activeView={activeView} 
             setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); }} 
             language={language}
             setLanguage={setLanguage}
             collapsed={effectiveSidebarCollapsed}
+            showRailToggle={!isNarrowLayout}
             onToggleCollapsed={() => {
               if (isNarrowLayout) {
                 setMobileMenuOpen((v) => !v);
@@ -193,6 +217,7 @@ function AppShell() {
           danger
           onCancel={() => setLogoutConfirmOpen(false)}
           onConfirm={() => {
+            clearApiSession();
             localStorage.removeItem(AUTH_STORAGE);
             setIsAuthenticated(false);
             setMobileMenuOpen(false);

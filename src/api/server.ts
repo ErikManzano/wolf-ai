@@ -14,6 +14,7 @@ import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { createTrainingRouter } from './routes';
 import { PostgresStore } from './postgresStore';
+import { assertJwtConfiguredForProduction } from './authTokens';
 
 const PORT = Number(process.env.PORT) || 4000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
@@ -53,6 +54,7 @@ const state = {
 };
 
 async function bootstrap() {
+  assertJwtConfiguredForProduction();
   const store = PostgresStore.fromEnv();
   if (store) {
     await store.init(mockUsers);

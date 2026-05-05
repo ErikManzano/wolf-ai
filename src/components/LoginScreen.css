@@ -1,126 +1,309 @@
 .wolf-login {
+  --wolf-login-bg: #0c0c0e;
+  --wolf-login-panel-left: #111113;
+  --wolf-login-panel-right: #18181b;
+  --wolf-login-border: #2a2a2e;
+  --wolf-login-muted: #a1a1aa;
+  --wolf-login-orange: #f97316;
+  --wolf-login-orange-hover: #ea580c;
+
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 28px;
-  background:
-    radial-gradient(1000px 500px at 80% 120%, rgba(79, 70, 229, 0.3), transparent 70%),
-    radial-gradient(700px 380px at -10% -10%, rgba(251, 113, 133, 0.24), transparent 70%),
-    var(--color-bg-main);
+  background: var(--wolf-login-bg);
 }
 
 .wolf-login-shell {
-  width: min(1080px, 100%);
-  min-height: min(680px, calc(100vh - 56px));
+  width: min(1120px, 100%);
+  min-height: min(640px, calc(100dvh - 56px));
   display: grid;
-  grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.2fr);
-  border-radius: 24px;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  background: color-mix(in srgb, var(--color-bg-panel) 90%, transparent);
+  border: 1px solid var(--wolf-login-border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  background: var(--wolf-login-panel-left);
 }
 
 .wolf-login-brand {
-  padding: 34px 30px;
-  color: #f8fafc;
+  padding: 40px 36px 36px;
+  color: #fafafa;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background:
-    linear-gradient(145deg, rgba(59, 130, 246, 0.25), rgba(14, 116, 144, 0.22)),
-    linear-gradient(180deg, rgba(17, 24, 39, 0.78), rgba(2, 6, 23, 0.9));
+  gap: 32px;
+  background: var(--wolf-login-panel-left);
+}
+
+.wolf-login-brand-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .wolf-login-logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.wolf-login-brand h2 {
-  margin: 0 0 8px;
-  font-size: 1.7rem;
-}
-
-.wolf-login-brand p {
-  margin: 0;
-  color: rgba(248, 250, 252, 0.85);
-  max-width: 32ch;
-  line-height: 1.5;
-}
-
-.wolf-login-quote {
-  margin-top: 22px;
   font-size: 1rem;
-  line-height: 1.5;
-  font-weight: 600;
-  max-width: 30ch;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+  color: #fafafa;
+}
+
+.wolf-login-logo svg {
+  color: var(--wolf-login-orange);
+  flex-shrink: 0;
+}
+
+.wolf-login-headline {
+  margin: 0 0 16px;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+}
+
+.wolf-login-headline-dot {
+  color: var(--wolf-login-orange);
+}
+
+.wolf-login-lead {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(250, 250, 250, 0.88);
+  max-width: 38ch;
+}
+
+.wolf-login-accent-line {
+  width: 40px;
+  height: 3px;
+  margin-top: 20px;
+  border-radius: 2px;
+  background: var(--wolf-login-orange);
+}
+
+.wolf-login-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 20px;
+  padding-top: 8px;
+}
+
+.wolf-login-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wolf-login-feature-icon {
+  color: var(--wolf-login-orange);
+  flex-shrink: 0;
+}
+
+.wolf-login-feature strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.wolf-login-feature span {
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--wolf-login-muted);
 }
 
 .wolf-login-form-wrap {
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 40px 36px;
+  background: var(--wolf-login-panel-right);
 }
 
 .wolf-login-form {
-  width: min(440px, 100%);
+  width: min(400px, 100%);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.wolf-login-mobile-visual {
-  display: none;
+.wolf-login-form-header {
+  margin-bottom: 4px;
 }
 
-.wolf-login-form h1 {
-  margin: 0;
-  font-size: 2rem;
-  letter-spacing: -0.02em;
-}
-
-.wolf-login-form p {
+.wolf-login-form-header h1 {
   margin: 0 0 8px;
-  color: var(--color-text-muted);
-  max-width: 40ch;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fafafa;
 }
 
-.wolf-login-form label {
+.wolf-login-form-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--wolf-login-muted);
+}
+
+.wolf-login-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.wolf-login-form label span {
-  font-size: 0.78rem;
+.wolf-login-label > span {
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
+  color: var(--wolf-login-muted);
 }
 
-.wolf-login-form input {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-panel);
-  color: var(--color-text-primary);
-  border-radius: 10px;
-  padding: 11px 12px;
+.wolf-login-form .wolf-login-label input,
+.wolf-login-form .wolf-login-label select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--wolf-login-border);
+  background: #121214;
+  color: #fafafa;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+}
+
+.wolf-login-form .wolf-login-label input::placeholder {
+  color: #71717a;
+}
+
+.wolf-login-form .wolf-login-label select {
+  cursor: pointer;
+}
+
+.wolf-login-input-adorned {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wolf-login-input-adorned input {
+  padding-right: 44px;
+}
+
+.wolf-login-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+}
+
+.wolf-login-password-toggle:hover {
+  color: var(--wolf-login-muted);
+}
+
+.wolf-login-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+
+.wolf-login-alt-row {
+  margin-top: -8px;
+}
+
+.wolf-login-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--wolf-login-orange);
+  cursor: pointer;
+  text-align: right;
+}
+
+.wolf-login-link:hover {
+  color: var(--wolf-login-orange-hover);
+}
+
+.wolf-login-alt-row .wolf-login-link {
+  text-align: left;
 }
 
 .wolf-login-submit {
-  margin-top: 6px;
+  margin-top: 4px;
   border: none;
-  border-radius: 12px;
-  background: var(--color-accent-gradient);
+  border-radius: 8px;
+  background: var(--wolf-login-orange);
   color: #fff;
   font-weight: 700;
-  padding: 12px;
+  font-size: 0.95rem;
+  padding: 14px 16px;
   cursor: pointer;
-  box-shadow: 0 8px 24px var(--color-accent-glow);
+  transition: background 0.15s ease;
+}
+
+.wolf-login-submit:hover:not(:disabled) {
+  background: var(--wolf-login-orange-hover);
+}
+
+.wolf-login-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.wolf-login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  color: var(--wolf-login-muted);
+  font-size: 0.82rem;
+}
+
+.wolf-login-divider::before,
+.wolf-login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--wolf-login-border);
+}
+
+.wolf-login-btn-secondary {
+  border: 1px solid var(--wolf-login-border);
+  border-radius: 8px;
+  background: transparent;
+  color: #fafafa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wolf-login-btn-secondary:hover {
+  border-color: #3f3f46;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .wolf-login-error {
@@ -129,41 +312,438 @@
   color: #f87171;
 }
 
-.wolf-login-divider {
-  margin-top: 8px;
+.wolf-login-success {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #4ade80;
+}
+
+.wolf-login-hint {
+  color: var(--wolf-login-muted);
   font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--color-text-muted);
+  margin: -8px 0 0;
 }
 
-.wolf-login-users {
-  display: grid;
-  gap: 8px;
+/* Mobile onboarding + auth (matchMedia ≤900px en LoginScreen.tsx) */
+.wolf-login--mobile-root {
+  padding: 0;
+  place-items: stretch;
+  background: #0d0d0d;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-.wolf-login-user-chip {
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-bg-panel) 86%, transparent);
-  color: var(--color-text-primary);
+.wolf-login-onb {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 20px 22px 24px;
+  box-sizing: border-box;
+  touch-action: pan-y;
+}
+
+.wolf-login-onb-slide {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.wolf-login-onb-slide--welcome {
+  position: relative;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+.wolf-login-onb-welcome-bg {
+  position: absolute;
+  inset: 0 0 0 35%;
+  background:
+    radial-gradient(ellipse 90% 70% at 85% 45%, rgba(249, 115, 22, 0.12), transparent 55%),
+    radial-gradient(circle at 90% 60%, rgba(60, 60, 62, 0.9) 0%, transparent 42%),
+    linear-gradient(115deg, transparent 40%, rgba(30, 30, 32, 0.95) 100%);
+  pointer-events: none;
+  border-radius: 0 0 0 40px;
+}
+
+.wolf-login-onb-welcome-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+}
+
+.wolf-login-logo--onb {
+  margin-bottom: 32px;
+}
+
+.wolf-login-onb-headline {
+  margin: 0 0 14px;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #fafafa;
+}
+
+.wolf-login-onb-headline-line {
+  color: #fafafa;
+}
+
+.wolf-login-onb-headline-accent {
+  color: var(--wolf-login-orange);
+}
+
+.wolf-login-onb-feature-title {
+  margin: 0 0 14px;
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.wolf-login-onb-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--wolf-login-muted);
+  text-align: left;
+}
+
+.wolf-login-onb-slide--feature .wolf-login-onb-sub {
+  text-align: center;
+  padding: 0 12px;
+}
+
+.wolf-login-onb-slide--feature {
+  align-items: center;
+  padding-top: 12vh;
+}
+
+.wolf-login-onb-icon-ring {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
   display: grid;
-  grid-template-columns: 20px 1fr auto;
+  place-items: center;
+  background: #161618;
+  border: 1px solid var(--wolf-login-border);
+  margin-bottom: 28px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.wolf-login-onb-icon {
+  color: var(--wolf-login-orange);
+}
+
+.wolf-login-onb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  gap: 16px;
+}
+
+.wolf-login-onb-dots {
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  text-align: left;
-  cursor: pointer;
 }
 
-.wolf-login-user-chip small {
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
+.wolf-login-onb-dot {
+  width: 28px;
+  height: 4px;
+  border-radius: 4px;
+  border: none;
+  padding: 0;
+  background: #2a2a2e;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.wolf-login-onb-dot.active {
+  background: var(--wolf-login-orange);
+}
+
+.wolf-login-onb-next {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--wolf-login-border);
+  background: #161618;
+  color: #fafafa;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.wolf-login-onb-next:hover {
+  background: #1c1c1f;
+  border-color: #3f3f46;
+}
+
+.wolf-login-get-started {
+  flex: 1;
+  min-height: 100dvh;
+  padding: 48px 24px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.wolf-login-get-started-brand {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+.wolf-login-logo--get-started {
+  margin-bottom: 0;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+}
+
+.wolf-login-logo--get-started svg {
+  width: 26px;
+  height: 26px;
+}
+
+.wolf-login-get-started-title {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fafafa;
+  letter-spacing: -0.02em;
+}
+
+.wolf-login-get-started-sub {
+  margin: 0 0 28px;
+  font-size: 0.92rem;
+  color: var(--wolf-login-muted);
+  line-height: 1.45;
+  max-width: 22rem;
+}
+
+.wolf-login-get-started-actions {
+  width: 100%;
+  max-width: 22rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wolf-login-btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #0d0d0d;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.wolf-login-btn-google-mark {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: linear-gradient(90deg, #4285f4, #ea4335, #fbbc04, #34a853);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wolf-login-btn-outline-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  background: transparent;
+  color: #fafafa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wolf-login-btn-outline-icon:hover:not(:disabled) {
+  border-color: #52525b;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wolf-login-btn-outline-icon:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wolf-login-get-started-footer {
+  margin-top: auto;
+  padding-top: 28px;
+  font-size: 0.9rem;
+  color: var(--wolf-login-muted);
+}
+
+.wolf-login-mobile-auth {
+  flex: 1;
+  min-height: 100dvh;
+  padding: 12px 20px 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.wolf-login-mobile-auth-top {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.wolf-login-mobile-back {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #fafafa;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  margin-left: -6px;
+}
+
+.wolf-login-mobile-back:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wolf-login-mobile-auth-logo {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 20px;
+  color: var(--wolf-login-orange);
+}
+
+.wolf-login-form--mobile {
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+  flex: 1;
+}
+
+.wolf-login-form-header--mobile {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.wolf-login-form-header--mobile h1 {
+  font-size: 1.5rem;
+}
+
+.wolf-login-form-header--mobile p {
+  font-size: 0.88rem;
+}
+
+.wolf-login-input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wolf-login-input-prefix {
+  position: absolute;
+  left: 14px;
+  color: #71717a;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wolf-login-form--mobile .wolf-login-input-icon-wrap input {
+  padding-left: 44px;
+}
+
+.wolf-login-form--mobile .wolf-login-input-icon-wrap.wolf-login-input-adorned input {
+  padding-right: 48px;
+}
+
+.wolf-login-form--mobile .wolf-login-input-icon-wrap .wolf-login-password-toggle {
+  right: 8px;
+}
+
+.wolf-login-divider--muted {
+  color: #71717a;
+  font-size: 0.8rem;
+}
+
+.wolf-login-social-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.wolf-login-social-tile {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  border: 1px solid var(--wolf-login-border);
+  background: #141416;
+  display: grid;
+  place-items: center;
+  cursor: not-allowed;
+  opacity: 0.75;
+  color: #e4e4e7;
+}
+
+.wolf-login-social-g {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4285f4;
+}
+
+.wolf-login-social-tile--apple {
+  color: #fafafa;
+}
+
+.wolf-login-apple-svg {
+  display: block;
+}
+
+.wolf-login-link--inline {
+  display: inline;
+  text-align: inherit;
+  font-size: inherit;
+}
+
+.wolf-login-mobile-footer {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--wolf-login-muted);
 }
 
 @media (max-width: 900px) {
-  .wolf-login {
-    padding: 12px;
+  .wolf-login:not(.wolf-login--mobile-root) {
+    padding: 16px;
   }
 
   .wolf-login-shell {
@@ -172,12 +752,24 @@
   }
 
   .wolf-login-brand {
-    min-height: 200px;
+    padding: 28px 24px 24px;
+    gap: 24px;
+  }
+
+  .wolf-login-features {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .wolf-login-feature {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
   }
 }
 
 @media (max-width: 640px) {
-  .wolf-login {
+  .wolf-login:not(.wolf-login--mobile-root) {
     padding: 0;
     place-items: stretch;
   }
@@ -192,85 +784,34 @@
   }
 
   .wolf-login-brand {
-    min-height: auto;
-    padding: 16px 16px 12px;
-    gap: 8px;
+    padding: 20px 18px 18px;
   }
 
-  .wolf-login-brand h2 {
-    font-size: 1.05rem;
+  .wolf-login-headline {
+    font-size: 1.35rem;
   }
 
-  .wolf-login-brand p,
-  .wolf-login-quote {
-    font-size: 0.8rem;
+  .wolf-login-lead {
+    font-size: 0.88rem;
     max-width: none;
   }
 
   .wolf-login-form-wrap {
-    padding: 16px;
+    padding: 20px 18px 28px;
   }
 
   .wolf-login-form {
     width: 100%;
-    gap: 10px;
+    gap: 14px;
   }
 
-  .wolf-login-form h1 {
-    font-size: 1.55rem;
+  .wolf-login-form-header h1 {
+    font-size: 1.45rem;
   }
 
-  .wolf-login-mobile-visual {
-    display: block;
-    margin-bottom: 2px;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-border));
-    border-radius: 14px;
-    padding: 10px 12px;
-    background:
-      radial-gradient(120% 140% at 100% 0%, rgba(249, 115, 22, 0.22), transparent 65%),
-      radial-gradient(120% 140% at 0% 100%, rgba(239, 68, 68, 0.2), transparent 70%),
-      var(--color-bg-panel);
-  }
-
-  .wolf-login-mobile-visual-head {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-accent);
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .wolf-login-mobile-visual p {
-    margin: 0;
-    color: var(--color-text-secondary);
-    font-size: 0.8rem;
-    line-height: 1.45;
-  }
-
-  .wolf-login-mobile-chips {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .wolf-login-mobile-chips span {
-    border: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
-    color: var(--color-text-secondary);
-    border-radius: 999px;
-    font-size: 0.66rem;
-    letter-spacing: 0.03em;
-    padding: 4px 8px;
-  }
-
-  .wolf-login-form input,
+  .wolf-login-form .wolf-login-label input,
   .wolf-login-submit,
-  .wolf-login-user-chip {
-    min-height: 46px;
+  .wolf-login-btn-secondary {
+    min-height: 48px;
   }
 }

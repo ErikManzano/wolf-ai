@@ -5,6 +5,11 @@
   margin-top: 8px;
 }
 
+.perf-stats-history--embedded {
+  margin-top: 0;
+  gap: 16px;
+}
+
 .perf-stats-head {
   display: flex;
   gap: 14px;

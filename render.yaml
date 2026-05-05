@@ -10,7 +10,9 @@ services:
     envVars:
       - key: FRONTEND_ORIGIN
         value: https://YOUR-NETLIFY-SITE.netlify.app
-      - key: DEMO_LOGIN_PASSWORD
-        value: wolf2026
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
       - key: DATABASE_URL
         sync: false

@@ -81,8 +81,8 @@ export interface SessionExerciseBlock {
   countsTowardTechnicalNBL?: boolean;
 }
 
-/** Usuario de la app (coach o atleta). */
-export type WolfAppRole = 'coach' | 'athlete';
+/** Usuario de la app (coach, atleta o super admin). */
+export type WolfAppRole = 'coach' | 'athlete' | 'super_admin';
 
 export interface WolfUser {
   id: string;
@@ -92,6 +92,10 @@ export interface WolfUser {
   /** Perfil Motor WL (`Athlete.id`) cuando role === athlete */
   linkedAthleteId?: string;
   email?: string;
+  /** Hash bcrypt del login; no exponer en responses públicas. */
+  passwordHash?: string;
+  /** @deprecated Usar `passwordHash`; solo compatibilidad con seeds antiguos. */
+  password?: string;
 }
 
 /** Programa generado asignado por el coach a un atleta (usuario). */

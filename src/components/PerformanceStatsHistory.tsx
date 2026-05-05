@@ -17,6 +17,8 @@ interface PerformanceStatsHistoryProps {
   intakes: IntakeData[];
   appAthletes: AppAthlete[];
   onGoToStats: () => void;
+  /** Oculta cabecera duplicada cuando va incrustado en el super-dashboard. */
+  embedded?: boolean;
 }
 
 const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
@@ -26,6 +28,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
   intakes,
   appAthletes,
   onGoToStats,
+  embedded = false,
 }) => {
   const isEs = language === 'ES';
   const [coachFilterId, setCoachFilterId] = useState<number | 'all'>('all');
@@ -68,6 +71,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
         chartSn: 'Evolución snatch (kg)',
         chartCj: 'Evolución C&J (kg)',
         cta: 'Nuevo registro / actualizar Stats',
+        tableBlock: 'PRs por envío',
       }
     : {
         title: 'Stats & PR history',
@@ -84,17 +88,20 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
         chartSn: 'Snatch trend (kg)',
         chartCj: 'C&J trend (kg)',
         cta: 'New entry / update Stats',
+        tableBlock: 'PRs by submission',
       };
 
   return (
-    <div className="perf-stats-history">
-      <div className="perf-stats-head">
-        <ClipboardList size={22} strokeWidth={2} aria-hidden />
-        <div>
-          <h2 className="perf-stats-title">{t.title}</h2>
-          <p className="perf-stats-sub">{t.sub}</p>
+    <div className={`perf-stats-history${embedded ? ' perf-stats-history--embedded' : ''}`}>
+      {!embedded ? (
+        <div className="perf-stats-head">
+          <ClipboardList size={22} strokeWidth={2} aria-hidden />
+          <div>
+            <h2 className="perf-stats-title">{t.title}</h2>
+            <p className="perf-stats-sub">{t.sub}</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {persona === 'coach' && (
         <label className="perf-stats-filter">
@@ -151,7 +158,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
 
           <div className="micro-card glass perf-table-card">
             <h3>
-              <Award size={18} /> PRs por envío
+              <Award size={18} /> {t.tableBlock}
             </h3>
             <div className="perf-table-scroll">
               <table className="perf-table">

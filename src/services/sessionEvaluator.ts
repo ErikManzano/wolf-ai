@@ -25,7 +25,7 @@ export function evaluateSession(session: Session, athlete: Athlete, exercises: E
   const avgRelativeIntensity = Math.round(calcularIntensidadRelativaPromedio(session) * 10) / 10;
   const avgAbsoluteIntensity = Math.round(calcularIntensidadAbsolutaPromedio(session, athlete, exercises) * 10) / 10;
   const load = calcularCargaTotal(session, athlete, exercises);
-  const kValue = calcularKValue(session, athlete, exercises);
+  const kValue = calcularKValue(session);
   const status = kStatus(athlete, kValue);
   return { totalReps, avgRelativeIntensity, avgAbsoluteIntensity, load, kValue, status };
 }

@@ -209,7 +209,7 @@ export function calcularCargaTotalBlocks(blocks: SessionExerciseBlock[], athlete
  * K-value según definición coach: (intensidad media prescrita / referencia total) × 100.
  * Sesión: numerador = media ponderada %1RM sobre NBL técnico; denominador = {@link K_REFERENCE_TOTAL_SESSION}.
  */
-export function calcularKValue(session: Session, _athlete: Athlete, _exercises: Exercise[]): number {
+export function calcularKValue(session: Session): number {
   const techBlocks = exercisesForTechnicalNBL(session);
   const intensidadMediaPct = calcularIntensidadRelativaPromedioBlocks(techBlocks);
   const raw = (intensidadMediaPct / K_REFERENCE_TOTAL_SESSION) * 100;
@@ -225,6 +225,6 @@ export function applySessionMetrics(session: Session, athlete: Athlete, exercise
     avgRelativeIntensity: Math.round(calcularIntensidadRelativaPromedioBlocks(techBlocks) * 10) / 10,
     avgAbsoluteIntensity: Math.round(calcularIntensidadAbsolutaPromedioBlocks(techBlocks, athlete, exercises) * 10) / 10,
     load: calcularCargaTotalBlocks(techBlocks, athlete, exercises),
-    kValue: calcularKValue(s, athlete, exercises),
+    kValue: calcularKValue(s),
   };
 }

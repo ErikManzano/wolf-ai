@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, CalendarRange, LineChart, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import './Sidebar.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -20,11 +20,14 @@ interface SidebarProps {
   onLogout: () => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  /** When false (e.g. mobile drawer), rail collapse lives in the app header instead. */
+  showRailToggle?: boolean;
 }
 
 const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-quick', 'wl-templates', 'athletes']);
 /** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
 const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
+const SUPER_ADMIN_ONLY_NAV = new Set(['admin-users']);
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeView,
@@ -34,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   collapsed,
   onToggleCollapsed,
+  showRailToggle = true,
 }) => {
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
@@ -47,13 +51,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'wl-quick', label: isEs ? 'Sesión rápida' : 'Quick session', icon: Zap },
     { id: 'wl-templates', label: isEs ? 'Plantillas Pro' : 'Pro templates', icon: Dumbbell },
     { id: 'global-calendar', label: isEs ? 'Calendario' : 'Calendar', icon: CalendarRange },
+    { id: 'admin-users', label: isEs ? 'Panel maestro' : 'Master panel', icon: ShieldCheck },
     { id: 'onboarding', label: isEs ? 'Stats y PRs' : 'Stats & PRs', icon: IntakeIcon },
-    { id: 'performance', label: isEs ? 'Rendimiento' : 'Performance', icon: LineChart },
     { id: 'library', label: isEs ? 'Biblioteca' : 'Library', icon: BookOpen },
   ];
 
   const visibleMenuItems = menuItems.filter((item) => {
+    if (SUPER_ADMIN_ONLY_NAV.has(item.id)) return currentUser?.role === 'super_admin';
     if (ATHLETE_ONLY_NAV.has(item.id)) return persona === 'athlete';
+    if (currentUser?.role === 'super_admin') {
+      // Super admin stays focused on account governance by default.
+      return !ATHLETE_ONLY_NAV.has(item.id);
+    }
     if (persona === 'athlete' && COACH_ONLY_NAV.has(item.id)) return false;
     return true;
   });
@@ -65,14 +74,16 @@ const Sidebar: React.FC<SidebarProps> = ({
           <WolfIcon size={28} className="logo-icon" />
           <h2>Wolf AI</h2>
         </div>
-        <button
-          type="button"
-          className="sidebar-collapse-btn"
-          onClick={onToggleCollapsed}
-          aria-label={collapsed ? (isEs ? 'Expandir sidebar' : 'Expand sidebar') : (isEs ? 'Colapsar sidebar' : 'Collapse sidebar')}
-        >
-          {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-        </button>
+        {showRailToggle ? (
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? (isEs ? 'Expandir sidebar' : 'Expand sidebar') : (isEs ? 'Colapsar sidebar' : 'Collapse sidebar')}
+          >
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        ) : null}
       </div>
 
       <nav className="sidebar-nav">
