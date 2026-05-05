@@ -37,8 +37,10 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 3. Crea una base Postgres gratis en Neon y copia el `DATABASE_URL`.
 4. Verifica variables en Render:
    - `FRONTEND_ORIGIN`: URL de tu Netlify (ej. `https://tu-app.netlify.app`)
-   - `DEMO_LOGIN_PASSWORD`: contraseña demo (`wolf2026` por defecto)
+   - `JWT_SECRET`: 32+ caracteres aleatorios (obligatorio en producción)
    - `DATABASE_URL`: connection string de Neon
+   - En el **front**, build con `VITE_API_URL` apuntando a tu API Render.
+   - Usuarios demo (coach / atleta): ver `.env.example`.
 5. Deploy.
 6. Prueba:
    - `https://TU-BACKEND.onrender.com/health`

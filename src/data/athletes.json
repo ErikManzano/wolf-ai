@@ -1,7 +1,7 @@
 [
   {
     "id": "ath-you",
-    "name": "Erik Manzano",
+    "name": "Atleta principal",
     "level": "intermediate",
     "bodyweight": 78,
     "oneRM": { "snatch": 85, "cleanJerk": 110, "backSquat": 150, "frontSquat": 125 },
