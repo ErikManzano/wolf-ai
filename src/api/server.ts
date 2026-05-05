@@ -19,6 +19,17 @@ import { assertJwtConfiguredForProduction } from './authTokens';
 const PORT = Number(process.env.PORT) || 4000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
+/** Orígenes CORS: FRONTEND_ORIGIN + FRONTEND_ORIGINS (coma) + localhost. */
+function corsAllowedOrigins(): string[] {
+  const fromList = (process.env.FRONTEND_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const base = FRONTEND_ORIGIN.trim();
+  const set = new Set<string>(['http://localhost:5173', 'http://127.0.0.1:5173', base, ...fromList]);
+  return [...set];
+}
+
 function seedAssignments(): ProgramAssignment[] {
   const athlete = mockAthletes.find((a) => a.id === 'ath-you');
   if (!athlete) return [];
@@ -63,10 +74,22 @@ async function bootstrap() {
     console.log('DATABASE_URL not set. Running in mock memory mode.');
   }
 
+  const allowedOrigins = corsAllowedOrigins();
   const app = express();
   app.use(
     cors({
-      origin: [FRONTEND_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+      origin(origin, cb) {
+        if (!origin) {
+          cb(null, true);
+          return;
+        }
+        if (allowedOrigins.includes(origin)) {
+          cb(null, true);
+          return;
+        }
+        console.warn(`[cors] blocked Origin: ${origin} (allowed: ${allowedOrigins.join(', ')})`);
+        cb(null, false);
+      },
     }),
   );
   app.use(express.json());
@@ -88,6 +111,7 @@ async function bootstrap() {
       ok: true,
       service: store ? 'wolf-ai-api-postgres' : 'wolf-ai-mock-api',
       frontendOrigin: FRONTEND_ORIGIN,
+      corsOrigins: allowedOrigins,
       persistence: store ? 'postgres' : 'memory',
     });
   });

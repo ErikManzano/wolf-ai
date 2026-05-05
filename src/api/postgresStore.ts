@@ -63,13 +63,17 @@ export class PostgresStore {
       );
     `);
 
+    const syncPasswords = process.env.WOLF_SYNC_SEED_PASSWORDS !== '0';
+
     for (const user of seedUsers) {
       const storedPassword =
         user.passwordHash && looksLikeBcryptHash(user.passwordHash)
           ? user.passwordHash
           : hashPassword(user.password ?? 'wolf2026');
-      await this.pool.query(
-        `
+      const params = [user.id, user.name, user.role, user.email ?? '', storedPassword, user.coachId ?? null, user.linkedAthleteId ?? null];
+      try {
+        await this.pool.query(
+          `
         INSERT INTO users (id, name, role, email, password, coach_id, linked_athlete_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (id) DO UPDATE SET
@@ -80,8 +84,37 @@ export class PostgresStore {
           coach_id = EXCLUDED.coach_id,
           linked_athlete_id = EXCLUDED.linked_athlete_id;
         `,
-        [user.id, user.name, user.role, user.email ?? '', storedPassword, user.coachId ?? null, user.linkedAthleteId ?? null],
-      );
+          params,
+        );
+      } catch (err: unknown) {
+        const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code: unknown }).code) : '';
+        if (code !== '23505') throw err;
+        await this.pool.query(
+          `
+          UPDATE users SET
+            name = $1,
+            role = $2,
+            password = $3,
+            coach_id = $4,
+            linked_athlete_id = $5
+          WHERE lower(email) = lower($6);
+        `,
+          [user.name, user.role, storedPassword, user.coachId ?? null, user.linkedAthleteId ?? null, user.email ?? ''],
+        );
+      }
+    }
+
+    if (syncPasswords) {
+      for (const user of seedUsers) {
+        const storedPassword =
+          user.passwordHash && looksLikeBcryptHash(user.passwordHash)
+            ? user.passwordHash
+            : hashPassword(user.password ?? 'wolf2026');
+        await this.pool.query(`UPDATE users SET password = $1 WHERE lower(email) = lower($2);`, [
+          storedPassword,
+          user.email ?? '',
+        ]);
+      }
     }
   }
 
