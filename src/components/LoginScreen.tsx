@@ -16,6 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import './LoginScreen.css';
+import { DEMO_QUICK_PROFILES } from '../config/demoQuickLogin';
 
 const MOBILE_MQ = '(max-width: 900px)';
 const ONB_STORAGE_KEY = 'wolf-mobile-onb';
@@ -135,8 +136,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       orContinue: isEs ? 'o continúa con' : 'or continue with',
       soon: isEs ? 'Próximamente' : 'Coming soon',
       brandShort: isEs ? 'Wolf' : 'Wolf',
+      quickAccess: isEs ? 'Accesos rápidos (demo)' : 'Quick access (demo)',
+      quickAccessAria: isEs ? 'Rellenar cuenta de demostración' : 'Fill demo account',
+      quickCoach: isEs ? 'Coach' : 'Coach',
+      quickAthlete: isEs ? 'Atleta' : 'Athlete',
+      quickAdmin: isEs ? 'Admin' : 'Admin',
     }),
     [isEs],
+  );
+
+  const applyQuickProfile = useCallback(
+    (row: (typeof DEMO_QUICK_PROFILES)[number], goAuthMobile: boolean) => {
+      setError('');
+      setSuccess('');
+      setEmail(row.email);
+      setPassword(row.password);
+      setTab('login');
+      if (goAuthMobile) setMobilePhase('auth');
+    },
+    [],
   );
 
   const onboardingSlides = useMemo(
@@ -283,6 +301,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           <h1>{formTitle}</h1>
           <p>{formSubtitle}</p>
         </header>
+      )}
+
+      {tab === 'login' && (
+        <div className="wolf-login-quick" role="group" aria-label={t.quickAccessAria}>
+          <span className="wolf-login-quick-label">{t.quickAccess}</span>
+          <div className="wolf-login-quick-row">
+            {DEMO_QUICK_PROFILES.map((row) => (
+              <button
+                key={row.id}
+                type="button"
+                className="wolf-login-quick-btn"
+                onClick={() => applyQuickProfile(row, false)}
+              >
+                {row.id === 'coach' ? t.quickCoach : row.id === 'athlete' ? t.quickAthlete : t.quickAdmin}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {tab === 'register' && (
@@ -616,6 +652,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 <Smartphone size={20} strokeWidth={2} aria-hidden />
                 {t.continuePhone}
               </button>
+            </div>
+            <div className="wolf-login-quick wolf-login-quick--get-started" role="group" aria-label={t.quickAccessAria}>
+              <span className="wolf-login-quick-label">{t.quickAccess}</span>
+              <div className="wolf-login-quick-row">
+                {DEMO_QUICK_PROFILES.map((row) => (
+                  <button
+                    key={row.id}
+                    type="button"
+                    className="wolf-login-quick-btn"
+                    onClick={() => applyQuickProfile(row, true)}
+                  >
+                    {row.id === 'coach' ? t.quickCoach : row.id === 'athlete' ? t.quickAthlete : t.quickAdmin}
+                  </button>
+                ))}
+              </div>
             </div>
             <p className="wolf-login-get-started-footer">
               {t.haveAccount}{' '}

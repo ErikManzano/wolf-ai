@@ -324,6 +324,56 @@
   margin: -8px 0 0;
 }
 
+.wolf-login-quick {
+  margin: -4px 0 8px;
+}
+
+.wolf-login-quick-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--wolf-login-muted);
+  margin-bottom: 8px;
+}
+
+.wolf-login-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wolf-login-quick-btn {
+  flex: 1;
+  min-width: 5.5rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--wolf-login-border);
+  background: #141416;
+  color: #fafafa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.wolf-login-quick-btn:hover {
+  border-color: var(--wolf-login-orange);
+  color: var(--wolf-login-orange);
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.wolf-login-quick--get-started {
+  margin: 20px 0 0;
+  width: 100%;
+  max-width: 22rem;
+}
+
+.wolf-login-quick--get-started .wolf-login-quick-row {
+  justify-content: center;
+}
+
 /* Mobile onboarding + auth (matchMedia ≤900px en LoginScreen.tsx) */
 .wolf-login--mobile-root {
   padding: 0;
