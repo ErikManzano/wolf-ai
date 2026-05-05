@@ -77,14 +77,18 @@ function AppShell() {
       <LoginScreen
         language={language}
         onLogin={async ({ email, password }) => {
-          const resolvedUser = await loginUser(email, password);
-          if (!resolvedUser) {
-            return language === 'ES' ? 'Credenciales incorrectas.' : 'Invalid credentials.';
+          try {
+            const resolvedUser = await loginUser(email, password);
+            if (!resolvedUser) {
+              return language === 'ES' ? 'Credenciales incorrectas.' : 'Invalid credentials.';
+            }
+            setCurrentUserId(resolvedUser.id);
+            localStorage.setItem(AUTH_STORAGE, '1');
+            setIsAuthenticated(true);
+            return null;
+          } catch (err) {
+            return err instanceof Error ? err.message : language === 'ES' ? 'Error de conexión.' : 'Connection error.';
           }
-          setCurrentUserId(resolvedUser.id);
-          localStorage.setItem(AUTH_STORAGE, '1');
-          setIsAuthenticated(true);
-          return null;
         }}
         onRegister={async ({ name, email, password, role }) => registerUser({ name, email, password, role })}
         onChangePassword={async ({ email, currentPassword, newPassword }) =>

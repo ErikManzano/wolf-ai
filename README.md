@@ -52,3 +52,10 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 - Con `DATABASE_URL`, `/users` y `/assignments*` quedan persistidos en Postgres.
 - Al ser plan gratis, Render puede “dormir” tras inactividad.
 - Para demo en tiempo real, todos deben usar el mismo backend URL.
+
+### Local funciona pero el deploy no (login)
+
+1. **Netlify / Vercel:** en *Environment variables* del sitio, define **`VITE_API_URL`** = URL `https` de tu API Render **sin** `/` al final, y **vuelve a desplegar** el front (Vite solo inyecta env en el build).
+2. **Render (API):** `FRONTEND_ORIGIN` debe ser **exactamente** la URL pública del front (mismo `https`, con o sin `www`). Opcional: `FRONTEND_ORIGINS` con varias URLs separadas por comas.
+3. Abre `GET https://TU-API.onrender.com/health` y revisa `corsOrigins` y `frontendOrigin`.
+4. Tras un intento de login fallido, el mensaje en pantalla indica si es red/CORS o credenciales.

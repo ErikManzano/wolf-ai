@@ -1,6 +1,8 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  # Obligatorio para login contra Render: Site settings → Environment variables →
+  # VITE_API_URL = https://TU-API.onrender.com  (sin / al final; redeploy tras cambiar)
 
 [[redirects]]
   from = "/*"

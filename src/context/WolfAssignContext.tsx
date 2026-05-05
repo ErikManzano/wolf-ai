@@ -14,8 +14,28 @@ const STORAGE_COMP = 'wolf_wl_completions_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
-const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
-const API_ENABLED = Boolean(API_BASE);
+
+/** URL del API: build `VITE_API_URL`, o `window.__WOLF_API_URL__` en index.html (sin redeploy). */
+export function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const injected = (window as Window & { __WOLF_API_URL__?: string }).__WOLF_API_URL__;
+    if (typeof injected === 'string' && injected.trim()) {
+      return injected.trim().replace(/\/+$/, '');
+    }
+  }
+  return ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
+}
+
+export function isApiEnabled(): boolean {
+  return Boolean(getApiBase());
+}
+
+function websocketUrlFromApiBase(base: string): string | null {
+  if (!base) return null;
+  if (base.startsWith('https://')) return `wss://${base.slice('https://'.length)}/ws`;
+  if (base.startsWith('http://')) return `ws://${base.slice('http://'.length)}/ws`;
+  return null;
+}
 
 function readApiToken(): string | null {
   try {
@@ -145,12 +165,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
   const loadUsersFromApi = useCallback(
     async (authorizationOverride?: string | null) => {
-      if (!API_ENABLED) return;
+      if (!isApiEnabled()) return;
       const bearer = authorizationOverride !== undefined ? authorizationOverride : apiToken;
       try {
         const headers: Record<string, string> = {};
         if (bearer) headers.Authorization = `Bearer ${bearer}`;
-        const res = await fetch(`${API_BASE}/users`, { headers });
+        const res = await fetch(`${getApiBase()}/users`, { headers });
         if (!res.ok) return;
         const list = (await res.json()) as WolfUser[];
         if (!Array.isArray(list) || list.length === 0) return;
@@ -163,9 +183,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const loadAssignmentsFromApi = useCallback(async () => {
-    if (!API_ENABLED) return;
+    if (!isApiEnabled()) return;
     try {
-      const res = await fetch(`${API_BASE}/assignments`);
+      const res = await fetch(`${getApiBase()}/assignments`);
       if (!res.ok) return;
       const list = (await res.json()) as ProgramAssignment[];
       if (!Array.isArray(list)) return;
@@ -181,9 +201,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [loadUsersFromApi, loadAssignmentsFromApi]);
 
   useEffect(() => {
-    if (!API_ENABLED) return;
+    if (!isApiEnabled()) return;
     let ws: WebSocket | null = null;
-    const wsUrl = API_BASE.replace(/^http/i, 'ws') + '/ws';
+    const wsUrl = websocketUrlFromApiBase(getApiBase());
+    if (!wsUrl) return;
     try {
       ws = new WebSocket(wsUrl);
       ws.onmessage = (event) => {
@@ -272,11 +293,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    if (!API_ENABLED || !apiToken) return;
+    if (!isApiEnabled() || !apiToken) return;
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
+        const res = await fetch(`${getApiBase()}/auth/me`, {
           headers: { Authorization: `Bearer ${apiToken}` },
         });
         if (cancelled) return;
@@ -329,8 +350,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         assignedAt: new Date().toISOString(),
       };
       setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
-      if (API_ENABLED) {
-        void fetch(`${API_BASE}/assignments`, {
+      if (isApiEnabled()) {
+        void fetch(`${getApiBase()}/assignments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -377,8 +398,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           : a,
       ),
     );
-    if (API_ENABLED) {
-      void fetch(`${API_BASE}/assignments/${assignmentId}/program`, {
+    if (isApiEnabled()) {
+      void fetch(`${getApiBase()}/assignments/${assignmentId}/program`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ program }),
@@ -397,8 +418,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const removeAssignment = useCallback((assignmentId: string) => {
     setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
-    if (API_ENABLED) {
-      void fetch(`${API_BASE}/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
+    if (isApiEnabled()) {
+      void fetch(`${getApiBase()}/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
         /* keep local state */
       });
     }
@@ -443,19 +464,34 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [assignments, athleteUser?.linkedAthleteId]);
 
   const loginUser = useCallback(async (email: string, password: string) => {
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       const local = users.find(
         (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && matchesStoredPassword(u, password),
       );
       return local ?? null;
     }
+    const base = getApiBase();
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetch(`${base}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) return null;
+      if (res.status === 401) {
+        return null;
+      }
+      if (!res.ok) {
+        let detail = '';
+        try {
+          const j = (await res.json()) as { error?: string };
+          detail = j.error ? ` ${j.error}` : '';
+        } catch {
+          /* ignore */
+        }
+        throw new Error(
+          `El servidor respondió ${res.status}.${detail} Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.`,
+        );
+      }
       const data = (await res.json()) as { user?: WolfUser; token?: string };
       if (data.token) {
         setApiToken(data.token);
@@ -466,8 +502,13 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       return data.user ?? null;
-    } catch {
-      return null;
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith('El servidor respondió')) {
+        throw e;
+      }
+      throw new Error(
+        'No hay conexión con el API. En Netlify/Vercel: variable de entorno VITE_API_URL = https://tu-api.onrender.com (sin / final) y redeploy del front. O define window.__WOLF_API_URL__ en index.html.',
+      );
     }
   }, [users]);
 
@@ -476,7 +517,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     if (!payload.name.trim() || !email || payload.password.trim().length < 6) {
       return 'Invalid registration payload.';
     }
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       if (users.some((u) => u.email?.toLowerCase() === email)) return 'Email already registered.';
       const next: WolfUser = {
         id: `user-${Date.now()}`,
@@ -489,7 +530,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/auth/register`, {
+      const res = await fetch(`${getApiBase()}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -519,7 +560,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const changePassword = useCallback(async (payload: { email: string; currentPassword: string; newPassword: string }) => {
     const email = payload.email.trim().toLowerCase();
     if (!email || payload.newPassword.trim().length < 6) return 'Invalid password update request.';
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       const idx = users.findIndex((u) => u.email?.toLowerCase() === email && matchesStoredPassword(u, payload.currentPassword));
       if (idx < 0) return 'Current credentials are invalid.';
       setUsers((prev) =>
@@ -534,7 +575,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/auth/change-password`, {
+      const res = await fetch(`${getApiBase()}/auth/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -557,7 +598,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     coachId?: string;
     linkedAthleteId?: string;
   }) => {
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       if (users.some((u) => u.email?.toLowerCase() === payload.email.trim().toLowerCase())) return 'Email already exists.';
       setUsers((prev) => [
         ...prev,
@@ -574,7 +615,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/users`, {
+      const res = await fetch(`${getApiBase()}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -594,12 +635,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [apiToken, loadUsersFromApi, users]);
 
   const updateUser = useCallback(async (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => {
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...payload } : u)));
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/users/${userId}`, {
+      const res = await fetch(`${getApiBase()}/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -619,7 +660,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [apiToken, loadUsersFromApi]);
 
   const deleteUser = useCallback(async (userId: string) => {
-    if (!API_ENABLED) {
+    if (!isApiEnabled()) {
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       if (currentUserId === userId) {
         setCurrentUserIdSafe(mockUsers.some((u) => u.id === 'user-owner') ? 'user-owner' : 'user-coach');
@@ -627,7 +668,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/users/${userId}`, {
+      const res = await fetch(`${getApiBase()}/users/${userId}`, {
         method: 'DELETE',
         headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
       });
