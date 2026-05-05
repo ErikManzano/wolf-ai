@@ -507,7 +507,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         throw e;
       }
       throw new Error(
-        'No hay conexión con el API. En Netlify/Vercel: variable de entorno VITE_API_URL = https://tu-api.onrender.com (sin / final) y redeploy del front. O define window.__WOLF_API_URL__ en index.html.',
+        'Sin conexión al API. Netlify: en Site → Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
       );
     }
   }, [users]);

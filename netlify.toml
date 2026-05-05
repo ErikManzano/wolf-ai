@@ -1,8 +1,11 @@
 [build]
-  command = "npm run build"
+  command = "node scripts/prep-netlify-proxy.mjs && npm run build"
   publish = "dist"
-  # Obligatorio para login contra Render: Site settings → Environment variables →
-  # VITE_API_URL = https://TU-API.onrender.com  (sin / al final; redeploy tras cambiar)
+  # Opción A (recomendada): proxy sin pelear con CORS
+  #   NETLIFY_API_PROXY_TARGET = https://TU-API.onrender.com
+  #   VITE_API_URL = /api
+  # Opción B: URL directa del API
+  #   VITE_API_URL = https://TU-API.onrender.com
 
 [[redirects]]
   from = "/*"

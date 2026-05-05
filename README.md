@@ -39,7 +39,7 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
    - `FRONTEND_ORIGIN`: URL de tu Netlify (ej. `https://tu-app.netlify.app`)
    - `JWT_SECRET`: 32+ caracteres aleatorios (obligatorio en producción)
    - `DATABASE_URL`: connection string de Neon
-   - En el **front**, build con `VITE_API_URL` apuntando a tu API Render.
+   - En el **front** (Netlify): `VITE_API_URL=/api` + `NETLIFY_API_PROXY_TARGET` = URL del API, o `VITE_API_URL` = URL https del API.
    - Usuarios demo (coach / atleta): ver `.env.example`.
 5. Deploy.
 6. Prueba:
@@ -55,7 +55,10 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 
 ### Local funciona pero el deploy no (login)
 
-1. **Netlify / Vercel:** en *Environment variables* del sitio, define **`VITE_API_URL`** = URL `https` de tu API Render **sin** `/` al final, y **vuelve a desplegar** el front (Vite solo inyecta env en el build).
-2. **Render (API):** `FRONTEND_ORIGIN` debe ser **exactamente** la URL pública del front (mismo `https`, con o sin `www`). Opcional: `FRONTEND_ORIGINS` con varias URLs separadas por comas.
-3. Abre `GET https://TU-API.onrender.com/health` y revisa `corsOrigins` y `frontendOrigin`.
-4. Tras un intento de login fallido, el mensaje en pantalla indica si es red/CORS o credenciales.
+1. **Netlify (recomendado):** en *Site settings → Environment variables*:
+   - `NETLIFY_API_PROXY_TARGET` = `https://TU-API.onrender.com` (sin `/` final)
+   - `VITE_API_URL` = `/api`
+   El build de Netlify ya ejecuta `prep-netlify-proxy.mjs` y genera `public/_redirects` para enrutar `/api/*` al backend.
+2. **Alternativa:** `VITE_API_URL` = `https://TU-API.onrender.com` (URL completa) y redeploy del front.
+3. **Render (API):** `FRONTEND_ORIGIN` = URL exacta del front Netlify. Opcional: `FRONTEND_ORIGINS` (varias URLs separadas por comas).
+4. `GET https://TU-API.onrender.com/health` → revisa `corsOrigins`.

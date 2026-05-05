@@ -9,7 +9,7 @@
   <body>
     <div id="root"></div>
     <!--
-      Producción: si olvidaste VITE_API_URL en el build, puedes inyectar aquí la URL del API (https, sin barra final):
+      Último recurso: URL absoluta del API (https, sin / final). En Netlify mejor usa VITE_API_URL=/api + NETLIFY_API_PROXY_TARGET.
       <script>window.__WOLF_API_URL__ = 'https://tu-servicio.onrender.com';</script>
     -->
     <script type="module" src="/src/main.tsx"></script>
