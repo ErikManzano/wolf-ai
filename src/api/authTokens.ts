@@ -1,10 +1,9 @@
-/**
- * JWT de acceso (HS256, issuer/audience fijos). Solo debe importarse desde el servidor Node.
- */
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 
 const ISS = 'wolf-ai';
-const AUD = 'wolf-ai-spa';
+const ACCESS_AUD = 'wolf-ai-spa';
+const REFRESH_AUD = 'wolf-ai-refresh';
 
 let secretBytes: Uint8Array | null = null;
 
@@ -36,9 +35,15 @@ function getSecretBytes(): Uint8Array {
   return secretBytes;
 }
 
-/** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 7 días. */
-export function getJwtExpiresIn(): string {
-  const v = process.env.JWT_EXPIRES_IN?.trim();
+/** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 15 minutos. */
+export function getAccessTokenExpiresIn(): string {
+  const v = process.env.JWT_ACCESS_EXPIRES_IN?.trim() ?? process.env.JWT_EXPIRES_IN?.trim();
+  return v && v.length > 0 ? v : '15m';
+}
+
+/** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 30 días. */
+export function getRefreshTokenExpiresIn(): string {
+  const v = process.env.JWT_REFRESH_EXPIRES_IN?.trim();
   return v && v.length > 0 ? v : '7d';
 }
 
@@ -60,16 +65,36 @@ export function expiryToSeconds(exp: string): number {
   }
 }
 
-export async function signAccessToken(sub: string, role: string): Promise<{ token: string; expiresIn: number }> {
+export interface AuthAccessClaims {
+  role: string;
+  verified: boolean;
+  email: string;
+  [key: string]: unknown;
+}
+
+export interface RefreshClaims {
+  tokenId: string;
+  [key: string]: unknown;
+}
+
+export function hashOpaqueToken(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+export function generateOpaqueToken(byteLength = 48): string {
+  return randomBytes(byteLength).toString('base64url');
+}
+
+export async function signAccessToken(sub: string, claims: AuthAccessClaims): Promise<{ token: string; expiresIn: number }> {
   const secret = getSecretBytes();
-  const exp = getJwtExpiresIn();
-  const jwt = await new SignJWT({ role })
+  const exp = getAccessTokenExpiresIn();
+  const jwt = await new SignJWT(claims)
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(sub)
     .setIssuedAt()
     .setExpirationTime(exp)
     .setIssuer(ISS)
-    .setAudience(AUD)
+    .setAudience(ACCESS_AUD)
     .sign(secret);
   return { token: jwt, expiresIn: expiryToSeconds(exp) };
 }
@@ -78,9 +103,35 @@ export async function verifyAccessToken(token: string): Promise<JWTPayload & { s
   const secret = getSecretBytes();
   const { payload } = await jwtVerify(token, secret, {
     issuer: ISS,
-    audience: AUD,
+    audience: ACCESS_AUD,
     algorithms: ['HS256'],
   });
   if (typeof payload.sub !== 'string') throw new Error('missing sub');
   return payload as JWTPayload & { sub: string };
+}
+
+export async function signRefreshToken(sub: string, claims: RefreshClaims): Promise<{ token: string; expiresIn: number }> {
+  const secret = getSecretBytes();
+  const exp = getRefreshTokenExpiresIn();
+  const jwt = await new SignJWT(claims)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(sub)
+    .setIssuedAt()
+    .setExpirationTime(exp)
+    .setJti(randomUUID())
+    .setIssuer(ISS)
+    .setAudience(REFRESH_AUD)
+    .sign(secret);
+  return { token: jwt, expiresIn: expiryToSeconds(exp) };
+}
+
+export async function verifyRefreshToken(token: string): Promise<JWTPayload & { sub: string; tokenId?: string }> {
+  const secret = getSecretBytes();
+  const { payload } = await jwtVerify(token, secret, {
+    issuer: ISS,
+    audience: REFRESH_AUD,
+    algorithms: ['HS256'],
+  });
+  if (typeof payload.sub !== 'string') throw new Error('missing sub');
+  return payload as JWTPayload & { sub: string; tokenId?: string };
 }

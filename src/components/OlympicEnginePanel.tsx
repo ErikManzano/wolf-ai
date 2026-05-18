@@ -7,6 +7,7 @@ import type { ProgramAssignment } from '../models/training';
 import { useAppContext } from '../context/AppContext';
 import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
+import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
 import './OlympicEnginePanel.css';
 
@@ -106,6 +107,10 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     editingAssignmentRef.current = editingAssignmentId;
   }, [editingAssignmentId]);
 
+  const debouncedAssignmentSync = useDebouncedCallback((assignmentId: string, p: GeneratedProgram) => {
+    updateAssignmentProgram(assignmentId, p);
+  }, 600);
+
   const handleProgramChange = useCallback(
     (p: GeneratedProgram | null) => {
       setProgram(p);
@@ -121,7 +126,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       }
       const aid = editingAssignmentRef.current;
       if (aid) {
-        updateAssignmentProgram(aid, p);
+        debouncedAssignmentSync(aid, p);
         return;
       }
       try {
@@ -130,7 +135,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
         /* ignore */
       }
     },
-    [updateAssignmentProgram],
+    [debouncedAssignmentSync, updateAssignmentProgram],
   );
 
   const onNewProgramGenerated = useCallback(() => {
@@ -214,7 +219,8 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
         </div>
       </header>
 
-      <div className="wolf-engine-tabs wolf-engine-tabs--4" role="tablist" aria-label={t.stepperAria}>
+      <div className="wolf-engine-stepper-rail" aria-label={t.stepperAria}>
+        <div className="wolf-engine-tabs wolf-engine-tabs--4" role="tablist">
         {stepItems.map((step) => {
           const isActive = activeStep === step.id;
           const isDone = activeStep > step.id;
@@ -242,6 +248,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
           <div className="wolf-stepper-progress-fill" style={{ width: `${stepProgress}%` }} />
         </div>
         <span className="wolf-stepper-progress-label">{stepProgress}%</span>
+      </div>
       </div>
 
       <div className={`wolf-engine-controls-card${activeStep === 1 ? '' : ' wolf-engine-controls-card--hidden'}`}>

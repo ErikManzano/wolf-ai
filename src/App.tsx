@@ -31,7 +31,7 @@ function AppShell() {
     tracking: false,
   });
 
-  const { setCurrentUserId, currentUser, loginUser, registerUser, changePassword, clearApiSession } = useWolfAssign();
+  const { setCurrentUserId, currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
   const { setUserRole } = useAppContext();
 
   useEffect(() => {
@@ -91,9 +91,18 @@ function AppShell() {
           }
         }}
         onRegister={async ({ name, email, password, role }) => registerUser({ name, email, password, role })}
-        onChangePassword={async ({ email, currentPassword, newPassword }) =>
-          changePassword({ email, currentPassword, newPassword })
-        }
+        onForgotPassword={async ({ email }) => forgotPassword({ email })}
+        onResetPassword={async ({ email, token, newPassword }) => resetPassword({ email, token, newPassword })}
+        onGoogleLogin={async () => {
+          const token = window.prompt(language === 'ES' ? 'Pega aquí tu Google ID Token' : 'Paste your Google ID token');
+          if (!token) return language === 'ES' ? 'Token requerido.' : 'Token required.';
+          const user = await loginWithGoogle(token);
+          if (!user) return language === 'ES' ? 'No se pudo iniciar con Google.' : 'Google login failed.';
+          setCurrentUserId(user.id);
+          localStorage.setItem(AUTH_STORAGE, '1');
+          setIsAuthenticated(true);
+          return null;
+        }}
       />
     );
   }

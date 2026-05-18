@@ -25,10 +25,12 @@ interface LoginScreenProps {
   language: 'ES' | 'EN';
   onLogin: (params: { email: string; password: string }) => Promise<string | null> | string | null;
   onRegister: (params: { name: string; email: string; password: string; role: 'coach' | 'athlete' }) => Promise<string | null> | string | null;
-  onChangePassword: (params: { email: string; currentPassword: string; newPassword: string }) => Promise<string | null> | string | null;
+  onForgotPassword: (params: { email: string }) => Promise<string | null> | string | null;
+  onResetPassword: (params: { email: string; token: string; newPassword: string }) => Promise<string | null> | string | null;
+  onGoogleLogin?: () => Promise<string | null> | string | null;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister, onChangePassword }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister, onForgotPassword, onResetPassword, onGoogleLogin }) => {
   const isEs = language === 'ES';
   const [isMobile, setIsMobile] = useState(false);
   const [mobilePhase, setMobilePhase] = useState<'onboarding' | 'get-started' | 'auth'>(() => {
@@ -45,12 +47,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
   const [onbIndex, setOnbIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
-  const [tab, setTab] = useState<'login' | 'register' | 'change-password'>('login');
+  const [tab, setTab] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
   const [registerRole, setRegisterRole] = useState<'coach' | 'athlete'>('athlete');
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -81,10 +83,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       loginSubtitle: isEs ? 'Accede para gestionar atletas y planes.' : 'Sign in to manage athletes and plans.',
       registerTitle: isEs ? 'Registrarse' : 'Register',
       registerSubtitle: isEs ? 'Crea tu cuenta para gestionar atletas y planes.' : 'Create your account to manage athletes and plans.',
-      changePasswordTitle: isEs ? 'Cambiar contraseña' : 'Change password',
-      changePasswordSubtitle: isEs
-        ? 'Introduce tu email y contraseñas para actualizar el acceso.'
-        : 'Enter your email and passwords to update access.',
+      changePasswordTitle: isEs ? 'Recuperar contraseña' : 'Recover password',
+      changePasswordSubtitle: isEs ? 'Te enviaremos un correo para recuperar tu cuenta.' : 'We will send you a recovery email.',
       email: isEs ? 'Email' : 'Email',
       password: isEs ? 'Contraseña' : 'Password',
       login: isEs ? 'Entrar al sistema' : 'Log in',
@@ -246,14 +246,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
     setTab('login');
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const result = await onChangePassword({
-      email: email.trim(),
-      currentPassword,
-      newPassword,
-    });
+    const result = await onForgotPassword({ email: email.trim() });
     setLoading(false);
     if (result) {
       setError(result);
@@ -261,8 +257,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       return;
     }
     setError('');
-    setSuccess(isEs ? 'Contraseña actualizada correctamente.' : 'Password updated successfully.');
-    setCurrentPassword('');
+    setSuccess(isEs ? 'Revisa tu correo para el token de recuperación.' : 'Check your email for reset token.');
+    setTab('reset-password');
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const result = await onResetPassword({ email: email.trim(), token: resetToken.trim(), newPassword });
+    setLoading(false);
+    if (result) {
+      setError(result);
+      setSuccess('');
+      return;
+    }
+    setError('');
+    setSuccess(isEs ? 'Contraseña restablecida correctamente.' : 'Password reset successfully.');
+    setResetToken('');
     setNewPassword('');
     setTab('login');
   };
@@ -283,7 +294,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           : t.login
         : tab === 'register'
           ? t.createAccount
-          : t.updatePassword;
+          : tab === 'forgot-password'
+            ? (isEs ? 'Enviar recuperación' : 'Send recovery')
+            : (isEs ? 'Restablecer contraseña' : 'Reset password');
 
   const showSocialRow = isMobile && tab === 'login';
 
@@ -370,57 +383,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         )}
       </label>
 
-      {tab === 'change-password' ? (
+      {tab === 'forgot-password' ? (
         <>
-          <label className="wolf-login-label">
-            <span>{t.currentPassword}</span>
-            {isMobile ? (
-              <div className="wolf-login-input-icon-wrap">
-                <Lock className="wolf-login-input-prefix" size={18} strokeWidth={2} aria-hidden />
-                <input
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-            ) : (
-              <input
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            )}
-          </label>
-          <label className="wolf-login-label">
-            <span>{t.newPassword}</span>
-            {isMobile ? (
-              <div className="wolf-login-input-icon-wrap wolf-login-input-adorned">
-                <Lock className="wolf-login-input-prefix" size={18} strokeWidth={2} aria-hidden />
-                <input
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  minLength={6}
-                />
-              </div>
-            ) : (
-              <input
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-              />
-            )}
-          </label>
-          <small className="wolf-login-hint">{t.passwordHint}</small>
+          <small className="wolf-login-hint">{isEs ? 'Usaremos este email para enviarte el token.' : 'We will send the reset token to this email.'}</small>
         </>
       ) : (
         <>
@@ -473,7 +438,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           </label>
           {tab === 'login' && (
             <div className="wolf-login-forgot-row">
-              <button type="button" className="wolf-login-link" onClick={() => setTab('change-password')}>
+              <button type="button" className="wolf-login-link" onClick={() => setTab('forgot-password')}>
                 {t.forgotPassword}
               </button>
             </div>
@@ -481,7 +446,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </>
       )}
 
-      {tab === 'change-password' && (
+      {tab === 'reset-password' && (
+        <>
+          <label className="wolf-login-label">
+            <span>{isEs ? 'Token de recuperación' : 'Recovery token'}</span>
+            <input value={resetToken} onChange={(e) => setResetToken(e.target.value)} type="text" required />
+          </label>
+          <label className="wolf-login-label">
+            <span>{t.newPassword}</span>
+            <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" required minLength={8} />
+          </label>
+        </>
+      )}
+
+      {tab !== 'login' && (
         <div className="wolf-login-alt-row">
           <button type="button" className="wolf-login-link" onClick={() => setTab('login')}>
             {t.backToLogin}
@@ -502,7 +480,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
             <span>{t.orContinue}</span>
           </div>
           <div className="wolf-login-social-row">
-            <button type="button" className="wolf-login-social-tile" aria-label="Google" title={t.soon} disabled>
+            <button
+              type="button"
+              className="wolf-login-social-tile"
+              aria-label="Google"
+              onClick={async () => {
+                if (!onGoogleLogin) return;
+                setLoading(true);
+                const result = await onGoogleLogin();
+                setLoading(false);
+                if (result) setError(result);
+              }}
+            >
               <span className="wolf-login-social-g">G</span>
             </button>
             <button type="button" className="wolf-login-social-tile wolf-login-social-tile--apple" aria-label="Apple" title={t.soon} disabled>
@@ -692,7 +681,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 className="wolf-login-mobile-back"
                 onClick={() => {
                   setError('');
-                  if (tab === 'change-password') {
+                  if (tab === 'reset-password') {
                     setTab('login');
                     return;
                   }
@@ -708,7 +697,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
             </div>
             <form
               className="wolf-login-form wolf-login-form--mobile"
-              onSubmit={tab === 'login' ? handleSubmit : tab === 'register' ? handleRegister : handleChangePassword}
+              onSubmit={tab === 'login' ? handleSubmit : tab === 'register' ? handleRegister : tab === 'forgot-password' ? handleForgotPassword : handleResetPassword}
             >
               {formBody}
             </form>
@@ -762,7 +751,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         <main className="wolf-login-form-wrap">
           <form
             className="wolf-login-form"
-            onSubmit={tab === 'login' ? handleSubmit : tab === 'register' ? handleRegister : handleChangePassword}
+            onSubmit={tab === 'login' ? handleSubmit : tab === 'register' ? handleRegister : tab === 'forgot-password' ? handleForgotPassword : handleResetPassword}
           >
             {formBody}
           </form>

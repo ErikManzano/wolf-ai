@@ -15,6 +15,7 @@ import { generatePeriodizedProgram } from '../services/programGenerator';
 import { createTrainingRouter } from './routes';
 import { PostgresStore } from './postgresStore';
 import { assertJwtConfiguredForProduction } from './authTokens';
+import { createAuthRouter } from './auth/router';
 
 const PORT = Number(process.env.PORT) || 4000;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
@@ -101,6 +102,7 @@ async function bootstrap() {
       if (client.readyState === 1) client.send(message);
     }
   };
+  app.use(createAuthRouter(state, store ?? undefined));
   app.use(createTrainingRouter(state, store ?? undefined, notify));
   wss.on('connection', (ws) => {
     ws.send(JSON.stringify({ event: 'connected', payload: { service: 'wolf-ai-realtime' }, ts: Date.now() }));

@@ -14,6 +14,7 @@ const STORAGE_COMP = 'wolf_wl_completions_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
+const STORAGE_API_REFRESH_TOKEN = 'wolf_api_refresh_token_v1';
 
 /** URL del API: build `VITE_API_URL`, o `window.__WOLF_API_URL__` en index.html (sin redeploy). */
 export function getApiBase(): string {
@@ -103,8 +104,11 @@ interface WolfAssignContextValue {
   /** Asignación activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
+  loginWithGoogle: (idToken: string) => Promise<WolfUser | null>;
   registerUser: (payload: { name: string; email: string; password: string; role: WolfAppRole }) => Promise<string | null>;
   changePassword: (payload: { email: string; currentPassword: string; newPassword: string }) => Promise<string | null>;
+  forgotPassword: (payload: { email: string }) => Promise<string | null>;
+  resetPassword: (payload: { email: string; token: string; newPassword: string }) => Promise<string | null>;
   createUser: (payload: {
     name: string;
     email: string;
@@ -123,6 +127,14 @@ const WolfAssignContext = createContext<WolfAssignContextValue | null>(null);
 
 export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const [apiToken, setApiToken] = useState<string | null>(() => (typeof window !== 'undefined' ? readApiToken() : null));
+  const [apiRefreshToken, setApiRefreshToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem(STORAGE_API_REFRESH_TOKEN);
+    } catch {
+      return null;
+    }
+  });
   const [users, setUsers] = useState<WolfUser[]>(mockUsers);
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
@@ -156,10 +168,31 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
   const clearApiSession = useCallback(() => {
     setApiToken(null);
+    setApiRefreshToken(null);
     try {
       localStorage.removeItem(STORAGE_API_TOKEN);
+      localStorage.removeItem(STORAGE_API_REFRESH_TOKEN);
     } catch {
       /* ignore */
+    }
+  }, []);
+
+  const storeTokens = useCallback((accessToken?: string, refreshToken?: string) => {
+    if (accessToken) {
+      setApiToken(accessToken);
+      try {
+        localStorage.setItem(STORAGE_API_TOKEN, accessToken);
+      } catch {
+        /* ignore */
+      }
+    }
+    if (refreshToken) {
+      setApiRefreshToken(refreshToken);
+      try {
+        localStorage.setItem(STORAGE_API_REFRESH_TOKEN, refreshToken);
+      } catch {
+        /* ignore */
+      }
     }
   }, []);
 
@@ -291,6 +324,40 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       /* ignore */
     }
   }, []);
+
+  const refreshSession = useCallback(async (): Promise<boolean> => {
+    if (!apiRefreshToken || !isApiEnabled()) return false;
+    try {
+      const res = await fetch(`${getApiBase()}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: apiRefreshToken }),
+      });
+      if (!res.ok) return false;
+      const data = (await res.json()) as { accessToken?: string; refreshToken?: string; user?: WolfUser };
+      storeTokens(data.accessToken, data.refreshToken);
+      if (data.user) applyUserSession(data.user);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [apiRefreshToken, applyUserSession, storeTokens]);
+
+  const apiRequest = useCallback(
+    async (path: string, init: RequestInit = {}, retry = true): Promise<Response> => {
+      const headers = new Headers(init.headers);
+      if (apiToken) headers.set('Authorization', `Bearer ${apiToken}`);
+      const res = await fetch(`${getApiBase()}${path}`, { ...init, headers });
+      if (res.status !== 401 || !retry) return res;
+      const refreshed = await refreshSession();
+      if (!refreshed) return res;
+      const retryHeaders = new Headers(init.headers);
+      const nextToken = readApiToken();
+      if (nextToken) retryHeaders.set('Authorization', `Bearer ${nextToken}`);
+      return fetch(`${getApiBase()}${path}`, { ...init, headers: retryHeaders });
+    },
+    [apiToken, refreshSession],
+  );
 
   useEffect(() => {
     if (!isApiEnabled() || !apiToken) return;
@@ -472,7 +539,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
     const base = getApiBase();
     try {
-      const res = await fetch(`${base}/auth/login`, {
+        const res = await fetch(`${base}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -492,15 +559,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           `El servidor respondió ${res.status}.${detail} Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.`,
         );
       }
-      const data = (await res.json()) as { user?: WolfUser; token?: string };
-      if (data.token) {
-        setApiToken(data.token);
-        try {
-          localStorage.setItem(STORAGE_API_TOKEN, data.token);
-        } catch {
-          /* ignore */
-        }
-      }
+      const data = (await res.json()) as { user?: WolfUser; token?: string; accessToken?: string; refreshToken?: string };
+      storeTokens(data.accessToken ?? data.token, data.refreshToken);
       return data.user ?? null;
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('El servidor respondió')) {
@@ -510,7 +570,20 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         'Sin conexión al API. Netlify: en Site → Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
       );
     }
-  }, [users]);
+  }, [storeTokens, users]);
+
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    if (!isApiEnabled()) return null;
+    const res = await fetch(`${getApiBase()}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { user?: WolfUser; accessToken?: string; refreshToken?: string };
+    storeTokens(data.accessToken, data.refreshToken);
+    return data.user ?? null;
+  }, [storeTokens]);
 
   const registerUser = useCallback(async (payload: { name: string; email: string; password: string; role: WolfAppRole }) => {
     const email = payload.email.trim().toLowerCase();
@@ -539,23 +612,42 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         const err = (await res.json().catch(() => null)) as { error?: string } | null;
         return err?.error ?? 'Could not register user.';
       }
-      const data = (await res.json()) as { user?: WolfUser; token?: string };
-      if (data.token) {
-        setApiToken(data.token);
-        try {
-          localStorage.setItem(STORAGE_API_TOKEN, data.token);
-        } catch {
-          /* ignore */
-        }
-        await loadUsersFromApi(data.token);
-      } else {
-        await loadUsersFromApi();
-      }
+      await loadUsersFromApi();
       return null;
     } catch {
       return 'Could not connect to backend.';
     }
   }, [loadUsersFromApi, users]);
+
+  const forgotPassword = useCallback(async (payload: { email: string }) => {
+    if (!isApiEnabled()) return 'Feature requires backend API.';
+    try {
+      const res = await fetch(`${getApiBase()}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) return 'Could not send recovery email.';
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (payload: { email: string; token: string; newPassword: string }) => {
+    if (!isApiEnabled()) return 'Feature requires backend API.';
+    try {
+      const res = await fetch(`${getApiBase()}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) return 'Could not reset password.';
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, []);
 
   const changePassword = useCallback(async (payload: { email: string; currentPassword: string; newPassword: string }) => {
     const email = payload.email.trim().toLowerCase();
@@ -615,11 +707,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${getApiBase()}/users`, {
+      const res = await apiRequest('/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
         },
         body: JSON.stringify(payload),
       });
@@ -632,7 +723,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       return 'Could not connect to backend.';
     }
-  }, [apiToken, loadUsersFromApi, users]);
+  }, [apiRequest, loadUsersFromApi, users]);
 
   const updateUser = useCallback(async (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => {
     if (!isApiEnabled()) {
@@ -640,11 +731,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${getApiBase()}/users/${userId}`, {
+      const res = await apiRequest(`/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
         },
         body: JSON.stringify(payload),
       });
@@ -657,7 +747,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       return 'Could not connect to backend.';
     }
-  }, [apiToken, loadUsersFromApi]);
+  }, [apiRequest, loadUsersFromApi]);
 
   const deleteUser = useCallback(async (userId: string) => {
     if (!isApiEnabled()) {
@@ -668,10 +758,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
     try {
-      const res = await fetch(`${getApiBase()}/users/${userId}`, {
-        method: 'DELETE',
-        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
-      });
+      const res = await apiRequest(`/users/${userId}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = (await res.json().catch(() => null)) as { error?: string } | null;
         return err?.error ?? 'Could not delete user.';
@@ -684,7 +771,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       return 'Could not connect to backend.';
     }
-  }, [apiToken, currentUserId, loadUsersFromApi, setCurrentUserIdSafe]);
+  }, [apiRequest, currentUserId, loadUsersFromApi, setCurrentUserIdSafe]);
 
   const value: WolfAssignContextValue = {
     users,
@@ -704,8 +791,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     isSessionComplete,
     myAssignment,
     loginUser,
+    loginWithGoogle,
     registerUser,
     changePassword,
+    forgotPassword,
+    resetPassword,
     createUser,
     updateUser,
     deleteUser,

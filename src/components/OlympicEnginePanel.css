@@ -1717,3 +1717,105 @@
 .wolf-program-live-card .wolf-program-export {
   padding-top: 4px;
 }
+
+/* Session editor enhancements */
+.wolf-se-pct-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wolf-se-pct-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wolf-se-pct-active {
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel)) !important;
+}
+
+.wolf-se-row-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.wolf-se-summary--footer {
+  margin-top: 4px;
+}
+
+.wolf-se-summary-backup {
+  color: var(--color-accent);
+  font-size: 0.8rem;
+}
+
+.wolf-se-sticky-bar {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-main) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.wolf-se-sticky-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.wolf-se-sticky-inner strong {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-se-sticky-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-sticky-add {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.wolf-se-draft-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 1023px) {
+  .wolf-engine--customize .wolf-session-editor {
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  }
+
+  .wolf-se-sticky-bar {
+    display: block;
+  }
+
+  .wolf-se-summary--footer {
+    display: none;
+  }
+}

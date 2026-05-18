@@ -113,6 +113,33 @@ export function addComplexSegment(
   return finalize(s, athlete, catalog);
 }
 
+export function reorderComplexSegments(
+  session: Session,
+  blockIndex: number,
+  fromIndex: number,
+  toIndex: number,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block?.segments || fromIndex === toIndex) return session;
+  const segs = [...block.segments];
+  if (fromIndex < 0 || fromIndex >= segs.length || toIndex < 0 || toIndex >= segs.length) return session;
+  const [moved] = segs.splice(fromIndex, 1);
+  segs.splice(toIndex, 0, moved!);
+  block.segments = segs;
+  for (const scheme of block.sets) {
+    if (scheme.segmentReps) {
+      const sr = [...scheme.segmentReps];
+      const [rep] = sr.splice(fromIndex, 1);
+      sr.splice(toIndex, 0, rep ?? '1');
+      scheme.segmentReps = sr;
+    }
+  }
+  return finalize(s, athlete, catalog);
+}
+
 export function removeComplexSegment(session: Session, blockIndex: number, segmentIndex: number, athlete: Athlete, catalog: Exercise[]): Session {
   const s = cloneSession(session);
   const block = s.exercises[blockIndex];
@@ -153,6 +180,42 @@ export function toggleBlockComplex(
       scheme.reps = 2;
     }
   }
+  return finalize(s, athlete, catalog);
+}
+
+export function duplicateSetAt(
+  session: Session,
+  blockIndex: number,
+  setIndex: number,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block?.sets[setIndex] || block.sets.length >= MAX_ROWS_PER_BLOCK) return session;
+  const src = block.sets[setIndex]!;
+  const copy: SetScheme = {
+    percentage: src.percentage,
+    reps: src.reps,
+    sets: src.sets,
+    ...(src.segmentReps ? { segmentReps: [...src.segmentReps] } : {}),
+  };
+  block.sets.splice(setIndex + 1, 0, copy);
+  return finalize(s, athlete, catalog);
+}
+
+export function applyBlockPercentagePreset(
+  session: Session,
+  blockIndex: number,
+  percentage: number,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block) return session;
+  const pct = roundPercentagePrilepin(percentage);
+  block.sets = block.sets.map((row) => ({ ...row, percentage: pct }));
   return finalize(s, athlete, catalog);
 }
 

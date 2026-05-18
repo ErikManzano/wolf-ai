@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import type { ProgramAssignment, WolfUser } from '../models/training';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
+import type { AuthRole, AuthUser } from './auth/types';
 
 type AssignmentCreateInput = {
   id: string;
@@ -50,6 +51,15 @@ export class PostgresStore {
       );
     `);
     await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT NOT NULL DEFAULT 'wolf2026';`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verified BOOLEAN NOT NULL DEFAULT TRUE;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'password';`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS refresh_token_hash TEXT;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_email_token_hash TEXT;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_email_token_expires_at TIMESTAMPTZ;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token_hash TEXT;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token_expires_at TIMESTAMPTZ;`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS assignments (
         id TEXT PRIMARY KEY,
@@ -361,4 +371,124 @@ export class PostgresStore {
     program: row.program as ProgramAssignment['program'],
     assignedAt: new Date(row.assigned_at as string | Date).toISOString(),
   });
+
+  async findAuthUserByEmail(email: string): Promise<AuthUser | null> {
+    const result = await this.pool.query(
+      `SELECT id, name, email, role, password, verified, auth_provider, refresh_token_hash,
+              verify_email_token_hash, verify_email_token_expires_at,
+              reset_password_token_hash, reset_password_token_expires_at,
+              created_at, updated_at
+       FROM users WHERE lower(email) = lower($1) LIMIT 1;`,
+      [email],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapAuthRow(result.rows[0]);
+  }
+
+  async findAuthUserById(id: string): Promise<AuthUser | null> {
+    const result = await this.pool.query(
+      `SELECT id, name, email, role, password, verified, auth_provider, refresh_token_hash,
+              verify_email_token_hash, verify_email_token_expires_at,
+              reset_password_token_hash, reset_password_token_expires_at,
+              created_at, updated_at
+       FROM users WHERE id = $1 LIMIT 1;`,
+      [id],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapAuthRow(result.rows[0]);
+  }
+
+  async createAuthUser(input: {
+    name: string;
+    email: string;
+    passwordHash?: string;
+    verified: boolean;
+    role: AuthRole;
+    provider: 'password' | 'google';
+  }): Promise<AuthUser> {
+    const mappedRole: WolfUser['role'] = input.role === 'owner' ? 'super_admin' : 'coach';
+    const id = `auth-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const result = await this.pool.query(
+      `INSERT INTO users (
+          id, name, role, email, password, verified, auth_provider, created_at, updated_at
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,now(),now())
+        RETURNING id, name, email, role, password, verified, auth_provider, refresh_token_hash,
+                  verify_email_token_hash, verify_email_token_expires_at,
+                  reset_password_token_hash, reset_password_token_expires_at,
+                  created_at, updated_at;`,
+      [id, input.name, mappedRole, input.email, input.passwordHash ?? '', input.verified, input.provider],
+    );
+    return this.mapAuthRow(result.rows[0]);
+  }
+
+  async updateAuthUserById(id: string, changes: Partial<AuthUser>): Promise<AuthUser | null> {
+    const current = await this.findAuthUserById(id);
+    if (!current) return null;
+    return this.updateAuthUserByEmail(current.email, changes);
+  }
+
+  async updateAuthUserByEmail(email: string, changes: Partial<AuthUser>): Promise<AuthUser | null> {
+    const current = await this.findAuthUserByEmail(email);
+    if (!current) return null;
+    const nextRole = changes.role ?? current.role;
+    const mappedRole: WolfUser['role'] = nextRole === 'owner' ? 'super_admin' : 'coach';
+    const result = await this.pool.query(
+      `UPDATE users SET
+          name = $2,
+          role = $3,
+          password = $4,
+          verified = $5,
+          auth_provider = $6,
+          refresh_token_hash = $7,
+          verify_email_token_hash = $8,
+          verify_email_token_expires_at = $9,
+          reset_password_token_hash = $10,
+          reset_password_token_expires_at = $11,
+          updated_at = now()
+        WHERE lower(email) = lower($1)
+        RETURNING id, name, email, role, password, verified, auth_provider, refresh_token_hash,
+                  verify_email_token_hash, verify_email_token_expires_at,
+                  reset_password_token_hash, reset_password_token_expires_at,
+                  created_at, updated_at;`,
+      [
+        email,
+        changes.name ?? current.name,
+        mappedRole,
+        changes.passwordHash ?? current.passwordHash ?? '',
+        changes.verified ?? current.verified,
+        changes.provider ?? current.provider,
+        changes.refreshTokenHash ?? null,
+        changes.verifyEmailTokenHash ?? null,
+        changes.verifyEmailTokenExpiresAt ?? null,
+        changes.resetPasswordTokenHash ?? null,
+        changes.resetPasswordTokenExpiresAt ?? null,
+      ],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapAuthRow(result.rows[0]);
+  }
+
+  private mapAuthRow(row: Record<string, unknown>): AuthUser {
+    const role = (row.role as WolfUser['role']) === 'super_admin' ? 'owner' : 'trainer';
+    return {
+      id: row.id as string,
+      name: row.name as string,
+      email: (row.email as string).toLowerCase(),
+      passwordHash: (row.password as string | null) ?? undefined,
+      verified: Boolean(row.verified),
+      role,
+      provider: ((row.auth_provider as string | null) ?? 'password') === 'google' ? 'google' : 'password',
+      refreshTokenHash: (row.refresh_token_hash as string | null) ?? undefined,
+      verifyEmailTokenHash: (row.verify_email_token_hash as string | null) ?? undefined,
+      verifyEmailTokenExpiresAt: row.verify_email_token_expires_at
+        ? new Date(row.verify_email_token_expires_at as string | Date).toISOString()
+        : undefined,
+      resetPasswordTokenHash: (row.reset_password_token_hash as string | null) ?? undefined,
+      resetPasswordTokenExpiresAt: row.reset_password_token_expires_at
+        ? new Date(row.reset_password_token_expires_at as string | Date).toISOString()
+        : undefined,
+      createdAt: row.created_at ? new Date(row.created_at as string | Date).toISOString() : new Date().toISOString(),
+      updatedAt: row.updated_at ? new Date(row.updated_at as string | Date).toISOString() : new Date().toISOString(),
+    };
+  }
 }

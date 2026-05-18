@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarRange, Download, FileJson, RefreshCw, UserPlus } from 'lucide-react';
 import type { Athlete, GeneratedProgram, Session, SessionGoal } from '../models/training';
 import { mockExercises } from '../data/loadMockData';
@@ -6,7 +6,15 @@ import { generatePeriodizedProgram, regenerateProgramDay } from '../services/pro
 import { replaceProgramSession } from '../services/sessionMutations';
 import { exportProgramAsJson } from '../services/programExport';
 import { evaluateSessionFull } from '../services/sessionEvaluator';
+import {
+  clearProgramEditDraft,
+  readProgramEditDraft,
+  saveProgramEditDraft,
+  type ProgramEditDraft,
+} from '../services/programDraftStore';
+import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import OlympicSessionEditor from './OlympicSessionEditor';
+import { DraftRecoveryBanner } from './session-editor/DraftRecoveryBanner';
 import { useWolfAssign } from '../context/WolfAssignContext';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
@@ -52,7 +60,15 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [selectedDay, setSelectedDay] = useState(1);
   const [assignFlash, setAssignFlash] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [syncPending, setSyncPending] = useState(false);
+  const [recoveryDraft, setRecoveryDraft] = useState<ProgramEditDraft | null>(null);
+  const programRef = useRef(program);
   const { assignProgramToAthlete } = useWolfAssign();
+
+  useEffect(() => {
+    programRef.current = program;
+  }, [program]);
 
   const showCreate = mode === 'full' || mode === 'create';
   const showCustomize = mode === 'full' || mode === 'customize';
@@ -84,6 +100,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       nameHint: isEs ? 'Opcional, pero ayuda para organizar atletas.' : 'Optional, but helps organize athletes.',
       nameError: isEs ? `Máximo ${PLAN_NAME_MAX_LEN} caracteres.` : `Maximum ${PLAN_NAME_MAX_LEN} characters.`,
       noProgramYet: isEs ? 'Aún no hay programa generado.' : 'No program generated yet.',
+      draftRecovery: isEs ? 'Hay cambios guardados en este dispositivo más recientes.' : 'More recent changes saved on this device.',
+      restoreDraft: isEs ? 'Restaurar borrador' : 'Restore draft',
+      dismissDraft: isEs ? 'Descartar' : 'Dismiss',
+      autosaveHint: isEs
+        ? 'Cada cambio se guarda en copia local al instante.'
+        : 'Every change is saved to a local copy instantly.',
     }),
     [isEs, athlete.name],
   );
@@ -119,9 +141,81 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         }
       }
       onProgramChange(p);
+      setSyncPending(false);
     },
     [onProgramChange, skipLocalDraftPersistence],
   );
+
+  const persistStorageOnly = useCallback(
+    (p: GeneratedProgram) => {
+      if (skipLocalDraftPersistence) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+      } catch {
+        /* ignore */
+      }
+      setSyncPending(false);
+    },
+    [skipLocalDraftPersistence],
+  );
+
+  const debouncedStoragePersist = useDebouncedCallback((p: GeneratedProgram) => {
+    persistStorageOnly(p);
+  }, 450);
+
+  const writeEditDraft = useCallback(
+    (p: GeneratedProgram) => {
+      const savedAt = new Date().toISOString();
+      saveProgramEditDraft({
+        program: p,
+        athleteId,
+        selectedWeek,
+        selectedDay,
+        assignmentId: editingAssignmentId,
+        savedAt,
+      });
+      setDraftSavedAt(savedAt);
+    },
+    [athleteId, selectedWeek, selectedDay, editingAssignmentId],
+  );
+
+  useEffect(() => {
+    if (!showCustomize || !program) {
+      setRecoveryDraft(null);
+      return;
+    }
+    const draft = readProgramEditDraft();
+    if (!draft || draft.athleteId !== athleteId) return;
+    const sameProgram = JSON.stringify(draft.program) === JSON.stringify(program);
+    if (!sameProgram) setRecoveryDraft(draft);
+  }, [showCustomize, program, athleteId]);
+
+  const flushLocalSave = useCallback(() => {
+    const p = programRef.current;
+    if (!p || skipLocalDraftPersistence) return;
+    persistStorageOnly(p);
+    setSyncPending(false);
+  }, [persistStorageOnly, skipLocalDraftPersistence]);
+
+  useEffect(() => {
+    if (!showCustomize) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      flushLocalSave();
+      if (syncPending) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushLocalSave();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('visibilitychange', onHide);
+    };
+  }, [showCustomize, syncPending, flushLocalSave]);
 
   const handleGenerate = useCallback(() => {
     if (!canGenerate) return;
@@ -165,11 +259,33 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
 
   const handleSessionEdit = useCallback(
     (s: Session) => {
-      if (!program) return;
-      persist(replaceProgramSession(program, selectedWeek, selectedDay, s));
+      const current = programRef.current;
+      if (!current) return;
+      const next = replaceProgramSession(current, selectedWeek, selectedDay, s);
+      programRef.current = next;
+      onProgramChange(next);
+      writeEditDraft(next);
+      if (!skipLocalDraftPersistence) {
+        setSyncPending(true);
+        debouncedStoragePersist(next);
+      }
     },
-    [program, selectedWeek, selectedDay, persist],
+    [selectedWeek, selectedDay, onProgramChange, writeEditDraft, debouncedStoragePersist, skipLocalDraftPersistence],
   );
+
+  const restoreRecoveryDraft = useCallback(() => {
+    if (!recoveryDraft) return;
+    programRef.current = recoveryDraft.program;
+    setSelectedWeek(recoveryDraft.selectedWeek);
+    setSelectedDay(recoveryDraft.selectedDay);
+    persist(recoveryDraft.program);
+    setRecoveryDraft(null);
+  }, [recoveryDraft, persist]);
+
+  const dismissRecoveryDraft = useCallback(() => {
+    clearProgramEditDraft();
+    setRecoveryDraft(null);
+  }, []);
 
   const handleRegenDay = useCallback(() => {
     if (!program) return;
@@ -189,6 +305,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
     const d = w?.days.find((x) => x.dayNumber === selectedDay);
     return d?.session ?? null;
+  }, [program, selectedWeek, selectedDay]);
+
+  const selectedDayLabel = useMemo(() => {
+    if (!program) return undefined;
+    const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
+    return w?.days.find((x) => x.dayNumber === selectedDay)?.label;
   }, [program, selectedWeek, selectedDay]);
 
   const evalDay = useMemo(() => {
@@ -321,6 +443,25 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
 
       {program && showCustomize && (
         <>
+          {recoveryDraft && (
+            <DraftRecoveryBanner
+              isEs={isEs}
+              savedAt={recoveryDraft.savedAt}
+              onRestore={restoreRecoveryDraft}
+              onDismiss={dismissRecoveryDraft}
+            />
+          )}
+          <p className="wolf-program-inline-hint">
+            {t.autosaveHint}
+            {draftSavedAt && !syncPending && (
+              <>
+                {' '}
+                · {isEs ? 'Última copia' : 'Last backup'}{' '}
+                {new Date(draftSavedAt).toLocaleTimeString(isEs ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' })}
+              </>
+            )}
+            {syncPending && <> · {isEs ? 'Guardando…' : 'Saving…'}</>}
+          </p>
           <div className="wolf-program-nav">
             <div className="wolf-program-nav-label">{isEs ? 'Semana y dia' : 'Week & day'}</div>
             <div className="wolf-week-strip wolf-week-strip-scroll">
@@ -348,7 +489,18 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
             </div>
           )}
           {daySession && (
-            <OlympicSessionEditor session={daySession} athlete={athleteForEngine} exercises={mockExercises} isEs={isEs} onChange={handleSessionEdit} />
+            <OlympicSessionEditor
+              session={daySession}
+              athlete={athleteForEngine}
+              exercises={mockExercises}
+              isEs={isEs}
+              onChange={handleSessionEdit}
+              draftSavedAt={draftSavedAt}
+              syncPending={syncPending}
+              dayLabel={selectedDayLabel}
+              weekNumber={selectedWeek}
+              dayNumber={selectedDay}
+            />
           )}
         </>
       )}

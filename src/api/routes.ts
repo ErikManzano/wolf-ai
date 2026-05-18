@@ -72,7 +72,11 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(401).json({ error: 'Invalid credentials.' });
       return;
     }
-    const { token, expiresIn } = await signAccessToken(user.id, user.role);
+    const { token, expiresIn } = await signAccessToken(user.id, {
+      role: user.role,
+      verified: true,
+      email: user.email ?? '',
+    });
     res.json({ user: sanitizeUser(user), token, expiresIn });
   });
 
@@ -114,12 +118,20 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         coachId: next.coachId,
         linkedAthleteId: next.linkedAthleteId,
       });
-      const { token, expiresIn } = await signAccessToken(created.id, created.role);
+      const { token, expiresIn } = await signAccessToken(created.id, {
+        role: created.role,
+        verified: true,
+        email: created.email ?? '',
+      });
       res.status(201).json({ user: sanitizeUser(created), token, expiresIn });
       return;
     }
     state.users = [...state.users, next];
-    const { token, expiresIn } = await signAccessToken(next.id, next.role);
+    const { token, expiresIn } = await signAccessToken(next.id, {
+      role: next.role,
+      verified: true,
+      email: next.email ?? '',
+    });
     res.status(201).json({ user: sanitizeUser(next), token, expiresIn });
   });
 

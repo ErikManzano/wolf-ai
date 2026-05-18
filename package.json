@@ -15,14 +15,19 @@
     "hash-password": "node scripts/hash-password.mjs"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "framer-motion": "^12.39.0",
     "jose": "^6.2.3",
     "lucide-react": "^0.577.0",
     "pg": "^8.20.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.0",
     "ws": "^8.20.0"
   },
   "devDependencies": {

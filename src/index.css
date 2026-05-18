@@ -1,3 +1,22 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-wolf-bg: #0a0c10;
+  --color-wolf-panel: #14171d;
+  --color-wolf-surface: #12151c;
+  --color-wolf-elevated: #1a1f28;
+  --color-wolf-hover: #1e222a;
+  --color-wolf-border: #2a3140;
+  --color-wolf-muted: #64748b;
+  --color-wolf-text: #f8fafc;
+  --color-wolf-subtle: #94a3b8;
+  --color-wolf-accent: #f97316;
+  --color-wolf-accent-soft: rgba(249, 115, 22, 0.12);
+  --color-wolf-success: #22c55e;
+  --color-wolf-danger: #f43f5e;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
