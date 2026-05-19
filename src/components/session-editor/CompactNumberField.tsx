@@ -86,8 +86,9 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
           value={value}
           min={min}
           max={max}
-          step={step}
+          step={step > 1 ? 1 : step}
           onChange={(e) => onChange(clamp(Number(e.target.value) || min))}
+          onBlur={(e) => onChange(clamp(Number(e.target.value) || min))}
           onWheel={(e) => {
             e.preventDefault();
             bump(e.deltaY < 0 ? step : -step);

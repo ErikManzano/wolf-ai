@@ -8,6 +8,9 @@ import { exerciseName, kgForExercise } from './blockMetrics';
 import { SectionHeader } from './SectionHeader';
 import './set-rows.css';
 
+/** Incremento de %1RM con botones −/+ (entrada manual sigue permitiendo cualquier entero 40–100). */
+const PCT_BUTTON_STEP = 5;
+
 interface SetsTableProps {
   block: SessionExerciseBlock;
   athlete: Athlete;
@@ -110,6 +113,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       value={row.percentage}
                       min={40}
                       max={100}
+                      step={PCT_BUTTON_STEP}
                       suffix="%"
                       onChange={(v) => onPctChange(si, v)}
                       aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
@@ -175,6 +179,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.percentage}
                         min={40}
                         max={100}
+                        step={PCT_BUTTON_STEP}
                         suffix="%"
                         onChange={(v) => onPctChange(si, v)}
                         aria-label={`% ${si + 1}`}
@@ -230,6 +235,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     value={row.percentage}
                     min={40}
                     max={100}
+                    step={PCT_BUTTON_STEP}
                     suffix="%"
                     onChange={(v) => onPctChange(si, v)}
                     aria-label={`% ${si + 1}`}
