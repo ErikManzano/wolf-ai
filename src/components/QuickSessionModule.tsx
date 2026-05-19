@@ -8,6 +8,7 @@ import { simulateMicrocycle, type MicrocycleSimulationResult } from '../services
 import { evaluateSessionFull } from '../services/sessionEvaluator';
 import OlympicSessionEditor from './OlympicSessionEditor';
 import './OlympicEnginePanel.css';
+import '../styles/interactive.css';
 
 const GOALS: SessionGoal[] = ['technique', 'strength', 'power'];
 

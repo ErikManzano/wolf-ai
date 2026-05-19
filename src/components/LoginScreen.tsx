@@ -16,6 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import './LoginScreen.css';
+import '../styles/interactive.css';
 import { DEMO_QUICK_PROFILES } from '../config/demoQuickLogin';
 
 const MOBILE_MQ = '(max-width: 900px)';

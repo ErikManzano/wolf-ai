@@ -6,6 +6,7 @@ import { ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { SessionDayHero } from './session-editor/SessionDayHero';
 import { SessionSheetOverview } from './session-editor/SessionSheetOverview';
 import './session-editor/session-editor-polish.css';
+import '../styles/interactive.css';
 
 /** Segundo movimiento por defecto al activar complejo (p. ej. Clean → Jerk). */
 const DEFAULT_COMPLEX_SECOND_ID = 'ex-022';
@@ -78,62 +79,62 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 
   return (
     <div className="wolf-session-editor">
-      <SessionDayHero
-        session={session}
-        isEs={isEs}
-        dayLabel={dayLabel}
-        weekNumber={weekNumber}
-        dayNumber={dayNumber}
-        syncPending={syncPending}
-        draftSavedAt={draftSavedAt}
-      />
-
-      <div className="wolf-se-layout">
-        <SessionSheetOverview
+      <header className="wolf-se-day-top">
+        <SessionDayHero
           session={session}
-          exercises={exercises}
           isEs={isEs}
-          onSelectBlock={scrollToBlock}
+          dayLabel={dayLabel}
+          weekNumber={weekNumber}
+          dayNumber={dayNumber}
+          syncPending={syncPending}
+          draftSavedAt={draftSavedAt}
         />
+        {session.exercises.length > 0 ? (
+          <SessionSheetOverview
+            session={session}
+            exercises={exercises}
+            isEs={isEs}
+            onSelectBlock={scrollToBlock}
+          />
+        ) : null}
+      </header>
 
-        <div className="wolf-se-main">
-          <div className="wolf-se-toolbar">
-            <p className="wolf-se-toolbar-hint">
-              {isEs ? 'Edita series abajo o toca la hoja' : 'Edit sets below or tap the sheet'}
-            </p>
-            <button
-              type="button"
-              className="btn-primary wolf-se-session-add"
-              disabled={session.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
-              onClick={() => apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises))}
-            >
-              <Plus size={16} />
-              <span className="wolf-se-session-add-text">{isEs ? 'Añadir ejercicio' : 'Add exercise'}</span>
-            </button>
-          </div>
-
-      {session.exercises.map((block, bi) => (
-        <ExerciseBlockCard
-          key={`${block.exerciseId}-${bi}`}
-          block={block}
-          blockIndex={bi}
-          session={session}
-          athlete={athlete}
-          exercises={exercises}
-          isEs={isEs}
-          expanded={expandedBlocks.has(bi)}
-          totalBlocks={session.exercises.length}
-          onToggle={() => toggleBlock(bi)}
-          onApply={apply}
-          blockRef={(el) => {
-            blockRefs.current[bi] = el;
-          }}
-          defaultComplexSecondId={DEFAULT_COMPLEX_SECOND_ID}
-          defaultExtraSegmentId={DEFAULT_EXTRA_SEGMENT_ID}
-        />
-      ))}
-
+      <div className="wolf-se-blocks-area">
+        <div className="wolf-se-toolbar">
+          <p className="wolf-se-toolbar-hint">
+            {isEs ? 'Edita series abajo o toca la hoja' : 'Edit sets below or tap the sheet'}
+          </p>
+          <button
+            type="button"
+            className="btn-primary wolf-se-session-add"
+            disabled={session.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
+            onClick={() => apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises))}
+          >
+            <Plus size={16} />
+            <span className="wolf-se-session-add-text">{isEs ? 'Añadir ejercicio' : 'Add exercise'}</span>
+          </button>
         </div>
+
+        {session.exercises.map((block, bi) => (
+          <ExerciseBlockCard
+            key={`${block.exerciseId}-${bi}`}
+            block={block}
+            blockIndex={bi}
+            session={session}
+            athlete={athlete}
+            exercises={exercises}
+            isEs={isEs}
+            expanded={expandedBlocks.has(bi)}
+            totalBlocks={session.exercises.length}
+            onToggle={() => toggleBlock(bi)}
+            onApply={apply}
+            blockRef={(el) => {
+              blockRefs.current[bi] = el;
+            }}
+            defaultComplexSecondId={DEFAULT_COMPLEX_SECOND_ID}
+            defaultExtraSegmentId={DEFAULT_EXTRA_SEGMENT_ID}
+          />
+        ))}
       </div>
 
       <button

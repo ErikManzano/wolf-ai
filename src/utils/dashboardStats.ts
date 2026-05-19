@@ -225,6 +225,31 @@ export function wlSlots(program: ProgramAssignment['program']): number {
   return program.weeks.reduce((acc, w) => acc + w.days.length, 0);
 }
 
+export type WlAssignmentStatus = 'idle' | 'active' | 'complete';
+
+export function wlAssignmentStatus(
+  assignment: ProgramAssignment,
+  completions: SessionCompletion[],
+): WlAssignmentStatus {
+  const slots = wlSlots(assignment.program);
+  const done = completions.filter((c) => c.assignmentId === assignment.id).length;
+  if (slots > 0 && done >= slots) return 'complete';
+  if (done > 0) return 'active';
+  const ageDays = (Date.now() - new Date(assignment.assignedAt).getTime()) / 86400000;
+  if (done === 0 && ageDays > 10) return 'idle';
+  return done === 0 ? 'idle' : 'active';
+}
+
+export function wlLastCompletionDate(
+  assignmentId: string,
+  completions: SessionCompletion[],
+): string | null {
+  const mine = completions
+    .filter((c) => c.assignmentId === assignmentId)
+    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+  return mine[0]?.completedAt ?? null;
+}
+
 export function buildWlAssignmentRows(
   wlAssignments: ProgramAssignment[],
   completions: SessionCompletion[],

@@ -25,6 +25,7 @@ import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { formatBlockPrescription } from './schemeFormat';
 import './session-editor.css';
 import './exercise-block-card.css';
+import '../../styles/interactive.css';
 
 const PCT_PRESETS = [70, 75, 80, 85, 90] as const;
 

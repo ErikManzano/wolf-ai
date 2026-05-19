@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BarChart3, Gauge, Pencil, Trash2, UserCog, Users } from 'lucide-react';
+import { BarChart3, Gauge, UserCog } from 'lucide-react';
 import type { GeneratedProgram, SessionGoal } from '../models/training';
 import { K_VALUE_RANGES } from '../models/training';
 import { mockAthletes } from '../data/loadMockData';
@@ -9,7 +9,9 @@ import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
+import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import './OlympicEnginePanel.css';
+import '../styles/interactive.css';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
 
@@ -33,7 +35,7 @@ const GOALS: SessionGoal[] = ['technique', 'strength', 'power'];
 
 const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => {
   const isEs = language === 'ES';
-  const { assignments, updateAssignmentProgram, removeAssignment } = useWolfAssign();
+  const { assignProgramToAthlete, updateAssignmentProgram, assignments } = useWolfAssign();
   const { intakes } = useAppContext();
 
   const t = useMemo(
@@ -163,15 +165,14 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
 
   const kRange = athlete ? K_VALUE_RANGES[athlete.level] : null;
 
-  const coachAssignments = useMemo(() => [...assignments].reverse(), [assignments]);
-  const canAdvanceToManagement = Boolean(program);
+  const canAdvanceToManagement = Boolean(program) || assignments.length > 0;
   const canAdvanceToCustomize = Boolean(program);
   const stepProgress = Math.round((activeStep / 4) * 100);
 
   const goToStep = useCallback(
     (next: StepId) => {
-      if (next === 4 && !canAdvanceToManagement) return;
       if (next === 3 && !canAdvanceToCustomize) return;
+      if (next === 4 && !canAdvanceToManagement) return;
       setActiveStep(next);
     },
     [canAdvanceToManagement, canAdvanceToCustomize],
@@ -188,20 +189,49 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     [t.step1, t.step2, t.step3, t.step4, canAdvanceToCustomize, canAdvanceToManagement],
   );
 
-  const fmtDate = (iso: string) => {
+  useEffect(() => {
     try {
-      return new Date(iso).toLocaleDateString(isEs ? 'es' : 'en', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
+      if (sessionStorage.getItem(WL_MANAGE_FOCUS_KEY)) {
+        setActiveStep(4);
+      }
     } catch {
-      return iso;
+      /* ignore */
     }
-  };
+  }, []);
+
+  const handleAssignDraft = useCallback(() => {
+    if (!program) return;
+    const id = assignProgramToAthlete(program, athleteId);
+    editingAssignmentRef.current = id;
+    setEditingAssignmentId(id);
+    setActiveStep(4);
+  }, [program, athleteId, assignProgramToAthlete]);
+
+  const handleDiscardDraft = useCallback(() => {
+    editingAssignmentRef.current = null;
+    setEditingAssignmentId(null);
+    setProgram(readStoredProgram());
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const handleOpenProgramInEngine = useCallback((p: GeneratedProgram, profileId?: string) => {
+    if (profileId) setAthleteId(profileId);
+    setProgram(p);
+    editingAssignmentRef.current = null;
+    setEditingAssignmentId(null);
+    setActiveStep(3);
+  }, []);
+
+  const athleteDisplayName = athlete?.name ?? athleteId;
 
   return (
-    <div className={`wolf-engine${activeStep === 3 ? ' wolf-engine--customize' : ''}`}>
+    <div
+      className={`wolf-engine${activeStep === 3 ? ' wolf-engine--customize' : ''}${activeStep === 4 ? ' wolf-engine--manage' : ''}`}
+    >
       <header className="wolf-coach-hero">
         <div className="wolf-coach-hero-accent" aria-hidden />
         <div className="wolf-coach-hero-inner">
@@ -341,7 +371,21 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       </div>
 
       <div className="content-area wolf-engine-content">
-        {athleteForEngine && athlete && (activeStep === 2 || activeStep === 3 || activeStep === 4) && (
+        {activeStep === 4 && athleteForEngine && athlete ? (
+          <WlAssignmentManagement
+            language={language}
+            program={program}
+            athleteId={athleteId}
+            athleteName={athleteDisplayName}
+            editingAssignmentId={editingAssignmentId}
+            onAssignDraft={handleAssignDraft}
+            onCustomizeDraft={() => goToStep(3)}
+            onDiscardDraft={handleDiscardDraft}
+            onEditAssignment={openAssignmentForEdit}
+            onOpenProgramInEngine={handleOpenProgramInEngine}
+          />
+        ) : null}
+        {athleteForEngine && athlete && (activeStep === 2 || activeStep === 3) && (
           <div className={`wolf-step-content${activeStep === 3 ? ' wolf-step-content--customize' : ''}`}>
             <OlympicProgramPlan
               language={language}
@@ -357,8 +401,9 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
               onAssignmentSynced={(id) => {
                 editingAssignmentRef.current = id;
                 setEditingAssignmentId(id);
+                setActiveStep(4);
               }}
-              mode={activeStep === 2 ? 'create' : activeStep === 3 ? 'customize' : 'assign'}
+              mode={activeStep === 2 ? 'create' : 'customize'}
             />
             <div className="wolf-stepper-actions">
               {activeStep > 1 && (
@@ -371,7 +416,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
                   type="button"
                   className="btn-primary"
                   onClick={() => goToStep((activeStep + 1) as StepId)}
-                  disabled={(activeStep === 2 && !canAdvanceToCustomize) || (activeStep >= 3 && !canAdvanceToManagement)}
+                  disabled={activeStep === 2 && !canAdvanceToCustomize}
                 >
                   {t.nextStep}
                 </button>
@@ -380,81 +425,10 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
             {activeStep === 2 && !canAdvanceToCustomize && (
               <p className="wolf-program-inline-hint">{t.mustGenerateBeforeNext}</p>
             )}
-            {activeStep >= 3 && !canAdvanceToManagement && (
-              <p className="wolf-program-inline-hint">{t.mustGenerateBeforeNext}</p>
-            )}
           </div>
         )}
       </div>
 
-      {activeStep === 4 && (
-        <section
-          className="wolf-coach-assignments wolf-coach-assignments--secondary"
-          aria-labelledby="wolf-coach-assigned-heading"
-        >
-          <div className="wolf-coach-assignments-head">
-            <Users size={18} strokeWidth={2} className="wolf-coach-assignments-ico" aria-hidden />
-            <div>
-              <span className="wolf-coach-assignments-badge">{t.assignedSectionBadge}</span>
-              <h2 id="wolf-coach-assigned-heading" className="wolf-coach-assignments-title">
-                {t.assignedTitle}
-              </h2>
-              <p className="wolf-coach-assignments-hint">{t.assignedHint}</p>
-            </div>
-          </div>
-          {coachAssignments.length === 0 ? (
-            <p className="wolf-coach-assignments-empty">{t.noAssignments}</p>
-          ) : (
-            <ul className="wolf-coach-assignment-list">
-              {coachAssignments.map((asg) => {
-                const prof = mockAthletes.find((a) => a.id === asg.athleteProfileId);
-                const active = editingAssignmentId === asg.id;
-                return (
-                  <li key={asg.id} className={`wolf-coach-assignment-card ${active ? 'wolf-coach-assignment-card--active' : ''}`}>
-                    <div className="wolf-coach-assignment-main">
-                      <strong className="wolf-coach-assignment-name">{asg.program.name}</strong>
-                      <span className="wolf-coach-assignment-meta">
-                        {prof?.name ?? asg.athleteProfileId} · {asg.program.totalWeeks}w · {asg.program.daysPerWeek}d/w
-                      </span>
-                      <span className="wolf-coach-assignment-meta">
-                        {t.version} {asg.version} · {asg.versionHistory.length} {t.history}
-                      </span>
-                      <span className="wolf-coach-assignment-date">
-                        {t.assignedPrefix}: {fmtDate(asg.assignedAt)}
-                      </span>
-                    </div>
-                    <div className="wolf-coach-assignment-actions">
-                      <button
-                        type="button"
-                        className="btn-secondary wolf-coach-assignment-btn"
-                        onClick={() => openAssignmentForEdit(asg)}
-                      >
-                        <Pencil size={16} aria-hidden /> {t.editPlan}
-                      </button>
-                      <button
-                        type="button"
-                        className="wolf-coach-assignment-btn wolf-coach-assignment-btn--danger"
-                        title={t.remove}
-                        aria-label={`${t.remove}: ${asg.program.name}`}
-                        onClick={() => {
-                          if (active) {
-                            editingAssignmentRef.current = null;
-                            setEditingAssignmentId(null);
-                            setProgram(readStoredProgram());
-                          }
-                          removeAssignment(asg.id);
-                        }}
-                      >
-                        <Trash2 size={16} aria-hidden />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      )}
 
     </div>
   );

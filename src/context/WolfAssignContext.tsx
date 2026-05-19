@@ -1,5 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { ProgramAssignment, SessionCompletion, WolfAppRole, WolfUser } from '../models/training';
+import type {
+  CoachWlProgramTemplate,
+  GeneratedProgram,
+  ProgramAssignment,
+  SessionCompletion,
+  WolfAppRole,
+  WolfUser,
+} from '../models/training';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
@@ -11,6 +18,7 @@ function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
 
 const STORAGE_ASSIGN = 'wolf_wl_assignments_v1';
 const STORAGE_COMP = 'wolf_wl_completions_v1';
+const STORAGE_TEMPLATES = 'wolf_wl_program_templates_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
@@ -119,6 +127,12 @@ interface WolfAssignContextValue {
   /** Actualiza el JSON del programa en una asignación (coach editando plan ya enviado). */
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
   removeAssignment: (assignmentId: string) => void;
+  restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
+  duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => string;
+  coachTemplates: CoachWlProgramTemplate[];
+  saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => string;
+  deleteCoachTemplate: (templateId: string) => void;
+  assignFromTemplate: (templateId: string, athleteProfileId: string) => string | null;
   toggleSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number) => void;
   isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number) => boolean;
   /** Asignación activa del atleta vinculado (user-athlete) */
@@ -158,6 +172,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<WolfUser[]>(mockUsers);
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
+  const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>([]);
   const [currentUserId, setCurrentUserId] = useState('user-coach');
   const [persona, setPersonaState] = useState<'coach' | 'athlete'>('coach');
 
@@ -165,8 +180,13 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     try {
       const a = localStorage.getItem(STORAGE_ASSIGN);
       const c = localStorage.getItem(STORAGE_COMP);
+      const tpl = localStorage.getItem(STORAGE_TEMPLATES);
       const p = localStorage.getItem(STORAGE_PERSONA) as WolfAppRole | null;
       const storedUser = localStorage.getItem(STORAGE_CURRENT_USER);
+      if (tpl) {
+        const parsed = JSON.parse(tpl) as CoachWlProgramTemplate[];
+        if (Array.isArray(parsed)) setCoachTemplates(parsed);
+      }
       if (a) {
         const parsed = JSON.parse(a) as ProgramAssignment[];
         setAssignments(parsed.map(normalizeAssignment));
@@ -217,19 +237,21 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const loadUsersFromApi = useCallback(
-    async (authorizationOverride?: string | null) => {
-      if (!isApiEnabled()) return;
+    async (authorizationOverride?: string | null): Promise<WolfUser[] | undefined> => {
+      if (!isApiEnabled()) return undefined;
       const bearer = authorizationOverride !== undefined ? authorizationOverride : apiToken;
       try {
         const headers: Record<string, string> = {};
         if (bearer) headers.Authorization = `Bearer ${bearer}`;
         const res = await fetch(`${getApiBase()}/users`, { headers });
-        if (!res.ok) return;
+        if (!res.ok) return undefined;
         const list = (await res.json()) as WolfUser[];
-        if (!Array.isArray(list) || list.length === 0) return;
+        if (!Array.isArray(list) || list.length === 0) return undefined;
         setUsers(list);
+        return list;
       } catch {
         /* fallback to mock users */
+        return undefined;
       }
     },
     [apiToken],
@@ -298,6 +320,14 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       /* ignore */
     }
   }, [completions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_TEMPLATES, JSON.stringify(coachTemplates));
+    } catch {
+      /* ignore */
+    }
+  }, [coachTemplates]);
 
   const setPersona = useCallback((role: WolfAppRole) => {
     const mapped = personaFromUserRole(role);
@@ -404,9 +434,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         if (!res.ok) return;
         const data = (await res.json()) as { user?: WolfUser };
         if (!data.user) return;
-        await loadUsersFromApi();
+        const loaded = await loadUsersFromApi();
         if (cancelled) return;
-        const catalog = users.length > 0 ? users : mockUsers;
+        const catalog = loaded && loaded.length > 0 ? loaded : mockUsers;
         applyUserSession(reconcileApiUser(data.user, data.user.email ?? '', catalog));
       } catch {
         /* red: mantener sesión local */
@@ -415,7 +445,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [apiToken, applyUserSession, clearApiSession, loadUsersFromApi, users]);
+  }, [apiToken, applyUserSession, clearApiSession, loadUsersFromApi]);
 
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId), [currentUserId, users]);
   const coach = useMemo(() => users.find((u) => u.role === 'coach'), [users]);
@@ -515,6 +545,69 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       });
     }
   }, []);
+
+  const restoreAssignmentVersion = useCallback(
+    (assignmentId: string, version: number): boolean => {
+      const asg = assignments.find((a) => a.id === assignmentId);
+      if (!asg) return false;
+      let targetProgram: GeneratedProgram | null = null;
+      if (asg.version === version) {
+        targetProgram = asg.program;
+      } else {
+        const hist = asg.versionHistory.find((h) => h.version === version);
+        if (hist) targetProgram = hist.program;
+      }
+      if (!targetProgram) return false;
+      updateAssignmentProgram(assignmentId, targetProgram);
+      return true;
+    },
+    [assignments, updateAssignmentProgram],
+  );
+
+  const duplicateAssignment = useCallback(
+    (assignmentId: string, targetAthleteProfileId: string): string => {
+      const asg = assignments.find((a) => a.id === assignmentId);
+      if (!asg) return '';
+      return assignProgramToAthlete(asg.program, targetAthleteProfileId);
+    },
+    [assignments, assignProgramToAthlete],
+  );
+
+  const saveCoachTemplate = useCallback(
+    (name: string, program: GeneratedProgram, sourceAssignmentId?: string): string => {
+      const coachId =
+        currentUser?.role === 'coach' || currentUser?.role === 'super_admin'
+          ? currentUser.id
+          : 'user-coach';
+      const id = `tpl-${Date.now()}`;
+      const now = new Date().toISOString();
+      const next: CoachWlProgramTemplate = {
+        id,
+        coachId,
+        name: name.trim() || program.name,
+        program: { ...program },
+        sourceAssignmentId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setCoachTemplates((prev) => [next, ...prev]);
+      return id;
+    },
+    [currentUser],
+  );
+
+  const deleteCoachTemplate = useCallback((templateId: string) => {
+    setCoachTemplates((prev) => prev.filter((t) => t.id !== templateId));
+  }, []);
+
+  const assignFromTemplate = useCallback(
+    (templateId: string, athleteProfileId: string): string | null => {
+      const tpl = coachTemplates.find((t) => t.id === templateId);
+      if (!tpl) return null;
+      return assignProgramToAthlete(tpl.program, athleteProfileId);
+    },
+    [coachTemplates, assignProgramToAthlete],
+  );
 
   const toggleSessionComplete = useCallback((assignmentId: string, weekNumber: number, dayNumber: number) => {
     setCompletions((prev) => {
@@ -838,6 +931,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     assignProgramToAthlete,
     updateAssignmentProgram,
     removeAssignment,
+    restoreAssignmentVersion,
+    duplicateAssignment,
+    coachTemplates,
+    saveCoachTemplate,
+    deleteCoachTemplate,
+    assignFromTemplate,
     toggleSessionComplete,
     isSessionComplete,
     myAssignment,

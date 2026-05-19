@@ -336,11 +336,13 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   }, [program]);
 
   return (
-    <div className="wolf-program-plan">
-      <header className="wolf-program-meso-head">
-        <h2 className="wolf-program-meso-title">{t.title}</h2>
-        <p className="wolf-program-meso-sub">{t.subtitle}</p>
-      </header>
+    <div className={`wolf-program-plan${showCustomize && !showCreate ? ' wolf-program-plan--edit' : ''}`}>
+      {showCreate && (
+        <header className="wolf-program-meso-head">
+          <h2 className="wolf-program-meso-title">{t.title}</h2>
+          <p className="wolf-program-meso-sub">{t.subtitle}</p>
+        </header>
+      )}
 
       {editingAssignmentId && (showCustomize || showAssign) && (
         <div className="wolf-program-edit-banner" role="status">

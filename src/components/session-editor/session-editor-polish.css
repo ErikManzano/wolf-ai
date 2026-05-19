@@ -530,6 +530,21 @@
 }
 
 /* Day hero — reference sheet volume, premium (not spreadsheet red) */
+/* Fila superior: programación del día + hoja (desktop: lado a lado) */
+.wolf-se-day-top {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.wolf-se-blocks-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
 .wolf-se-day-hero {
   display: flex;
   flex-wrap: wrap;
@@ -537,7 +552,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 18px 20px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
   border-radius: var(--se-radius);
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
   background: linear-gradient(
@@ -801,22 +816,75 @@
 }
 
 @media (min-width: 1024px) {
-  .wolf-se-layout {
+  .wolf-se-day-top {
     display: grid;
-    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-    align-items: start;
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .wolf-se-day-hero {
+    padding: 14px 18px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .wolf-se-day-hero-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .wolf-se-day-hero-title {
+    font-size: 1.1rem;
+  }
+
+  .wolf-se-day-hero-reps {
+    margin-top: 6px;
+  }
+
+  .wolf-se-day-hero-stats {
+    align-self: flex-end;
   }
 
   .wolf-se-sheet {
-    position: sticky;
-    top: 72px;
-    max-height: calc(100vh - 96px);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+    overflow: hidden;
   }
 
-  .wolf-engine--customize .wolf-se-sheet {
-    top: 120px;
+  .wolf-se-sheet-rows {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .wolf-engine--customize .wolf-se-day-top {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  }
+
+  .wolf-engine--customize .wolf-se-day-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
+
+  .wolf-engine--customize .wolf-se-day-hero-reps {
+    display: block;
+  }
+
+  .wolf-engine--customize .wolf-se-day-hero-reps-num {
+    font-size: 1.35rem;
+  }
+
+  .wolf-engine--customize .wolf-se-blocks-area {
+    width: 100%;
   }
 
   .wolf-se-toolbar-hint {

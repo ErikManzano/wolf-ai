@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import './Sidebar.css';
+import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
 

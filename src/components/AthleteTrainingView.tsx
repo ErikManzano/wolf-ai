@@ -13,6 +13,7 @@ import { mockAthletes, mockExercises } from '../data/loadMockData';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { normalizeBlockType } from '../services/trainingEngine';
 import './AthleteTrainingView.css';
+import '../styles/interactive.css';
 
 function exName(id: string): string {
   return mockExercises.find((e) => e.id === id)?.name ?? id;

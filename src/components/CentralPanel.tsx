@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './CentralPanel.css';
 import './SuperDashboard.css';
+import '../styles/interactive.css';
 import {
   ChevronRight, Settings2, SlidersHorizontal, Share, Download, GripVertical, Plus,
   LayoutDashboard, Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp, Award,
@@ -10,6 +11,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import type { Athlete, IntakeData } from '../context/AppContext';
 import OlympicEnginePanel from './OlympicEnginePanel';
+import { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import QuickSessionModule from './QuickSessionModule';
 import ProTemplatesModule from './ProTemplatesModule';
 import AthleteTrainingView from './AthleteTrainingView';
@@ -117,7 +119,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     }
   }, [persona, activeView, setActiveView]);
 
-  /** Atleta: no quedar en vistas de coach (p. ej. tras sesión guardada con rol incorrecto). */
+  /** Atleta: no quedar en vistas exclusivas de coach (motor, atletas, planificación). */
   useEffect(() => {
     if (persona !== 'athlete') return;
     const coachOnly =
@@ -125,9 +127,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
       activeView === 'wl-quick' ||
       activeView === 'wl-templates' ||
       activeView === 'athletes' ||
-      activeView === 'dashboard' ||
-      activeView === 'planning' ||
-      activeView === 'library';
+      activeView === 'planning';
     if (coachOnly) setActiveView('my-wl-plan');
   }, [persona, activeView, setActiveView]);
 
@@ -1487,7 +1487,14 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                             type="button"
                             className="btn-outline"
                             style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            onClick={() => setActiveView('wolf-engine')}
+                            onClick={() => {
+                              try {
+                                sessionStorage.setItem(WL_MANAGE_FOCUS_KEY, row.assignmentId);
+                              } catch {
+                                /* ignore */
+                              }
+                              setActiveView('wolf-engine');
+                            }}
                           >
                             {isEs ? 'Motor' : 'Engine'}
                           </button>

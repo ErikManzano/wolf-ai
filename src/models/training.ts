@@ -105,6 +105,17 @@ export interface ProgramAssignmentVersion {
   program: GeneratedProgram;
 }
 
+/** Plantilla WL reutilizable guardada por un coach en la biblioteca del motor. */
+export interface CoachWlProgramTemplate {
+  id: string;
+  coachId: string;
+  name: string;
+  program: GeneratedProgram;
+  sourceAssignmentId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProgramAssignment {
   id: string;
   coachId: string;

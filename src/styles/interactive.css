@@ -1,0 +1,599 @@
+/**
+ * Estados interactivos globales — hover, active, focus-visible, selected, disabled.
+ * Importar al final de cada módulo principal para máxima prioridad en cascada.
+ */
+
+:root {
+  --ix-duration: 0.18s;
+  --ix-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ix-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-accent) 38%, transparent);
+  --ix-focus-offset: 2px;
+}
+
+/* ——— Botones base (app-wide) ——— */
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.confirm-modal-btn,
+.wolf-se-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease),
+    filter var(--ix-duration) var(--ix-ease),
+    opacity var(--ix-duration) var(--ix-ease);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px var(--color-accent-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  filter: brightness(0.95);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px var(--color-accent-glow);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring), 0 4px 12px var(--color-accent-glow);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-outline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-bg-hover);
+  border-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-bg-hover) 80%, var(--color-bg-main));
+  transform: scale(0.98);
+}
+
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.btn-outline:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
+  transform: scale(0.98);
+}
+
+.btn-outline:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.btn-outline-danger:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 18%, var(--color-bg-panel));
+}
+
+/* ——— Sidebar & navegación ——— */
+.nav-item {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease);
+}
+
+.nav-item:hover:not(.active) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-item:active {
+  transform: scale(0.99);
+}
+
+.nav-item.active {
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-panel));
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.sidebar-collapse-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.sidebar-collapse-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-bg-hover);
+}
+
+.sidebar-collapse-btn:active {
+  transform: scale(0.96);
+}
+
+.sidebar-collapse-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.sidebar-logout-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease);
+}
+
+.sidebar-logout-btn:hover {
+  border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-main));
+}
+
+.sidebar-logout-btn:active {
+  transform: scale(0.98);
+}
+
+.sidebar-logout-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.lang-toggle button {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease);
+}
+
+.lang-toggle button:hover:not(.active) {
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-hover) 60%, transparent);
+}
+
+.lang-toggle button.active {
+  background: var(--color-bg-panel);
+  color: var(--color-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.lang-toggle button:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+/* ——— Motor WL: stepper, semanas, días ——— */
+.wolf-tab {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-tab:hover:not(:disabled):not(.active) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
+}
+
+.wolf-tab:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.wolf-tab.active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-panel));
+  color: var(--color-text-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.wolf-tab.done:not(.active):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+}
+
+.wolf-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-week-pill,
+.wolf-day-pill {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-week-pill:hover:not(.active),
+.wolf-day-pill:hover:not(.active) {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-secondary));
+}
+
+.wolf-week-pill:active:not(.active),
+.wolf-day-pill:active:not(.active) {
+  transform: scale(0.97);
+}
+
+.wolf-week-pill.active,
+.wolf-day-pill.active {
+  background: var(--color-accent-gradient);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--color-accent-glow);
+}
+
+.wolf-week-pill:focus-visible,
+.wolf-day-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-program-quick-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-program-quick-btn:hover:not(.wolf-program-quick-btn--active) {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-program-quick-btn--active,
+.wolf-program-quick-btn:active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
+}
+
+.wolf-program-quick-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-regen-day:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.wolf-regen-day:active {
+  transform: scale(0.98);
+}
+
+/* ——— Gestión WL (paso 4) ——— */
+.wl-mgmt-tab {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wl-mgmt-tab:hover:not(.active) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wl-mgmt-tab.active {
+  background: var(--color-accent-gradient);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px var(--color-accent-glow);
+}
+
+.wl-mgmt-tab:active {
+  transform: scale(0.98);
+}
+
+.wl-mgmt-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wl-mgmt-assignment-card {
+  transition:
+    border-color var(--ix-duration) var(--ix-ease),
+    background-color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wl-mgmt-assignment-card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 12%, transparent);
+  transform: translateY(-2px);
+}
+
+.wl-mgmt-assignment-card:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px color-mix(in srgb, #000 8%, transparent);
+}
+
+.wl-mgmt-assignment-card:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring), 0 6px 20px color-mix(in srgb, #000 10%, transparent);
+}
+
+.wl-mgmt-library-card {
+  transition:
+    border-color var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wl-mgmt-library-card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  transform: translateY(-1px);
+}
+
+.wl-mgmt-version-restore:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.wl-mgmt-day-cell {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wl-mgmt-day-cell:hover:not(.wl-mgmt-day-cell--done) {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-bg-panel));
+}
+
+.wl-mgmt-day-cell--done {
+  border-color: color-mix(in srgb, #22c55e 35%, var(--color-border));
+}
+
+/* ——— Editor de sesión ——— */
+.wolf-se-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 14px var(--color-accent-glow);
+}
+
+.wolf-se-btn--primary:active:not(:disabled) {
+  filter: brightness(0.94);
+  transform: scale(0.98);
+}
+
+.wolf-se-btn--outline:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.wolf-se-btn--ghost:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-bg-hover);
+}
+
+.wolf-se-sheet-row {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-se-sheet-row:hover,
+.wolf-se-sheet-row:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-secondary));
+  outline: none;
+}
+
+.wolf-se-sheet-row:active {
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-bg-secondary));
+}
+
+.wolf-se-pct-chip {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-se-pct-chip:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.wolf-se-pct-chip:active,
+.wolf-se-pct-chip.active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-panel));
+  color: var(--color-accent);
+}
+
+/* ——— Dashboard / CentralPanel tabs ——— */
+.tab {
+  transition: color var(--ix-duration) var(--ix-ease);
+}
+
+.tab:hover:not(.active) {
+  color: var(--color-text-secondary);
+}
+
+.tab.active {
+  color: var(--color-text-primary);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+  border-radius: 4px;
+}
+
+/* ——— Mobile header ——— */
+.mobile-header-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease);
+}
+
+.mobile-header-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.mobile-header-btn:active {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-hover));
+}
+
+.mobile-header-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.mobile-header-btn[aria-expanded='true'] {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-hover));
+}
+
+/* ——— Login ——— */
+.wolf-login-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.wolf-login-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.wolf-login-btn-outline-icon:hover:not(:disabled) {
+  border-color: var(--wolf-login-orange);
+  background: color-mix(in srgb, var(--wolf-login-orange) 8%, transparent);
+}
+
+/* ——— Confirmación modal ——— */
+.confirm-modal-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 38%, var(--color-bg-panel));
+  border-color: var(--color-danger);
+}
+
+.confirm-modal-btn--danger:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 48%, var(--color-bg-panel));
+}
+
+/* ——— Inputs focus (complemento) ——— */
+.wl-mgmt-search input:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+}
+
+.wl-mgmt-search input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-engine-field select:hover,
+.wolf-engine-field input:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-border));
+}
+
+.wolf-engine-field select:focus,
+.wolf-engine-field input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--ix-focus-ring);
+}
+
+/* ——— Vista atleta ——— */
+.wolf-athlete-week-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-athlete-week-pill:active:not(.active) {
+  transform: scale(0.97);
+}
+
+.wolf-athlete-day-card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+  box-shadow: 0 6px 20px color-mix(in srgb, #000 8%, transparent);
+}
+
+.wolf-athlete-done-btn {
+  transition:
+    background-color var(--ix-duration) var(--ix-ease),
+    border-color var(--ix-duration) var(--ix-ease),
+    color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-athlete-done-btn:hover:not(.active) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.wolf-athlete-done-btn.active {
+  border-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-bg-panel));
+}
+
+.wolf-athlete-done-btn:active {
+  transform: scale(0.97);
+}
+
+.wolf-athlete-done-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-se-autocomplete-option {
+  transition: background-color var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-se-autocomplete-option:hover,
+.wolf-se-autocomplete-option.is-selected {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-hover));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  .btn-primary:hover:not(:disabled),
+  .wl-mgmt-assignment-card:hover {
+    transform: none;
+  }
+}

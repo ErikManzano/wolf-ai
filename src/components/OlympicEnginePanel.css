@@ -1507,19 +1507,22 @@
   color: var(--color-text-muted);
 }
 
-/* Step 3 (customization): maximize editing density for coaches */
+/* Step 3 (customization): flujo vertical; en desktop ver bloque @media (min-width: 1025px) */
 .wolf-step-content--customize {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .wolf-engine--customize .wolf-engine-content {
-  gap: 10px;
+  gap: 12px;
+  overflow: visible;
 }
 
 .wolf-engine--customize .wolf-program-plan {
-  gap: 10px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .wolf-engine--customize .wolf-program-nav {
@@ -1541,7 +1544,8 @@
 }
 
 .wolf-engine--customize .wolf-session-editor {
-  gap: 10px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .wolf-engine--customize .wolf-se-block {
@@ -1560,6 +1564,168 @@
 
 .wolf-engine--customize .wolf-stepper-actions {
   margin-top: 8px;
+}
+
+/* Desktop: un solo scroll (.workspace-area), sin paneles comprimidos */
+@media (min-width: 1025px) {
+  .wolf-engine--customize {
+    gap: 10px;
+    max-width: min(1280px, 100%);
+  }
+
+  .wolf-engine--customize .wolf-coach-hero {
+    margin-bottom: 0;
+  }
+
+  .wolf-engine--customize .wolf-coach-hero-inner {
+    align-items: center;
+    padding: 8px 14px 10px;
+    gap: 10px;
+  }
+
+  .wolf-engine--customize .wolf-coach-hero-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .wolf-engine--customize .wolf-coach-badge {
+    margin-bottom: 4px;
+  }
+
+  .wolf-engine--customize .wolf-coach-title {
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
+  .wolf-engine--customize .wolf-coach-sub {
+    display: none;
+  }
+
+  .wolf-engine--customize .wolf-engine-stepper-rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+
+  .wolf-engine--customize .wolf-engine-tabs {
+    position: static;
+    flex: 1 1 520px;
+    min-width: 0;
+    padding: 4px 0 6px;
+    border-bottom: none;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .wolf-engine--customize .wolf-engine-tabs--4 .wolf-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .wolf-engine--customize .wolf-step-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wolf-engine--customize .wolf-stepper-progress {
+    flex: 0 0 min(120px, 18%);
+    margin-top: 0;
+  }
+
+  .wolf-engine--customize .wolf-program-meso-head {
+    display: none;
+  }
+
+  .wolf-engine--customize .wolf-program-edit-banner {
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+
+  .wolf-engine--customize .wolf-program-inline-hint {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+  }
+
+  .wolf-engine--customize .wolf-program-nav {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    gap: 6px 12px;
+    padding: 10px 12px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .wolf-engine--customize .wolf-program-nav-label {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .wolf-engine--customize .wolf-week-strip-scroll {
+    grid-column: 1 / -1;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .wolf-engine--customize .wolf-day-strip-scroll {
+    grid-column: 1;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .wolf-engine--customize .wolf-regen-day {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: center;
+    justify-self: end;
+    white-space: nowrap;
+  }
+
+  .wolf-engine--customize .wolf-program-day-eval {
+    display: none;
+  }
+
+  .wolf-engine--customize .wolf-step-content--customize {
+    gap: 12px;
+  }
+
+  .wolf-engine--customize .wolf-stepper-actions {
+    position: static;
+    margin-top: 4px;
+    padding: 0;
+    background: none;
+  }
+}
+
+/* Step 4 — assignment management hub */
+.wolf-engine--manage .wolf-engine-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.wolf-engine--manage .content-area {
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {

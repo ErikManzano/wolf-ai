@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
+import './styles/interactive.css';
 import Sidebar from './components/Sidebar';
 import CentralPanel from './components/CentralPanel.tsx';
 import ChatPanel from './components/ChatPanel';
@@ -31,6 +32,8 @@ function AppShell() {
     startY: 0,
     tracking: false,
   });
+  /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
+  const initialViewUserIdRef = useRef<string | null>(null);
 
   const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
   const { setUserRole } = useAppContext();
@@ -42,11 +45,22 @@ function AppShell() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      initialViewUserIdRef.current = null;
+      return;
+    }
     if (!currentUser) return;
     setUserRole(appRoleFromWolf(currentUser.role));
-    setActiveView(currentUser.role === 'athlete' ? 'my-wl-plan' : currentUser.role === 'super_admin' ? 'admin-users' : 'wolf-engine');
-  }, [isAuthenticated, currentUser, setUserRole]);
+    if (initialViewUserIdRef.current === currentUser.id) return;
+    initialViewUserIdRef.current = currentUser.id;
+    setActiveView(
+      currentUser.role === 'athlete'
+        ? 'my-wl-plan'
+        : currentUser.role === 'super_admin'
+          ? 'admin-users'
+          : 'wolf-engine',
+    );
+  }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole]);
 
   useEffect(() => {
     localStorage.setItem('wolf_sidebar_compact_v1', sidebarCollapsed ? '1' : '0');

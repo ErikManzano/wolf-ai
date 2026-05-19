@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import './ConfirmationModal.css';
+import '../styles/interactive.css';
 
 interface ConfirmationModalProps {
   open: boolean;
