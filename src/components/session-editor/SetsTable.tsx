@@ -100,17 +100,26 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   {rowActions(si)}
                 </div>
                 <div className="wolf-se-set-card-fields">
-                  <label className="wolf-se-field-chip">
+                  <div
+                    className="wolf-se-field-chip"
+                    role="group"
+                    aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
+                  >
                     <span className="wolf-se-field-chip-label">%1RM</span>
                     <CompactNumberField
                       value={row.percentage}
                       min={40}
                       max={100}
+                      suffix="%"
                       onChange={(v) => onPctChange(si, v)}
                       aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
                     />
-                  </label>
-                  <label className="wolf-se-field-chip">
+                  </div>
+                  <div
+                    className="wolf-se-field-chip"
+                    role="group"
+                    aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
+                  >
                     <span className="wolf-se-field-chip-label">{isEs ? 'Reps' : 'Reps'}</span>
                     <CompactNumberField
                       value={row.reps}
@@ -119,8 +128,12 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       onChange={(v) => onRepsChange(si, v)}
                       aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
                     />
-                  </label>
-                  <label className="wolf-se-field-chip">
+                  </div>
+                  <div
+                    className="wolf-se-field-chip"
+                    role="group"
+                    aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
+                  >
                     <span className="wolf-se-field-chip-label">{isEs ? 'Series' : 'Sets'}</span>
                     <CompactNumberField
                       value={row.sets}
@@ -129,7 +142,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       onChange={(v) => onSetsChange(si, v)}
                       aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
                     />
-                  </label>
+                  </div>
                 </div>
               </article>
             );
@@ -162,6 +175,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.percentage}
                         min={40}
                         max={100}
+                        suffix="%"
                         onChange={(v) => onPctChange(si, v)}
                         aria-label={`% ${si + 1}`}
                       />
@@ -210,17 +224,18 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             <div className="wolf-se-complex-set-head">
               <span className="wolf-se-row-badge wolf-se-row-badge--lg">{si + 1}</span>
               <div className="wolf-se-complex-set-fields">
-                <label className="wolf-se-field-chip wolf-se-field-chip--inline">
+                <div className="wolf-se-field-chip wolf-se-field-chip--inline" role="group">
                   <span className="wolf-se-field-chip-label">%1RM</span>
                   <CompactNumberField
                     value={row.percentage}
                     min={40}
                     max={100}
+                    suffix="%"
                     onChange={(v) => onPctChange(si, v)}
                     aria-label={`% ${si + 1}`}
                   />
-                </label>
-                <label className="wolf-se-field-chip wolf-se-field-chip--inline">
+                </div>
+                <div className="wolf-se-field-chip wolf-se-field-chip--inline" role="group">
                   <span className="wolf-se-field-chip-label">{isEs ? 'Series' : 'Sets'}</span>
                   <CompactNumberField
                     value={row.sets}
@@ -229,7 +244,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     onChange={(v) => onSetsChange(si, v)}
                     aria-label={`Sets ${si + 1}`}
                   />
-                </label>
+                </div>
               </div>
               {rowActions(si)}
             </div>

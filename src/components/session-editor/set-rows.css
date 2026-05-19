@@ -1,4 +1,4 @@
-/* Set rows — touch-friendly % / reps / sets on all breakpoints */
+/* Set rows — coach-grade % / reps / sets on all breakpoints */
 
 .wolf-se-sets-section {
   display: flex;
@@ -12,59 +12,134 @@
   color: var(--color-text-muted);
 }
 
-/* Compact number control */
+/* ── Numeric stepper (CompactNumberField) ── */
 .wolf-se-num-compact {
   display: flex;
   align-items: stretch;
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--color-bg-panel);
+  background: var(--color-bg-secondary);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 3%, transparent) inset;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wolf-se-field-chip:focus-within .wolf-se-num-compact,
+.wolf-se-num-compact:focus-within {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
 
 .wolf-se-num-compact-btn {
-  flex: 0 0 44px;
-  width: 44px;
-  min-height: 44px;
+  flex: 0 0 48px;
+  width: 48px;
+  min-height: 48px;
   border: none;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-panel);
   color: var(--color-text-primary);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.wolf-se-num-compact-btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-panel));
+  color: var(--color-accent);
 }
 
 .wolf-se-num-compact-btn:active {
-  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-secondary));
+  background: color-mix(in srgb, var(--color-accent) 22%, var(--color-bg-panel));
+}
+
+.wolf-se-num-compact-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-se-num-compact-value {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
 }
 
 .wolf-se-num-compact-input {
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
+  width: 100%;
+  max-width: 3.5rem;
+  min-height: 48px;
   border: none;
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text-primary);
   text-align: center;
-  font-size: 16px;
+  font-size: 1.125rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.wolf-se-num-compact-input::-webkit-outer-spin-button,
+.wolf-se-num-compact-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .wolf-se-num-compact-input:focus {
   outline: none;
-  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
 }
 
-/* Mobile set cards (simple blocks) */
+.wolf-se-num-compact-value:focus-within {
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-bg-panel));
+}
+
+.wolf-se-num-compact-suffix {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+
+/* ── Field chip (label group) ── */
+.wolf-se-field-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 50%, transparent);
+}
+
+.wolf-se-field-chip--inline {
+  flex: 1 1 140px;
+  min-width: 140px;
+}
+
+.wolf-se-field-chip-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
+/* ── Mobile set cards ── */
 .wolf-se-sets-mobile {
   display: flex;
   flex-direction: column;
@@ -77,12 +152,12 @@
 
 .wolf-se-set-card {
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--color-bg-panel);
-  padding: 10px 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .wolf-se-set-card-top {
@@ -99,52 +174,57 @@
 }
 
 .wolf-se-set-card-kg strong {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   color: var(--color-accent);
 }
 
+/* Móvil estrecho: campos apilados (máxima claridad para el coach) */
 .wolf-se-set-card-fields {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.wolf-se-field-chip {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
+/* Móvil ancho / phablet: tres columnas con scroll si hace falta */
+@media (min-width: 400px) and (max-width: 639px) {
+  .wolf-se-set-card-fields {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
 
-.wolf-se-field-chip--inline {
-  flex: 1;
-  min-width: 120px;
-}
+  .wolf-se-set-card-fields::-webkit-scrollbar {
+    display: none;
+  }
 
-.wolf-se-field-chip-label {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+  .wolf-se-field-chip {
+    flex: 1 1 0;
+    min-width: 118px;
+    max-width: 160px;
+  }
 }
 
 .wolf-se-rep-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .wolf-se-rep-input {
-  width: 56px;
-  min-height: 44px;
+  width: 100%;
+  max-width: 72px;
+  min-height: 48px;
   text-align: center;
-  padding: 8px 6px;
-  border-radius: 10px;
+  padding: 8px;
+  border-radius: 12px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-panel);
   color: var(--color-text-primary);
-  font-size: 16px;
+  font-size: 1.125rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -167,7 +247,7 @@
 
 .wolf-se-complex-set-card {
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--color-bg-panel);
 }
@@ -177,7 +257,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px;
   border-bottom: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-bg-secondary) 60%, transparent);
 }
@@ -197,7 +277,7 @@
 }
 
 .wolf-se-movement-cell {
-  padding: 10px 12px;
+  padding: 12px;
   background: var(--color-bg-secondary);
 }
 
@@ -218,7 +298,7 @@
   gap: 12px;
 }
 
-/* Tablet: show table for simple, keep complex cards */
+/* Tablet+: tabla en simple; chips más compactos en tabla */
 @media (min-width: 640px) {
   .wolf-se-sets-mobile {
     display: none;
@@ -228,29 +308,48 @@
     display: block;
   }
 
-  .wolf-se-set-card-fields {
-    gap: 12px;
+  .wolf-se-num-compact {
+    min-height: 44px;
+    max-width: 148px;
+  }
+
+  .wolf-se-num-compact-btn {
+    flex: 0 0 40px;
+    width: 40px;
+    min-height: 44px;
+    font-size: 1.2rem;
+  }
+
+  .wolf-se-num-compact-input {
+    min-height: 44px;
+    font-size: 1rem;
   }
 
   .wolf-se-complex-set-fields {
     flex-wrap: nowrap;
   }
+
+  .wolf-se-field-chip--inline {
+    min-width: 130px;
+  }
 }
 
+/* Desktop */
 @media (min-width: 1024px) {
   .wolf-se-num-compact {
     min-height: 40px;
+    max-width: 132px;
   }
 
   .wolf-se-num-compact-btn {
     flex: 0 0 36px;
     width: 36px;
-    min-height: 36px;
+    min-height: 40px;
     font-size: 1.1rem;
   }
 
   .wolf-se-num-compact-input {
-    min-height: 36px;
+    min-height: 40px;
     font-size: 0.95rem;
   }
 }
