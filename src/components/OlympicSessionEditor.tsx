@@ -173,37 +173,6 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           </span>
         )}
       </div>
-
-      <div className="wolf-se-sticky-bar" role="status" aria-live="polite">
-        <div className="wolf-se-sticky-inner">
-          <div>
-            <strong>
-              {session.load} kg · K {session.kValue.toFixed(1)}
-            </strong>
-            <span className="wolf-se-sticky-sub">
-              {syncPending
-                ? isEs
-                  ? 'Guardando…'
-                  : 'Saving…'
-                : draftSavedAt
-                  ? `${isEs ? 'Copia' : 'Backup'} ${new Date(draftSavedAt).toLocaleTimeString(isEs ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' })}`
-                  : isEs
-                    ? 'Sin copia local'
-                    : 'No local backup'}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn-primary wolf-se-sticky-add"
-            disabled={session.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
-            onClick={() =>
-              apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises))
-            }
-          >
-            <Plus size={16} /> {isEs ? 'Ejercicio' : 'Exercise'}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
