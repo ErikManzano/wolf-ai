@@ -1,7 +1,7 @@
 import React from 'react';
-import { ChevronDown, ChevronRight, ChevronUp, Copy, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
-import { normalizeBlockType, resolveBaseOneRm } from '../../services/trainingEngine';
+import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   addComplexSegment,
   addSetToBlock,
@@ -17,8 +17,8 @@ import {
   toggleBlockComplex,
   updateSegmentRepAt,
   updateSetSchemeField,
-  WL_SESSION_LIMITS,
 } from '../../services/sessionMutations';
+import { SetsTable } from './SetsTable';
 import { blockTonnage, exerciseName } from './blockMetrics';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { formatBlockPrescription } from './schemeFormat';
@@ -71,7 +71,6 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   defaultExtraSegmentId,
 }) => {
   const apply = onApply;
-  const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
@@ -81,24 +80,6 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   const tonnage = blockTonnage(block, athlete, exercises);
   const workSets = block.sets.reduce((a, r) => a + r.sets, 0);
   const prescription = formatBlockPrescription(block);
-  const setLabel = (si: number) => (isEs ? `Serie ${si + 1}` : `Set ${si + 1}`);
-
-  const kgSimple = (pct: number): number => {
-    const ex = exercises.find((e) => e.id === block.exerciseId);
-    if (!ex) return 0;
-    return Math.round((pct / 100) * resolveBaseOneRm(ex, athlete) * 10) / 10;
-  };
-
-  const kgComplexParts = (pct: number): { key: string; kg: number; short: string }[] => {
-    if (!segments.length) return [];
-    return segments.map((seg, i) => {
-      const ex = exercises.find((e) => e.id === seg.exerciseId);
-      if (!ex) return { key: `s-${i}`, kg: 0, short: '?' };
-      const kg = Math.round((pct / 100) * resolveBaseOneRm(ex, athlete) * 10) / 10;
-      const short = ex.name.length > 8 ? `${ex.name.slice(0, 7)}…` : ex.name;
-      return { key: seg.exerciseId + String(i), kg, short };
-    });
-  };
 
   const avgPct =
     block.sets.length > 0
@@ -317,291 +298,31 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
 
             <div className="wolf-se-block-layout__sets">
-              <div className="wolf-se-sets-panel-head">
-                <h4 className="wolf-se-config-title">{isEs ? 'Series' : 'Sets'}</h4>
-                <span className="wolf-se-sets-meta">
-                  {block.sets.length} {isEs ? 'líneas' : 'rows'} · {workSets} {isEs ? 'series totales' : 'total sets'}
-                </span>
-              </div>
-
-              <div className="wolf-se-table-shell">
-                <table className="wolf-se-table">
-                  <thead>
-                    <tr>
-                      <th>%1RM</th>
-                      <th>{isEs ? '≈ kg' : '≈ kg'}</th>
-                      {isComplex && segments.length > 0 ? (
-                        segments.map((seg, si) => {
-                          const name = exerciseName(exercises, seg.exerciseId);
-                          const short = name.length > 14 ? `${name.slice(0, 12)}…` : name;
-                          return (
-                            <th key={`${seg.exerciseId}-${si}`} title={name}>
-                              Reps · {short}
-                            </th>
-                          );
-                        })
-                      ) : (
-                        <th>{isEs ? 'Reps' : 'Reps'}</th>
-                      )}
-                      <th>{isEs ? 'Series' : 'Sets'}</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {block.sets.map((row, si) => (
-                      <tr key={si} className="wolf-se-set-row" data-set-label={setLabel(si)}>
-                        <td data-label="%1RM">
-                          <input
-                            type="number"
-                            className="wolf-se-input"
-                            value={row.percentage}
-                            min={40}
-                            max={100}
-                            step={1}
-                            onChange={(e) =>
-                              apply(() =>
-                                updateSetSchemeField(
-                                  session,
-                                  bi,
-                                  si,
-                                  'percentage',
-                                  Number(e.target.value),
-                                  athlete,
-                                  exercises,
-                                ),
-                              )
-                            }
-                          />
-                        </td>
-                        <td className="wolf-se-kg-cell" data-label={isEs ? 'Kg' : 'Kg'}>
-                          {isComplex && segments.length > 0 ? (
-                            <ul className="wolf-se-kg-list">
-                              {kgComplexParts(row.percentage).map((p) => (
-                                <li key={p.key} title={p.short}>
-                                  <span className="wolf-se-kg-short">{p.short}</span>{' '}
-                                  <strong>{p.kg}</strong> kg
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <span className="wolf-se-kg-one">
-                              <strong>{kgSimple(row.percentage)}</strong> kg
-                            </span>
-                          )}
-                        </td>
-                        {isComplex && segments.length > 0 ? (
-                          segments.map((seg, segIdx) => {
-                            const segName = exerciseName(exercises, seg.exerciseId);
-                            const short = segName.length > 12 ? `${segName.slice(0, 10)}…` : segName;
-                            return (
-                              <td key={segIdx} data-label={`Reps · ${short}`}>
-                                <input
-                                  type="text"
-                                  className="wolf-se-input wolf-se-rep-token"
-                                  value={row.segmentReps?.[segIdx] ?? '1'}
-                                  placeholder="2+1"
-                                  title={
-                                    isEs ? 'Reps o suma (ej. 2, 1+2)' : 'Reps or sum (e.g. 2, 1+2)'
-                                  }
-                                  onChange={(e) =>
-                                    apply(() =>
-                                      updateSegmentRepAt(
-                                        session,
-                                        bi,
-                                        si,
-                                        segIdx,
-                                        e.target.value,
-                                        athlete,
-                                        exercises,
-                                      ),
-                                    )
-                                  }
-                                />
-                              </td>
-                            );
-                          })
-                        ) : (
-                          <td data-label={isEs ? 'Reps' : 'Reps'}>
-                            <div className="wolf-se-stepper">
-                              <button
-                                type="button"
-                                className="wolf-se-mini"
-                                disabled={row.reps <= WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-                                onClick={() =>
-                                  apply(() =>
-                                    updateSetSchemeField(
-                                      session,
-                                      bi,
-                                      si,
-                                      'reps',
-                                      row.reps - 1,
-                                      athlete,
-                                      exercises,
-                                    ),
-                                  )
-                                }
-                              >
-                                −
-                              </button>
-                              <input
-                                type="number"
-                                className="wolf-se-input"
-                                value={row.reps}
-                                min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-                                max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-                                onChange={(e) =>
-                                  apply(() =>
-                                    updateSetSchemeField(
-                                      session,
-                                      bi,
-                                      si,
-                                      'reps',
-                                      clamp(
-                                        Number(e.target.value),
-                                        WL_SESSION_LIMITS.MIN_REPS_PER_SET,
-                                        WL_SESSION_LIMITS.MAX_REPS_PER_SET,
-                                      ),
-                                      athlete,
-                                      exercises,
-                                    ),
-                                  )
-                                }
-                              />
-                              <button
-                                type="button"
-                                className="wolf-se-mini"
-                                disabled={row.reps >= WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-                                onClick={() =>
-                                  apply(() =>
-                                    updateSetSchemeField(
-                                      session,
-                                      bi,
-                                      si,
-                                      'reps',
-                                      row.reps + 1,
-                                      athlete,
-                                      exercises,
-                                    ),
-                                  )
-                                }
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                        <td data-label={isEs ? 'Series' : 'Sets'}>
-                          <div className="wolf-se-stepper">
-                            <button
-                              type="button"
-                              className="wolf-se-mini"
-                              disabled={row.sets <= WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
-                              onClick={() =>
-                                apply(() =>
-                                  updateSetSchemeField(
-                                    session,
-                                    bi,
-                                    si,
-                                    'sets',
-                                    row.sets - 1,
-                                    athlete,
-                                    exercises,
-                                  ),
-                                )
-                              }
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              className="wolf-se-input"
-                              value={row.sets}
-                              min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
-                              max={WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
-                              onChange={(e) =>
-                                apply(() =>
-                                  updateSetSchemeField(
-                                    session,
-                                    bi,
-                                    si,
-                                    'sets',
-                                    clamp(
-                                      Number(e.target.value),
-                                      WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME,
-                                      WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME,
-                                    ),
-                                    athlete,
-                                    exercises,
-                                  ),
-                                )
-                              }
-                            />
-                            <button
-                              type="button"
-                              className="wolf-se-mini"
-                              disabled={row.sets >= WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
-                              onClick={() =>
-                                apply(() =>
-                                  updateSetSchemeField(
-                                    session,
-                                    bi,
-                                    si,
-                                    'sets',
-                                    row.sets + 1,
-                                    athlete,
-                                    exercises,
-                                  ),
-                                )
-                              }
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        <td className="wolf-se-cell-actions" data-label="">
-                          <div className="wolf-se-row-actions">
-                            <button
-                              type="button"
-                              className="wolf-se-mini"
-                              title={isEs ? 'Duplicar fila' : 'Duplicate row'}
-                              disabled={block.sets.length >= WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK}
-                              onClick={() => apply(() => duplicateSetAt(session, bi, si, athlete, exercises))}
-                            >
-                              <Copy size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              className="wolf-se-mini wolf-se-danger"
-                              disabled={block.sets.length <= 1}
-                              onClick={() => apply(() => removeSetFromBlock(session, bi, si, athlete, exercises))}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <button
-                type="button"
-                className="wolf-se-add-row wolf-se-btn wolf-se-btn--outline wolf-se-btn--sm"
-                disabled={block.sets.length >= WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK}
-                onClick={() => apply(() => addSetToBlock(session, bi, athlete, exercises))}
-              >
-                <Plus size={14} /> {isEs ? 'Añadir serie' : 'Add set row'}
-              </button>
-              {block.sets.length >= WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK && (
-                <p className="wolf-se-limit-hint">
-                  {isEs ? 'Límite de filas por bloque.' : 'Max rows per block.'}
-                </p>
-              )}
+              <SetsTable
+                block={block}
+                athlete={athlete}
+                exercises={exercises}
+                isEs={isEs}
+                onPctChange={(si, v) =>
+                  apply(() => updateSetSchemeField(session, bi, si, 'percentage', v, athlete, exercises))
+                }
+                onRepsChange={(si, v) =>
+                  apply(() => updateSetSchemeField(session, bi, si, 'reps', v, athlete, exercises))
+                }
+                onSetsChange={(si, v) =>
+                  apply(() => updateSetSchemeField(session, bi, si, 'sets', v, athlete, exercises))
+                }
+                onSegmentRepChange={(si, segIdx, val) =>
+                  apply(() => updateSegmentRepAt(session, bi, si, segIdx, val, athlete, exercises))
+                }
+                onAddSet={() => apply(() => addSetToBlock(session, bi, athlete, exercises))}
+                onDuplicateSet={(si) => apply(() => duplicateSetAt(session, bi, si, athlete, exercises))}
+                onRemoveSet={(si) => apply(() => removeSetFromBlock(session, bi, si, athlete, exercises))}
+              />
             </div>
           </div>
 
-          <footer className="wolf-se-block-footer">
+                    <footer className="wolf-se-block-footer">
             <span>{isEs ? 'Tonelaje del bloque' : 'Block tonnage'}</span>
             <strong>{tonnage} kg</strong>
           </footer>

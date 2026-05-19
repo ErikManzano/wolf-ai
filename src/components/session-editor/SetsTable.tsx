@@ -6,6 +6,7 @@ import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { CompactNumberField } from './CompactNumberField';
 import { exerciseName, kgForExercise } from './blockMetrics';
 import { SectionHeader } from './SectionHeader';
+import './set-rows.css';
 
 interface SetsTableProps {
   block: SessionExerciseBlock;
@@ -44,7 +45,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
       disabled={block.sets.length >= WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK}
       onClick={onAddSet}
     >
-      <Plus size={14} className="me-1" />
+      <Plus size={14} aria-hidden />
       {isEs ? 'Serie' : 'Set'}
     </button>
   );
@@ -79,11 +80,64 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   };
 
   if (!isComplex) {
+    const ex = exercises.find((e) => e.id === block.exerciseId);
+
     return (
-      <section className="wolf-se-section" onKeyDown={onEnter}>
+      <section className="wolf-se-sets-section" onKeyDown={onEnter}>
         <SectionHeader icon={ListOrdered} title={isEs ? 'Esquema de series' : 'Set scheme'} action={addBtn} />
 
-        <div className="wolf-se-table-shell">
+        {/* Móvil / tablet estrecha: tarjetas compactas */}
+        <div className="wolf-se-sets-mobile">
+          {block.sets.map((row, si) => {
+            const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
+            return (
+              <article key={si} className="wolf-se-set-card">
+                <div className="wolf-se-set-card-top">
+                  <span className="wolf-se-row-badge wolf-se-row-badge--lg">{si + 1}</span>
+                  <span className="wolf-se-set-card-kg">
+                    <strong>{kg}</strong> kg
+                  </span>
+                  {rowActions(si)}
+                </div>
+                <div className="wolf-se-set-card-fields">
+                  <label className="wolf-se-field-chip">
+                    <span className="wolf-se-field-chip-label">%1RM</span>
+                    <CompactNumberField
+                      value={row.percentage}
+                      min={40}
+                      max={100}
+                      onChange={(v) => onPctChange(si, v)}
+                      aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
+                    />
+                  </label>
+                  <label className="wolf-se-field-chip">
+                    <span className="wolf-se-field-chip-label">{isEs ? 'Reps' : 'Reps'}</span>
+                    <CompactNumberField
+                      value={row.reps}
+                      min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+                      max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                      onChange={(v) => onRepsChange(si, v)}
+                      aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
+                    />
+                  </label>
+                  <label className="wolf-se-field-chip">
+                    <span className="wolf-se-field-chip-label">{isEs ? 'Series' : 'Sets'}</span>
+                    <CompactNumberField
+                      value={row.sets}
+                      min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
+                      max={WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
+                      onChange={(v) => onSetsChange(si, v)}
+                      aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
+                    />
+                  </label>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Desktop: tabla */}
+        <div className="wolf-se-sets-desktop wolf-se-table-shell">
           <table className="wolf-se-table">
             <thead>
               <tr>
@@ -92,12 +146,11 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                 <th>Kg</th>
                 <th>Reps</th>
                 <th>{isEs ? 'Series' : 'Sets'}</th>
-                <th className="text-end" />
+                <th className="wolf-se-text-end" />
               </tr>
             </thead>
             <tbody>
               {block.sets.map((row, si) => {
-                const ex = exercises.find((e) => e.id === block.exerciseId);
                 const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
                 return (
                   <tr key={si} className="wolf-se-table-row">
@@ -105,7 +158,13 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       <span className="wolf-se-row-badge">{si + 1}</span>
                     </td>
                     <td>
-                      <CompactNumberField value={row.percentage} min={40} max={100} onChange={(v) => onPctChange(si, v)} aria-label={`% ${si + 1}`} />
+                      <CompactNumberField
+                        value={row.percentage}
+                        min={40}
+                        max={100}
+                        onChange={(v) => onPctChange(si, v)}
+                        aria-label={`% ${si + 1}`}
+                      />
                     </td>
                     <td>
                       <span className="wolf-se-kg-display">{kg}</span>
@@ -135,27 +194,34 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             </tbody>
           </table>
         </div>
-        <p className="wolf-se-hint mb-0 mt-2">{isEs ? 'Enter · nueva serie' : 'Enter · new set'}</p>
+
+        <p className="wolf-se-sets-hint">{isEs ? 'Enter · nueva serie' : 'Enter · new set row'}</p>
       </section>
     );
   }
 
   return (
-    <section className="wolf-se-section">
+    <section className="wolf-se-sets-section">
       <SectionHeader icon={ListOrdered} title={isEs ? 'Series del complejo' : 'Complex sets'} action={addBtn} />
 
       <div className="wolf-se-complex-sets">
         {block.sets.map((row, si) => (
-          <div key={si} className="wolf-se-complex-set-card" onKeyDown={onEnter}>
+          <article key={si} className="wolf-se-complex-set-card" onKeyDown={onEnter}>
             <div className="wolf-se-complex-set-head">
               <span className="wolf-se-row-badge wolf-se-row-badge--lg">{si + 1}</span>
               <div className="wolf-se-complex-set-fields">
-                <div className="wolf-se-inline-field">
-                  <span className="wolf-se-inline-label">%1RM</span>
-                  <CompactNumberField value={row.percentage} min={40} max={100} onChange={(v) => onPctChange(si, v)} aria-label={`% ${si + 1}`} />
-                </div>
-                <div className="wolf-se-inline-field">
-                  <span className="wolf-se-inline-label">{isEs ? 'Series' : 'Sets'}</span>
+                <label className="wolf-se-field-chip wolf-se-field-chip--inline">
+                  <span className="wolf-se-field-chip-label">%1RM</span>
+                  <CompactNumberField
+                    value={row.percentage}
+                    min={40}
+                    max={100}
+                    onChange={(v) => onPctChange(si, v)}
+                    aria-label={`% ${si + 1}`}
+                  />
+                </label>
+                <label className="wolf-se-field-chip wolf-se-field-chip--inline">
+                  <span className="wolf-se-field-chip-label">{isEs ? 'Series' : 'Sets'}</span>
                   <CompactNumberField
                     value={row.sets}
                     min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
@@ -163,36 +229,44 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     onChange={(v) => onSetsChange(si, v)}
                     aria-label={`Sets ${si + 1}`}
                   />
-                </div>
+                </label>
               </div>
               {rowActions(si)}
             </div>
 
             <div className="wolf-se-movement-grid">
               {segments.map((seg, segIdx) => {
-                const ex = exercises.find((e) => e.id === seg.exerciseId);
-                const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
+                const exSeg = exercises.find((e) => e.id === seg.exerciseId);
+                const kg = exSeg ? kgForExercise(athlete, exSeg, row.percentage) : '—';
                 return (
                   <div key={segIdx} className="wolf-se-movement-cell">
                     <span className="wolf-se-movement-name">{exerciseName(exercises, seg.exerciseId)}</span>
                     <div className="wolf-se-movement-row">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className="wolf-se-rep-input"
-                        value={row.segmentReps?.[segIdx] ?? '1'}
-                        onChange={(e) => onSegmentRepChange(si, segIdx, e.target.value)}
-                        aria-label={`Reps ${exerciseName(exercises, seg.exerciseId)}`}
-                      />
-                      <span className="wolf-se-kg-display wolf-se-kg-display--sm">{kg} kg</span>
+                      <label className="wolf-se-rep-field">
+                        <span className="wolf-se-field-chip-label">Reps</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          className="wolf-se-rep-input"
+                          value={row.segmentReps?.[segIdx] ?? '1'}
+                          placeholder="2+1"
+                          onChange={(e) => onSegmentRepChange(si, segIdx, e.target.value)}
+                          aria-label={`Reps ${exerciseName(exercises, seg.exerciseId)}`}
+                        />
+                      </label>
+                      <span className="wolf-se-kg-display wolf-se-kg-display--sm">
+                        <strong>{kg}</strong> kg
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </article>
         ))}
       </div>
+
+      <p className="wolf-se-sets-hint">{isEs ? 'Enter · nueva serie' : 'Enter · new set row'}</p>
     </section>
   );
 };

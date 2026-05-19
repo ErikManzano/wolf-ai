@@ -199,6 +199,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+}
+
+.wolf-se-block-layout__sets .wolf-se-sets-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .wolf-se-block-options {
