@@ -139,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 ? isEs
                   ? 'Administrador'
                   : 'Administrator'
-                : persona === 'athlete'
+                : userRole === 'athlete' || persona === 'athlete'
                   ? isEs
                     ? 'Atleta'
                     : 'Athlete'

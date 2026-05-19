@@ -83,3 +83,4 @@
 .wolf-se-draft-actions{display:flex;gap:8px}
 .wolf-se-autocomplete-cat{font-size:.65rem;font-weight:800;color:var(--color-text-muted)}
 @media(min-width:1024px){.wolf-se-summary-footer{display:flex}.wolf-se-fab,.wolf-se-sticky-bar{display:none}}
+.wolf-se-chain-count{margin-left:6px;padding:2px 7px;border-radius:999px;font-size:.62rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-text-secondary);background:var(--color-bg-panel);border:1px solid var(--color-border)}

@@ -171,7 +171,7 @@ export interface CustomExerciseGroup {
   difficultyLevel?: string;
 }
 
-export type UserRole = 'coach' | 'admin';
+export type UserRole = 'coach' | 'admin' | 'athlete';
 
 interface AppContextType {
   microcycles: Microcycle[];

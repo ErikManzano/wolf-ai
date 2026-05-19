@@ -117,6 +117,20 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     }
   }, [persona, activeView, setActiveView]);
 
+  /** Atleta: no quedar en vistas de coach (p. ej. tras sesión guardada con rol incorrecto). */
+  useEffect(() => {
+    if (persona !== 'athlete') return;
+    const coachOnly =
+      activeView === 'wolf-engine' ||
+      activeView === 'wl-quick' ||
+      activeView === 'wl-templates' ||
+      activeView === 'athletes' ||
+      activeView === 'dashboard' ||
+      activeView === 'planning' ||
+      activeView === 'library';
+    if (coachOnly) setActiveView('my-wl-plan');
+  }, [persona, activeView, setActiveView]);
+
   useEffect(() => {
     if (activeView === 'admin-users' && currentUser?.role !== 'super_admin') {
       setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'wolf-engine');

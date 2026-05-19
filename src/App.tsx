@@ -9,6 +9,7 @@ import { useWolfAssign } from './context/WolfAssignContext';
 import { MessageSquare, Menu, X } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
+import type { WolfAppRole } from './models/training';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
 
@@ -31,13 +32,19 @@ function AppShell() {
     tracking: false,
   });
 
-  const { setCurrentUserId, currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
+  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
   const { setUserRole } = useAppContext();
+
+  const appRoleFromWolf = (role: WolfAppRole) => {
+    if (role === 'super_admin') return 'admin' as const;
+    if (role === 'athlete') return 'athlete' as const;
+    return 'coach' as const;
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
     if (!currentUser) return;
-    setUserRole(currentUser.role === 'super_admin' ? 'admin' : 'coach');
+    setUserRole(appRoleFromWolf(currentUser.role));
     setActiveView(currentUser.role === 'athlete' ? 'my-wl-plan' : currentUser.role === 'super_admin' ? 'admin-users' : 'wolf-engine');
   }, [isAuthenticated, currentUser, setUserRole]);
 
@@ -82,7 +89,6 @@ function AppShell() {
             if (!resolvedUser) {
               return language === 'ES' ? 'Credenciales incorrectas.' : 'Invalid credentials.';
             }
-            setCurrentUserId(resolvedUser.id);
             localStorage.setItem(AUTH_STORAGE, '1');
             setIsAuthenticated(true);
             return null;
@@ -98,7 +104,6 @@ function AppShell() {
           if (!token) return language === 'ES' ? 'Token requerido.' : 'Token required.';
           const user = await loginWithGoogle(token);
           if (!user) return language === 'ES' ? 'No se pudo iniciar con Google.' : 'Google login failed.';
-          setCurrentUserId(user.id);
           localStorage.setItem(AUTH_STORAGE, '1');
           setIsAuthenticated(true);
           return null;

@@ -50,6 +50,26 @@ function personaFromUserRole(role: WolfAppRole): 'coach' | 'athlete' {
   return role === 'athlete' ? 'athlete' : 'coach';
 }
 
+function isWolfAppRole(role: unknown): role is WolfAppRole {
+  return role === 'athlete' || role === 'coach' || role === 'super_admin';
+}
+
+/** Si el API devolvió rol del módulo email (trainer/owner), recuperar coach|athlete desde el catálogo Wolf. */
+function reconcileApiUser(apiUser: WolfUser, email: string, catalog: WolfUser[]): WolfUser {
+  if (isWolfAppRole(apiUser.role)) return apiUser;
+  const normalizedEmail = email.trim().toLowerCase();
+  const seed =
+    catalog.find((u) => u.email?.toLowerCase() === normalizedEmail) ?? catalog.find((u) => u.id === apiUser.id);
+  if (!seed) return apiUser;
+  return {
+    ...seed,
+    ...apiUser,
+    role: seed.role,
+    coachId: apiUser.coachId ?? seed.coachId,
+    linkedAthleteId: apiUser.linkedAthleteId ?? seed.linkedAthleteId,
+  };
+}
+
 function normalizeAssignment(a: ProgramAssignment): ProgramAssignment {
   return {
     ...a,
@@ -336,12 +356,15 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       if (!res.ok) return false;
       const data = (await res.json()) as { accessToken?: string; refreshToken?: string; user?: WolfUser };
       storeTokens(data.accessToken, data.refreshToken);
-      if (data.user) applyUserSession(data.user);
+      if (data.user) {
+        const catalog = users.length > 0 ? users : mockUsers;
+        applyUserSession(reconcileApiUser(data.user, data.user.email ?? '', catalog));
+      }
       return true;
     } catch {
       return false;
     }
-  }, [apiRefreshToken, applyUserSession, storeTokens]);
+  }, [apiRefreshToken, applyUserSession, storeTokens, users]);
 
   const apiRequest = useCallback(
     async (path: string, init: RequestInit = {}, retry = true): Promise<Response> => {
@@ -383,7 +406,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         if (!data.user) return;
         await loadUsersFromApi();
         if (cancelled) return;
-        applyUserSession(data.user);
+        const catalog = users.length > 0 ? users : mockUsers;
+        applyUserSession(reconcileApiUser(data.user, data.user.email ?? '', catalog));
       } catch {
         /* red: mantener sesión local */
       }
@@ -391,7 +415,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [apiToken, applyUserSession, clearApiSession, loadUsersFromApi]);
+  }, [apiToken, applyUserSession, clearApiSession, loadUsersFromApi, users]);
 
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId), [currentUserId, users]);
   const coach = useMemo(() => users.find((u) => u.role === 'coach'), [users]);
@@ -531,11 +555,23 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [assignments, athleteUser?.linkedAthleteId]);
 
   const loginUser = useCallback(async (email: string, password: string) => {
+    const commitLoggedInUser = (user: WolfUser): WolfUser => {
+      setUsers((prev) => {
+        const idx = prev.findIndex((u) => u.id === user.id);
+        if (idx >= 0) {
+          return prev.map((u, i) => (i === idx ? { ...u, ...user } : u));
+        }
+        return [...prev, user];
+      });
+      applyUserSession(user);
+      return user;
+    };
+
     if (!isApiEnabled()) {
       const local = users.find(
         (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && matchesStoredPassword(u, password),
       );
-      return local ?? null;
+      return local ? commitLoggedInUser(local) : null;
     }
     const base = getApiBase();
     try {
@@ -561,7 +597,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       const data = (await res.json()) as { user?: WolfUser; token?: string; accessToken?: string; refreshToken?: string };
       storeTokens(data.accessToken ?? data.token, data.refreshToken);
-      return data.user ?? null;
+      if (data.user) {
+        const catalog = users.length > 0 ? users : mockUsers;
+        return commitLoggedInUser(reconcileApiUser(data.user, email, catalog));
+      }
+      return null;
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('El servidor respondió')) {
         throw e;
@@ -570,7 +610,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         'Sin conexión al API. Netlify: en Site → Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
       );
     }
-  }, [storeTokens, users]);
+  }, [applyUserSession, storeTokens, users]);
 
   const loginWithGoogle = useCallback(async (idToken: string) => {
     if (!isApiEnabled()) return null;
@@ -582,8 +622,19 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     if (!res.ok) return null;
     const data = (await res.json()) as { user?: WolfUser; accessToken?: string; refreshToken?: string };
     storeTokens(data.accessToken, data.refreshToken);
+    if (data.user) {
+      const catalog = users.length > 0 ? users : mockUsers;
+      const merged = reconcileApiUser(data.user, data.user.email ?? '', catalog);
+      setUsers((prev) => {
+        const idx = prev.findIndex((u) => u.id === merged.id);
+        if (idx >= 0) return prev.map((u, i) => (i === idx ? { ...u, ...merged } : u));
+        return [...prev, merged];
+      });
+      applyUserSession(merged);
+      return merged;
+    }
     return data.user ?? null;
-  }, [storeTokens]);
+  }, [applyUserSession, storeTokens, users]);
 
   const registerUser = useCallback(async (payload: { name: string; email: string; password: string; role: WolfAppRole }) => {
     const email = payload.email.trim().toLowerCase();

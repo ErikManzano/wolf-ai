@@ -102,8 +102,10 @@ async function bootstrap() {
       if (client.readyState === 1) client.send(message);
     }
   };
-  app.use(createAuthRouter(state, store ?? undefined));
+  // Training router primero: /auth/login y /auth/register usan roles coach|athlete (WolfUser).
+  // Si va después, createAuthRouter captura login y mapea atleta → trainer (UI de coach).
   app.use(createTrainingRouter(state, store ?? undefined, notify));
+  app.use(createAuthRouter(state, store ?? undefined));
   wss.on('connection', (ws) => {
     ws.send(JSON.stringify({ event: 'connected', payload: { service: 'wolf-ai-realtime' }, ts: Date.now() }));
   });

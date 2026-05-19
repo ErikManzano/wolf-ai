@@ -17,6 +17,7 @@ import {
   toggleBlockComplex,
   updateSegmentRepAt,
   updateSetSchemeField,
+  WL_SESSION_LIMITS,
 } from '../../services/sessionMutations';
 import { SetsTable } from './SetsTable';
 import { blockTonnage, exerciseName } from './blockMetrics';
@@ -74,6 +75,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
+  const atMaxComplexSegments = segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS;
   const isWarmup = block.countsTowardTechnicalNBL === false;
   const blockKind = isWarmup ? 'warmup' : isComplex ? 'complex' : 'single';
   const title = blockTitle(block, isComplex, segments, exercises);
@@ -89,7 +91,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   return (
     <article
       ref={blockRef}
-      className={`wolf-se-block wolf-se-block--${blockKind}${expanded ? '' : ' wolf-se-block--collapsed'}`}
+      className={`wolf-se-block wolf-se-block-card wolf-se-block--${blockKind}${expanded ? '' : ' wolf-se-block--collapsed'}`}
       data-block-index={bi + 1}
     >
       <header className="wolf-se-block-head">
@@ -210,11 +212,24 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               {isComplex && segments.length > 0 ? (
                 <section className="wolf-se-config-section" aria-label={isEs ? 'Movimientos del complejo' : 'Complex movements'}>
                   <div className="wolf-se-config-section-head">
-                    <h4 className="wolf-se-config-title">{isEs ? 'Cadena del complejo' : 'Complex chain'}</h4>
+                    <h4 className="wolf-se-config-title">
+                      {isEs ? 'Cadena del complejo' : 'Complex chain'}
+                      <span className="wolf-se-chain-count">
+                        {segments.length}/{WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
+                      </span>
+                    </h4>
                     <div className="wolf-se-chain-tools">
                       <button
                         type="button"
                         className="wolf-se-btn wolf-se-btn--ghost wolf-se-btn--sm"
+                        disabled={atMaxComplexSegments}
+                        title={
+                          atMaxComplexSegments
+                            ? isEs
+                              ? 'Máximo 4 movimientos por complejo'
+                              : 'Maximum 4 movements per complex'
+                            : undefined
+                        }
                         onClick={() =>
                           apply(() =>
                             addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises),
@@ -322,7 +337,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
           </div>
 
-                    <footer className="wolf-se-block-footer">
+          <footer className="wolf-se-block-footer">
             <span>{isEs ? 'Tonelaje del bloque' : 'Block tonnage'}</span>
             <strong>{tonnage} kg</strong>
           </footer>

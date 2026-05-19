@@ -7,6 +7,8 @@ const MIN_SETS_PER_SCHEME = 1;
 const MAX_SETS_PER_SCHEME = 10;
 const MAX_ROWS_PER_BLOCK = 8;
 const MAX_BLOCKS_PER_SESSION = 8;
+const MIN_COMPLEX_SEGMENTS = 2;
+const MAX_COMPLEX_SEGMENTS = 4;
 
 function cloneSession(session: Session): Session {
   return JSON.parse(JSON.stringify(session)) as Session;
@@ -16,6 +18,9 @@ function cloneSession(session: Session): Session {
 function syncDerivedReps(s: Session): void {
   for (const b of s.exercises) {
     if (normalizeBlockType(b) === 'complex' && b.segments?.length) {
+      if (b.segments.length > MAX_COMPLEX_SEGMENTS) {
+        b.segments = b.segments.slice(0, MAX_COMPLEX_SEGMENTS);
+      }
       for (const scheme of b.sets) {
         if (!scheme.segmentReps || scheme.segmentReps.length < b.segments.length) {
           scheme.segmentReps = b.segments.map((_, i) => scheme.segmentReps?.[i] ?? '1');
@@ -102,7 +107,9 @@ export function addComplexSegment(
   const s = cloneSession(session);
   const block = s.exercises[blockIndex];
   if (!block || normalizeBlockType(block) !== 'complex') return session;
-  block.segments = [...(block.segments ?? []), { exerciseId }];
+  const current = block.segments ?? [];
+  if (current.length >= MAX_COMPLEX_SEGMENTS) return session;
+  block.segments = [...current, { exerciseId }];
   const n = block.segments.length;
   for (const scheme of block.sets) {
     const sr = [...(scheme.segmentReps ?? [])];
@@ -345,4 +352,6 @@ export const WL_SESSION_LIMITS = {
   MAX_SETS_PER_SCHEME,
   MAX_ROWS_PER_BLOCK,
   MAX_BLOCKS_PER_SESSION,
+  MIN_COMPLEX_SEGMENTS,
+  MAX_COMPLEX_SEGMENTS,
 } as const;
