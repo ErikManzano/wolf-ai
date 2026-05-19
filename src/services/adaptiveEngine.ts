@@ -69,7 +69,7 @@ export function adaptSession(session: Session, athlete: Athlete, exercises: Exer
         if (sch.reps > 1) return { ...sch, reps: sch.reps - 1 };
         const ex = exById.get(block.exerciseId);
         const lo = ex?.intensityRange[0] ?? 50;
-        const hi = ex?.intensityRange[1] ?? 100;
+        const hi = ex?.intensityRange[1] ?? 120;
         return { ...sch, percentage: clampPct(sch.percentage - 3, lo, hi) };
       }),
     }));

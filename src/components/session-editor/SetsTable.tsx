@@ -1,14 +1,14 @@
 import React from 'react';
 import { Copy, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
-import { normalizeBlockType } from '../../services/trainingEngine';
+import { normalizeBlockType, WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { CompactNumberField } from './CompactNumberField';
 import { exerciseName, kgForExercise } from './blockMetrics';
 import { SectionHeader } from './SectionHeader';
 import './set-rows.css';
 
-/** Incremento de %1RM con botones −/+ (entrada manual sigue permitiendo cualquier entero 40–100). */
+/** Incremento de %1RM con botones −/+ (entrada manual: enteros 40–120). */
 const PCT_BUTTON_STEP = 5;
 
 interface SetsTableProps {
@@ -111,8 +111,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     <span className="wolf-se-field-chip-label">%1RM</span>
                     <CompactNumberField
                       value={row.percentage}
-                      min={40}
-                      max={100}
+                      min={WL_PCT_MIN}
+                      max={WL_PCT_MAX}
                       step={PCT_BUTTON_STEP}
                       suffix="%"
                       onChange={(v) => onPctChange(si, v)}
@@ -177,8 +177,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     <td>
                       <CompactNumberField
                         value={row.percentage}
-                        min={40}
-                        max={100}
+                        min={WL_PCT_MIN}
+                        max={WL_PCT_MAX}
                         step={PCT_BUTTON_STEP}
                         suffix="%"
                         onChange={(v) => onPctChange(si, v)}
@@ -233,8 +233,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   <span className="wolf-se-field-chip-label">%1RM</span>
                   <CompactNumberField
                     value={row.percentage}
-                    min={40}
-                    max={100}
+                    min={WL_PCT_MIN}
+                    max={WL_PCT_MAX}
                     step={PCT_BUTTON_STEP}
                     suffix="%"
                     onChange={(v) => onPctChange(si, v)}

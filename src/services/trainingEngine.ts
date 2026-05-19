@@ -53,9 +53,12 @@ export function normalizeBlockType(block: SessionExerciseBlock): 'single' | 'com
   return block.blockType === 'complex' && block.segments && block.segments.length >= 2 ? 'complex' : 'single';
 }
 
-/** % enteros tipo tabla Prilepin (70, 75, 80, 85…) — rango 40–100. */
+/** %1RM enteros — rango habitual halterofilia 40–120 (pulls/overloads). */
+export const WL_PCT_MIN = 40;
+export const WL_PCT_MAX = 120;
+
 export function roundPercentagePrilepin(pct: number): number {
-  return Math.round(Math.min(100, Math.max(40, pct)));
+  return Math.round(Math.min(WL_PCT_MAX, Math.max(WL_PCT_MIN, pct)));
 }
 
 function roundPercentagesDeep(session: Session): Session {

@@ -1,5 +1,6 @@
 import type { Athlete, Assignment, Program, Exercise, ExerciseSet, IntakeData } from '../context/AppContext';
 import type { ProgramAssignment, SessionCompletion } from '../models/training';
+import { countCompletedDays } from './completionHelpers';
 
 const LIFT_KEYS = ['snatch', 'cleanJerk', 'deadlift', 'backSquat', 'frontSquat'] as const;
 
@@ -232,7 +233,7 @@ export function wlAssignmentStatus(
   completions: SessionCompletion[],
 ): WlAssignmentStatus {
   const slots = wlSlots(assignment.program);
-  const done = completions.filter((c) => c.assignmentId === assignment.id).length;
+  const done = countCompletedDays(completions, assignment.id, assignment.program);
   if (slots > 0 && done >= slots) return 'complete';
   if (done > 0) return 'active';
   const ageDays = (Date.now() - new Date(assignment.assignedAt).getTime()) / 86400000;
@@ -257,7 +258,7 @@ export function buildWlAssignmentRows(
 ): WlAssignmentRow[] {
   return wlAssignments.map((a) => {
     const slots = wlSlots(a.program);
-    const done = completions.filter((c) => c.assignmentId === a.id).length;
+    const done = countCompletedDays(completions, a.id, a.program);
     return {
       assignmentId: a.id,
       athleteProfileId: a.athleteProfileId,
@@ -280,7 +281,7 @@ export function aggregateWlAttendance(
   for (const a of wlAssignments) {
     const slots = wlSlots(a.program);
     total += slots;
-    done += completions.filter((c) => c.assignmentId === a.id).length;
+    done += countCompletedDays(completions, a.id, a.program);
   }
   return {
     done,
@@ -299,7 +300,7 @@ export function buildAlertsWl(input: {
   const DAY = 86400000;
   for (const a of input.wlAssignments) {
     const slots = wlSlots(a.program);
-    const done = input.completions.filter((c) => c.assignmentId === a.id).length;
+    const done = countCompletedDays(input.completions, a.id, a.program);
     const ageDays = (now - new Date(a.assignedAt).getTime()) / DAY;
     if (slots > 0 && done === 0 && ageDays > 10) {
       alerts.push({

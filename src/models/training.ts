@@ -134,12 +134,14 @@ export interface ProgramAssignment {
   assignedAt: string;
 }
 
-/** Sesión marcada como realizada (disciplina / asistencia). */
+/** Sesión o ejercicio marcado como realizado (disciplina / asistencia). */
 export interface SessionCompletion {
   assignmentId: string;
   weekNumber: number;
   dayNumber: number;
   completedAt: string;
+  /** Índice del bloque en `session.exercises`. Omitido = día completo. */
+  exerciseIndex?: number;
 }
 
 export interface Session {

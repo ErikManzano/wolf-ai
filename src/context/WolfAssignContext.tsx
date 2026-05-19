@@ -10,6 +10,12 @@ import type {
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
+import {
+  completionMatches,
+  isDayComplete,
+  isExerciseComplete,
+  isSessionMarkedComplete,
+} from '../utils/completionHelpers';
 
 /** Usuario app enlazado a este perfil motor (p. ej. Erik ↔ ath-you). */
 function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
@@ -133,8 +139,20 @@ interface WolfAssignContextValue {
   saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => string;
   deleteCoachTemplate: (templateId: string) => void;
   assignFromTemplate: (templateId: string, athleteProfileId: string) => string | null;
-  toggleSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number) => void;
-  isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number) => boolean;
+  toggleSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => void;
+  isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => boolean;
+  toggleExerciseComplete: (
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+    exerciseIndex: number,
+  ) => void;
+  isExerciseComplete: (
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+    exerciseIndex: number,
+  ) => boolean;
   /** Asignación activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
@@ -270,10 +288,26 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const loadCompletionsFromApi = useCallback(async () => {
+    if (!isApiEnabled()) return;
+    try {
+      const headers: Record<string, string> = {};
+      const token = readApiToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${getApiBase()}/completions`, { headers });
+      if (!res.ok) return;
+      const list = (await res.json()) as SessionCompletion[];
+      if (Array.isArray(list)) setCompletions(list);
+    } catch {
+      /* fallback to local state */
+    }
+  }, []);
+
   useEffect(() => {
     void loadUsersFromApi();
     void loadAssignmentsFromApi();
-  }, [loadUsersFromApi, loadAssignmentsFromApi]);
+    void loadCompletionsFromApi();
+  }, [loadUsersFromApi, loadAssignmentsFromApi, loadCompletionsFromApi]);
 
   useEffect(() => {
     if (!isApiEnabled()) return;
@@ -609,33 +643,105 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     [coachTemplates, assignProgramToAthlete],
   );
 
-  const toggleSessionComplete = useCallback((assignmentId: string, weekNumber: number, dayNumber: number) => {
-    setCompletions((prev) => {
-      const exists = prev.some(
-        (x) => x.assignmentId === assignmentId && x.weekNumber === weekNumber && x.dayNumber === dayNumber,
-      );
-      if (exists) {
-        return prev.filter(
-          (x) => !(x.assignmentId === assignmentId && x.weekNumber === weekNumber && x.dayNumber === dayNumber),
+  const applySessionToggleLocal = useCallback(
+    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount: number) => {
+      setCompletions((prev) => {
+        const done = isDayComplete(prev, assignmentId, weekNumber, dayNumber, exerciseCount);
+        const filtered = prev.filter(
+          (c) =>
+            !(
+              c.assignmentId === assignmentId &&
+              c.weekNumber === weekNumber &&
+              c.dayNumber === dayNumber
+            ),
         );
-      }
-      return [
-        ...prev,
-        {
-          assignmentId,
-          weekNumber,
-          dayNumber,
-          completedAt: new Date().toISOString(),
-        },
-      ];
-    });
-  }, []);
+        if (done) return filtered;
+        return [
+          ...filtered,
+          {
+            assignmentId,
+            weekNumber,
+            dayNumber,
+            completedAt: new Date().toISOString(),
+          },
+        ];
+      });
+    },
+    [],
+  );
+
+  const toggleSessionComplete = useCallback(
+    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount = 0) => {
+      applySessionToggleLocal(assignmentId, weekNumber, dayNumber, exerciseCount);
+      if (!isApiEnabled()) return;
+      void apiRequest('/completions/session-toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseCount }),
+      })
+        .then((res) => {
+          if (!res.ok) void loadCompletionsFromApi();
+        })
+        .catch(() => void loadCompletionsFromApi());
+    },
+    [apiRequest, applySessionToggleLocal, loadCompletionsFromApi],
+  );
 
   const isSessionComplete = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number) =>
-      completions.some(
-        (x) => x.assignmentId === assignmentId && x.weekNumber === weekNumber && x.dayNumber === dayNumber,
-      ),
+    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount = 0) =>
+      isDayComplete(completions, assignmentId, weekNumber, dayNumber, exerciseCount),
+    [completions],
+  );
+
+  const toggleExerciseComplete = useCallback(
+    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) => {
+      setCompletions((prev) => {
+        const exists = prev.some((c) =>
+          completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
+        );
+        if (exists) {
+          return prev.filter(
+            (c) => !completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
+          );
+        }
+        const withoutSession = prev.filter(
+          (c) =>
+            !(
+              c.assignmentId === assignmentId &&
+              c.weekNumber === weekNumber &&
+              c.dayNumber === dayNumber &&
+              c.exerciseIndex === undefined
+            ),
+        );
+        return [
+          ...withoutSession,
+          {
+            assignmentId,
+            weekNumber,
+            dayNumber,
+            exerciseIndex,
+            completedAt: new Date().toISOString(),
+          },
+        ];
+      });
+      if (!isApiEnabled()) return;
+      void apiRequest('/completions/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseIndex }),
+      })
+        .then((res) => {
+          if (!res.ok) void loadCompletionsFromApi();
+        })
+        .catch(() => void loadCompletionsFromApi());
+    },
+    [apiRequest, loadCompletionsFromApi],
+  );
+
+  const isExerciseCompleteFn = useCallback(
+    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) =>
+      isExerciseComplete(completions, assignmentId, weekNumber, dayNumber, exerciseIndex) ||
+      isSessionMarkedComplete(completions, assignmentId, weekNumber, dayNumber),
     [completions],
   );
 
@@ -939,6 +1045,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     assignFromTemplate,
     toggleSessionComplete,
     isSessionComplete,
+    toggleExerciseComplete,
+    isExerciseComplete: isExerciseCompleteFn,
     myAssignment,
     loginUser,
     loginWithGoogle,

@@ -66,7 +66,7 @@ export const BlockHeader: React.FC<BlockHeaderProps> = ({
               </p>
             )}
             <div className="wolf-se-intensity-bar" aria-hidden>
-              <div className="wolf-se-intensity-fill" style={{ width: `${Math.min(100, avgPct)}%` }} />
+              <div className="wolf-se-intensity-fill" style={{ width: `${Math.min(120, avgPct) / 1.2}%` }} />
             </div>
             <div className="wolf-se-stats">
               <div>

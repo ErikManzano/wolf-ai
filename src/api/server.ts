@@ -63,6 +63,7 @@ const state = {
   sessions: [] as Session[],
   users: [...mockUsers],
   assignments: seedAssignments(),
+  completions: [],
 };
 
 async function bootstrap() {

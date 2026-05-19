@@ -280,14 +280,53 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.15rem 1.15rem 1rem 1.35rem;
+  padding: 1.15rem 1.15rem 1rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.wolf-athlete-day-card--collapsed .wolf-athlete-day-top {
+  border-bottom: none;
+}
+
+.wolf-athlete-day-expand {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-top: 2px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.wolf-athlete-day-expand:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-accent);
+}
+
+.wolf-athlete-day-chevron {
+  transition: transform 0.2s ease;
+}
+
+.wolf-athlete-day-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.wolf-athlete-metric--progress strong {
+  color: var(--color-success);
 }
 
 .wolf-athlete-day-title-row {
   display: flex;
   align-items: flex-start;
   gap: 0.85rem;
+  flex: 1;
   min-width: 0;
 }
 
@@ -390,14 +429,57 @@
   border-radius: 11px;
   background: var(--color-bg-secondary);
   border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.wolf-athlete-exercise--done {
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg-secondary));
 }
 
 .wolf-athlete-exercise-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 0.65rem;
-  margin-bottom: 0.55rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.wolf-athlete-exercise-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.wolf-athlete-exercise-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.wolf-athlete-exercise-done-btn:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-exercise-done-btn.active {
+  border-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-bg-panel));
+  color: color-mix(in srgb, var(--color-success) 92%, #fff);
+}
+
+.wolf-athlete-exercise-done-btn.active svg {
+  color: var(--color-success);
 }
 
 .wolf-athlete-pill {

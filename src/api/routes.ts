@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, Session, SessionGoal, WolfUser } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, WolfUser } from '../models/training';
+import { isDayComplete } from '../utils/completionHelpers';
 import { generateSession } from '../services/sessionGenerator';
 import { evaluateSessionFull } from '../services/sessionEvaluator';
 import { adaptSession } from '../services/adaptiveEngine';
@@ -14,6 +15,7 @@ export interface MockApiState {
   sessions: Session[];
   users: WolfUser[];
   assignments: ProgramAssignment[];
+  completions: SessionCompletion[];
 }
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
@@ -370,6 +372,103 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     state.assignments[idx] = updated;
     notify?.('assignments:changed', { id: updated.id, athleteProfileId: updated.athleteProfileId });
     res.json(updated);
+  });
+
+  router.get('/completions', async (req, res) => {
+    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
+    if (store) {
+      res.json(await store.getCompletions(assignmentId));
+      return;
+    }
+    const list = assignmentId
+      ? state.completions.filter((c) => c.assignmentId === assignmentId)
+      : state.completions;
+    res.json(list);
+  });
+
+  router.post('/completions/toggle', async (req, res) => {
+    const body = req.body as {
+      assignmentId?: string;
+      weekNumber?: number;
+      dayNumber?: number;
+      exerciseIndex?: number;
+    };
+    if (!body.assignmentId || body.weekNumber == null || body.dayNumber == null) {
+      res.status(400).json({ error: 'assignmentId, weekNumber and dayNumber are required.' });
+      return;
+    }
+    const payload = {
+      assignmentId: body.assignmentId,
+      weekNumber: Number(body.weekNumber),
+      dayNumber: Number(body.dayNumber),
+      ...(body.exerciseIndex != null ? { exerciseIndex: Number(body.exerciseIndex) } : {}),
+    };
+    if (store) {
+      const active = await store.toggleCompletion(payload);
+      res.json({ active });
+      return;
+    }
+    const match = (c: SessionCompletion) =>
+      c.assignmentId === payload.assignmentId &&
+      c.weekNumber === payload.weekNumber &&
+      c.dayNumber === payload.dayNumber &&
+      (payload.exerciseIndex == null ? c.exerciseIndex == null : c.exerciseIndex === payload.exerciseIndex);
+    const idx = state.completions.findIndex(match);
+    if (idx >= 0) {
+      state.completions.splice(idx, 1);
+      res.json({ active: false });
+      return;
+    }
+    state.completions.push({
+      ...payload,
+      completedAt: new Date().toISOString(),
+    });
+    res.json({ active: true });
+  });
+
+  router.post('/completions/session-toggle', async (req, res) => {
+    const body = req.body as {
+      assignmentId?: string;
+      weekNumber?: number;
+      dayNumber?: number;
+      exerciseCount?: number;
+    };
+    if (!body.assignmentId || body.weekNumber == null || body.dayNumber == null) {
+      res.status(400).json({ error: 'assignmentId, weekNumber and dayNumber are required.' });
+      return;
+    }
+    const assignmentId = body.assignmentId;
+    const weekNumber = Number(body.weekNumber);
+    const dayNumber = Number(body.dayNumber);
+    const exerciseCount = Number(body.exerciseCount ?? 0);
+    if (store) {
+      const list = await store.getCompletions(assignmentId);
+      const dayDone = isDayComplete(list, assignmentId, weekNumber, dayNumber, exerciseCount);
+      if (dayDone) {
+        await store.deleteCompletionsForDay(assignmentId, weekNumber, dayNumber);
+        res.json({ active: false });
+        return;
+      }
+      await store.deleteCompletionsForDay(assignmentId, weekNumber, dayNumber);
+      await store.toggleCompletion({ assignmentId, weekNumber, dayNumber });
+      res.json({ active: true });
+      return;
+    }
+    const dayDone = isDayComplete(state.completions, assignmentId, weekNumber, dayNumber, exerciseCount);
+    state.completions = state.completions.filter(
+      (c) => !(c.assignmentId === assignmentId && c.weekNumber === weekNumber && c.dayNumber === dayNumber),
+    );
+    if (!dayDone) {
+      state.completions.push({
+        assignmentId,
+        weekNumber,
+        dayNumber,
+        completedAt: new Date().toISOString(),
+      });
+      res.json({ active: true });
+      return;
+    }
+    res.json({ active: false });
   });
 
   router.delete('/assignments/:id', async (req, res) => {

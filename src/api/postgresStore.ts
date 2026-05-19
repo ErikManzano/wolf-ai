@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { ProgramAssignment, WolfUser } from '../models/training';
+import type { ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
 import type { AuthRole, AuthUser } from './auth/types';
 
@@ -71,6 +71,20 @@ export class PostgresStore {
         program JSONB NOT NULL,
         assigned_at TIMESTAMPTZ NOT NULL
       );
+    `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS workout_completions (
+        id TEXT PRIMARY KEY,
+        assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+        week_number INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        exercise_index INTEGER,
+        completed_at TIMESTAMPTZ NOT NULL
+      );
+    `);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS workout_completions_slot_idx
+      ON workout_completions (assignment_id, week_number, day_number, COALESCE(exercise_index, -1));
     `);
 
     const syncPasswords = process.env.WOLF_SYNC_SEED_PASSWORDS !== '0';
@@ -360,6 +374,83 @@ export class PostgresStore {
     const result = await this.pool.query('DELETE FROM assignments WHERE id = $1;', [id]);
     return (result.rowCount ?? 0) > 0;
   }
+
+  async getCompletions(assignmentId?: string): Promise<SessionCompletion[]> {
+    const result = assignmentId
+      ? await this.pool.query(
+          `
+          SELECT assignment_id, week_number, day_number, exercise_index, completed_at
+          FROM workout_completions
+          WHERE assignment_id = $1
+          ORDER BY completed_at DESC;
+          `,
+          [assignmentId],
+        )
+      : await this.pool.query(
+          `
+          SELECT assignment_id, week_number, day_number, exercise_index, completed_at
+          FROM workout_completions
+          ORDER BY completed_at DESC;
+          `,
+        );
+    return result.rows.map(this.mapCompletionRow);
+  }
+
+  async toggleCompletion(input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex?: number;
+  }): Promise<boolean> {
+    const exerciseIndex = input.exerciseIndex ?? null;
+    const existing = await this.pool.query(
+      `
+      SELECT id FROM workout_completions
+      WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
+        AND (
+          ($4::int IS NULL AND exercise_index IS NULL)
+          OR exercise_index = $4
+        )
+      LIMIT 1;
+      `,
+      [input.assignmentId, input.weekNumber, input.dayNumber, exerciseIndex],
+    );
+    if (existing.rows.length > 0) {
+      await this.pool.query('DELETE FROM workout_completions WHERE id = $1;', [existing.rows[0].id]);
+      return false;
+    }
+    const id = `wc-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    await this.pool.query(
+      `
+      INSERT INTO workout_completions (id, assignment_id, week_number, day_number, exercise_index, completed_at)
+      VALUES ($1, $2, $3, $4, $5, $6::timestamptz);
+      `,
+      [id, input.assignmentId, input.weekNumber, input.dayNumber, exerciseIndex, new Date().toISOString()],
+    );
+    return true;
+  }
+
+  async deleteCompletionsForDay(
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+  ): Promise<void> {
+    await this.pool.query(
+      `
+      DELETE FROM workout_completions
+      WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3;
+      `,
+      [assignmentId, weekNumber, dayNumber],
+    );
+  }
+
+  private mapCompletionRow = (row: Record<string, unknown>): SessionCompletion => ({
+    assignmentId: row.assignment_id as string,
+    weekNumber: Number(row.week_number),
+    dayNumber: Number(row.day_number),
+    ...(row.exercise_index != null ? { exerciseIndex: Number(row.exercise_index) } : {}),
+    completedAt: new Date(row.completed_at as string | Date).toISOString(),
+  });
 
   private mapAssignmentRow = (row: Record<string, unknown>): ProgramAssignment => ({
     id: row.id as string,
