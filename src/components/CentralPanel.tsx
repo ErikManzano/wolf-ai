@@ -12,8 +12,7 @@ import { useAppContext } from '../context/AppContext';
 import type { Athlete, IntakeData } from '../context/AppContext';
 import OlympicEnginePanel from './OlympicEnginePanel';
 import { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
-import QuickSessionModule from './QuickSessionModule';
-import ProTemplatesModule from './ProTemplatesModule';
+import CoachExerciseLibrary from './CoachExerciseLibrary';
 import AthleteTrainingView from './AthleteTrainingView';
 import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -105,6 +104,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   const [intakeSubmitSuccess, setIntakeSubmitSuccess] = useState(false);
 
   useEffect(() => {
+    if (activeView === 'library' || activeView === 'wl-exercises') {
+      setActiveView('exercise-intelligence');
+    }
+  }, [activeView, setActiveView]);
+
+  useEffect(() => {
     if (activeView !== 'onboarding') setIntakeSubmitSuccess(false);
   }, [activeView]);
 
@@ -124,8 +129,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     if (persona !== 'athlete') return;
     const coachOnly =
       activeView === 'wolf-engine' ||
-      activeView === 'wl-quick' ||
-      activeView === 'wl-templates' ||
+      activeView === 'exercise-intelligence' ||
       activeView === 'athletes' ||
       activeView === 'planning';
     if (coachOnly) setActiveView('my-wl-plan');
@@ -2633,8 +2637,9 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
       {(activeView === 'micros' || activeView === 'sessions' || activeView === 'macros' || activeView === 'mesos') && renderPeriodization()}
       {activeView === 'library' && renderExerciseLibrary()}
       {activeView === 'wolf-engine' && <OlympicEnginePanel language={language} />}
-      {activeView === 'wl-quick' && <QuickSessionModule language={language} />}
-      {activeView === 'wl-templates' && <ProTemplatesModule language={language} />}
+      {(activeView === 'wl-exercises' || activeView === 'exercise-intelligence') && (
+        <CoachExerciseLibrary language={language} />
+      )}
       {activeView === 'my-wl-plan' && <AthleteTrainingView language={language} />}
       {activeView === 'admin-users' && renderAdminUsersView()}
       {activeView === 'global-calendar' && renderCalendarView()}

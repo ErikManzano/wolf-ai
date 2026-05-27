@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import './ChatPanel.css';
 import { useAppContext } from '../context/AppContext';
+import { useWolfAssign } from '../context/WolfAssignContext';
+import { buildExerciseFeatureVector } from '../services/exercise';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
 interface ChatPanelProps {
@@ -39,6 +41,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const showDesktopCollapse = Boolean(isDesktopChatLayout && onToggleDesktopCollapse);
 
   const { applyDeload, reduceVolume, exerciseLibrary, selectedExerciseId } = useAppContext();
+  const { motorExerciseDefinitions, exerciseRelationships } = useWolfAssign();
   const [inputText, setInputText] = useState('');
   const [activeTab, setActiveTab] = useState<'chat' | 'info'>('chat');
 
@@ -78,13 +81,31 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     setMessages((prev) => [...prev, newUserMsg]);
     setInputText('');
 
+    const lower = inputText.toLowerCase();
+    const wantsExerciseRec =
+      lower.includes('ejercicio') ||
+      lower.includes('exercise') ||
+      lower.includes('snatch') ||
+      lower.includes('arranque');
+
     setTimeout(() => {
+      let reply = isEs
+        ? 'Entendido. He aplicado los cambios. ¿Hay algo más en lo que pueda ayudar?'
+        : 'Understood. I have applied the changes. Is there anything else I can help with?';
+
+      if (wantsExerciseRec && motorExerciseDefinitions.length) {
+        const technical = motorExerciseDefinitions.filter((d) => d.objective === 'technique').slice(0, 3);
+        const names = technical.map((d) => d.displayName).join(', ');
+        const vec = technical[0] ? buildExerciseFeatureVector(technical[0]) : null;
+        reply = isEs
+          ? `Catálogo WL (${motorExerciseDefinitions.length} defs). Sugerencia técnica: ${names}. Reglas activas: ${exerciseRelationships.filter((r) => r.isActive).length}. Feature vector dims: ${vec ? Object.keys(vec.familyOneHot).length : 0} familias.`
+          : `WL catalog (${motorExerciseDefinitions.length} defs). Technical picks: ${names}. Active rules: ${exerciseRelationships.filter((r) => r.isActive).length}. Feature vector families: ${vec ? Object.keys(vec.familyOneHot).length : 0}.`;
+      }
+
       const newAiMsg: Message = {
         id: msgIdRef.current++,
         sender: 'ai',
-        text: isEs
-          ? 'Entendido. He aplicado los cambios. ¿Hay algo más en lo que pueda ayudar?'
-          : 'Understood. I have applied the changes. Is there anything else I can help with?',
+        text: reply,
       };
       setMessages((prev) => [...prev, newAiMsg]);
     }, 1000);

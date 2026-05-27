@@ -32,6 +32,12 @@ export type ExerciseComplexity = 'single' | 'complex';
 
 export type ExerciseGoal = 'technique' | 'strength' | 'power';
 
+/**
+ * Which athlete 1RM anchors kg for prescriptions (`SetScheme.percentage`).
+ * `auto` keeps legacy mapping from category + accessory name heuristics.
+ */
+export type ExerciseLoadAnchor = 'auto' | 'snatch' | 'clean_jerk' | 'back_squat' | 'front_squat';
+
 export interface Exercise {
   id: string;
   name: string;
@@ -40,8 +46,19 @@ export interface Exercise {
   startPosition: StartPosition;
   complexity: ExerciseComplexity;
   goal: ExerciseGoal;
-  /** Sensible %1RM window for classical prescriptions (Prilepin band) */
+  /**
+   * Sensible %1RM window for classical prescriptions (Prilepin band).
+   * @deprecated Prefer training_objectives bands via exercise definitions.
+   */
   intensityRange: [number, number];
+  /** Semantic tags from composable definitions (motor filtering). */
+  tags?: string[];
+  /**
+   * Multiplier applied after resolving the anchor 1RM (e.g. 1.05 ≈ 105 % of clean for clean pulls).
+   * Omit or 1 = no extra scaling.
+   */
+  loadAnchor?: ExerciseLoadAnchor;
+  loadScale?: number;
 }
 
 export interface SetScheme {

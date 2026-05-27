@@ -1,7 +1,8 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
-import type { Exercise, ExerciseCategory } from '../../models/training';
-import { filterExercises } from './blockMetrics';
+import type { ExerciseCategory } from '../../models/training';
+import type { ExerciseLifecycleStatus } from '../../models/exercise';
+import { filterPickerOptions, type SessionPickerOption } from '../../services/exercise';
 
 const CAT: Record<ExerciseCategory, string> = {
   snatch: 'SN',
@@ -10,8 +11,20 @@ const CAT: Record<ExerciseCategory, string> = {
   accessory: 'AC',
 };
 
+function lifecycleBadgeClass(status: ExerciseLifecycleStatus): string {
+  return `wolf-ei-badge wolf-ei-badge--${status}`;
+}
+
+const SHORT_LIFECYCLE: Record<ExerciseLifecycleStatus, [string, string]> = {
+  official: ['Of.', 'Off.'],
+  coach_modified: ['Coach', 'Coach'],
+  experimental: ['Propio', 'Cust.'],
+  deprecated: ['Dep.', 'Dep.'],
+  ai_suggested: ['IA', 'AI'],
+};
+
 interface ExerciseAutocompleteProps {
-  exercises: Exercise[];
+  options: SessionPickerOption[];
   value: string;
   onChange: (exerciseId: string) => void;
   isEs: boolean;
@@ -20,7 +33,7 @@ interface ExerciseAutocompleteProps {
 }
 
 export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
-  exercises,
+  options,
   value,
   onChange,
   isEs,
@@ -33,8 +46,8 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  const selected = exercises.find((e) => e.id === value);
-  const suggestions = filterExercises(exercises, query, 12);
+  const selected = options.find((o) => o.id === value);
+  const suggestions = filterPickerOptions(options, query, 12);
 
   useEffect(() => {
     if (!open) setQuery(selected?.name ?? '');
@@ -89,16 +102,26 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       </div>
       {open && suggestions.length > 0 && (
         <ul id={listId} role="listbox" className="wolf-se-autocomplete-menu">
-          {suggestions.map((ex) => (
-            <li key={ex.id} role="option" aria-selected={ex.id === value}>
+          {suggestions.map((opt) => (
+            <li key={opt.id} role="option" aria-selected={opt.id === value}>
               <button
                 type="button"
-                className={`wolf-se-autocomplete-option${ex.id === value ? ' is-selected' : ''}`}
+                className={`wolf-se-autocomplete-option${opt.id === value ? ' is-selected' : ''}`}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(ex.id)}
+                onClick={() => pick(opt.id)}
               >
-                <span>{ex.name}</span>
-                <span className="wolf-se-autocomplete-cat">{CAT[ex.category]}</span>
+                <span>{opt.name}</span>
+                <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  {opt.kind === 'complex' ? (
+                    <span className="wolf-ei-badge wolf-ei-badge--coach_modified" style={{ fontSize: '0.6rem' }}>
+                      C+
+                    </span>
+                  ) : null}
+                  <span className={lifecycleBadgeClass(opt.lifecycleStatus)} style={{ fontSize: '0.6rem' }}>
+                    {SHORT_LIFECYCLE[opt.lifecycleStatus][isEs ? 0 : 1]}
+                  </span>
+                  <span className="wolf-se-autocomplete-cat">{CAT[opt.category]}</span>
+                </span>
               </button>
             </li>
           ))}

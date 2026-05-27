@@ -334,11 +334,20 @@
   }
 }
 
+/* Desktop — dentro del bloque, el ancho lo define la columna de series */
+article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact {
+  max-width: none;
+}
+
 /* Desktop */
 @media (min-width: 1024px) {
   .wolf-se-num-compact {
     min-height: 40px;
     max-width: 132px;
+  }
+
+  article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact {
+    max-width: none;
   }
 
   .wolf-se-num-compact-btn {

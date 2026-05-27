@@ -1,5 +1,18 @@
 import type { Athlete, Exercise, Session, SessionExerciseBlock, SessionGoal, SetScheme } from '../models/training';
+import { getExerciseTaxonomy, intensityRangeForExercise } from './exercise';
 import { applySessionMetrics } from './trainingEngine';
+
+const GOAL_OBJECTIVES: Record<SessionGoal, string[]> = {
+  technique: ['technique', 'positional', 'recovery'],
+  strength: ['strength', 'pulling_strength'],
+  power: ['speed'],
+};
+
+const GOAL_TO_LEGACY: Record<SessionGoal, Exercise['goal'][]> = {
+  technique: ['technique'],
+  strength: ['strength'],
+  power: ['power'],
+};
 
 export function newSessionId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -31,12 +44,29 @@ export function buildSessionFromBlocks(
   return applySessionMetrics(base, athlete, exercises);
 }
 
-/** Pool ordenado por id para reproducibilidad en MVP */
+/** Pool ordenado por id; prioriza objetivo semántico y tags cuando el catálogo viene de definitions. */
 export function getExercisePoolForGoal(goal: SessionGoal, catalog: Exercise[]): Exercise[] {
-  let pool = catalog.filter((e) => e.goal === goal);
+  const taxonomy = getExerciseTaxonomy();
+  const legacyGoals = GOAL_TO_LEGACY[goal];
+  const semanticTags = new Set(GOAL_OBJECTIVES[goal]);
+
+  let pool = catalog.filter((e) => {
+    if (legacyGoals.includes(e.goal)) return true;
+    const tags = (e as Exercise & { tags?: string[] }).tags;
+    if (tags?.some((t) => semanticTags.has(t))) return true;
+    return false;
+  });
+
   if (pool.length < 3) {
-    pool = [...catalog];
+    pool = catalog.filter((e) => {
+      const [lo, hi] = intensityRangeForExercise(e, taxonomy);
+      const mid = (lo + hi) / 2;
+      if (goal === 'technique') return mid <= 80;
+      if (goal === 'strength') return mid >= 75;
+      return mid >= 70;
+    });
   }
+  if (pool.length < 3) pool = [...catalog];
   return [...pool].sort((a, b) => a.id.localeCompare(b.id));
 }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GripVertical, Link2, Plus, Trash2 } from 'lucide-react';
 import type { Exercise } from '../../models/training';
+import type { SessionPickerOption } from '../../services/exercise';
 import { exerciseName } from './blockMetrics';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { SectionHeader } from './SectionHeader';
@@ -8,6 +9,7 @@ import { SectionHeader } from './SectionHeader';
 interface ComplexSequenceProps {
   segmentIds: string[];
   exercises: Exercise[];
+  pickerOptions: SessionPickerOption[];
   isEs: boolean;
   onSegmentChange: (index: number, exerciseId: string) => void;
   onAdd: () => void;
@@ -19,6 +21,7 @@ interface ComplexSequenceProps {
 export const ComplexSequence: React.FC<ComplexSequenceProps> = ({
   segmentIds,
   exercises,
+  pickerOptions,
   isEs,
   onSegmentChange,
   onAdd,
@@ -77,7 +80,7 @@ export const ComplexSequence: React.FC<ComplexSequenceProps> = ({
                   {exerciseName(exercises, segId)}
                 </p>
                 <ExerciseAutocomplete
-                  exercises={exercises}
+                  options={pickerOptions}
                   value={segId}
                   onChange={(id) => onSegmentChange(idx, id)}
                   isEs={isEs}

@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BarChart3, Gauge, UserCog } from 'lucide-react';
+import {
+  ChevronDown,
+  Dumbbell,
+  Gauge,
+  PersonStanding,
+  Scale,
+  UserCog,
+} from 'lucide-react';
 import type { GeneratedProgram, SessionGoal } from '../models/training';
 import { K_VALUE_RANGES } from '../models/training';
 import { mockAthletes } from '../data/loadMockData';
@@ -43,8 +50,8 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       title: isEs ? 'Motor halterofilia' : 'Olympic lifting engine',
       coachBadge: isEs ? 'Panel coach' : 'Coach panel',
       subtitle: isEs
-        ? 'Crea el mesociclo en minutos: define semanas, ajusta sesiones y asigna al atleta.'
-        : 'Build a mesocycle in minutes: set weeks, tune sessions, and assign to the athlete.',
+        ? 'Planifica el mesociclo completo en minutos: semanas, sesiones y asignación al atleta, con cargas basadas en sus PRs.'
+        : 'Plan the full mesocycle in minutes—weeks, sessions, and athlete assignment—with loads driven by their PRs.',
       stepperAria: isEs ? 'Flujo principal de planificación WL' : 'Primary WL planning flow',
       contextHeading: isEs ? 'Contexto del plan' : 'Plan context',
       step1: isEs ? 'Contexto del plan' : 'Plan context',
@@ -88,6 +95,8 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       prsBs: isEs ? 'Sentadilla trasera' : 'Back squat',
       prsFs: isEs ? 'Sentadilla frontal' : 'Front squat',
       prsBw: isEs ? 'Peso corporal' : 'Bodyweight',
+      lastUpdated: isEs ? 'Última actualización' : 'Last updated',
+      prsProfileAria: isEs ? 'PRs y perfil del atleta' : 'Athlete PRs & profile',
     }),
     [isEs],
   );
@@ -169,6 +178,15 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
   const canAdvanceToCustomize = Boolean(program);
   const stepProgress = Math.round((activeStep / 4) * 100);
 
+  const stepSegmentFill = useCallback(
+    (stepId: StepId) => {
+      if (stepId < activeStep) return 100;
+      if (stepId === activeStep) return 25;
+      return 0;
+    },
+    [activeStep],
+  );
+
   const goToStep = useCallback(
     (next: StepId) => {
       if (next === 3 && !canAdvanceToCustomize) return;
@@ -228,6 +246,41 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
 
   const athleteDisplayName = athlete?.name ?? athleteId;
 
+  const prUpdatedLabel = useMemo(() => {
+    if (latestStatsIntake?.date) return latestStatsIntake.date;
+    return new Intl.DateTimeFormat(isEs ? 'es' : 'en', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date());
+  }, [latestStatsIntake, isEs]);
+
+  const prStatCards = useMemo(() => {
+    if (!athlete) return [];
+    const cards: {
+      key: string;
+      label: string;
+      value: string;
+      unit: string;
+      Icon: typeof Dumbbell;
+    }[] = [
+      { key: 'bw', label: t.prsBw, value: String(athlete.bodyweight), unit: 'kg', Icon: Scale },
+      { key: 'sn', label: t.prsSn, value: String(athlete.oneRM.snatch), unit: 'kg', Icon: Dumbbell },
+      { key: 'cj', label: t.prsCj, value: String(athlete.oneRM.cleanJerk), unit: 'kg', Icon: Dumbbell },
+      { key: 'bs', label: t.prsBs, value: String(athlete.oneRM.backSquat), unit: 'kg', Icon: Dumbbell },
+      { key: 'fs', label: t.prsFs, value: String(athlete.oneRM.frontSquat), unit: 'kg', Icon: Dumbbell },
+    ];
+    if (deadliftFromStats != null && deadliftFromStats > 0) {
+      cards.push({
+        key: 'dl',
+        label: t.prsDead,
+        value: String(deadliftFromStats),
+        unit: 'kg',
+        Icon: Dumbbell,
+      });
+    }
+    return cards;
+  }, [athlete, deadliftFromStats, t]);
+
   return (
     <div
       className={`wolf-engine${activeStep === 3 ? ' wolf-engine--customize' : ''}${activeStep === 4 ? ' wolf-engine--manage' : ''}`}
@@ -235,50 +288,87 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
       <header className="wolf-coach-hero">
         <div className="wolf-coach-hero-accent" aria-hidden />
         <div className="wolf-coach-hero-inner">
-          <div className="wolf-coach-hero-icon-wrap">
-            <Gauge size={26} strokeWidth={2} />
-          </div>
-          <div className="wolf-coach-hero-text">
-            <span className="wolf-coach-badge">
-              <UserCog size={13} strokeWidth={2} />
-              {t.coachBadge}
-            </span>
-            <h1 className="wolf-coach-title view-title">{t.title}</h1>
-            <p className="wolf-coach-sub">{t.subtitle}</p>
+          <div className="wolf-coach-hero-title-row">
+            <div className="wolf-coach-hero-icon-wrap" aria-hidden>
+              <Gauge size={24} strokeWidth={2} />
+            </div>
+            <div className="wolf-coach-hero-heading">
+              <div className="wolf-coach-hero-meta">
+                <span className="wolf-coach-badge">
+                  <UserCog size={12} strokeWidth={2.25} aria-hidden />
+                  {t.coachBadge}
+                </span>
+                <h1 className="wolf-coach-title view-title">{t.title}</h1>
+              </div>
+              <p className="wolf-coach-sub">{t.subtitle}</p>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="wolf-engine-stepper-rail" aria-label={t.stepperAria}>
-        <div className="wolf-engine-tabs wolf-engine-tabs--4" role="tablist">
-        {stepItems.map((step) => {
-          const isActive = activeStep === step.id;
-          const isDone = activeStep > step.id;
-          return (
-            <button
-              key={step.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-current={isActive ? 'step' : undefined}
-              className={`wolf-tab ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}
-              onClick={() => goToStep(step.id)}
-              disabled={!step.enabled}
-            >
-              <span className="wolf-step-dot" aria-hidden>
-                {isDone ? '✓' : step.id}
-              </span>
-              <span className="wolf-step-label">{step.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="wolf-stepper-progress" aria-hidden>
-        <div className="wolf-stepper-progress-track">
-          <div className="wolf-stepper-progress-fill" style={{ width: `${stepProgress}%` }} />
+        <div className="wolf-stepper-timeline" aria-hidden>
+          <div className="wolf-stepper-timeline-track">
+            <div className="wolf-stepper-timeline-fill" style={{ width: `${stepProgress}%` }} />
+          </div>
+          {stepItems.map((step) => {
+            const isActive = activeStep === step.id;
+            const isDone = activeStep > step.id;
+            return (
+              <span
+                key={step.id}
+                className={`wolf-stepper-timeline-node${isActive ? ' is-active' : ''}${isDone ? ' is-done' : ''}`}
+              />
+            );
+          })}
         </div>
-        <span className="wolf-stepper-progress-label">{stepProgress}%</span>
-      </div>
+
+        <div className="wolf-engine-tabs wolf-engine-tabs--4" role="tablist">
+          {stepItems.map((step) => {
+            const isActive = activeStep === step.id;
+            const isDone = activeStep > step.id;
+            return (
+              <button
+                key={step.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-current={isActive ? 'step' : undefined}
+                className={`wolf-tab ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${!isActive && !isDone ? 'inactive' : ''}`}
+                onClick={() => goToStep(step.id)}
+                disabled={!step.enabled}
+              >
+                <span className="wolf-step-dot" aria-hidden>
+                  {isDone ? '✓' : step.id}
+                </span>
+                <span className="wolf-step-label">
+                  <span className="wolf-step-num">{step.id}.</span> {step.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="wolf-stepper-segments" aria-hidden>
+          {stepItems.map((step) => {
+            const fill = stepSegmentFill(step.id);
+            const isActive = activeStep === step.id;
+            return (
+              <div
+                key={step.id}
+                className={`wolf-stepper-segment${isActive ? ' wolf-stepper-segment--active' : ''}`}
+              >
+                <div className="wolf-stepper-segment-track">
+                  <div className="wolf-stepper-segment-fill" style={{ width: `${fill}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="wolf-stepper-progress-meta">
+          <span className="wolf-stepper-progress-label">{stepProgress}%</span>
+        </div>
       </div>
 
       <div className={`wolf-engine-controls-card${activeStep === 1 ? '' : ' wolf-engine-controls-card--hidden'}`}>
@@ -287,24 +377,30 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
         </h2>
         <div className="wolf-engine-shared-controls">
           <label className="wolf-engine-field">
-            <span>{t.athlete}</span>
-            <select value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
-              {mockAthletes.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.level})
-                </option>
-              ))}
-            </select>
+            <span className="wolf-engine-field-label">{t.athlete}</span>
+            <div className="wolf-select-wrap">
+              <select value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
+                {mockAthletes.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.level})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
+            </div>
           </label>
           <label className="wolf-engine-field">
-            <span>{t.goal}</span>
-            <select value={goal} onChange={(e) => setGoal(e.target.value as SessionGoal)}>
-              {GOALS.map((g) => (
-                <option key={g} value={g}>
-                  {goalLabel(g)}
-                </option>
-              ))}
-            </select>
+            <span className="wolf-engine-field-label">{t.goal}</span>
+            <div className="wolf-select-wrap">
+              <select value={goal} onChange={(e) => setGoal(e.target.value as SessionGoal)}>
+                {GOALS.map((g) => (
+                  <option key={g} value={g}>
+                    {goalLabel(g)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
+            </div>
           </label>
         </div>
 
@@ -319,11 +415,12 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
         )}
 
         {athlete && (
-          <div className="wolf-coach-athlete-prs" aria-label={t.prsTitle}>
+          <div className="wolf-coach-athlete-prs" aria-label={t.prsProfileAria}>
             <div className="wolf-coach-athlete-prs-head">
-              <BarChart3 size={18} strokeWidth={2} aria-hidden />
-              <div>
-                <h3 className="wolf-coach-athlete-prs-title">{t.prsTitle}</h3>
+              <div className="wolf-coach-athlete-prs-icon" aria-hidden>
+                <PersonStanding size={22} strokeWidth={1.75} />
+              </div>
+              <div className="wolf-coach-athlete-prs-copy">
                 <p className="wolf-coach-athlete-prs-hint">{t.prsHint}</p>
                 {latestStatsIntake && (
                   <p className="wolf-coach-stats-badge">
@@ -333,38 +430,25 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
                 )}
               </div>
             </div>
-            <dl className="wolf-coach-athlete-prs-grid">
-              <div className="wolf-coach-pr-item">
-                <dt>{t.prsBw}</dt>
-                <dd>{athlete.bodyweight} kg</dd>
-              </div>
-              <div className="wolf-coach-pr-item">
-                <dt>{t.prsSn}</dt>
-                <dd>{athlete.oneRM.snatch} kg</dd>
-              </div>
-              <div className="wolf-coach-pr-item">
-                <dt>{t.prsCj}</dt>
-                <dd>{athlete.oneRM.cleanJerk} kg</dd>
-              </div>
-              <div className="wolf-coach-pr-item">
-                <dt>{t.prsBs}</dt>
-                <dd>{athlete.oneRM.backSquat} kg</dd>
-              </div>
-              <div className="wolf-coach-pr-item">
-                <dt>{t.prsFs}</dt>
-                <dd>{athlete.oneRM.frontSquat} kg</dd>
-              </div>
-              {deadliftFromStats != null && deadliftFromStats > 0 && (
-                <div className="wolf-coach-pr-item">
-                  <dt>{t.prsDead}</dt>
-                  <dd>{deadliftFromStats} kg</dd>
-                </div>
-              )}
-            </dl>
+            <div className="wolf-coach-athlete-prs-grid">
+              {prStatCards.map(({ key, label, value, unit, Icon }) => (
+                <article key={key} className="wolf-pr-stat-card">
+                  <Icon className="wolf-pr-stat-card-icon" size={14} strokeWidth={2} aria-hidden />
+                  <span className="wolf-pr-stat-label">{label}</span>
+                  <span className="wolf-pr-stat-value">
+                    {value}
+                    <span className="wolf-pr-stat-unit">{unit}</span>
+                  </span>
+                </article>
+              ))}
+            </div>
+            <p className="wolf-pr-last-updated">
+              {t.lastUpdated}: <time dateTime={prUpdatedLabel}>{prUpdatedLabel}</time>
+            </p>
           </div>
         )}
-        <div className="wolf-stepper-actions">
-          <button type="button" className="btn-primary" onClick={() => goToStep(2)}>
+        <div className="wolf-stepper-actions wolf-stepper-actions--context">
+          <button type="button" className="btn-primary wolf-btn-continue" onClick={() => goToStep(2)}>
             {t.nextStep}
           </button>
         </div>

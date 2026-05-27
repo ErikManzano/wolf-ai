@@ -1,0 +1,95 @@
+{
+  "families": [
+    { "code": "snatch", "labelEs": "Snatch", "labelEn": "Snatch", "sortOrder": 1 },
+    { "code": "clean", "labelEs": "Clean", "labelEn": "Clean", "sortOrder": 2 },
+    { "code": "jerk", "labelEs": "Jerk", "labelEn": "Jerk", "sortOrder": 3 },
+    { "code": "pull", "labelEs": "Tirón", "labelEn": "Pull", "sortOrder": 4 },
+    { "code": "squat", "labelEs": "Sentadilla", "labelEn": "Squat", "sortOrder": 5 },
+    { "code": "press", "labelEs": "Press", "labelEn": "Press", "sortOrder": 6 },
+    { "code": "accessory", "labelEs": "Accesorio", "labelEn": "Accessory", "sortOrder": 7 }
+  ],
+  "variations": [
+    { "code": "classic", "labelEs": "Clásico", "labelEn": "Classic", "sortOrder": 1 },
+    { "code": "power", "labelEs": "Potencia", "labelEn": "Power", "sortOrder": 2 },
+    { "code": "hang", "labelEs": "Hang", "labelEn": "Hang", "sortOrder": 3 },
+    { "code": "block", "labelEs": "Bloque", "labelEn": "Block", "sortOrder": 4 },
+    { "code": "muscle", "labelEs": "Muscle", "labelEn": "Muscle", "sortOrder": 5 },
+    { "code": "tall", "labelEs": "Tall", "labelEn": "Tall", "sortOrder": 6 },
+    { "code": "pull", "labelEs": "Pull", "labelEn": "Pull", "sortOrder": 7 },
+    { "code": "high_pull", "labelEs": "High pull", "labelEn": "High pull", "sortOrder": 8 },
+    { "code": "complex", "labelEs": "Complejo", "labelEn": "Complex", "sortOrder": 9 }
+  ],
+  "startPositions": [
+    { "code": "floor", "labelEs": "Suelo", "labelEn": "Floor", "sortOrder": 1 },
+    { "code": "below_knee", "labelEs": "Bajo rodilla", "labelEn": "Below knee", "sortOrder": 2 },
+    { "code": "at_knee", "labelEs": "Rodilla", "labelEn": "At knee", "sortOrder": 3 },
+    { "code": "above_knee", "labelEs": "Sobre rodilla", "labelEn": "Above knee", "sortOrder": 4 },
+    { "code": "blocks", "labelEs": "Bloques", "labelEn": "Blocks", "sortOrder": 5 },
+    { "code": "rack", "labelEs": "Rack", "labelEn": "Rack", "sortOrder": 6 },
+    { "code": "straight_legs", "labelEs": "Piernas rectas", "labelEn": "Straight legs", "sortOrder": 7 }
+  ],
+  "modifiers": [
+    { "code": "pause", "labelEs": "Pausa", "labelEn": "Pause", "sortOrder": 1 },
+    { "code": "slow_eccentric", "labelEs": "Excéntrica lenta", "labelEn": "Slow eccentric", "sortOrder": 2 },
+    { "code": "four_stops", "labelEs": "4 paradas", "labelEn": "4 stops", "sortOrder": 3 },
+    { "code": "overhead_squat", "labelEs": "Overhead squat", "labelEn": "Overhead squat", "sortOrder": 4 },
+    { "code": "tempo", "labelEs": "Tempo", "labelEn": "Tempo", "sortOrder": 5 },
+    { "code": "deficit", "labelEs": "Déficit", "labelEn": "Deficit", "sortOrder": 6 },
+    { "code": "front", "labelEs": "Frontal", "labelEn": "Front", "sortOrder": 7 },
+    { "code": "behind_neck", "labelEs": "Tras nuca", "labelEn": "Behind neck", "sortOrder": 8 }
+  ],
+  "objectives": [
+    { "code": "technique", "labelEs": "Técnica", "labelEn": "Technique", "intensityMin": 50, "intensityMax": 82, "sortOrder": 1 },
+    { "code": "strength", "labelEs": "Fuerza", "labelEn": "Strength", "intensityMin": 70, "intensityMax": 92, "sortOrder": 2 },
+    { "code": "speed", "labelEs": "Velocidad", "labelEn": "Speed", "intensityMin": 55, "intensityMax": 75, "sortOrder": 3 },
+    { "code": "positional", "labelEs": "Posicional", "labelEn": "Positional", "intensityMin": 45, "intensityMax": 70, "sortOrder": 4 },
+    { "code": "pulling_strength", "labelEs": "Fuerza de tirón", "labelEn": "Pulling strength", "intensityMin": 85, "intensityMax": 115, "sortOrder": 5 },
+    { "code": "recovery", "labelEs": "Recuperación", "labelEn": "Recovery", "intensityMin": 40, "intensityMax": 60, "sortOrder": 6 }
+  ],
+  "relationshipRules": [
+    {
+      "id": "rel-clean-pull",
+      "fromRef": { "type": "family", "code": "clean" },
+      "toRef": { "type": "family", "code": "pull" },
+      "relationshipType": "overload",
+      "ratioMin": 1.05,
+      "ratioMax": 1.2,
+      "ratioMean": 1.1,
+      "confidence": 0.85,
+      "methodology": "bulgarian"
+    },
+    {
+      "id": "rel-snatch-power",
+      "fromRef": { "type": "family", "code": "snatch" },
+      "toRef": { "type": "variation", "code": "power" },
+      "relationshipType": "technical",
+      "ratioMin": 0.82,
+      "ratioMax": 0.92,
+      "ratioMean": 0.87,
+      "confidence": 0.8,
+      "methodology": "empirical"
+    },
+    {
+      "id": "rel-bs-snatch",
+      "fromRef": { "type": "family", "code": "squat" },
+      "toRef": { "type": "family", "code": "snatch" },
+      "relationshipType": "predictive",
+      "ratioMin": 0.78,
+      "ratioMax": 0.88,
+      "ratioMean": 0.83,
+      "confidence": 0.75,
+      "methodology": "soviet"
+    },
+    {
+      "id": "rel-clean-cj",
+      "fromRef": { "type": "family", "code": "clean" },
+      "toRef": { "type": "family", "code": "jerk" },
+      "relationshipType": "percentage",
+      "ratioMin": 0.8,
+      "ratioMax": 0.85,
+      "ratioMean": 0.82,
+      "confidence": 0.9,
+      "methodology": "chinese"
+    }
+  ]
+}

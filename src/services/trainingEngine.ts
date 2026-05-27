@@ -7,7 +7,8 @@
  * del NBL técnico (sin calentamiento). Para una sesión, T_ref = 100 (% escala 1RM).
  * Ejemplo coach: (70×9 + 80×6 + 85×3) / 18 ≈ 75.8 → K ≈ 75.8 cuando T_ref = 100.
  */
-import type { Athlete, Exercise, Session, SessionExerciseBlock, SetScheme } from '../models/training';
+import type { Athlete, Exercise, ExerciseLoadAnchor, Session, SessionExerciseBlock, SetScheme } from '../models/training';
+import { coerceLoadScale } from '../utils/exerciseCatalog';
 
 /** Referencia total en escala %1RM para una sesión (denominador del cociente del coach). */
 export const K_REFERENCE_TOTAL_SESSION = 100;
@@ -16,7 +17,23 @@ function exerciseById(exercises: Exercise[], id: string): Exercise | undefined {
   return exercises.find((e) => e.id === id);
 }
 
-export function resolveBaseOneRm(exercise: Exercise, athlete: Athlete): number {
+function rawOneRmForAnchor(anchor: Exclude<ExerciseLoadAnchor, 'auto'>, athlete: Athlete): number {
+  switch (anchor) {
+    case 'snatch':
+      return athlete.oneRM.snatch;
+    case 'clean_jerk':
+      return athlete.oneRM.cleanJerk;
+    case 'back_squat':
+      return athlete.oneRM.backSquat;
+    case 'front_squat':
+      return athlete.oneRM.frontSquat;
+    default:
+      return athlete.oneRM.snatch;
+  }
+}
+
+/** Legacy anchor when `loadAnchor` is omitted or `auto` — matches previous Wolf behaviour. */
+export function resolveLegacyBaseOneRm(exercise: Exercise, athlete: Athlete): number {
   switch (exercise.category) {
     case 'snatch':
       return athlete.oneRM.snatch;
@@ -39,6 +56,18 @@ export function resolveBaseOneRm(exercise: Exercise, athlete: Athlete): number {
     default:
       return athlete.oneRM.snatch;
   }
+}
+
+/**
+ * Base kg for `SetScheme.percentage` (before multiplying by %/100).
+ * Uses `exercise.loadAnchor` + `exercise.loadScale` when set; otherwise legacy resolution.
+ */
+export function resolveBaseOneRm(exercise: Exercise, athlete: Athlete): number {
+  const anchor = exercise.loadAnchor ?? 'auto';
+  const base =
+    anchor === 'auto' ? resolveLegacyBaseOneRm(exercise, athlete) : rawOneRmForAnchor(anchor, athlete);
+  const scale = coerceLoadScale(exercise.loadScale ?? 1);
+  return Math.round(base * scale * 100) / 100;
 }
 
 /** Suma reps tipo "1", "2", "1+1+3" */

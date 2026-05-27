@@ -1,0 +1,196 @@
+.wolf-ex-lib {
+  padding: 0 0 2rem;
+  max-width: 1200px;
+}
+
+.wolf-ex-lib__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wolf-ex-lib__sub {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted, #8b949e);
+  font-size: 0.9rem;
+  max-width: 52ch;
+}
+
+.wolf-ex-lib__grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .wolf-ex-lib__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wolf-ex-lib__panel {
+  background: var(--color-surface, #161b22);
+  border: 1px solid var(--color-border, #30363d);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.wolf-ex-lib__panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.wolf-ex-lib__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wolf-ex-lib__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #8b949e);
+}
+
+.wolf-ex-lib__form input,
+.wolf-ex-lib__form select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #30363d);
+  background: var(--color-bg, #0d1117);
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.wolf-ex-lib__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.wolf-ex-lib__range {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wolf-ex-lib__range input {
+  width: 4rem;
+}
+
+.wolf-ex-lib__preview {
+  margin: 0;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 8px;
+}
+
+.wolf-ex-lib__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.wolf-ex-lib__list-head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.wolf-ex-lib__search {
+  flex: 1;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #30363d);
+  background: var(--color-bg, #0d1117);
+  color: inherit;
+}
+
+.wolf-ex-lib__table-wrap {
+  overflow-x: auto;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+}
+
+.wolf-ex-lib__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.wolf-ex-lib__table th,
+.wolf-ex-lib__table td {
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--color-border, #30363d);
+  vertical-align: middle;
+}
+
+.wolf-ex-lib__table tr.active {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.wolf-ex-lib__tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wolf-ex-lib__tag.system {
+  background: rgba(139, 148, 158, 0.2);
+  color: #8b949e;
+}
+
+.wolf-ex-lib__tag.custom {
+  background: rgba(34, 197, 94, 0.15);
+  color: #3fb950;
+}
+
+.wolf-ex-lib__demo {
+  font-size: 0.75rem;
+}
+
+.wolf-ex-lib__row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.wolf-ex-lib__row-actions .btn-icon {
+  padding: 0.35rem;
+  margin-left: 0.15rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.wolf-ex-lib__row-actions .btn-icon:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wolf-ex-lib__row-actions .btn-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-ex-lib__row-actions .btn-icon.danger:hover:not(:disabled) {
+  color: #f85149;
+}
+
+.wolf-ex-lib__empty {
+  text-align: center;
+  color: var(--color-text-muted, #8b949e);
+  padding: 1.5rem;
+}

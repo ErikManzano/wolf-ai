@@ -13,8 +13,8 @@
 .wolf-se-btn--ghost{border-color:var(--color-border);background:var(--color-bg-panel);padding:6px 8px;min-height:36px}
 .wolf-se-btn--sm{padding:5px 10px;min-height:32px;font-size:.78rem}
 .wolf-se-block-body{padding:0 14px 14px}.wolf-se-block-footer{padding:10px 14px;border-top:1px solid var(--color-border);background:var(--color-bg-panel)}
-.wolf-se-block-layout{display:flex;flex-direction:column;gap:14px}
-@media(min-width:900px){.wolf-se-block-layout{display:grid;grid-template-columns:1fr 1.1fr}.wolf-se-block-layout__sets{border-left:1px solid var(--color-border);padding-left:16px}}
+.wolf-se-block-layout{display:flex;flex-direction:column;gap:10px}
+@media(min-width:768px){.wolf-se-block-layout{display:grid;grid-template-columns:minmax(0,min(300px,34%)) minmax(0,1fr);gap:0}.wolf-se-block-layout__sets{min-width:0;padding:10px 12px}}
 .wolf-se-header{padding:14px;border-bottom:1px solid var(--color-border)}
 .wolf-se-header-top{display:flex;gap:12px}.wolf-se-header-main{display:flex;gap:12px;flex:1;min-width:0}
 .wolf-se-index{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--color-accent-glow);color:var(--color-accent);font-weight:800}
@@ -34,6 +34,8 @@
 .wolf-se-chip-row{display:flex;flex-wrap:wrap;gap:8px}
 .wolf-se-pct-chip{min-height:40px;padding:8px 12px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg-panel);font-weight:700;cursor:pointer}
 .wolf-se-pct-chip.active{border-color:var(--color-accent);color:var(--color-accent)}
+.wolf-se-pct-chip--suggest{border-color:rgba(56,189,248,.5);color:#38bdf8;font-size:.78rem}
+.wolf-se-suggest-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .wolf-se-autocomplete{position:relative}.wolf-se-autocomplete-input-wrap{display:flex;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-bg-panel)}
 .wolf-se-autocomplete-input-wrap:focus-within{border-color:var(--color-accent)}
 .wolf-se-autocomplete-input-wrap--compact{padding:6px 8px}

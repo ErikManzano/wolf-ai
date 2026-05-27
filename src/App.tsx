@@ -6,6 +6,7 @@ import CentralPanel from './components/CentralPanel.tsx';
 import ChatPanel from './components/ChatPanel';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
+import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
 import { MessageSquare, Menu, X } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
@@ -264,9 +265,11 @@ function AppShell() {
 function App() {
   return (
     <AppProvider>
-      <WolfAssignProvider>
-        <AppShell />
-      </WolfAssignProvider>
+      <WolfAlertProvider>
+        <WolfAssignProvider>
+          <AppShell />
+        </WolfAssignProvider>
+      </WolfAlertProvider>
     </AppProvider>
   );
 }

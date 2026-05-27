@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronRight, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
+import { useWolfAssign } from '../../context/WolfAssignContext';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   addComplexSegment,
@@ -73,11 +74,16 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   defaultExtraSegmentId,
 }) => {
   const apply = onApply;
+  const {
+    sessionExercisePicker,
+    sessionExercisePickerSingles,
+  } = useWolfAssign();
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
   const atMaxComplexSegments = segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS;
   const isWarmup = block.countsTowardTechnicalNBL === false;
+
   const blockKind = isWarmup ? 'warmup' : isComplex ? 'complex' : 'single';
   const title = blockTitle(block, isComplex, segments, exercises);
   const tonnage = blockTonnage(block, athlete, exercises);
@@ -265,7 +271,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                         <div className="wolf-se-chain-node">
                           <span className="wolf-se-chain-idx">{segIdx + 1}</span>
                           <ExerciseAutocomplete
-                            exercises={exercises}
+                            options={sessionExercisePickerSingles}
                             value={seg.exerciseId}
                             compact
                             isEs={isEs}
@@ -286,7 +292,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 <section className="wolf-se-config-section">
                   <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
                   <ExerciseAutocomplete
-                    exercises={exercises}
+                    options={sessionExercisePicker}
                     value={block.exerciseId}
                     isEs={isEs}
                     onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}

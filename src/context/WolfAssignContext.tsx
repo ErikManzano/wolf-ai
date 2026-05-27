@@ -1,13 +1,36 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   CoachWlProgramTemplate,
+  Exercise,
   GeneratedProgram,
   ProgramAssignment,
   SessionCompletion,
   WolfAppRole,
   WolfUser,
 } from '../models/training';
+import type {
+  CoachExerciseOverride,
+  ExerciseDefinition,
+  ExerciseDefinitionInput,
+  ExerciseRelationshipRule,
+  ExerciseTaxonomyBundle,
+  OverridePatch,
+  RegistryBrowseQuery,
+  RegistryBrowseResult,
+  TechnicalCollectionWithItems,
+} from '../models/exercise';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
+import { seedTechnicalCollectionsLocal } from '../data/exercise-intelligence/seedCollections';
+import { seedExerciseDefinitionsFromLegacy, seedRelationshipRules } from '../api/exerciseCatalogSeed';
+import {
+  browseExerciseRegistry,
+  getExerciseTaxonomy,
+  mergeCatalogViews,
+  mergedViewsToPickerOptions,
+  toLegacyExercise,
+  type SessionPickerOption,
+} from '../services/exercise';
+import { normalizeExercise } from '../utils/exerciseCatalog';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 import {
@@ -29,6 +52,63 @@ const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
 const STORAGE_API_REFRESH_TOKEN = 'wolf_api_refresh_token_v1';
+const STORAGE_MOTOR_EXERCISES = 'wolf_motor_exercises_custom_v1';
+const STORAGE_EXERCISE_DEFS = 'wolf_exercise_definitions_custom_v1';
+
+const BUILTIN_EXERCISE_IDS = new Set(mockExercises.map((e) => e.id));
+
+function readLocalCoachExercises(): Exercise[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_MOTOR_EXERCISES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Exercise[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((e) => normalizeExercise({ ...e } as unknown as Record<string, unknown>));
+  } catch {
+    return [];
+  }
+}
+
+function persistLocalCoachExercises(custom: Exercise[]): void {
+  try {
+    localStorage.setItem(STORAGE_MOTOR_EXERCISES, JSON.stringify(custom));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** @deprecated Legacy flat exercise form — use ExerciseDefinitionInput */
+export type MotorExerciseInput = {
+  name: string;
+  category: import('../models/training').ExerciseCategory;
+  subtype: import('../models/training').ExerciseSubtype;
+  startPosition: import('../models/training').StartPosition;
+  complexity: import('../models/training').ExerciseComplexity;
+  goal: import('../models/training').ExerciseGoal;
+  intensityRange: [number, number];
+  loadAnchor: import('../models/training').ExerciseLoadAnchor;
+  loadScale: number;
+};
+
+function readLocalExerciseDefinitions(): ExerciseDefinition[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_EXERCISE_DEFS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ExerciseDefinition[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistLocalExerciseDefinitions(custom: ExerciseDefinition[]): void {
+  try {
+    const coachOnly = custom.filter((d) => d.coachId);
+    localStorage.setItem(STORAGE_EXERCISE_DEFS, JSON.stringify(coachOnly));
+  } catch {
+    /* ignore */
+  }
+}
 
 /** URL del API: build `VITE_API_URL`, o `window.__WOLF_API_URL__` en index.html (sin redeploy). */
 export function getApiBase(): string {
@@ -173,6 +253,50 @@ interface WolfAssignContextValue {
   deleteUser: (userId: string) => Promise<string | null>;
   /** Limpia token del API (p. ej. al cerrar sesión). */
   clearApiSession: () => void;
+  /** Catálogo WL legacy (motor, editor sesión). */
+  motorExercises: Exercise[];
+  /** Opciones del autocomplete del editor (todas las definiciones asignables). */
+  sessionExercisePicker: SessionPickerOption[];
+  /** Solo movimientos simples (segmentos de complejo). */
+  sessionExercisePickerSingles: SessionPickerOption[];
+  exerciseTaxonomy: ExerciseTaxonomyBundle;
+  motorExerciseDefinitions: ExerciseDefinition[];
+  exerciseRelationships: ExerciseRelationshipRule[];
+  refreshExerciseCatalog: () => Promise<void>;
+  createExerciseDefinition: (input: ExerciseDefinitionInput) => Promise<string | null>;
+  updateExerciseDefinition: (id: string, input: ExerciseDefinitionInput) => Promise<string | null>;
+  deleteExerciseDefinition: (id: string) => Promise<string | null>;
+  createExerciseRelationship: (
+    input: Omit<ExerciseRelationshipRule, 'id' | 'coachId' | 'isActive'> & { isActive?: boolean },
+  ) => Promise<string | null>;
+  deleteExerciseRelationship: (id: string) => Promise<string | null>;
+  logPrescriptionEvent: (event: {
+    athleteProfileId: string;
+    definitionId: string;
+    prescribedPct: number;
+    completed?: boolean;
+    rpe?: number;
+  }) => Promise<void>;
+  coachExerciseOverrides: CoachExerciseOverride[];
+  technicalCollections: TechnicalCollectionWithItems[];
+  mergedExerciseDefinitions: import('../models/exercise').MergedDefinitionView[];
+  registryBrowse: (query?: RegistryBrowseQuery) => RegistryBrowseResult;
+  forkExerciseDefinition: (parentId: string, input: ExerciseDefinitionInput) => Promise<string | null>;
+  upsertCoachOverride: (baseDefinitionId: string, patch: OverridePatch) => Promise<string | null>;
+  fetchDefinitionDetail: (id: string) => Promise<{
+    definition: ExerciseDefinition;
+    versions: import('../models/exercise').ExerciseDefinitionVersion[];
+  } | null>;
+  publishExerciseDefinition: (id: string, changeReason?: string) => Promise<string | null>;
+  isBuiltinMotorExercise: (id: string) => boolean;
+  /** @deprecated */
+  refreshMotorExercises: () => Promise<void>;
+  /** @deprecated */
+  createMotorExercise: (input: MotorExerciseInput) => Promise<string | null>;
+  /** @deprecated */
+  updateMotorExercise: (id: string, input: MotorExerciseInput) => Promise<string | null>;
+  /** @deprecated */
+  deleteMotorExercise: (id: string) => Promise<string | null>;
 }
 
 const WolfAssignContext = createContext<WolfAssignContextValue | null>(null);
@@ -191,8 +315,74 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
   const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>([]);
+  const [coachCustomExercises, setCoachCustomExercises] = useState<Exercise[]>(() => readLocalCoachExercises());
+  const [exerciseTaxonomy, setExerciseTaxonomy] = useState<ExerciseTaxonomyBundle>(() => getExerciseTaxonomy());
+  const [motorExerciseDefinitions, setMotorExerciseDefinitions] = useState<ExerciseDefinition[]>(() => {
+    const system = seedExerciseDefinitionsFromLegacy();
+    const custom = typeof window !== 'undefined' ? readLocalExerciseDefinitions() : [];
+    const byId = new Map<string, ExerciseDefinition>();
+    for (const d of system) byId.set(d.id, d);
+    for (const d of custom) byId.set(d.id, d);
+    return [...byId.values()];
+  });
+  const [exerciseRelationships, setExerciseRelationships] = useState<ExerciseRelationshipRule[]>(() =>
+    seedRelationshipRules(),
+  );
+  const [coachExerciseOverrides, setCoachExerciseOverrides] = useState<CoachExerciseOverride[]>([]);
+  const [technicalCollections, setTechnicalCollections] = useState<TechnicalCollectionWithItems[]>(() =>
+    seedTechnicalCollectionsLocal(),
+  );
   const [currentUserId, setCurrentUserId] = useState('user-coach');
   const [persona, setPersonaState] = useState<'coach' | 'athlete'>('coach');
+
+  const mergedExerciseDefinitions = useMemo(
+    () => mergeCatalogViews(motorExerciseDefinitions, coachExerciseOverrides, currentUserId),
+    [motorExerciseDefinitions, coachExerciseOverrides, currentUserId],
+  );
+
+  const motorExercises = useMemo(
+    () =>
+      mergedExerciseDefinitions.map((def) => {
+        const ex = toLegacyExercise(def, exerciseTaxonomy);
+        return {
+          ...ex,
+          id: def.legacyExerciseId ?? def.id,
+          name: def.effectiveDisplayName,
+        };
+      }),
+    [mergedExerciseDefinitions, exerciseTaxonomy],
+  );
+
+  const sessionExercisePicker = useMemo(() => {
+    const result = browseExerciseRegistry(motorExerciseDefinitions, coachExerciseOverrides, {
+      coachId: currentUserId,
+      includeDeprecated: false,
+      status: 'all',
+      kind: 'all',
+    }, exerciseTaxonomy);
+    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy);
+  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy]);
+
+  const sessionExercisePickerSingles = useMemo(() => {
+    const result = browseExerciseRegistry(motorExerciseDefinitions, coachExerciseOverrides, {
+      coachId: currentUserId,
+      includeDeprecated: false,
+      status: 'all',
+      kind: 'single',
+    }, exerciseTaxonomy);
+    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy);
+  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy]);
+
+  const registryBrowse = useCallback(
+    (query?: RegistryBrowseQuery) =>
+      browseExerciseRegistry(motorExerciseDefinitions, coachExerciseOverrides, {
+        coachId: currentUserId,
+        ...query,
+      }, exerciseTaxonomy),
+    [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy],
+  );
+
+  const isBuiltinMotorExercise = useCallback((id: string) => BUILTIN_EXERCISE_IDS.has(id), []);
 
   useEffect(() => {
     try {
@@ -303,11 +493,55 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const loadExerciseCatalogFromApi = useCallback(async () => {
+    if (!isApiEnabled()) return;
+    const token = readApiToken();
+    if (!token) return;
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [taxRes, defRes, relRes, colRes, ovrRes] = await Promise.all([
+        fetch(`${getApiBase()}/exercise-taxonomy`, { headers }),
+        fetch(`${getApiBase()}/exercise-definitions`, { headers }),
+        fetch(`${getApiBase()}/exercise-relationships`, { headers }),
+        fetch(`${getApiBase()}/technical-collections`, { headers }),
+        fetch(`${getApiBase()}/coach-exercise-overrides`, { headers }),
+      ]);
+      if (taxRes.ok) {
+        const tax = (await taxRes.json()) as ExerciseTaxonomyBundle;
+        if (tax?.families?.length) setExerciseTaxonomy(tax);
+      }
+      if (defRes.ok) {
+        const defs = (await defRes.json()) as ExerciseDefinition[];
+        if (Array.isArray(defs)) setMotorExerciseDefinitions(defs);
+      }
+      if (relRes.ok) {
+        const rel = (await relRes.json()) as ExerciseRelationshipRule[];
+        if (Array.isArray(rel)) setExerciseRelationships(rel);
+      }
+      if (colRes.ok) {
+        const cols = (await colRes.json()) as TechnicalCollectionWithItems[];
+        if (Array.isArray(cols)) setTechnicalCollections(cols);
+      }
+      if (ovrRes.ok) {
+        const ovrs = (await ovrRes.json()) as CoachExerciseOverride[];
+        if (Array.isArray(ovrs)) setCoachExerciseOverrides(ovrs);
+      }
+    } catch {
+      /* keep local catalog */
+    }
+  }, []);
+
   useEffect(() => {
     void loadUsersFromApi();
     void loadAssignmentsFromApi();
     void loadCompletionsFromApi();
   }, [loadUsersFromApi, loadAssignmentsFromApi, loadCompletionsFromApi]);
+
+  useEffect(() => {
+    if (!isApiEnabled()) return;
+    if (!apiToken) return;
+    void loadExerciseCatalogFromApi();
+  }, [apiToken, loadExerciseCatalogFromApi]);
 
   useEffect(() => {
     if (!isApiEnabled()) return;
@@ -321,6 +555,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           const msg = JSON.parse(String(event.data)) as { event?: string };
           if (msg.event === 'assignments:changed') {
             void loadAssignmentsFromApi();
+          }
+          if (msg.event === 'exercises:changed' || msg.event === 'exercise-catalog:changed') {
+            void loadExerciseCatalogFromApi();
           }
         } catch {
           /* ignore malformed messages */
@@ -337,7 +574,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       if (ws && ws.readyState < 2) ws.close();
     };
-  }, [loadAssignmentsFromApi]);
+  }, [loadAssignmentsFromApi, loadExerciseCatalogFromApi]);
 
   useEffect(() => {
     try {
@@ -999,6 +1236,390 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [apiRequest, loadUsersFromApi]);
 
+  const refreshExerciseCatalog = useCallback(async () => {
+    await loadExerciseCatalogFromApi();
+  }, [loadExerciseCatalogFromApi]);
+
+  const refreshMotorExercises = refreshExerciseCatalog;
+
+  const applyLocalDefinitionCatalog = useCallback((customCoach: ExerciseDefinition[]) => {
+    const system = seedExerciseDefinitionsFromLegacy();
+    const byId = new Map<string, ExerciseDefinition>();
+    for (const d of system) byId.set(d.id, d);
+    for (const d of customCoach) byId.set(d.id, d);
+    setMotorExerciseDefinitions([...byId.values()]);
+    persistLocalExerciseDefinitions(customCoach);
+  }, []);
+
+  const createExerciseDefinition = useCallback(
+    async (input: ExerciseDefinitionInput): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest('/exercise-definitions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not create exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
+      const id = `def-${Date.now()}`;
+      const created = buildExerciseDefinition(id, input, exerciseTaxonomy, { coachId: 'user-coach' });
+      const custom = motorExerciseDefinitions.filter((d) => d.coachId);
+      applyLocalDefinitionCatalog([...custom, created]);
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+  );
+
+  const updateExerciseDefinition = useCallback(
+    async (id: string, input: ExerciseDefinitionInput): Promise<string | null> => {
+      if (BUILTIN_EXERCISE_IDS.has(id) && !motorExerciseDefinitions.find((d) => d.id === id)?.coachId) {
+        return 'System exercises cannot be edited.';
+      }
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-definitions/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not update exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
+      const updated = buildExerciseDefinition(id, input, exerciseTaxonomy, {
+        coachId: motorExerciseDefinitions.find((d) => d.id === id)?.coachId ?? 'user-coach',
+      });
+      const custom = motorExerciseDefinitions.filter((d) => d.coachId && d.id !== id);
+      applyLocalDefinitionCatalog([...custom, updated]);
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+  );
+
+  const createExerciseRelationship = useCallback(
+    async (
+      input: Omit<ExerciseRelationshipRule, 'id' | 'coachId' | 'isActive'> & { isActive?: boolean },
+    ): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest('/exercise-relationships', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not create relationship.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const rule: ExerciseRelationshipRule = {
+        ...input,
+        id: `rel-${Date.now()}`,
+        coachId: 'user-coach',
+        isActive: input.isActive !== false,
+      };
+      setExerciseRelationships((prev) => [...prev, rule]);
+      return null;
+    },
+    [apiRequest, apiToken, loadExerciseCatalogFromApi],
+  );
+
+  const deleteExerciseRelationship = useCallback(
+    async (id: string): Promise<string | null> => {
+      const rule = exerciseRelationships.find((r) => r.id === id);
+      if (rule && !rule.coachId) return 'System rules cannot be deleted.';
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-relationships/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not delete relationship.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      setExerciseRelationships((prev) => prev.filter((r) => r.id !== id));
+      return null;
+    },
+    [apiRequest, apiToken, exerciseRelationships, loadExerciseCatalogFromApi],
+  );
+
+  const forkExerciseDefinition = useCallback(
+    async (parentId: string, input: ExerciseDefinitionInput): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-definitions/${parentId}/fork`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not fork exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
+      const forked = buildExerciseDefinition(`def-fork-${Date.now()}`, input, exerciseTaxonomy, {
+        coachId: 'user-coach',
+      });
+      forked.parentDefinitionId = parentId;
+      forked.lifecycleStatus = 'coach_modified';
+      const custom = motorExerciseDefinitions.filter((d) => d.coachId);
+      applyLocalDefinitionCatalog([...custom, forked]);
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+  );
+
+  const upsertCoachOverride = useCallback(
+    async (baseDefinitionId: string, patch: OverridePatch): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/coach-exercise-overrides/${baseDefinitionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not save override.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const id = `ovr-user-coach-${baseDefinitionId}`;
+      const saved: CoachExerciseOverride = {
+        id,
+        coachId: 'user-coach',
+        baseDefinitionId,
+        override: patch,
+      };
+      setCoachExerciseOverrides((prev) => [...prev.filter((o) => o.id !== id), saved]);
+      return null;
+    },
+    [apiRequest, apiToken, loadExerciseCatalogFromApi],
+  );
+
+  const fetchDefinitionDetail = useCallback(
+    async (id: string) => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-definitions/${id}`);
+          if (!res.ok) return null;
+          return (await res.json()) as {
+            definition: ExerciseDefinition;
+            versions: import('../models/exercise').ExerciseDefinitionVersion[];
+          };
+        } catch {
+          return null;
+        }
+      }
+      const def = motorExerciseDefinitions.find((d) => d.id === id);
+      if (!def) return null;
+      return { definition: def, versions: [] };
+    },
+    [apiRequest, apiToken, motorExerciseDefinitions],
+  );
+
+  const publishExerciseDefinition = useCallback(
+    async (id: string, changeReason?: string): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-definitions/${id}/publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ changeReason }),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not publish.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const def = motorExerciseDefinitions.find((d) => d.id === id);
+      if (!def) return 'Not found.';
+      def.version = (def.version ?? 1) + 1;
+      def.lifecycleStatus = 'official';
+      def.publishedAt = new Date().toISOString();
+      setMotorExerciseDefinitions([...motorExerciseDefinitions]);
+      return null;
+    },
+    [apiRequest, apiToken, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+  );
+
+  const logPrescriptionEvent = useCallback(
+    async (event: {
+      athleteProfileId: string;
+      definitionId: string;
+      prescribedPct: number;
+      completed?: boolean;
+      rpe?: number;
+    }) => {
+      if (!isApiEnabled() || !apiToken) return;
+      try {
+        await apiRequest('/prescription-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(event),
+        });
+      } catch {
+        /* analytics best-effort */
+      }
+    },
+    [apiRequest, apiToken],
+  );
+
+  const deleteExerciseDefinition = useCallback(
+    async (id: string): Promise<string | null> => {
+      if (BUILTIN_EXERCISE_IDS.has(id) && !motorExerciseDefinitions.find((d) => d.id === id)?.coachId) {
+        return 'System exercises cannot be deleted.';
+      }
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercise-definitions/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not delete exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      applyLocalDefinitionCatalog(motorExerciseDefinitions.filter((d) => d.coachId && d.id !== id));
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+  );
+
+  const applyLocalMotorCatalog = useCallback((custom: Exercise[]) => {
+    setCoachCustomExercises(custom);
+    persistLocalCoachExercises(custom);
+  }, []);
+
+  const createMotorExercise = useCallback(
+    async (input: MotorExerciseInput): Promise<string | null> => {
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest('/exercises', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not create exercise.';
+          }
+          await res.json();
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const id = `cex-${Date.now()}`;
+      const created = normalizeExercise({ id, ...input } as unknown as Record<string, unknown>);
+      const custom = [...coachCustomExercises.filter((e) => e.id !== id), created];
+      applyLocalMotorCatalog(custom);
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalMotorCatalog, coachCustomExercises, loadExerciseCatalogFromApi],
+  );
+
+  const updateMotorExercise = useCallback(
+    async (id: string, input: MotorExerciseInput): Promise<string | null> => {
+      if (BUILTIN_EXERCISE_IDS.has(id) && !coachCustomExercises.some((e) => e.id === id)) {
+        return 'System exercises cannot be edited. Create a custom copy.';
+      }
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercises/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          if (!res.ok) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not update exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      const updated = normalizeExercise({ id, ...input } as unknown as Record<string, unknown>);
+      const custom = coachCustomExercises.some((e) => e.id === id)
+        ? coachCustomExercises.map((e) => (e.id === id ? updated : e))
+        : [...coachCustomExercises, updated];
+      applyLocalMotorCatalog(custom);
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalMotorCatalog, coachCustomExercises, loadExerciseCatalogFromApi],
+  );
+
+  const deleteMotorExercise = useCallback(
+    async (id: string): Promise<string | null> => {
+      if (BUILTIN_EXERCISE_IDS.has(id) && !coachCustomExercises.some((e) => e.id === id)) {
+        return 'System exercises cannot be deleted.';
+      }
+      if (isApiEnabled() && apiToken) {
+        try {
+          const res = await apiRequest(`/exercises/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const err = (await res.json().catch(() => null)) as { error?: string } | null;
+            return err?.error ?? 'Could not delete exercise.';
+          }
+          await loadExerciseCatalogFromApi();
+          return null;
+        } catch {
+          return 'Could not connect to backend.';
+        }
+      }
+      applyLocalMotorCatalog(coachCustomExercises.filter((e) => e.id !== id));
+      return null;
+    },
+    [apiRequest, apiToken, applyLocalMotorCatalog, coachCustomExercises, loadExerciseCatalogFromApi],
+  );
+
   const deleteUser = useCallback(async (userId: string) => {
     if (!isApiEnabled()) {
       setUsers((prev) => prev.filter((u) => u.id !== userId));
@@ -1058,6 +1679,32 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     updateUser,
     deleteUser,
     clearApiSession,
+    motorExercises,
+    sessionExercisePicker,
+    sessionExercisePickerSingles,
+    exerciseTaxonomy,
+    motorExerciseDefinitions,
+    exerciseRelationships,
+    refreshExerciseCatalog,
+    createExerciseDefinition,
+    updateExerciseDefinition,
+    deleteExerciseDefinition,
+    createExerciseRelationship,
+    deleteExerciseRelationship,
+    logPrescriptionEvent,
+    coachExerciseOverrides,
+    technicalCollections,
+    mergedExerciseDefinitions,
+    registryBrowse,
+    forkExerciseDefinition,
+    upsertCoachOverride,
+    fetchDefinitionDetail,
+    publishExerciseDefinition,
+    isBuiltinMotorExercise,
+    refreshMotorExercises,
+    createMotorExercise,
+    updateMotorExercise,
+    deleteMotorExercise,
   };
 
   return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;

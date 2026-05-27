@@ -1,5 +1,28 @@
 import { Router, type IRouter, type Request } from 'express';
 import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, WolfUser } from '../models/training';
+import type {
+  AthleteLoadCalibration,
+  CoachExerciseOverride,
+  ExerciseDefinition,
+  ExerciseRelationshipRule,
+  OverridePatch,
+  PrescriptionEvent,
+  TechnicalCollectionWithItems,
+} from '../models/exercise';
+import { mockExercises } from '../data/loadMockData';
+import { mergeExerciseCatalog, normalizeExercise } from '../utils/exerciseCatalog';
+import { parseExerciseUpsertBody } from './exercisePayload';
+import { parseComposePreviewBody, parseExerciseDefinitionBody } from './exerciseDefinitionPayload';
+import {
+  browseExerciseRegistry,
+  composeDisplayName,
+  definitionsToLegacyExercises,
+  getExerciseTaxonomy,
+  resolveLoadSuggestion,
+  validateComposition,
+  buildSignature,
+} from '../services/exercise';
+import { buildExerciseDefinition } from '../services/exercise/buildDefinition';
 import { isDayComplete } from '../utils/completionHelpers';
 import { generateSession } from '../services/sessionGenerator';
 import { evaluateSessionFull } from '../services/sessionEvaluator';
@@ -12,6 +35,12 @@ import { signAccessToken, verifyAccessToken } from './authTokens';
 export interface MockApiState {
   athletes: Athlete[];
   exercises: Exercise[];
+  exerciseDefinitions: ExerciseDefinition[];
+  exerciseRelationships: ExerciseRelationshipRule[];
+  coachExerciseOverrides: CoachExerciseOverride[];
+  technicalCollections: TechnicalCollectionWithItems[];
+  athleteLoadCalibrations: AthleteLoadCalibration[];
+  prescriptionEvents: PrescriptionEvent[];
   sessions: Session[];
   users: WolfUser[];
   assignments: ProgramAssignment[];
@@ -21,6 +50,28 @@ type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
 function sanitizeUser(u: WolfUser): Omit<WolfUser, 'password' | 'passwordHash'> {
   return { id: u.id, name: u.name, role: u.role, email: u.email, coachId: u.coachId, linkedAthleteId: u.linkedAthleteId };
+}
+
+function isCoachOrAdmin(user: WolfUser | null): user is WolfUser {
+  return user?.role === 'coach' || user?.role === 'super_admin';
+}
+
+function coachIdForExercises(user: WolfUser): string {
+  if (user.role === 'coach') return user.id;
+  if (user.role === 'athlete' && user.coachId) return user.coachId;
+  return 'user-coach';
+}
+
+function listExercisesMock(state: MockApiState): Exercise[] {
+  const bundle = getExerciseTaxonomy();
+  if (state.exerciseDefinitions.length > 0) {
+    return definitionsToLegacyExercises(state.exerciseDefinitions, bundle);
+  }
+  return mergeExerciseCatalog(mockExercises, state.exercises);
+}
+
+function listDefinitionsMock(state: MockApiState, coachId: string): ExerciseDefinition[] {
+  return state.exerciseDefinitions.filter((d) => !d.coachId || d.coachId === coachId);
 }
 
 /** Resuelve el usuario actual desde `Authorization: Bearer <JWT>`; el rol se toma siempre de la fuente de datos. */
@@ -282,8 +333,685 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json(state.athletes);
   });
 
-  router.get('/exercises', (_req, res) => {
-    res.json(state.exercises);
+  router.get('/exercises', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    if (store) {
+      const rows = await store.listExercisesForCoach(scopeCoachId);
+      res.json(rows);
+      return;
+    }
+    res.json(listExercisesMock(state));
+  });
+
+  router.get('/exercise-taxonomy', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    if (store) {
+      res.json(await store.getExerciseTaxonomyBundle());
+      return;
+    }
+    res.json(getExerciseTaxonomy());
+  });
+
+  router.get('/exercise-registry/browse', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+    const family = typeof req.query.family === 'string' ? req.query.family : 'all';
+    const status = typeof req.query.status === 'string' ? req.query.status : 'all';
+    const kind = typeof req.query.kind === 'string' ? req.query.kind : 'all';
+    const includeDeprecated = req.query.includeDeprecated === 'true';
+
+    let definitions: ExerciseDefinition[];
+    let overrides: CoachExerciseOverride[];
+    let taxonomy = getExerciseTaxonomy();
+
+    if (store) {
+      definitions = await store.listExerciseDefinitionsForCoach(scopeCoachId);
+      overrides = await store.listCoachExerciseOverrides(scopeCoachId);
+      taxonomy = await store.getExerciseTaxonomyBundle();
+    } else {
+      definitions = listDefinitionsMock(state, scopeCoachId);
+      overrides = state.coachExerciseOverrides.filter((o) => o.coachId === scopeCoachId);
+    }
+
+    const result = browseExerciseRegistry(definitions, overrides, {
+      q,
+      family: family as 'all',
+      status: status as 'all',
+      kind: kind as 'all',
+      includeDeprecated,
+      coachId: scopeCoachId,
+    }, taxonomy);
+    res.json(result);
+  });
+
+  router.get('/exercise-definitions/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const row = await store.getExerciseDefinition(id);
+      if (!row) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      const versions = await store.getDefinitionVersionHistory(id);
+      res.json({ definition: row.def, versions });
+      return;
+    }
+    const def = state.exerciseDefinitions.find((d) => d.id === id);
+    if (!def) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    res.json({ definition: def, versions: [] });
+  });
+
+  router.post('/exercise-definitions/:id/publish', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    if (actor.role !== 'super_admin') {
+      res.status(403).json({ error: 'Registry admin required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const body = (req.body ?? {}) as { changeReason?: string };
+    if (store) {
+      const published = await store.publishExerciseDefinitionById(id, actor.id, body.changeReason);
+      if (!published) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      notify?.('exercise-catalog:changed');
+      res.json(published);
+      return;
+    }
+    const def = state.exerciseDefinitions.find((d) => d.id === id);
+    if (!def) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    def.version = (def.version ?? 1) + 1;
+    def.lifecycleStatus = 'official';
+    def.publishedAt = new Date().toISOString();
+    notify?.('exercise-catalog:changed');
+    res.json(def);
+  });
+
+  router.post('/exercise-definitions/:id/fork', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const parsed = parseExerciseDefinitionBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    const coachId = coachIdForExercises(actor);
+    if (store) {
+      const forked = await store.forkExerciseDefinitionForCoach(coachId, id, parsed.value);
+      notify?.('exercise-catalog:changed');
+      res.status(201).json(forked);
+      return;
+    }
+    const bundle = getExerciseTaxonomy();
+    const forked = buildExerciseDefinition(`def-fork-${Date.now()}`, parsed.value, bundle, { coachId });
+    forked.parentDefinitionId = id;
+    forked.lifecycleStatus = 'coach_modified';
+    state.exerciseDefinitions = [...state.exerciseDefinitions, forked];
+    notify?.('exercise-catalog:changed');
+    res.status(201).json(forked);
+  });
+
+  router.get('/coach-exercise-overrides', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const coachId = coachIdForExercises(actor);
+    if (store) {
+      res.json(await store.listCoachExerciseOverrides(coachId));
+      return;
+    }
+    res.json(state.coachExerciseOverrides.filter((o) => o.coachId === coachId));
+  });
+
+  router.put('/coach-exercise-overrides/:baseId', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { baseId } = req.params as { baseId: string };
+    const patch = req.body as OverridePatch;
+    const coachId = coachIdForExercises(actor);
+    if (store) {
+      const saved = await store.upsertCoachExerciseOverride(coachId, baseId, patch, patch.methodology);
+      notify?.('exercise-catalog:changed');
+      res.json(saved);
+      return;
+    }
+    const id = `ovr-${coachId}-${baseId}`;
+    const existing = state.coachExerciseOverrides.find((o) => o.coachId === coachId && o.baseDefinitionId === baseId);
+    const saved: CoachExerciseOverride = existing
+      ? { ...existing, override: { ...existing.override, ...patch } }
+      : { id, coachId, baseDefinitionId: baseId, override: patch };
+    state.coachExerciseOverrides = [
+      ...state.coachExerciseOverrides.filter((o) => o.id !== saved.id),
+      saved,
+    ];
+    notify?.('exercise-catalog:changed');
+    res.json(saved);
+  });
+
+  router.get('/technical-collections', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    if (store) {
+      res.json(await store.listTechnicalCollectionsForCoach(scopeCoachId));
+      return;
+    }
+    res.json(state.technicalCollections);
+  });
+
+  router.get('/exercise-relationships/graph', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    const rules = store
+      ? await store.listExerciseRelationshipRules(scopeCoachId)
+      : state.exerciseRelationships.filter((r) => !r.coachId || r.coachId === scopeCoachId);
+    const nodes = new Set<string>();
+    for (const r of rules) {
+      if (r.fromRef.type === 'family') nodes.add(r.fromRef.code);
+      if (r.toRef.type === 'family') nodes.add(r.toRef.code);
+    }
+    res.json({
+      nodes: [...nodes].map((code) => ({ id: code, label: code })),
+      edges: rules.filter((r) => r.isActive).map((r) => ({
+        id: r.id,
+        from: r.fromRef.code,
+        to: r.toRef.code,
+        ratioMean: r.ratioMean,
+        type: r.relationshipType,
+      })),
+    });
+  });
+
+  router.get('/exercise-definitions', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    if (store) {
+      res.json(await store.listExerciseDefinitionsForCoach(scopeCoachId));
+      return;
+    }
+    res.json(listDefinitionsMock(state, scopeCoachId));
+  });
+
+  router.post('/exercise-definitions/compose-preview', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const parsed = parseComposePreviewBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    const bundle = store ? await store.getExerciseTaxonomyBundle() : getExerciseTaxonomy();
+    const { composition, locale } = parsed.value;
+    const displayName = composeDisplayName(composition, bundle, locale);
+    const signature = buildSignature(composition);
+    const warnings = validateComposition(composition, bundle);
+    res.json({ displayName, signature, warnings });
+  });
+
+  router.post('/exercise-definitions', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const parsed = parseExerciseDefinitionBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    const coachId = coachIdForExercises(actor);
+    const id = `def-${Date.now()}`;
+    if (store) {
+      const created = await store.createExerciseDefinitionForCoach(coachId, id, parsed.value);
+      notify?.('exercise-catalog:changed');
+      res.status(201).json(created);
+      return;
+    }
+    const bundle = getExerciseTaxonomy();
+    const created = buildExerciseDefinition(id, parsed.value, bundle, { coachId });
+    const sig = created.signature;
+    if (state.exerciseDefinitions.some((d) => d.coachId === coachId && d.signature === sig)) {
+      res.status(409).json({ error: 'Duplicate composition for this coach.' });
+      return;
+    }
+    state.exerciseDefinitions = [...state.exerciseDefinitions, created];
+    notify?.('exercise-catalog:changed');
+    res.status(201).json(created);
+  });
+
+  router.patch('/exercise-definitions/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const parsed = parseExerciseDefinitionBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    if (store) {
+      const existing = await store.getExerciseDefinition(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      if (existing.coachId === null) {
+        res.status(403).json({ error: 'System exercises cannot be edited.' });
+        return;
+      }
+      if (existing.coachId !== coachIdForExercises(actor)) {
+        res.status(403).json({ error: 'You can only edit your own exercises.' });
+        return;
+      }
+      const updated = await store.updateExerciseDefinitionById(id, parsed.value);
+      if (!updated) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      notify?.('exercise-catalog:changed');
+      res.json(updated);
+      return;
+    }
+    const idx = state.exerciseDefinitions.findIndex((d) => d.id === id);
+    if (idx < 0) {
+      res.status(404).json({ error: 'Exercise not found.' });
+      return;
+    }
+    if (!state.exerciseDefinitions[idx]?.coachId) {
+      res.status(403).json({ error: 'System exercises cannot be edited.' });
+      return;
+    }
+    const bundle = getExerciseTaxonomy();
+    const updated = buildExerciseDefinition(id, parsed.value, bundle, { coachId: state.exerciseDefinitions[idx]!.coachId! });
+    state.exerciseDefinitions[idx] = updated;
+    notify?.('exercise-catalog:changed');
+    res.json(updated);
+  });
+
+  router.delete('/exercise-definitions/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const existing = await store.getExerciseDefinition(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      if (existing.coachId === null) {
+        res.status(403).json({ error: 'System exercises cannot be deleted.' });
+        return;
+      }
+      const removed = await store.deleteExerciseDefinitionById(id, coachIdForExercises(actor));
+      if (!removed) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      notify?.('exercise-catalog:changed');
+      res.status(204).send();
+      return;
+    }
+    const def = state.exerciseDefinitions.find((d) => d.id === id);
+    if (!def) {
+      res.status(404).json({ error: 'Exercise not found.' });
+      return;
+    }
+    if (!def.coachId) {
+      res.status(403).json({ error: 'System exercises cannot be deleted.' });
+      return;
+    }
+    state.exerciseDefinitions = state.exerciseDefinitions.filter((d) => d.id !== id);
+    notify?.('exercise-catalog:changed');
+    res.status(204).send();
+  });
+
+  router.get('/exercise-relationships', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    if (store) {
+      res.json(await store.listExerciseRelationshipRules(scopeCoachId));
+      return;
+    }
+    res.json(state.exerciseRelationships.filter((r) => !r.coachId || r.coachId === scopeCoachId));
+  });
+
+  router.post('/exercise-relationships', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const body = req.body as Partial<ExerciseRelationshipRule>;
+    if (store) {
+      const coachId = coachIdForExercises(actor);
+      const rule = await store.createExerciseRelationshipRule(
+        coachId,
+        body as Omit<ExerciseRelationshipRule, 'id' | 'coachId'>,
+      );
+      notify?.('exercise-catalog:changed');
+      res.status(201).json(rule);
+      return;
+    }
+    if (!body.fromRef?.code || !body.toRef?.code || !body.relationshipType) {
+      res.status(400).json({ error: 'fromRef, toRef, relationshipType required.' });
+      return;
+    }
+    const coachId = coachIdForExercises(actor);
+    const rule: ExerciseRelationshipRule = {
+      id: `rel-${Date.now()}`,
+      coachId,
+      fromRef: body.fromRef,
+      toRef: body.toRef,
+      relationshipType: body.relationshipType,
+      ratioMin: Number(body.ratioMin ?? 0.9),
+      ratioMax: Number(body.ratioMax ?? 1.1),
+      ratioMean: Number(body.ratioMean ?? 1),
+      confidence: Number(body.confidence ?? 0.5),
+      methodology: body.methodology ?? 'custom',
+      athleteLevel: body.athleteLevel ?? null,
+      notes: body.notes ?? null,
+      isActive: body.isActive !== false,
+    };
+    state.exerciseRelationships = [...state.exerciseRelationships, rule];
+    notify?.('exercise-catalog:changed');
+    res.status(201).json(rule);
+  });
+
+  router.delete('/exercise-relationships/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const coachId = coachIdForExercises(actor);
+      const ok = await store.deleteExerciseRelationshipRule(id, coachId);
+      if (!ok) {
+        res.status(404).json({ error: 'Rule not found.' });
+        return;
+      }
+      notify?.('exercise-catalog:changed');
+      res.status(204).send();
+      return;
+    }
+    const rule = state.exerciseRelationships.find((r) => r.id === id);
+    if (!rule) {
+      res.status(404).json({ error: 'Rule not found.' });
+      return;
+    }
+    if (!rule.coachId) {
+      res.status(403).json({ error: 'System rules cannot be deleted.' });
+      return;
+    }
+    state.exerciseRelationships = state.exerciseRelationships.filter((r) => r.id !== id);
+    notify?.('exercise-catalog:changed');
+    res.status(204).send();
+  });
+
+  router.get('/athletes/:athleteProfileId/load-resolver', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const { athleteProfileId } = req.params as { athleteProfileId: string };
+    const definitionId = typeof req.query.definitionId === 'string' ? req.query.definitionId : '';
+    if (!definitionId) {
+      res.status(400).json({ error: 'definitionId query required.' });
+      return;
+    }
+    const athlete = state.athletes.find((a) => a.id === athleteProfileId);
+    if (!athlete) {
+      res.status(404).json({ error: 'Athlete not found.' });
+      return;
+    }
+    let def: ExerciseDefinition | undefined;
+    if (store) {
+      const row = await store.getExerciseDefinition(definitionId);
+      def = row?.def;
+    } else {
+      def = state.exerciseDefinitions.find((d) => d.id === definitionId);
+    }
+    if (!def) {
+      res.status(404).json({ error: 'Definition not found.' });
+      return;
+    }
+    const scopeCoachId = coachIdForExercises(actor);
+    const rules = store
+      ? await store.listExerciseRelationshipRules(scopeCoachId)
+      : state.exerciseRelationships;
+    const calibrations = store
+      ? await store.getAthleteLoadCalibrations(athleteProfileId)
+      : state.athleteLoadCalibrations.filter((c) => c.athleteProfileId === athleteProfileId);
+    const suggestion = resolveLoadSuggestion({
+      athlete,
+      definition: def,
+      rules,
+      calibrations: calibrations.map((c) => ({ relationshipRuleId: c.relationshipRuleId, ratioMean: c.ratioMean })),
+    });
+    res.json({ suggestion });
+  });
+
+  router.post('/prescription-events', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const body = req.body as {
+      athleteProfileId?: string;
+      definitionId?: string;
+      prescribedPct?: number;
+      completed?: boolean;
+      rpe?: number;
+    };
+    if (!body.athleteProfileId || !body.definitionId || body.prescribedPct == null) {
+      res.status(400).json({ error: 'athleteProfileId, definitionId, prescribedPct required.' });
+      return;
+    }
+    const event: Omit<PrescriptionEvent, 'id'> = {
+      athleteProfileId: body.athleteProfileId,
+      definitionId: body.definitionId,
+      prescribedPct: Number(body.prescribedPct),
+      completed: body.completed,
+      rpe: body.rpe,
+      recordedAt: new Date().toISOString(),
+    };
+    if (store) {
+      const saved = await store.recordPrescriptionEvent(event);
+      res.status(201).json(saved);
+      return;
+    }
+    const saved: PrescriptionEvent = { ...event, id: `pe-${Date.now()}` };
+    state.prescriptionEvents.push(saved);
+    res.status(201).json(saved);
+  });
+
+  router.post('/exercises', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const parsed = parseExerciseUpsertBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    const coachId = coachIdForExercises(actor);
+    const id = `cex-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    if (store) {
+      try {
+        const created = await store.createCoachExercise(coachId, id, parsed.value);
+        notify?.('exercises:changed');
+        res.status(201).json(created);
+      } catch (err: unknown) {
+        const code = typeof err === 'object' && err !== null && 'code' in err ? String((err as { code: unknown }).code) : '';
+        if (code === '23505') {
+          res.status(409).json({ error: 'Exercise id already exists.' });
+          return;
+        }
+        throw err;
+      }
+      return;
+    }
+    const created = normalizeExercise({ id, ...parsed.value } as unknown as Record<string, unknown>);
+    state.exercises = [...state.exercises, created];
+    notify?.('exercises:changed');
+    res.status(201).json(created);
+  });
+
+  router.patch('/exercises/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const parsed = parseExerciseUpsertBody(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    if (store) {
+      const existing = await store.getExerciseById(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      if (existing.coachId === null) {
+        res.status(403).json({ error: 'System exercises cannot be edited. Duplicate as a custom exercise.' });
+        return;
+      }
+      if (existing.coachId !== coachIdForExercises(actor)) {
+        res.status(403).json({ error: 'You can only edit your own exercises.' });
+        return;
+      }
+      const updated = await store.updateCoachExercise(id, parsed.value);
+      if (!updated) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      notify?.('exercises:changed');
+      res.json(updated);
+      return;
+    }
+    const idx = state.exercises.findIndex((e) => e.id === id);
+    if (idx < 0) {
+      if (mockExercises.some((e) => e.id === id)) {
+        res.status(403).json({ error: 'System exercises cannot be edited. Duplicate as a custom exercise.' });
+        return;
+      }
+      res.status(404).json({ error: 'Exercise not found.' });
+      return;
+    }
+    const updated = normalizeExercise({ id, ...parsed.value } as unknown as Record<string, unknown>);
+    state.exercises[idx] = updated;
+    notify?.('exercises:changed');
+    res.json(updated);
+  });
+
+  router.delete('/exercises/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const existing = await store.getExerciseById(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      if (existing.coachId === null) {
+        res.status(403).json({ error: 'System exercises cannot be deleted.' });
+        return;
+      }
+      const removed = await store.deleteCoachExercise(id, coachIdForExercises(actor));
+      if (!removed) {
+        res.status(404).json({ error: 'Exercise not found.' });
+        return;
+      }
+      notify?.('exercises:changed');
+      res.status(204).send();
+      return;
+    }
+    if (mockExercises.some((e) => e.id === id)) {
+      res.status(403).json({ error: 'System exercises cannot be deleted.' });
+      return;
+    }
+    const before = state.exercises.length;
+    state.exercises = state.exercises.filter((e) => e.id !== id);
+    if (state.exercises.length === before) {
+      res.status(404).json({ error: 'Exercise not found.' });
+      return;
+    }
+    notify?.('exercises:changed');
+    res.status(204).send();
   });
 
   router.get('/sessions', (_req, res) => {

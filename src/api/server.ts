@@ -13,6 +13,8 @@ import type { ProgramAssignment, Session } from '../models/training';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import { createTrainingRouter } from './routes';
+import { seedExerciseDefinitionsFromLegacy, seedRelationshipRules } from './exerciseCatalogSeed';
+import { seedTechnicalCollectionsLocal } from '../data/exercise-intelligence/seedCollections';
 import { PostgresStore } from './postgresStore';
 import { assertJwtConfiguredForProduction } from './authTokens';
 import { createAuthRouter } from './auth/router';
@@ -59,7 +61,13 @@ function seedAssignments(): ProgramAssignment[] {
 
 const state = {
   athletes: [...mockAthletes],
-  exercises: [...mockExercises],
+  exercises: [] as import('../models/training').Exercise[],
+  exerciseDefinitions: seedExerciseDefinitionsFromLegacy(),
+  exerciseRelationships: seedRelationshipRules(),
+  coachExerciseOverrides: [],
+  technicalCollections: seedTechnicalCollectionsLocal(),
+  athleteLoadCalibrations: [],
+  prescriptionEvents: [],
   sessions: [] as Session[],
   users: [...mockUsers],
   assignments: seedAssignments(),
@@ -111,13 +119,15 @@ async function bootstrap() {
     ws.send(JSON.stringify({ event: 'connected', payload: { service: 'wolf-ai-realtime' }, ts: Date.now() }));
   });
 
-  app.get('/health', (_req, res) => {
+  app.get('/health', async (_req, res) => {
+    const exerciseCatalog = store ? await store.getExerciseCatalogStats().catch(() => null) : null;
     res.json({
       ok: true,
       service: store ? 'wolf-ai-api-postgres' : 'wolf-ai-mock-api',
       frontendOrigin: FRONTEND_ORIGIN,
       corsOrigins: allowedOrigins,
       persistence: store ? 'postgres' : 'memory',
+      exerciseCatalog,
     });
   });
 

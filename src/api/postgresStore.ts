@@ -1,7 +1,44 @@
 import { Pool } from 'pg';
-import type { ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
+import type { Exercise, ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
+import { mockExercises } from '../data/loadMockData';
+import { normalizeExercise } from '../utils/exerciseCatalog';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
+import type { ExerciseUpsertPayload } from './exercisePayload';
 import type { AuthRole, AuthUser } from './auth/types';
+import type {
+  CoachExerciseOverride,
+  ExerciseDefinition,
+  ExerciseDefinitionInput,
+  ExerciseRelationshipRule,
+  OverridePatch,
+  TechnicalCollectionWithItems,
+} from '../models/exercise';
+import {
+  createExerciseDefinition,
+  deleteExerciseDefinition,
+  deleteRelationshipRule,
+  forkExerciseDefinition,
+  getExerciseDefinitionById,
+  getTaxonomyFromDb,
+  initExerciseCatalogTables,
+  insertPrescriptionEvent,
+  insertRelationshipRule,
+  listAthleteCalibrations,
+  listCoachOverrides,
+  listDefinitionVersions,
+  publishExerciseDefinition,
+  listExerciseDefinitions,
+  listLegacyExercisesFromDefinitions,
+  listRelationshipRules,
+  listTechnicalCollections,
+  getExerciseCatalogStats,
+  seedExerciseDefinitionsFromLegacy,
+  seedExerciseTaxonomy,
+  seedTechnicalCollections,
+  snapshotDefinitionVersion,
+  updateExerciseDefinition,
+  upsertCoachOverride,
+} from './postgresExerciseCatalog';
 
 type AssignmentCreateInput = {
   id: string;
@@ -86,6 +123,33 @@ export class PostgresStore {
       CREATE UNIQUE INDEX IF NOT EXISTS workout_completions_slot_idx
       ON workout_completions (assignment_id, week_number, day_number, COALESCE(exercise_index, -1));
     `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS coach_exercises (
+        id TEXT PRIMARY KEY,
+        coach_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        subtype TEXT NOT NULL,
+        start_position TEXT NOT NULL,
+        complexity TEXT NOT NULL,
+        goal TEXT NOT NULL,
+        intensity_min INTEGER NOT NULL,
+        intensity_max INTEGER NOT NULL,
+        load_anchor TEXT NOT NULL DEFAULT 'auto',
+        load_scale REAL NOT NULL DEFAULT 1,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS coach_exercises_coach_id_idx ON coach_exercises (coach_id);
+    `);
+    await this.seedSystemExercises();
+    await initExerciseCatalogTables(this.pool);
+    await seedExerciseTaxonomy(this.pool);
+    const officialSeeded = await seedExerciseDefinitionsFromLegacy(this.pool);
+    await seedTechnicalCollections(this.pool);
+    console.log(`[postgres] Exercise OS catalog: ${officialSeeded} official definitions upserted from exercises.json`);
 
     const syncPasswords = process.env.WOLF_SYNC_SEED_PASSWORDS !== '0';
 
@@ -140,6 +204,10 @@ export class PostgresStore {
         ]);
       }
     }
+  }
+
+  async getExerciseCatalogStats() {
+    return getExerciseCatalogStats(this.pool);
   }
 
   async getUsers(): Promise<WolfUser[]> {
@@ -442,6 +510,217 @@ export class PostgresStore {
       `,
       [assignmentId, weekNumber, dayNumber],
     );
+  }
+
+  private async seedSystemExercises(): Promise<void> {
+    for (const raw of mockExercises) {
+      const ex = normalizeExercise({ ...raw } as unknown as Record<string, unknown>);
+      await this.pool.query(
+        `
+        INSERT INTO coach_exercises (
+          id, coach_id, name, category, subtype, start_position, complexity, goal,
+          intensity_min, intensity_max, load_anchor, load_scale
+        ) VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ON CONFLICT (id) DO NOTHING;
+        `,
+        [
+          ex.id,
+          ex.name,
+          ex.category,
+          ex.subtype,
+          ex.startPosition,
+          ex.complexity,
+          ex.goal,
+          ex.intensityRange[0],
+          ex.intensityRange[1],
+          ex.loadAnchor ?? 'auto',
+          ex.loadScale ?? 1,
+        ],
+      );
+    }
+  }
+
+  async listExercisesForCoach(coachId: string): Promise<Exercise[]> {
+    const fromDefs = await listLegacyExercisesFromDefinitions(this.pool, coachId);
+    if (fromDefs.length > 0) return fromDefs;
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, category, subtype, start_position, complexity, goal,
+             intensity_min, intensity_max, load_anchor, load_scale
+      FROM coach_exercises
+      WHERE coach_id IS NULL OR coach_id = $1
+      ORDER BY name ASC;
+      `,
+      [coachId],
+    );
+    return result.rows.map((row) => this.mapExerciseRow(row));
+  }
+
+  async getExerciseTaxonomyBundle() {
+    return getTaxonomyFromDb(this.pool);
+  }
+
+  async listExerciseDefinitionsForCoach(coachId: string): Promise<ExerciseDefinition[]> {
+    return listExerciseDefinitions(this.pool, coachId);
+  }
+
+  async getExerciseDefinition(id: string) {
+    return getExerciseDefinitionById(this.pool, id);
+  }
+
+  async createExerciseDefinitionForCoach(coachId: string, id: string, input: ExerciseDefinitionInput) {
+    return createExerciseDefinition(this.pool, coachId, id, input);
+  }
+
+  async updateExerciseDefinitionById(id: string, input: ExerciseDefinitionInput) {
+    return updateExerciseDefinition(this.pool, id, input);
+  }
+
+  async deleteExerciseDefinitionById(id: string, coachId: string) {
+    return deleteExerciseDefinition(this.pool, id, coachId);
+  }
+
+  async listExerciseRelationshipRules(coachId: string): Promise<ExerciseRelationshipRule[]> {
+    return listRelationshipRules(this.pool, coachId);
+  }
+
+  async getAthleteLoadCalibrations(athleteProfileId: string) {
+    return listAthleteCalibrations(this.pool, athleteProfileId);
+  }
+
+  async recordPrescriptionEvent(event: Parameters<typeof insertPrescriptionEvent>[1]) {
+    return insertPrescriptionEvent(this.pool, event);
+  }
+
+  async listCoachExerciseOverrides(coachId: string): Promise<CoachExerciseOverride[]> {
+    return listCoachOverrides(this.pool, coachId);
+  }
+
+  async upsertCoachExerciseOverride(coachId: string, baseDefinitionId: string, patch: OverridePatch, methodology?: string | null) {
+    return upsertCoachOverride(this.pool, coachId, baseDefinitionId, patch, methodology);
+  }
+
+  async forkExerciseDefinitionForCoach(coachId: string, parentId: string, input: ExerciseDefinitionInput) {
+    return forkExerciseDefinition(this.pool, coachId, parentId, input);
+  }
+
+  async createExerciseRelationshipRule(coachId: string, rule: Omit<ExerciseRelationshipRule, 'id' | 'coachId'>) {
+    return insertRelationshipRule(this.pool, coachId, rule);
+  }
+
+  async deleteExerciseRelationshipRule(id: string, coachId: string) {
+    return deleteRelationshipRule(this.pool, id, coachId);
+  }
+
+  async listTechnicalCollectionsForCoach(coachId: string): Promise<TechnicalCollectionWithItems[]> {
+    return listTechnicalCollections(this.pool, coachId);
+  }
+
+  async getDefinitionVersionHistory(definitionId: string) {
+    return listDefinitionVersions(this.pool, definitionId);
+  }
+
+  async publishDefinitionVersion(def: ExerciseDefinition, changedBy?: string, reason?: string) {
+    return snapshotDefinitionVersion(this.pool, def, changedBy, reason);
+  }
+
+  async publishExerciseDefinitionById(id: string, changedBy?: string, reason?: string) {
+    return publishExerciseDefinition(this.pool, id, changedBy, reason);
+  }
+
+  async getExerciseById(id: string): Promise<{ exercise: Exercise; coachId: string | null } | null> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, category, subtype, start_position, complexity, goal,
+             intensity_min, intensity_max, load_anchor, load_scale
+      FROM coach_exercises WHERE id = $1 LIMIT 1;
+      `,
+      [id],
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return { exercise: this.mapExerciseRow(row), coachId: (row.coach_id as string | null) ?? null };
+  }
+
+  async createCoachExercise(coachId: string, id: string, payload: ExerciseUpsertPayload): Promise<Exercise> {
+    const [lo, hi] = payload.intensityRange;
+    const result = await this.pool.query(
+      `
+      INSERT INTO coach_exercises (
+        id, coach_id, name, category, subtype, start_position, complexity, goal,
+        intensity_min, intensity_max, load_anchor, load_scale
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, coach_id, name, category, subtype, start_position, complexity, goal,
+                intensity_min, intensity_max, load_anchor, load_scale;
+      `,
+      [
+        id,
+        coachId,
+        payload.name,
+        payload.category,
+        payload.subtype,
+        payload.startPosition,
+        payload.complexity,
+        payload.goal,
+        lo,
+        hi,
+        payload.loadAnchor,
+        payload.loadScale,
+      ],
+    );
+    return this.mapExerciseRow(result.rows[0]);
+  }
+
+  async updateCoachExercise(id: string, payload: ExerciseUpsertPayload): Promise<Exercise | null> {
+    const [lo, hi] = payload.intensityRange;
+    const result = await this.pool.query(
+      `
+      UPDATE coach_exercises SET
+        name = $2, category = $3, subtype = $4, start_position = $5, complexity = $6, goal = $7,
+        intensity_min = $8, intensity_max = $9, load_anchor = $10, load_scale = $11, updated_at = now()
+      WHERE id = $1 AND coach_id IS NOT NULL
+      RETURNING id, coach_id, name, category, subtype, start_position, complexity, goal,
+                intensity_min, intensity_max, load_anchor, load_scale;
+      `,
+      [
+        id,
+        payload.name,
+        payload.category,
+        payload.subtype,
+        payload.startPosition,
+        payload.complexity,
+        payload.goal,
+        lo,
+        hi,
+        payload.loadAnchor,
+        payload.loadScale,
+      ],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapExerciseRow(result.rows[0]);
+  }
+
+  async deleteCoachExercise(id: string, coachId: string): Promise<boolean> {
+    const result = await this.pool.query(
+      `DELETE FROM coach_exercises WHERE id = $1 AND coach_id = $2;`,
+      [id, coachId],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  private mapExerciseRow(row: Record<string, unknown>): Exercise {
+    return normalizeExercise({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      subtype: row.subtype,
+      startPosition: row.start_position,
+      complexity: row.complexity,
+      goal: row.goal,
+      intensityRange: [row.intensity_min, row.intensity_max],
+      loadAnchor: row.load_anchor,
+      loadScale: row.load_scale,
+    });
   }
 
   private mapCompletionRow = (row: Record<string, unknown>): SessionCompletion => ({

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, BookOpen, ShieldCheck, Gauge, ClipboardCheck, Zap, Dumbbell, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, ShieldCheck, Gauge, ClipboardCheck, ListTree, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
@@ -25,7 +25,7 @@ interface SidebarProps {
   showRailToggle?: boolean;
 }
 
-const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-quick', 'wl-templates', 'athletes']);
+const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-exercises', 'exercise-intelligence', 'athletes']);
 /** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
 const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
 const SUPER_ADMIN_ONLY_NAV = new Set(['admin-users']);
@@ -49,12 +49,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'my-wl-plan', label: isEs ? 'Mi plan WL' : 'My WL plan', icon: ClipboardCheck },
     { id: 'athletes', label: isEs ? 'Atletas' : 'Athletes', icon: Users },
     { id: 'wolf-engine', label: isEs ? 'Motor Weightlifting' : 'Weightlifting Engine', icon: Gauge },
-    { id: 'wl-quick', label: isEs ? 'Sesión rápida' : 'Quick session', icon: Zap },
-    { id: 'wl-templates', label: isEs ? 'Plantillas Pro' : 'Pro templates', icon: Dumbbell },
+    { id: 'exercise-intelligence', label: isEs ? 'Ejercicios' : 'Exercises', icon: ListTree },
     { id: 'global-calendar', label: isEs ? 'Calendario' : 'Calendar', icon: CalendarRange },
     { id: 'admin-users', label: isEs ? 'Panel maestro' : 'Master panel', icon: ShieldCheck },
     { id: 'onboarding', label: isEs ? 'Stats y PRs' : 'Stats & PRs', icon: IntakeIcon },
-    { id: 'library', label: isEs ? 'Biblioteca' : 'Library', icon: BookOpen },
   ];
 
   const visibleMenuItems = menuItems.filter((item) => {

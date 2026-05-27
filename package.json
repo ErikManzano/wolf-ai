@@ -12,7 +12,9 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "deploy:netlify": "netlify deploy --dir=dist --prod",
-    "hash-password": "node scripts/hash-password.mjs"
+    "hash-password": "node scripts/hash-password.mjs",
+    "db:setup": "tsx scripts/db-setup-production.ts",
+    "db:seed-exercises": "tsx scripts/db-setup-production.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",

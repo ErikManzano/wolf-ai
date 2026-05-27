@@ -1,0 +1,24 @@
+/* Wolf AI · Exercise OS — design tokens (Linear / Vercel inspired) */
+.wolf-ei--premium {
+  --ei-bg-canvas: #09090b;
+  --ei-bg-panel: #111113;
+  --ei-bg-panel-raised: #18181b;
+  --ei-bg-hover: rgba(255, 255, 255, 0.04);
+  --ei-bg-active: rgba(56, 189, 248, 0.08);
+  --ei-border-subtle: rgba(255, 255, 255, 0.06);
+  --ei-border-default: #27272a;
+  --ei-border-strong: #3f3f46;
+  --ei-text-primary: #fafafa;
+  --ei-text-secondary: #a1a1aa;
+  --ei-text-tertiary: #71717a;
+  --ei-text-muted: #52525b;
+  --ei-accent: #38bdf8;
+  --ei-accent-muted: rgba(56, 189, 248, 0.45);
+  --ei-accent-ring: rgba(56, 189, 248, 0.35);
+  --ei-focus-ring: 0 0 0 2px var(--ei-bg-canvas), 0 0 0 4px var(--ei-accent-ring);
+  --ei-radius-sm: 6px;
+  --ei-radius-md: 10px;
+  --ei-radius-lg: 12px;
+  --ei-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+  --ei-font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
+}

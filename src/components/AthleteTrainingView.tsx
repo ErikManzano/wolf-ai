@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   CalendarDays,
@@ -10,33 +10,13 @@ import {
   Layers,
   TrendingUp,
 } from 'lucide-react';
-import { mockAthletes, mockExercises } from '../data/loadMockData';
+import { mockAthletes } from '../data/loadMockData';
+import { normalizeBlockType, resolveBaseOneRm } from '../services/trainingEngine';
 import { useWolfAssign } from '../context/WolfAssignContext';
-import { normalizeBlockType } from '../services/trainingEngine';
 import { countCompletedExercises, countProgramExercises } from '../utils/completionHelpers';
 import './AthleteTrainingView.css';
 import '../styles/interactive.css';
 
-function exName(id: string): string {
-  return mockExercises.find((e) => e.id === id)?.name ?? id;
-}
-
-function oneRmForExercise(exerciseId: string, athlete?: (typeof mockAthletes)[number]): number | null {
-  if (!athlete) return null;
-  const ex = mockExercises.find((e) => e.id === exerciseId);
-  if (!ex) return null;
-  switch (ex.category) {
-    case 'snatch':
-      return athlete.oneRM.snatch;
-    case 'clean_jerk':
-      return athlete.oneRM.cleanJerk;
-    case 'squat':
-      return athlete.oneRM.backSquat;
-    case 'accessory':
-    default:
-      return athlete.oneRM.frontSquat;
-  }
-}
 
 function dayKey(weekNumber: number, dayNumber: number): string {
   return `w${weekNumber}-d${dayNumber}`;
@@ -55,7 +35,13 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     isSessionComplete,
     toggleExerciseComplete,
     isExerciseComplete,
+    motorExercises,
   } = useWolfAssign();
+
+  const exName = useCallback(
+    (id: string) => motorExercises.find((e) => e.id === id)?.name ?? id,
+    [motorExercises],
+  );
   const [week, setWeek] = useState(1);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
@@ -295,7 +281,9 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
                     const loadBaseExerciseId = complex
                       ? block.segments?.[0]?.exerciseId ?? block.exerciseId
                       : block.exerciseId;
-                    const baseOneRm = oneRmForExercise(loadBaseExerciseId, athleteProfile);
+                    const loadEx = motorExercises.find((e) => e.id === loadBaseExerciseId);
+                    const baseOneRm =
+                      athleteProfile && loadEx ? resolveBaseOneRm(loadEx, athleteProfile) : null;
                     const exerciseDone = isExerciseComplete(
                       myAssignment.id,
                       weekData.weekNumber,
