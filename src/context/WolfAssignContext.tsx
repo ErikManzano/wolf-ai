@@ -5,6 +5,7 @@ import type {
   GeneratedProgram,
   ProgramAssignment,
   SessionCompletion,
+  SetCompletionLog,
   WolfAppRole,
   WolfUser,
 } from '../models/training';
@@ -39,6 +40,7 @@ import {
   isExerciseComplete,
   isSessionMarkedComplete,
 } from '../utils/completionHelpers';
+import { findSetLog } from '../utils/athleteSetLogs';
 
 /** Usuario app enlazado a este perfil motor (p. ej. Erik ↔ ath-you). */
 function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
@@ -47,6 +49,7 @@ function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
 
 const STORAGE_ASSIGN = 'wolf_wl_assignments_v1';
 const STORAGE_COMP = 'wolf_wl_completions_v1';
+const STORAGE_SET_LOGS = 'wolf_wl_set_logs_v1';
 const STORAGE_TEMPLATES = 'wolf_wl_program_templates_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
@@ -233,6 +236,45 @@ interface WolfAssignContextValue {
     dayNumber: number,
     exerciseIndex: number,
   ) => boolean;
+  setLogs: SetCompletionLog[];
+  toggleSetComplete: (input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex: number;
+    schemeIndex: number;
+    setInstance: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+  }) => void;
+  updateSetLog: (input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex: number;
+    schemeIndex: number;
+    setInstance: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+  }) => void;
+  isSetComplete: (
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+    exerciseIndex: number,
+    schemeIndex: number,
+    setInstance: number,
+  ) => boolean;
+  getSetLog: (
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+    exerciseIndex: number,
+    schemeIndex: number,
+    setInstance: number,
+  ) => SetCompletionLog | undefined;
   /** Asignación activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
@@ -314,6 +356,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<WolfUser[]>(mockUsers);
   const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
   const [completions, setCompletions] = useState<SessionCompletion[]>([]);
+  const [setLogs, setSetLogs] = useState<SetCompletionLog[]>([]);
   const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>([]);
   const [coachCustomExercises, setCoachCustomExercises] = useState<Exercise[]>(() => readLocalCoachExercises());
   const [exerciseTaxonomy, setExerciseTaxonomy] = useState<ExerciseTaxonomyBundle>(() => getExerciseTaxonomy());
@@ -404,6 +447,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem(STORAGE_ASSIGN, JSON.stringify(seed));
       }
       if (c) setCompletions(JSON.parse(c));
+      const sl = localStorage.getItem(STORAGE_SET_LOGS);
+      if (sl) {
+        const parsed = JSON.parse(sl) as SetCompletionLog[];
+        if (Array.isArray(parsed)) setSetLogs(parsed);
+      }
       if (storedUser && mockUsers.some((u) => u.id === storedUser)) {
         setCurrentUserId(storedUser);
       }
@@ -493,6 +541,21 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const loadSetLogsFromApi = useCallback(async () => {
+    if (!isApiEnabled()) return;
+    try {
+      const headers: Record<string, string> = {};
+      const token = readApiToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${getApiBase()}/set-logs`, { headers });
+      if (!res.ok) return;
+      const list = (await res.json()) as SetCompletionLog[];
+      if (Array.isArray(list)) setSetLogs(list);
+    } catch {
+      /* fallback to local state */
+    }
+  }, []);
+
   const loadExerciseCatalogFromApi = useCallback(async () => {
     if (!isApiEnabled()) return;
     const token = readApiToken();
@@ -535,7 +598,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     void loadUsersFromApi();
     void loadAssignmentsFromApi();
     void loadCompletionsFromApi();
-  }, [loadUsersFromApi, loadAssignmentsFromApi, loadCompletionsFromApi]);
+    void loadSetLogsFromApi();
+  }, [loadUsersFromApi, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
 
   useEffect(() => {
     if (!isApiEnabled()) return;
@@ -591,6 +655,14 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       /* ignore */
     }
   }, [completions]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_SET_LOGS, JSON.stringify(setLogs));
+    } catch {
+      /* ignore */
+    }
+  }, [setLogs]);
 
   useEffect(() => {
     try {
@@ -810,6 +882,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const removeAssignment = useCallback((assignmentId: string) => {
     setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
+    setSetLogs((prev) => prev.filter((l) => l.assignmentId !== assignmentId));
     if (isApiEnabled()) {
       void fetch(`${getApiBase()}/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
         /* keep local state */
@@ -980,6 +1053,177 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       isExerciseComplete(completions, assignmentId, weekNumber, dayNumber, exerciseIndex) ||
       isSessionMarkedComplete(completions, assignmentId, weekNumber, dayNumber),
     [completions],
+  );
+
+  const setLogMatches = useCallback(
+    (
+      l: SetCompletionLog,
+      assignmentId: string,
+      weekNumber: number,
+      dayNumber: number,
+      exerciseIndex: number,
+      schemeIndex: number,
+      setInstance: number,
+    ) =>
+      l.assignmentId === assignmentId &&
+      l.weekNumber === weekNumber &&
+      l.dayNumber === dayNumber &&
+      l.exerciseIndex === exerciseIndex &&
+      l.schemeIndex === schemeIndex &&
+      l.setInstance === setInstance,
+    [],
+  );
+
+  const getSetLogFn = useCallback(
+    (
+      assignmentId: string,
+      weekNumber: number,
+      dayNumber: number,
+      exerciseIndex: number,
+      schemeIndex: number,
+      setInstance: number,
+    ) =>
+      findSetLog(setLogs, assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance),
+    [setLogs],
+  );
+
+  const isSetCompleteFn = useCallback(
+    (
+      assignmentId: string,
+      weekNumber: number,
+      dayNumber: number,
+      exerciseIndex: number,
+      schemeIndex: number,
+      setInstance: number,
+    ) => Boolean(getSetLogFn(assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance)),
+    [getSetLogFn],
+  );
+
+  const updateSetLogFn = useCallback(
+    (input: {
+      assignmentId: string;
+      weekNumber: number;
+      dayNumber: number;
+      exerciseIndex: number;
+      schemeIndex: number;
+      setInstance: number;
+      actualKg?: number;
+      actualReps?: number;
+      actualSegmentReps?: number[];
+    }) => {
+      setSetLogs((prev) => {
+        const idx = prev.findIndex((l) =>
+          setLogMatches(
+            l,
+            input.assignmentId,
+            input.weekNumber,
+            input.dayNumber,
+            input.exerciseIndex,
+            input.schemeIndex,
+            input.setInstance,
+          ),
+        );
+        if (idx < 0) {
+          return [
+            ...prev,
+            {
+              ...input,
+              completedAt: new Date().toISOString(),
+            },
+          ];
+        }
+        const next = [...prev];
+        next[idx] = {
+          ...next[idx]!,
+          actualKg: input.actualKg ?? next[idx]!.actualKg,
+          actualReps: input.actualReps ?? next[idx]!.actualReps,
+          actualSegmentReps: input.actualSegmentReps ?? next[idx]!.actualSegmentReps,
+        };
+        return next;
+      });
+      if (!isApiEnabled()) return;
+      void apiRequest('/set-logs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+        .then((res) => {
+          if (!res.ok) void loadSetLogsFromApi();
+        })
+        .catch(() => void loadSetLogsFromApi());
+    },
+    [setLogMatches, loadSetLogsFromApi],
+  );
+
+  const toggleSetCompleteFn = useCallback(
+    (input: {
+      assignmentId: string;
+      weekNumber: number;
+      dayNumber: number;
+      exerciseIndex: number;
+      schemeIndex: number;
+      setInstance: number;
+      actualKg?: number;
+      actualReps?: number;
+      actualSegmentReps?: number[];
+    }) => {
+      setSetLogs((prev) => {
+        const exists = prev.some((l) =>
+          setLogMatches(
+            l,
+            input.assignmentId,
+            input.weekNumber,
+            input.dayNumber,
+            input.exerciseIndex,
+            input.schemeIndex,
+            input.setInstance,
+          ),
+        );
+        if (exists) {
+          return prev.filter(
+            (l) =>
+              !setLogMatches(
+                l,
+                input.assignmentId,
+                input.weekNumber,
+                input.dayNumber,
+                input.exerciseIndex,
+                input.schemeIndex,
+                input.setInstance,
+              ),
+          );
+        }
+        return [
+          ...prev,
+          {
+            ...input,
+            completedAt: new Date().toISOString(),
+          },
+        ];
+      });
+      setCompletions((prev) =>
+        prev.filter(
+          (c) =>
+            !(
+              c.assignmentId === input.assignmentId &&
+              c.weekNumber === input.weekNumber &&
+              c.dayNumber === input.dayNumber &&
+              c.exerciseIndex === input.exerciseIndex
+            ),
+        ),
+      );
+      if (!isApiEnabled()) return;
+      void apiRequest('/set-logs/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+        .then((res) => {
+          if (!res.ok) void loadSetLogsFromApi();
+        })
+        .catch(() => void loadSetLogsFromApi());
+    },
+    [setLogMatches, loadSetLogsFromApi],
   );
 
   const myAssignment = useMemo(() => {
@@ -1668,6 +1912,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     isSessionComplete,
     toggleExerciseComplete,
     isExerciseComplete: isExerciseCompleteFn,
+    setLogs,
+    toggleSetComplete: toggleSetCompleteFn,
+    updateSetLog: updateSetLogFn,
+    isSetComplete: isSetCompleteFn,
+    getSetLog: getSetLogFn,
     myAssignment,
     loginUser,
     loginWithGoogle,

@@ -19,6 +19,9 @@ function readStored(key: string): WlListViewMode {
   } catch {
     /* ignore */
   }
+  if (typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches) {
+    return 'cards';
+  }
   return 'table';
 }
 

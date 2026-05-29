@@ -17,7 +17,11 @@ import { useWolfAssign } from '../context/WolfAssignContext';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
 import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
+import { CompactWizardBar } from './mobile-wl/navigation/CompactWizardBar';
+import { CollapsibleContextChip } from './mobile-wl/navigation/CollapsibleContextChip';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import './OlympicEnginePanel.css';
+import './mobile-wl/mobile-wl.css';
 import '../styles/interactive.css';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
@@ -244,7 +248,9 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     setActiveStep(3);
   }, []);
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const athleteDisplayName = athlete?.name ?? athleteId;
+  const hideHeroSub = isMobile && activeStep > 1;
 
   const prUpdatedLabel = useMemo(() => {
     if (latestStatsIntake?.date) return latestStatsIntake.date;
@@ -300,13 +306,28 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
                 </span>
                 <h1 className="wolf-coach-title view-title">{t.title}</h1>
               </div>
-              <p className="wolf-coach-sub">{t.subtitle}</p>
+              <p className={`wolf-coach-sub${hideHeroSub ? ' wolf-coach-sub--hide-mobile-steps' : ''}`}>
+                {t.subtitle}
+              </p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="wolf-engine-stepper-rail" aria-label={t.stepperAria}>
+      {isMobile ? (
+        <CompactWizardBar
+          activeStep={activeStep}
+          stepItems={stepItems}
+          progressPct={stepProgress}
+          isEs={isEs}
+          onGoToStep={goToStep}
+        />
+      ) : null}
+
+      <div
+        className={`wolf-engine-stepper-rail${isMobile ? ' wolf-engine-stepper-rail--desktop-only' : ''}`}
+        aria-label={t.stepperAria}
+      >
         <div className="wolf-stepper-timeline" aria-hidden>
           <div className="wolf-stepper-timeline-track">
             <div className="wolf-stepper-timeline-fill" style={{ width: `${stepProgress}%` }} />
@@ -453,6 +474,22 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
           </button>
         </div>
       </div>
+
+      {isMobile && activeStep > 1 && athlete ? (
+        <CollapsibleContextChip
+          athleteName={athleteDisplayName}
+          goalLabel={goalLabel(goal)}
+          kBand={kRange ? `${kRange[0]}–${kRange[1]}` : undefined}
+          level={athlete.level}
+          prStats={prStatCards.map((c) => ({
+            key: c.key,
+            label: c.label,
+            value: c.value,
+            unit: c.unit,
+          }))}
+          isEs={isEs}
+        />
+      ) : null}
 
       <div className="content-area wolf-engine-content">
         {activeStep === 4 && athleteForEngine && athlete ? (

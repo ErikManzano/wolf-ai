@@ -161,6 +161,24 @@ export interface SessionCompletion {
   exerciseIndex?: number;
 }
 
+/** Registro granular de una serie individual (autorregulación kg/reps). */
+export interface SetCompletionLog {
+  assignmentId: string;
+  weekNumber: number;
+  dayNumber: number;
+  exerciseIndex: number;
+  /** Índice en `block.sets` (esquema). */
+  schemeIndex: number;
+  /** Instancia 1..N dentro del esquema (p. ej. 2 de 3 series). */
+  setInstance: number;
+  completedAt: string;
+  actualKg?: number;
+  /** Suma de reps (simple) o derivada de actualSegmentReps (complejo). */
+  actualReps?: number;
+  /** Reps realizadas por movimiento en complejos, paralelo a segmentReps del esquema. */
+  actualSegmentReps?: number[];
+}
+
 export interface Session {
   id: string;
   athleteId: string;

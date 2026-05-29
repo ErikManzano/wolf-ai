@@ -32,6 +32,7 @@ import {
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import OlympicSessionEditor from './OlympicSessionEditor';
 import { DraftRecoveryBanner } from './session-editor/DraftRecoveryBanner';
+import ConfirmationModal from './ConfirmationModal';
 import { useWolfAssign } from '../context/WolfAssignContext';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
@@ -81,6 +82,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [syncPending, setSyncPending] = useState(false);
   const [recoveryDraft, setRecoveryDraft] = useState<ProgramEditDraft | null>(null);
   const [editingDayLabel, setEditingDayLabel] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<'week' | 'day' | null>(null);
   const programRef = useRef(program);
   const { assignProgramToAthlete, motorExercises } = useWolfAssign();
 
@@ -356,11 +358,17 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const handleRemoveWeek = useCallback(() => {
     const current = programRef.current;
     if (!current || !canRemoveWeek) return;
-    if (!window.confirm(t.confirmRemoveWeek)) return;
+    setConfirmRemove('week');
+  }, [canRemoveWeek]);
+
+  const confirmRemoveWeek = useCallback(() => {
+    const current = programRef.current;
+    if (!current || !canRemoveWeek) return;
     const next = removeWeekFromGeneratedProgram(current, selectedWeek);
     const fallback = next.weeks[Math.min(next.weeks.length - 1, selectedWeek - 2)] ?? next.weeks[0];
     applyProgramUpdate(next, { week: fallback?.weekNumber ?? 1, day: 1 });
-  }, [selectedWeek, canRemoveWeek, t.confirmRemoveWeek, applyProgramUpdate]);
+    setConfirmRemove(null);
+  }, [selectedWeek, canRemoveWeek, applyProgramUpdate]);
 
   const handleAddDay = useCallback(() => {
     const current = programRef.current;
@@ -376,12 +384,18 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const handleRemoveDay = useCallback(() => {
     const current = programRef.current;
     if (!current || !canRemoveDay) return;
-    if (!window.confirm(t.confirmRemoveDay)) return;
+    setConfirmRemove('day');
+  }, [canRemoveDay]);
+
+  const confirmRemoveDay = useCallback(() => {
+    const current = programRef.current;
+    if (!current || !canRemoveDay) return;
     const next = removeDayFromGeneratedWeek(current, selectedWeek, selectedDay);
     const updatedWeek = next.weeks.find((w) => w.weekNumber === selectedWeek);
     const fallbackDay = updatedWeek?.days[Math.min(updatedWeek.days.length - 1, selectedDay - 2)]?.dayNumber ?? 1;
     applyProgramUpdate(next, { day: fallbackDay });
-  }, [selectedWeek, selectedDay, canRemoveDay, t.confirmRemoveDay, applyProgramUpdate]);
+    setConfirmRemove(null);
+  }, [selectedWeek, selectedDay, canRemoveDay, applyProgramUpdate]);
 
   const restoreRecoveryDraft = useCallback(() => {
     if (!recoveryDraft) return;
@@ -783,6 +797,27 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           )}
         </>
       )}
+
+      <ConfirmationModal
+        open={confirmRemove === 'week'}
+        title={isEs ? 'Eliminar semana' : 'Remove week'}
+        message={t.confirmRemoveWeek}
+        confirmLabel={isEs ? 'Eliminar' : 'Remove'}
+        cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+        danger
+        onCancel={() => setConfirmRemove(null)}
+        onConfirm={confirmRemoveWeek}
+      />
+      <ConfirmationModal
+        open={confirmRemove === 'day'}
+        title={isEs ? 'Eliminar día' : 'Remove day'}
+        message={t.confirmRemoveDay}
+        confirmLabel={isEs ? 'Eliminar' : 'Remove'}
+        cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+        danger
+        onCancel={() => setConfirmRemove(null)}
+        onConfirm={confirmRemoveDay}
+      />
     </div>
   );
 };

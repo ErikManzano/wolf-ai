@@ -5,7 +5,10 @@ import { addExerciseBlock, WL_SESSION_LIMITS } from '../services/sessionMutation
 import { ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { SessionDayHero } from './session-editor/SessionDayHero';
 import { SessionSheetOverview } from './session-editor/SessionSheetOverview';
+import { StickySessionActions } from './mobile-wl/navigation/StickySessionActions';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import './session-editor/session-editor-polish.css';
+import './mobile-wl/mobile-wl.css';
 import '../styles/interactive.css';
 
 /** Segundo movimiento por defecto al activar complejo (p. ej. Clean → Jerk). */
@@ -73,12 +76,18 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     });
   }, []);
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
   const apply = (fn: () => Session) => {
     onChange(fn());
   };
 
+  const handleAddExercise = () => {
+    apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises));
+  };
+
   return (
-    <div className="wolf-session-editor">
+    <div className={`wolf-session-editor${isMobile ? ' wolf-session-editor--mobile-sticky' : ''}`}>
       <header className="wolf-se-day-top">
         <SessionDayHero
           session={session}
@@ -90,12 +99,14 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           draftSavedAt={draftSavedAt}
         />
         {session.exercises.length > 0 ? (
-          <SessionSheetOverview
-            session={session}
-            exercises={exercises}
-            isEs={isEs}
-            onSelectBlock={scrollToBlock}
-          />
+          <div className={isMobile ? 'wolf-se-sheet--sticky-mobile' : undefined}>
+            <SessionSheetOverview
+              session={session}
+              exercises={exercises}
+              isEs={isEs}
+              onSelectBlock={scrollToBlock}
+            />
+          </div>
         ) : null}
       </header>
 
@@ -152,6 +163,15 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           {isEs ? 'Límite de ejercicios por sesión alcanzado.' : 'Max exercise blocks per session reached.'}
         </p>
       )}
+
+      <StickySessionActions
+        session={session}
+        isEs={isEs}
+        draftSavedAt={draftSavedAt}
+        syncPending={syncPending}
+        canAddExercise={session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
+        onAddExercise={handleAddExercise}
+      />
 
       <div className="wolf-se-summary wolf-se-summary--footer">
         <span>K {session.kValue.toFixed(1)}</span>

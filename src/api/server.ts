@@ -72,6 +72,7 @@ const state = {
   users: [...mockUsers],
   assignments: seedAssignments(),
   completions: [],
+  setLogs: [],
 };
 
 async function bootstrap() {

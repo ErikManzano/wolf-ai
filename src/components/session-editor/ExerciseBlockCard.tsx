@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   addComplexSegment,
@@ -12,6 +13,7 @@ import {
   removeComplexSegment,
   removeExerciseBlock,
   removeSetFromBlock,
+  reorderComplexSegments,
   setBlockCountsTowardTechnicalNBL,
   setBlockExercise,
   setSegmentExercise,
@@ -21,8 +23,10 @@ import {
   WL_SESSION_LIMITS,
 } from '../../services/sessionMutations';
 import { SetsTable } from './SetsTable';
+import { ComplexSequence } from './ComplexSequence';
 import { blockTonnage, exerciseName } from './blockMetrics';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
+import { ExercisePickerSheet } from '../mobile-wl/sheets/ExercisePickerSheet';
 import { formatBlockPrescription } from './schemeFormat';
 import './session-editor.css';
 import './exercise-block-card.css';
@@ -78,6 +82,9 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
     sessionExercisePicker,
     sessionExercisePickerSingles,
   } = useWolfAssign();
+
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
@@ -217,6 +224,29 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               </div>
 
               {isComplex && segments.length > 0 ? (
+                isMobile ? (
+                  <ComplexSequence
+                    segmentIds={segments.map((s) => s.exerciseId)}
+                    exercises={exercises}
+                    pickerOptions={sessionExercisePickerSingles}
+                    isEs={isEs}
+                    onSegmentChange={(idx, id) =>
+                      idx === 0
+                        ? apply(() => setBlockExercise(session, bi, id, athlete, exercises))
+                        : apply(() => setSegmentExercise(session, bi, idx, id, athlete, exercises))
+                    }
+                    onAdd={() =>
+                      apply(() => addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises))
+                    }
+                    onRemove={(idx) =>
+                      apply(() => removeComplexSegment(session, bi, idx, athlete, exercises))
+                    }
+                    onReorder={(from, to) =>
+                      apply(() => reorderComplexSegments(session, bi, from, to, athlete, exercises))
+                    }
+                    canRemove={segments.length > 2}
+                  />
+                ) : (
                 <section className="wolf-se-config-section" aria-label={isEs ? 'Movimientos del complejo' : 'Complex movements'}>
                   <div className="wolf-se-config-section-head">
                     <h4 className="wolf-se-config-title">
@@ -288,6 +318,30 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                     ))}
                   </div>
                 </section>
+                )
+              ) : isMobile ? (
+                <>
+                  <section className="wolf-se-config-section">
+                    <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
+                    <button
+                      type="button"
+                      className="wolf-se-btn wolf-se-btn--outline"
+                      style={{ minHeight: 48, width: '100%', justifyContent: 'flex-start' }}
+                      onClick={() => setPickerOpen(true)}
+                    >
+                      {exerciseName(exercises, block.exerciseId)}
+                    </button>
+                  </section>
+                  <ExercisePickerSheet
+                    open={pickerOpen}
+                    onClose={() => setPickerOpen(false)}
+                    options={sessionExercisePicker}
+                    exercises={exercises}
+                    value={block.exerciseId}
+                    isEs={isEs}
+                    onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
+                  />
+                </>
               ) : (
                 <section className="wolf-se-config-section">
                   <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>

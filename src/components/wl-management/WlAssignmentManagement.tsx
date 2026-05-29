@@ -12,6 +12,9 @@ import {
 import WlAssignmentDetail from './WlAssignmentDetail';
 import WlCoachProgramLibrary from './WlCoachProgramLibrary';
 import WlViewModeToggle, { useWlListViewMode } from './WlViewModeToggle';
+import { MobileAssignmentCard } from '../mobile-wl/cards/MobileAssignmentCard';
+import { AssignmentDetailSheet } from '../mobile-wl/sheets/AssignmentDetailSheet';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import '../OlympicEnginePanel.css';
 import './wl-management.css';
 import '../../styles/interactive.css';
@@ -59,6 +62,8 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
   const [filterAthleteId, setFilterAthleteId] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useWlListViewMode('assignments');
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const effectiveViewMode = isMobile ? 'cards' : viewMode;
 
   const nameByProfileId = useMemo(() => {
     const m: Record<string, string> = {};
@@ -121,7 +126,7 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
     setTab('assignments');
   };
 
-  if (selectedAssignment) {
+  if (selectedAssignment && !isMobile) {
     return (
       <WlAssignmentDetail
         assignment={selectedAssignment}
@@ -244,7 +249,9 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
                 ))}
               </select>
             </label>
-            <WlViewModeToggle storageKey="assignments" isEs={isEs} value={viewMode} onChange={setViewMode} />
+            {!isMobile && (
+              <WlViewModeToggle storageKey="assignments" isEs={isEs} value={viewMode} onChange={setViewMode} />
+            )}
           </div>
 
           {filteredRows.length === 0 ? (
@@ -253,7 +260,7 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
                 ? 'No hay asignaciones. Crea un mesociclo y asígnalo al atleta.'
                 : 'No assignments yet. Build a mesocycle and assign it to an athlete.'}
             </p>
-          ) : viewMode === 'table' ? (
+          ) : effectiveViewMode === 'table' ? (
             <div className="wl-mgmt-table-wrap">
               <table className="wl-mgmt-crud-table">
                 <thead>
@@ -317,6 +324,26 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
                 const asg = coachScoped.find((a) => a.id === row.assignmentId);
                 if (!asg) return null;
                 const st = wlAssignmentStatus(asg, completions);
+                if (isMobile) {
+                  return (
+                    <li key={row.assignmentId}>
+                      <MobileAssignmentCard
+                        programName={row.programName}
+                        athleteName={row.athleteName}
+                        status={st}
+                        statusLabel={statusLabel(st, isEs)}
+                        version={asg.version}
+                        assignedAt={row.assignedAt}
+                        completionPct={row.completionPct}
+                        sessionsDone={row.sessionsDone}
+                        sessionSlots={row.sessionSlots}
+                        isEs={isEs}
+                        onView={() => setSelectedId(row.assignmentId)}
+                        onEdit={() => onEditAssignment(asg)}
+                      />
+                    </li>
+                  );
+                }
                 return (
                   <li key={row.assignmentId}>
                     <button
@@ -348,6 +375,17 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
           )}
         </div>
       )}
+
+      <AssignmentDetailSheet
+        open={isMobile && Boolean(selectedAssignment)}
+        assignment={selectedAssignment}
+        isEs={isEs}
+        nameByProfileId={nameByProfileId}
+        onClose={() => setSelectedId(null)}
+        onEdit={onEditAssignment}
+        onDeleted={() => setSelectedId(null)}
+        onDuplicated={(id) => setSelectedId(id)}
+      />
     </div>
   );
 };

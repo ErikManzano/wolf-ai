@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, WolfUser } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser } from '../models/training';
 import type {
   AthleteLoadCalibration,
   CoachExerciseOverride,
@@ -45,6 +45,7 @@ export interface MockApiState {
   users: WolfUser[];
   assignments: ProgramAssignment[];
   completions: SessionCompletion[];
+  setLogs: SetCompletionLog[];
 }
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
@@ -1197,6 +1198,146 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       return;
     }
     res.json({ active: false });
+  });
+
+  router.get('/set-logs', async (req, res) => {
+    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
+    if (store) {
+      res.json(await store.getSetLogs(assignmentId));
+      return;
+    }
+    const list = assignmentId
+      ? state.setLogs.filter((l) => l.assignmentId === assignmentId)
+      : state.setLogs;
+    res.json(list);
+  });
+
+  router.post('/set-logs/toggle', async (req, res) => {
+    const body = req.body as {
+      assignmentId?: string;
+      weekNumber?: number;
+      dayNumber?: number;
+      exerciseIndex?: number;
+      schemeIndex?: number;
+      setInstance?: number;
+      actualKg?: number;
+      actualReps?: number;
+      actualSegmentReps?: number[];
+    };
+    if (
+      !body.assignmentId ||
+      body.weekNumber == null ||
+      body.dayNumber == null ||
+      body.exerciseIndex == null ||
+      body.schemeIndex == null ||
+      body.setInstance == null
+    ) {
+      res.status(400).json({ error: 'assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance required.' });
+      return;
+    }
+    const payload = {
+      assignmentId: body.assignmentId,
+      weekNumber: Number(body.weekNumber),
+      dayNumber: Number(body.dayNumber),
+      exerciseIndex: Number(body.exerciseIndex),
+      schemeIndex: Number(body.schemeIndex),
+      setInstance: Number(body.setInstance),
+      actualKg: body.actualKg != null ? Number(body.actualKg) : undefined,
+      actualReps: body.actualReps != null ? Number(body.actualReps) : undefined,
+      actualSegmentReps: Array.isArray(body.actualSegmentReps)
+        ? body.actualSegmentReps.map((n) => Number(n))
+        : undefined,
+    };
+    if (store) {
+      const active = await store.toggleSetLog(payload);
+      res.json({ active });
+      return;
+    }
+    const match = (l: SetCompletionLog) =>
+      l.assignmentId === payload.assignmentId &&
+      l.weekNumber === payload.weekNumber &&
+      l.dayNumber === payload.dayNumber &&
+      l.exerciseIndex === payload.exerciseIndex &&
+      l.schemeIndex === payload.schemeIndex &&
+      l.setInstance === payload.setInstance;
+    const idx = state.setLogs.findIndex(match);
+    if (idx >= 0) {
+      state.setLogs.splice(idx, 1);
+      res.json({ active: false });
+      return;
+    }
+    state.setLogs.push({
+      ...payload,
+      completedAt: new Date().toISOString(),
+    });
+    res.json({ active: true });
+  });
+
+  router.patch('/set-logs', async (req, res) => {
+    const body = req.body as {
+      assignmentId?: string;
+      weekNumber?: number;
+      dayNumber?: number;
+      exerciseIndex?: number;
+      schemeIndex?: number;
+      setInstance?: number;
+      actualKg?: number;
+      actualReps?: number;
+      actualSegmentReps?: number[];
+    };
+    if (
+      !body.assignmentId ||
+      body.weekNumber == null ||
+      body.dayNumber == null ||
+      body.exerciseIndex == null ||
+      body.schemeIndex == null ||
+      body.setInstance == null
+    ) {
+      res.status(400).json({ error: 'assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance required.' });
+      return;
+    }
+    const payload = {
+      assignmentId: body.assignmentId,
+      weekNumber: Number(body.weekNumber),
+      dayNumber: Number(body.dayNumber),
+      exerciseIndex: Number(body.exerciseIndex),
+      schemeIndex: Number(body.schemeIndex),
+      setInstance: Number(body.setInstance),
+      actualKg: body.actualKg != null ? Number(body.actualKg) : undefined,
+      actualReps: body.actualReps != null ? Number(body.actualReps) : undefined,
+      actualSegmentReps: Array.isArray(body.actualSegmentReps)
+        ? body.actualSegmentReps.map((n) => Number(n))
+        : undefined,
+    };
+    if (store) {
+      const updated = await store.patchSetLog(payload);
+      res.json(updated);
+      return;
+    }
+    const match = (l: SetCompletionLog) =>
+      l.assignmentId === payload.assignmentId &&
+      l.weekNumber === payload.weekNumber &&
+      l.dayNumber === payload.dayNumber &&
+      l.exerciseIndex === payload.exerciseIndex &&
+      l.schemeIndex === payload.schemeIndex &&
+      l.setInstance === payload.setInstance;
+    const idx = state.setLogs.findIndex(match);
+    if (idx >= 0) {
+      state.setLogs[idx] = {
+        ...state.setLogs[idx]!,
+        actualKg: payload.actualKg ?? state.setLogs[idx]!.actualKg,
+        actualReps: payload.actualReps ?? state.setLogs[idx]!.actualReps,
+        actualSegmentReps: payload.actualSegmentReps ?? state.setLogs[idx]!.actualSegmentReps,
+      };
+      res.json(state.setLogs[idx]);
+      return;
+    }
+    const created: SetCompletionLog = {
+      ...payload,
+      completedAt: new Date().toISOString(),
+    };
+    state.setLogs.push(created);
+    res.json(created);
   });
 
   router.delete('/assignments/:id', async (req, res) => {

@@ -6,6 +6,148 @@
   margin: 0 auto;
 }
 
+.wolf-athlete-plan--tracking {
+  padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.wolf-athlete-week-section--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 -0.35rem 1rem;
+  padding: 0.75rem 0.35rem 0.85rem;
+  background: color-mix(in srgb, var(--color-bg-main) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.wolf-athlete-week-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.wolf-athlete-week-arrows {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.wolf-athlete-week-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.wolf-athlete-week-arrow:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-week-arrow:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.wolf-athlete-week-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-athlete-week-pill--complete:not(.active) {
+  border-color: color-mix(in srgb, var(--color-success) 42%, var(--color-border));
+  color: color-mix(in srgb, var(--color-success) 88%, var(--color-text-secondary));
+}
+
+.wolf-athlete-day-title-row--tap {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.wolf-athlete-day-title-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.wolf-athlete-metric--progress.is-complete strong {
+  color: var(--color-success);
+}
+
+.wolf-athlete-metric--progress.is-complete svg {
+  color: var(--color-success);
+}
+
+.wolf-athlete-day-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-athlete-day-panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.wolf-athlete-day-panel > .wolf-athlete-day-panel-inner {
+  overflow: hidden;
+}
+
+.wolf-athlete-day-panel:not(.is-open) .wolf-athlete-day-panel-inner {
+  pointer-events: none;
+}
+
+.wolf-athlete-day-footer {
+  padding: 0 1rem 1rem 1.35rem;
+}
+
+.wolf-athlete-done-btn--block {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.wolf-athlete-empty-text--inline {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.wolf-athlete-tracking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .wolf-athlete-plan--tracking .wolf-athlete-hero {
+    margin-bottom: 0.75rem;
+  }
+
+  .wolf-athlete-plan--tracking .wolf-athlete-title {
+    font-size: 1.35rem;
+  }
+}
+
+
 /* ——— Estado vacío ——— */
 .wolf-athlete-plan--empty {
   display: flex;
@@ -276,10 +418,9 @@
 
 .wolf-athlete-day-top {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.65rem;
   padding: 1.15rem 1.15rem 1rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
 }

@@ -481,6 +481,17 @@
   color: #16a34a;
 }
 
+.wl-mgmt-day-cell--autoreg {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.wl-mgmt-day-autoreg {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
 .wl-mgmt-detail-actions {
   display: flex;
   flex-wrap: wrap;

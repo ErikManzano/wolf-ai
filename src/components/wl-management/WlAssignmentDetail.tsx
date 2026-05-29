@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BookMarked,
@@ -17,7 +17,9 @@ import {
   wlLastCompletionDate,
   type WlAssignmentStatus,
 } from '../../utils/dashboardStats';
+import { flattenBlockSets, findSetLog, setLogHasAutoregulation } from '../../utils/athleteSetLogs';
 import ConfirmationModal from '../ConfirmationModal';
+import { PromptModal } from '../mobile-wl/sheets/PromptModal';
 import WlVersionTimeline from './WlVersionTimeline';
 
 interface WlAssignmentDetailProps {
@@ -47,6 +49,8 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
 }) => {
   const {
     completions,
+    setLogs,
+    motorExercises,
     isSessionComplete,
     removeAssignment,
     restoreAssignmentVersion,
@@ -55,6 +59,7 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
   } = useWolfAssign();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [templatePromptOpen, setTemplatePromptOpen] = useState(false);
   const [dupAthleteId, setDupAthleteId] = useState(assignment.athleteProfileId);
   const [showDup, setShowDup] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
@@ -72,13 +77,49 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
     return w?.days ?? [];
   }, [assignment.program.weeks, selectedWeek]);
 
+  const athleteProfile = useMemo(
+    () => mockAthletes.find((a) => a.id === assignment.athleteProfileId),
+    [assignment.athleteProfileId],
+  );
+
+  const exName = useCallback(
+    (id: string) => motorExercises.find((e) => e.id === id)?.name ?? id,
+    [motorExercises],
+  );
+
+  const dayHasAutoregulation = useCallback(
+    (weekNumber: number, dayNumber: number) => {
+      const w = assignment.program.weeks.find((x) => x.weekNumber === weekNumber);
+      const d = w?.days.find((x) => x.dayNumber === dayNumber);
+      if (!d) return false;
+      for (let bi = 0; bi < d.session.exercises.length; bi++) {
+        const block = d.session.exercises[bi]!;
+        const flat = flattenBlockSets(block, athleteProfile, motorExercises, exName);
+        for (const row of flat) {
+          const log = findSetLog(
+            setLogs,
+            assignment.id,
+            weekNumber,
+            dayNumber,
+            bi,
+            row.schemeIndex,
+            row.setInstance,
+          );
+          if (log && setLogHasAutoregulation(log, row.prescribedKg, row.prescribedReps, row.prescribedSegmentReps)) return true;
+        }
+      }
+      return false;
+    },
+    [assignment, athleteProfile, motorExercises, exName, setLogs],
+  );
+
   const handleSaveTemplate = () => {
-    const name = window.prompt(
-      isEs ? 'Nombre de la plantilla' : 'Template name',
-      assignment.program.name,
-    );
-    if (name === null) return;
+    setTemplatePromptOpen(true);
+  };
+
+  const confirmSaveTemplate = (name: string) => {
     saveCoachTemplate(name, assignment.program, assignment.id);
+    setTemplatePromptOpen(false);
   };
 
   const handleDuplicate = () => {
@@ -92,9 +133,9 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
   return (
     <div className="wl-mgmt-detail">
       <header className="wl-mgmt-detail-head">
-        <button type="button" className="btn-outline wl-mgmt-back-btn" onClick={onBack}>
+        <button type="button" className="btn-outline wl-mgmt-back-btn" onClick={onBack} aria-label={isEs ? 'Volver' : 'Back'}>
           <ArrowLeft size={16} aria-hidden />
-          {isEs ? 'Volver' : 'Back'}
+          <span className="wl-mgmt-back-btn-text">{isEs ? 'Volver' : 'Back'}</span>
         </button>
         <div className="wl-mgmt-detail-title-wrap">
           <h2 className="wl-mgmt-detail-title">{assignment.program.name}</h2>
@@ -152,13 +193,25 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
           <div className="wl-mgmt-day-grid">
             {weekDays.map((d) => {
               const done = isSessionComplete(assignment.id, selectedWeek, d.dayNumber);
+              const autoreg = dayHasAutoregulation(selectedWeek, d.dayNumber);
               return (
                 <div
                   key={d.dayNumber}
-                  className={`wl-mgmt-day-cell ${done ? 'wl-mgmt-day-cell--done' : ''}`}
-                  title={d.label}
+                  className={`wl-mgmt-day-cell ${done ? 'wl-mgmt-day-cell--done' : ''}${autoreg ? ' wl-mgmt-day-cell--autoreg' : ''}`}
+                  title={
+                    autoreg
+                      ? isEs
+                        ? `${d.label}: autorregulación registrada`
+                        : `${d.label}: autoregulation logged`
+                      : d.label
+                  }
                 >
                   <span className="wl-mgmt-day-label">{d.label}</span>
+                  {autoreg ? (
+                    <span className="wl-mgmt-day-autoreg" aria-hidden>
+                      ±
+                    </span>
+                  ) : null}
                   {done ? <Check size={14} aria-hidden /> : null}
                 </div>
               );
@@ -231,6 +284,17 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
           setDeleteOpen(false);
           onDeleted();
         }}
+      />
+
+      <PromptModal
+        open={templatePromptOpen}
+        title={isEs ? 'Guardar plantilla' : 'Save template'}
+        label={isEs ? 'Nombre de la plantilla' : 'Template name'}
+        defaultValue={assignment.program.name}
+        confirmLabel={isEs ? 'Guardar' : 'Save'}
+        cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+        onCancel={() => setTemplatePromptOpen(false)}
+        onConfirm={confirmSaveTemplate}
       />
     </div>
   );

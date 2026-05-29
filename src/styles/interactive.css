@@ -576,6 +576,63 @@
   box-shadow: var(--ix-focus-ring);
 }
 
+.wolf-athlete-day-expand {
+  transition:
+    border-color var(--ix-duration) var(--ix-ease),
+    background-color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-athlete-day-expand:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-accent);
+}
+
+.wolf-athlete-day-expand:active {
+  transform: scale(0.94);
+}
+
+.wolf-athlete-day-expand:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-athlete-day-title-row--tap:focus-visible {
+  outline: none;
+  border-radius: 10px;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.wolf-athlete-day-title-row--tap:active {
+  opacity: 0.88;
+}
+
+.athlete-set-row {
+  transition:
+    border-color var(--ix-duration) var(--ix-ease),
+    background-color var(--ix-duration) var(--ix-ease),
+    transform var(--ix-duration) var(--ix-ease);
+}
+
+.athlete-set-tap:focus-visible .inline-block,
+.athlete-set-input:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.athlete-set-check:focus-visible {
+  outline: none;
+  box-shadow: var(--ix-focus-ring);
+}
+
+.athlete-set-check:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.athlete-set-field .athlete-set-tap:active {
+  transform: scale(0.97);
+}
+
 .wolf-se-autocomplete-option {
   transition: background-color var(--ix-duration) var(--ix-ease);
 }

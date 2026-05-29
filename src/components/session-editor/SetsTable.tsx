@@ -3,6 +3,8 @@ import { Copy, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType, WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { MobileSetList } from '../mobile-wl/cards/MobileSetList';
 import { CompactNumberField } from './CompactNumberField';
 import { exerciseName, kgForExercise } from './blockMetrics';
 import { SectionHeader } from './SectionHeader';
@@ -38,6 +40,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onDuplicateSet,
   onRemoveSet,
 }) => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
 
@@ -84,6 +87,23 @@ export const SetsTable: React.FC<SetsTableProps> = ({
 
   if (!isComplex) {
     const ex = exercises.find((e) => e.id === block.exerciseId);
+
+    if (isMobile) {
+      return (
+        <MobileSetList
+          block={block}
+          athlete={athlete}
+          exercises={exercises}
+          isEs={isEs}
+          onPctChange={onPctChange}
+          onRepsChange={onRepsChange}
+          onSetsChange={onSetsChange}
+          onAddSet={onAddSet}
+          onDuplicateSet={onDuplicateSet}
+          onRemoveSet={onRemoveSet}
+        />
+      );
+    }
 
     return (
       <section className="wolf-se-sets-section" onKeyDown={onEnter}>

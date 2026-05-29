@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { Exercise, ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
+import type { Exercise, ProgramAssignment, SessionCompletion, SetCompletionLog, WolfUser } from '../models/training';
 import { mockExercises } from '../data/loadMockData';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
@@ -122,6 +122,30 @@ export class PostgresStore {
     await this.pool.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS workout_completions_slot_idx
       ON workout_completions (assignment_id, week_number, day_number, COALESCE(exercise_index, -1));
+    `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS workout_set_logs (
+        id TEXT PRIMARY KEY,
+        assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+        week_number INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        exercise_index INTEGER NOT NULL,
+        scheme_index INTEGER NOT NULL,
+        set_instance INTEGER NOT NULL,
+        actual_kg REAL,
+        actual_reps INTEGER,
+        completed_at TIMESTAMPTZ NOT NULL
+      );
+    `);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS workout_set_logs_slot_idx
+      ON workout_set_logs (
+        assignment_id, week_number, day_number, exercise_index, scheme_index, set_instance
+      );
+    `);
+    await this.pool.query(`
+      ALTER TABLE workout_set_logs
+      ADD COLUMN IF NOT EXISTS actual_segment_reps JSONB;
     `);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS coach_exercises (
@@ -512,6 +536,174 @@ export class PostgresStore {
     );
   }
 
+  async getSetLogs(assignmentId?: string): Promise<SetCompletionLog[]> {
+    const result = assignmentId
+      ? await this.pool.query(
+          `
+          SELECT assignment_id, week_number, day_number, exercise_index, scheme_index,
+                 set_instance, actual_kg, actual_reps, actual_segment_reps, completed_at
+          FROM workout_set_logs
+          WHERE assignment_id = $1
+          ORDER BY completed_at DESC;
+          `,
+          [assignmentId],
+        )
+      : await this.pool.query(
+          `
+          SELECT assignment_id, week_number, day_number, exercise_index, scheme_index,
+                 set_instance, actual_kg, actual_reps, actual_segment_reps, completed_at
+          FROM workout_set_logs
+          ORDER BY completed_at DESC;
+          `,
+        );
+    return result.rows.map(this.mapSetLogRow);
+  }
+
+  async toggleSetLog(input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex: number;
+    schemeIndex: number;
+    setInstance: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+  }): Promise<boolean> {
+    const existing = await this.pool.query(
+      `
+      SELECT id FROM workout_set_logs
+      WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
+        AND exercise_index = $4 AND scheme_index = $5 AND set_instance = $6
+      LIMIT 1;
+      `,
+      [
+        input.assignmentId,
+        input.weekNumber,
+        input.dayNumber,
+        input.exerciseIndex,
+        input.schemeIndex,
+        input.setInstance,
+      ],
+    );
+    if (existing.rows.length > 0) {
+      await this.pool.query('DELETE FROM workout_set_logs WHERE id = $1;', [existing.rows[0].id]);
+      return false;
+    }
+    const id = `wsl-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    await this.pool.query(
+      `
+      INSERT INTO workout_set_logs (
+        id, assignment_id, week_number, day_number, exercise_index, scheme_index,
+        set_instance, actual_kg, actual_reps, actual_segment_reps, completed_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::timestamptz);
+      `,
+      [
+        id,
+        input.assignmentId,
+        input.weekNumber,
+        input.dayNumber,
+        input.exerciseIndex,
+        input.schemeIndex,
+        input.setInstance,
+        input.actualKg ?? null,
+        input.actualReps ?? null,
+        input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
+        new Date().toISOString(),
+      ],
+    );
+    return true;
+  }
+
+  async patchSetLog(input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex: number;
+    schemeIndex: number;
+    setInstance: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+  }): Promise<SetCompletionLog | null> {
+    const existing = await this.pool.query(
+      `
+      SELECT id FROM workout_set_logs
+      WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
+        AND exercise_index = $4 AND scheme_index = $5 AND set_instance = $6
+      LIMIT 1;
+      `,
+      [
+        input.assignmentId,
+        input.weekNumber,
+        input.dayNumber,
+        input.exerciseIndex,
+        input.schemeIndex,
+        input.setInstance,
+      ],
+    );
+    if (existing.rows.length === 0) {
+      const id = `wsl-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      await this.pool.query(
+        `
+        INSERT INTO workout_set_logs (
+          id, assignment_id, week_number, day_number, exercise_index, scheme_index,
+          set_instance, actual_kg, actual_reps, actual_segment_reps, completed_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::timestamptz);
+        `,
+        [
+          id,
+          input.assignmentId,
+          input.weekNumber,
+          input.dayNumber,
+          input.exerciseIndex,
+          input.schemeIndex,
+          input.setInstance,
+          input.actualKg ?? null,
+          input.actualReps ?? null,
+          input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
+          new Date().toISOString(),
+        ],
+      );
+    } else {
+      await this.pool.query(
+        `
+        UPDATE workout_set_logs
+        SET actual_kg = COALESCE($8, actual_kg),
+            actual_reps = COALESCE($9, actual_reps),
+            actual_segment_reps = COALESCE($10::jsonb, actual_segment_reps)
+        WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
+          AND exercise_index = $4 AND scheme_index = $5 AND set_instance = $6;
+        `,
+        [
+          input.assignmentId,
+          input.weekNumber,
+          input.dayNumber,
+          input.exerciseIndex,
+          input.schemeIndex,
+          input.setInstance,
+          input.actualKg ?? null,
+          input.actualReps ?? null,
+          input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
+        ],
+      );
+    }
+    const rows = await this.getSetLogs(input.assignmentId);
+    return (
+      rows.find(
+        (l) =>
+          l.assignmentId === input.assignmentId &&
+          l.weekNumber === input.weekNumber &&
+          l.dayNumber === input.dayNumber &&
+          l.exerciseIndex === input.exerciseIndex &&
+          l.schemeIndex === input.schemeIndex &&
+          l.setInstance === input.setInstance,
+      ) ?? null
+    );
+  }
+
   private async seedSystemExercises(): Promise<void> {
     for (const raw of mockExercises) {
       const ex = normalizeExercise({ ...raw } as unknown as Record<string, unknown>);
@@ -722,6 +914,25 @@ export class PostgresStore {
       loadScale: row.load_scale,
     });
   }
+
+  private mapSetLogRow = (row: Record<string, unknown>): SetCompletionLog => ({
+    assignmentId: row.assignment_id as string,
+    weekNumber: Number(row.week_number),
+    dayNumber: Number(row.day_number),
+    exerciseIndex: Number(row.exercise_index),
+    schemeIndex: Number(row.scheme_index),
+    setInstance: Number(row.set_instance),
+    completedAt: new Date(row.completed_at as string | Date).toISOString(),
+    ...(row.actual_kg != null ? { actualKg: Number(row.actual_kg) } : {}),
+    ...(row.actual_reps != null ? { actualReps: Number(row.actual_reps) } : {}),
+    ...(row.actual_segment_reps != null
+      ? {
+          actualSegmentReps: Array.isArray(row.actual_segment_reps)
+            ? (row.actual_segment_reps as number[])
+            : (JSON.parse(String(row.actual_segment_reps)) as number[]),
+        }
+      : {}),
+  });
 
   private mapCompletionRow = (row: Record<string, unknown>): SessionCompletion => ({
     assignmentId: row.assignment_id as string,
