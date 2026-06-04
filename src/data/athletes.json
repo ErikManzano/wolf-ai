@@ -1,5 +1,14 @@
 [
   {
+    "id": "ath-erik",
+    "name": "Erik Manzano",
+    "level": "intermediate",
+    "bodyweight": 78,
+    "oneRM": { "snatch": 85, "cleanJerk": 110, "backSquat": 150, "frontSquat": 125 },
+    "fatigueScore": 40,
+    "readinessScore": 72
+  },
+  {
     "id": "ath-you",
     "name": "Atleta principal",
     "level": "intermediate",

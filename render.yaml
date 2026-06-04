@@ -9,10 +9,14 @@ services:
     healthCheckPath: /health
     envVars:
       - key: FRONTEND_ORIGIN
-        value: https://wolf-ai-test-v1-march-2026.netlify.app/
+        value: https://wolf-ai-test-v1-march-2026.netlify.app
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: DATABASE_URL
         sync: false
+      - key: WOLF_SYNC_SEED_PASSWORDS
+        value: "0"
+      - key: WOLF_ALLOW_PUBLIC_REGISTER
+        value: "0"

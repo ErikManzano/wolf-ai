@@ -109,6 +109,8 @@ export interface WolfUser {
   /** Perfil Motor WL (`Athlete.id`) cuando role === athlete */
   linkedAthleteId?: string;
   email?: string;
+  /** Login alternativo (mientras no haya correo real). Único, minúsculas. */
+  username?: string;
   /** Hash bcrypt del login; no exponer en responses públicas. */
   passwordHash?: string;
   /** @deprecated Usar `passwordHash`; solo compatibilidad con seeds antiguos. */

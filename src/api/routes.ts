@@ -30,6 +30,7 @@ import { adaptSession } from '../services/adaptiveEngine';
 import { simulateMicrocycle } from '../services/simulateMicrocycle';
 import { PostgresStore } from './postgresStore';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
+import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
 
 export interface MockApiState {
@@ -50,7 +51,15 @@ export interface MockApiState {
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
 function sanitizeUser(u: WolfUser): Omit<WolfUser, 'password' | 'passwordHash'> {
-  return { id: u.id, name: u.name, role: u.role, email: u.email, coachId: u.coachId, linkedAthleteId: u.linkedAthleteId };
+  return {
+    id: u.id,
+    name: u.name,
+    role: u.role,
+    email: u.email,
+    username: u.username,
+    coachId: u.coachId,
+    linkedAthleteId: u.linkedAthleteId,
+  };
 }
 
 function isCoachOrAdmin(user: WolfUser | null): user is WolfUser {
@@ -73,6 +82,53 @@ function listExercisesMock(state: MockApiState): Exercise[] {
 
 function listDefinitionsMock(state: MockApiState, coachId: string): ExerciseDefinition[] {
   return state.exerciseDefinitions.filter((d) => !d.coachId || d.coachId === coachId);
+}
+
+function canReadAssignment(actor: WolfUser, assignment: ProgramAssignment): boolean {
+  if (actor.role === 'super_admin') return true;
+  if (actor.role === 'coach') return assignment.coachId === actor.id;
+  if (actor.role === 'athlete') {
+    return assignment.athleteUserId === actor.id || assignment.athleteProfileId === actor.linkedAthleteId;
+  }
+  return false;
+}
+
+function canWriteAssignment(actor: WolfUser, assignment: ProgramAssignment): boolean {
+  if (actor.role === 'super_admin') return true;
+  if (actor.role === 'coach') return assignment.coachId === actor.id;
+  return false;
+}
+
+function canLogAssignment(actor: WolfUser, assignment: ProgramAssignment): boolean {
+  return canReadAssignment(actor, assignment);
+}
+
+async function findAssignmentById(
+  id: string,
+  state: MockApiState,
+  store?: PostgresStore,
+): Promise<ProgramAssignment | null> {
+  if (store) {
+    const list = await store.getAssignments();
+    return list.find((a) => a.id === id) ?? null;
+  }
+  return state.assignments.find((a) => a.id === id) ?? null;
+}
+
+async function listAssignmentsForActor(
+  actor: WolfUser,
+  state: MockApiState,
+  store?: PostgresStore,
+): Promise<ProgramAssignment[]> {
+  const all = store ? await store.getAssignments() : state.assignments;
+  if (actor.role === 'super_admin') return all;
+  if (actor.role === 'coach') return all.filter((a) => a.coachId === actor.id);
+  if (actor.role === 'athlete') {
+    return all.filter(
+      (a) => a.athleteUserId === actor.id || a.athleteProfileId === actor.linkedAthleteId,
+    );
+  }
+  return [];
 }
 
 /** Resuelve el usuario actual desde `Authorization: Bearer <JWT>`; el rol se toma siempre de la fuente de datos. */
@@ -114,13 +170,14 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
 
   router.post('/auth/login', async (req, res) => {
     const body = req.body as { email?: string; password?: string };
-    const email = body.email?.trim().toLowerCase();
+    const loginId = body.email?.trim().toLowerCase() ?? '';
     const password = body.password ?? '';
     let user: WolfUser | null = null;
     if (store) {
-      user = await store.validateUser(email ?? '', password);
+      user = await store.validateUser(loginId, password);
     } else {
-      user = state.users.find((u) => u.email?.toLowerCase() === email && matchesStoredPassword(u, password)) ?? null;
+      user =
+        state.users.find((u) => userMatchesLoginId(u, loginId) && matchesStoredPassword(u, password)) ?? null;
     }
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials.' });
@@ -135,6 +192,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.post('/auth/register', async (req, res) => {
+    if (process.env.WOLF_ALLOW_PUBLIC_REGISTER === '0') {
+      res.status(403).json({ error: 'Public registration is disabled.' });
+      return;
+    }
     const body = req.body as { name?: string; email?: string; password?: string; role?: WolfUser['role']; coachId?: string; linkedAthleteId?: string };
     if (body.role === 'super_admin') {
       res.status(403).json({ error: 'Super admin accounts cannot be created via public registration.' });
@@ -1019,13 +1080,27 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json(state.sessions);
   });
 
-  router.get('/assignments', async (_req, res) => {
-    const assignments = store ? await store.getAssignments() : state.assignments;
+  router.get('/assignments', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const assignments = await listAssignmentsForActor(actor, state, store);
     res.json(assignments);
   });
 
   router.get('/assignments/athlete/:athleteProfileId', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const { athleteProfileId } = req.params as { athleteProfileId: string };
+    if (actor.role === 'athlete' && actor.linkedAthleteId !== athleteProfileId) {
+      res.status(403).json({ error: 'Forbidden.' });
+      return;
+    }
     const match = store
       ? await store.getAssignmentByAthlete(athleteProfileId)
       : state.assignments
@@ -1035,13 +1110,30 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(404).json({ error: 'No assignment found for athlete profile.' });
       return;
     }
+    if (!canReadAssignment(actor, match)) {
+      res.status(403).json({ error: 'Forbidden.' });
+      return;
+    }
     res.json(match);
   });
 
   router.post('/assignments', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
     const body = req.body as { coachId?: string; athleteProfileId?: string; athleteUserId?: string; program?: ProgramAssignment['program'] };
     if (!body.coachId || !body.athleteProfileId || !body.program) {
       res.status(400).json({ error: 'coachId, athleteProfileId and program are required.' });
+      return;
+    }
+    if (actor.role === 'coach' && body.coachId !== actor.id) {
+      res.status(403).json({ error: 'coachId must match the authenticated coach.' });
       return;
     }
     const id = `asg-${Date.now()}`;
@@ -1067,7 +1159,21 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.patch('/assignments/:id/program', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const { id } = req.params as { id: string };
+    const existing = await findAssignmentById(id, state, store);
+    if (!existing) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canWriteAssignment(actor, existing)) {
+      res.status(403).json({ error: 'Forbidden.' });
+      return;
+    }
     const body = req.body as { program?: ProgramAssignment['program'] };
     if (!body.program) {
       res.status(400).json({ error: 'program is required.' });
@@ -1104,18 +1210,46 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.get('/completions', async (req, res) => {
-    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
-    if (store) {
-      res.json(await store.getCompletions(assignmentId));
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
-    const list = assignmentId
-      ? state.completions.filter((c) => c.assignmentId === assignmentId)
-      : state.completions;
+    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
+    if (assignmentId) {
+      const assignment = await findAssignmentById(assignmentId, state, store);
+      if (!assignment) {
+        res.status(404).json({ error: 'Assignment not found.' });
+        return;
+      }
+      if (!canReadAssignment(actor, assignment)) {
+        res.status(403).json({ error: 'Forbidden.' });
+        return;
+      }
+    }
+    if (store) {
+      const list = await store.getCompletions(assignmentId);
+      if (!assignmentId && actor.role !== 'super_admin') {
+        const allowed = new Set((await listAssignmentsForActor(actor, state, store)).map((a) => a.id));
+        res.json(list.filter((c) => allowed.has(c.assignmentId)));
+        return;
+      }
+      res.json(list);
+      return;
+    }
+    const allowedIds = new Set((await listAssignmentsForActor(actor, state, store)).map((a) => a.id));
+    const list = (assignmentId ? state.completions.filter((c) => c.assignmentId === assignmentId) : state.completions).filter(
+      (c) => actor.role === 'super_admin' || allowedIds.has(c.assignmentId),
+    );
     res.json(list);
   });
 
   router.post('/completions/toggle', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const body = req.body as {
       assignmentId?: string;
       weekNumber?: number;
@@ -1124,6 +1258,15 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     if (!body.assignmentId || body.weekNumber == null || body.dayNumber == null) {
       res.status(400).json({ error: 'assignmentId, weekNumber and dayNumber are required.' });
+      return;
+    }
+    const assignment = await findAssignmentById(body.assignmentId, state, store);
+    if (!assignment) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canLogAssignment(actor, assignment)) {
+      res.status(403).json({ error: 'Forbidden.' });
       return;
     }
     const payload = {
@@ -1156,6 +1299,11 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.post('/completions/session-toggle', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const body = req.body as {
       assignmentId?: string;
       weekNumber?: number;
@@ -1164,6 +1312,15 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     if (!body.assignmentId || body.weekNumber == null || body.dayNumber == null) {
       res.status(400).json({ error: 'assignmentId, weekNumber and dayNumber are required.' });
+      return;
+    }
+    const assignment = await findAssignmentById(body.assignmentId, state, store);
+    if (!assignment) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canLogAssignment(actor, assignment)) {
+      res.status(403).json({ error: 'Forbidden.' });
       return;
     }
     const assignmentId = body.assignmentId;
@@ -1201,18 +1358,46 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.get('/set-logs', async (req, res) => {
-    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
-    if (store) {
-      res.json(await store.getSetLogs(assignmentId));
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
-    const list = assignmentId
-      ? state.setLogs.filter((l) => l.assignmentId === assignmentId)
-      : state.setLogs;
+    const assignmentId = typeof req.query.assignmentId === 'string' ? req.query.assignmentId : undefined;
+    if (assignmentId) {
+      const assignment = await findAssignmentById(assignmentId, state, store);
+      if (!assignment) {
+        res.status(404).json({ error: 'Assignment not found.' });
+        return;
+      }
+      if (!canReadAssignment(actor, assignment)) {
+        res.status(403).json({ error: 'Forbidden.' });
+        return;
+      }
+    }
+    if (store) {
+      const list = await store.getSetLogs(assignmentId);
+      if (!assignmentId && actor.role !== 'super_admin') {
+        const allowed = new Set((await listAssignmentsForActor(actor, state, store)).map((a) => a.id));
+        res.json(list.filter((l) => allowed.has(l.assignmentId)));
+        return;
+      }
+      res.json(list);
+      return;
+    }
+    const allowedIds = new Set((await listAssignmentsForActor(actor, state, store)).map((a) => a.id));
+    const list = (assignmentId ? state.setLogs.filter((l) => l.assignmentId === assignmentId) : state.setLogs).filter(
+      (l) => actor.role === 'super_admin' || allowedIds.has(l.assignmentId),
+    );
     res.json(list);
   });
 
   router.post('/set-logs/toggle', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const body = req.body as {
       assignmentId?: string;
       weekNumber?: number;
@@ -1233,6 +1418,15 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       body.setInstance == null
     ) {
       res.status(400).json({ error: 'assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance required.' });
+      return;
+    }
+    const assignment = await findAssignmentById(body.assignmentId!, state, store);
+    if (!assignment) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canLogAssignment(actor, assignment)) {
+      res.status(403).json({ error: 'Forbidden.' });
       return;
     }
     const payload = {
@@ -1274,6 +1468,11 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.patch('/set-logs', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const body = req.body as {
       assignmentId?: string;
       weekNumber?: number;
@@ -1294,6 +1493,15 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       body.setInstance == null
     ) {
       res.status(400).json({ error: 'assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance required.' });
+      return;
+    }
+    const patchAssignment = await findAssignmentById(body.assignmentId, state, store);
+    if (!patchAssignment) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canLogAssignment(actor, patchAssignment)) {
+      res.status(403).json({ error: 'Forbidden.' });
       return;
     }
     const payload = {
@@ -1341,7 +1549,21 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.delete('/assignments/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
     const { id } = req.params as { id: string };
+    const existing = await findAssignmentById(id, state, store);
+    if (!existing) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canWriteAssignment(actor, existing)) {
+      res.status(403).json({ error: 'Forbidden.' });
+      return;
+    }
     if (store) {
       const removed = await store.deleteAssignment(id);
       if (!removed) {

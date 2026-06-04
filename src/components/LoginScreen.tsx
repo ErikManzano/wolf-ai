@@ -18,6 +18,7 @@ import {
 import './LoginScreen.css';
 import '../styles/interactive.css';
 import { DEMO_QUICK_PROFILES } from '../config/demoQuickLogin';
+import { allowPublicRegister, showDemoQuickLogin } from '../config/productionAuth';
 
 const MOBILE_MQ = '(max-width: 900px)';
 const ONB_STORAGE_KEY = 'wolf-mobile-onb';
@@ -86,7 +87,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       registerSubtitle: isEs ? 'Crea tu cuenta para gestionar atletas y planes.' : 'Create your account to manage athletes and plans.',
       changePasswordTitle: isEs ? 'Recuperar contraseña' : 'Recover password',
       changePasswordSubtitle: isEs ? 'Te enviaremos un correo para recuperar tu cuenta.' : 'We will send you a recovery email.',
-      email: isEs ? 'Email' : 'Email',
+      email: isEs ? 'Usuario o email' : 'Username or email',
       password: isEs ? 'Contraseña' : 'Password',
       login: isEs ? 'Entrar al sistema' : 'Log in',
       loginCta: isEs ? 'Iniciar sesión' : 'Sign in',
@@ -105,7 +106,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       noAccountShort: isEs ? '¿No tienes cuenta?' : 'No account?',
       haveAccount: isEs ? '¿Ya tienes cuenta?' : 'Already have an account?',
       backToLogin: isEs ? 'Volver a iniciar sesión' : 'Back to sign in',
-      emailPh: isEs ? 'tu@email.com' : 'you@email.com',
+      emailPh: isEs ? 'erik o tu@email.com' : 'erik or you@email.com',
       passwordPh: isEs ? 'Tu contraseña' : 'Your password',
       toggleShow: isEs ? 'Mostrar contraseña' : 'Show password',
       toggleHide: isEs ? 'Ocultar contraseña' : 'Hide password',
@@ -317,7 +318,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </header>
       )}
 
-      {tab === 'login' && (
+      {tab === 'login' && showDemoQuickLogin && (
         <div className="wolf-login-quick" role="group" aria-label={t.quickAccessAria}>
           <span className="wolf-login-quick-label">{t.quickAccess}</span>
           <div className="wolf-login-quick-row">
@@ -335,7 +336,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </div>
       )}
 
-      {tab === 'register' && (
+      {tab === 'register' && allowPublicRegister && (
         <>
           <label className="wolf-login-label">
             <span>{t.name}</span>
@@ -362,12 +363,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         <span>{t.email}</span>
         {isMobile ? (
           <div className="wolf-login-input-icon-wrap">
-            <Mail className="wolf-login-input-prefix" size={18} strokeWidth={2} aria-hidden />
+            {tab === 'login' ? (
+              <User className="wolf-login-input-prefix" size={18} strokeWidth={2} aria-hidden />
+            ) : (
+              <Mail className="wolf-login-input-prefix" size={18} strokeWidth={2} aria-hidden />
+            )}
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              autoComplete="email"
+              type={tab === 'login' ? 'text' : 'email'}
+              autoComplete={tab === 'login' ? 'username' : 'email'}
               placeholder={t.emailPh}
               required
             />
@@ -376,8 +381,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            autoComplete="email"
+            type={tab === 'login' ? 'text' : 'email'}
+            autoComplete={tab === 'login' ? 'username' : 'email'}
             placeholder={t.emailPh}
             required
           />
@@ -507,7 +512,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </>
       )}
 
-      {!isMobile && tab === 'login' && (
+      {!isMobile && tab === 'login' && allowPublicRegister && (
         <>
           <div className="wolf-login-divider">
             <span>{t.noAccount}</span>
@@ -518,7 +523,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </>
       )}
 
-      {!isMobile && tab === 'register' && (
+      {!isMobile && tab === 'register' && allowPublicRegister && (
         <>
           <div className="wolf-login-divider">
             <span>{t.haveAccount}</span>
@@ -529,7 +534,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </>
       )}
 
-      {isMobile && tab === 'login' && (
+      {isMobile && tab === 'login' && allowPublicRegister && (
         <p className="wolf-login-mobile-footer">
           {t.noAccountShort}{' '}
           <button type="button" className="wolf-login-link wolf-login-link--inline" onClick={() => setTab('register')}>
@@ -538,7 +543,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         </p>
       )}
 
-      {isMobile && tab === 'register' && (
+      {isMobile && tab === 'register' && allowPublicRegister && (
         <p className="wolf-login-mobile-footer">
           {t.haveAccount}{' '}
           <button type="button" className="wolf-login-link wolf-login-link--inline" onClick={() => setTab('login')}>
@@ -631,18 +636,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 type="button"
                 className="wolf-login-btn-outline-icon"
                 onClick={() => {
-                  setTab('register');
+                  setTab(allowPublicRegister ? 'register' : 'login');
                   setMobilePhase('auth');
                 }}
               >
                 <Mail size={20} strokeWidth={2} aria-hidden />
-                {t.continueEmail}
+                {allowPublicRegister ? t.continueEmail : t.loginCta}
               </button>
               <button type="button" className="wolf-login-btn-outline-icon" disabled title={t.soon}>
                 <Smartphone size={20} strokeWidth={2} aria-hidden />
                 {t.continuePhone}
               </button>
             </div>
+            {showDemoQuickLogin && (
             <div className="wolf-login-quick wolf-login-quick--get-started" role="group" aria-label={t.quickAccessAria}>
               <span className="wolf-login-quick-label">{t.quickAccess}</span>
               <div className="wolf-login-quick-row">
@@ -658,6 +664,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 ))}
               </div>
             </div>
+            )}
             <p className="wolf-login-get-started-footer">
               {t.haveAccount}{' '}
               <button

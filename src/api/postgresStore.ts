@@ -54,6 +54,7 @@ type UserCreateInput = {
   role: WolfUser['role'];
   email: string;
   password: string;
+  username?: string;
   coachId?: string;
   linkedAthleteId?: string;
 };
@@ -63,6 +64,18 @@ export class PostgresStore {
 
   constructor(pool: Pool) {
     this.pool = pool;
+  }
+
+  private mapUserRow(row: Record<string, unknown>): WolfUser {
+    return {
+      id: row.id as string,
+      name: row.name as string,
+      role: row.role as WolfUser['role'],
+      email: row.email as string,
+      username: (row.username as string | null) ?? undefined,
+      coachId: (row.coach_id as string | null) ?? undefined,
+      linkedAthleteId: (row.linked_athlete_id as string | null) ?? undefined,
+    };
   }
 
   static fromEnv(): PostgresStore | null {
@@ -97,6 +110,12 @@ export class PostgresStore {
     await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token_expires_at TIMESTAMPTZ;`);
     await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
     await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();`);
+    await this.pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;`);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx
+      ON users (lower(username))
+      WHERE username IS NOT NULL AND username <> '';
+    `);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS assignments (
         id TEXT PRIMARY KEY,
@@ -182,19 +201,29 @@ export class PostgresStore {
         user.passwordHash && looksLikeBcryptHash(user.passwordHash)
           ? user.passwordHash
           : hashPassword(user.password ?? 'wolf2026');
-      const params = [user.id, user.name, user.role, user.email ?? '', storedPassword, user.coachId ?? null, user.linkedAthleteId ?? null];
+      const params = [
+        user.id,
+        user.name,
+        user.role,
+        user.email ?? '',
+        storedPassword,
+        user.coachId ?? null,
+        user.linkedAthleteId ?? null,
+        user.username?.toLowerCase() ?? null,
+      ];
       try {
         await this.pool.query(
           `
-        INSERT INTO users (id, name, role, email, password, coach_id, linked_athlete_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO users (id, name, role, email, password, coach_id, linked_athlete_id, username)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           role = EXCLUDED.role,
           email = EXCLUDED.email,
           password = EXCLUDED.password,
           coach_id = EXCLUDED.coach_id,
-          linked_athlete_id = EXCLUDED.linked_athlete_id;
+          linked_athlete_id = EXCLUDED.linked_athlete_id,
+          username = EXCLUDED.username;
         `,
           params,
         );
@@ -207,11 +236,24 @@ export class PostgresStore {
             name = $1,
             role = $2,
             password = $3,
-            coach_id = $4,
-            linked_athlete_id = $5
-          WHERE lower(email) = lower($6);
+            coach_id = CASE
+              WHEN $4::text IS NOT NULL AND EXISTS (SELECT 1 FROM users u WHERE u.id = $4)
+              THEN $4
+              ELSE coach_id
+            END,
+            linked_athlete_id = COALESCE($5, linked_athlete_id),
+            username = COALESCE($6, username)
+          WHERE lower(email) = lower($7);
         `,
-          [user.name, user.role, storedPassword, user.coachId ?? null, user.linkedAthleteId ?? null, user.email ?? ''],
+          [
+            user.name,
+            user.role,
+            storedPassword,
+            user.coachId ?? null,
+            user.linkedAthleteId ?? null,
+            user.username?.toLowerCase() ?? null,
+            user.email ?? '',
+          ],
         );
       }
     }
@@ -236,43 +278,29 @@ export class PostgresStore {
 
   async getUsers(): Promise<WolfUser[]> {
     const result = await this.pool.query(
-      'SELECT id, name, role, email, coach_id, linked_athlete_id FROM users ORDER BY name ASC;',
+      'SELECT id, name, role, email, username, coach_id, linked_athlete_id FROM users ORDER BY name ASC;',
     );
-    return result.rows.map((row) => ({
-      id: row.id as string,
-      name: row.name as string,
-      role: row.role as WolfUser['role'],
-      email: row.email as string,
-      coachId: (row.coach_id as string | null) ?? undefined,
-      linkedAthleteId: (row.linked_athlete_id as string | null) ?? undefined,
-    }));
+    return result.rows.map((row) => this.mapUserRow(row));
   }
 
   async getUserByEmail(email: string): Promise<WolfUser | null> {
     const result = await this.pool.query(
-      'SELECT id, name, role, email, coach_id, linked_athlete_id FROM users WHERE lower(email) = lower($1) LIMIT 1;',
+      'SELECT id, name, role, email, username, coach_id, linked_athlete_id FROM users WHERE lower(email) = lower($1) LIMIT 1;',
       [email],
     );
     if (result.rows.length === 0) return null;
-    return {
-      id: result.rows[0].id as string,
-      name: result.rows[0].name as string,
-      role: result.rows[0].role as WolfUser['role'],
-      email: result.rows[0].email as string,
-      coachId: (result.rows[0].coach_id as string | null) ?? undefined,
-      linkedAthleteId: (result.rows[0].linked_athlete_id as string | null) ?? undefined,
-    };
+    return this.mapUserRow(result.rows[0]);
   }
 
-  async validateUser(email: string, password: string): Promise<WolfUser | null> {
+  async validateUser(loginId: string, password: string): Promise<WolfUser | null> {
     const result = await this.pool.query(
       `
-      SELECT id, name, role, email, coach_id, linked_athlete_id, password AS stored_password
+      SELECT id, name, role, email, username, coach_id, linked_athlete_id, password AS stored_password
       FROM users
-      WHERE lower(email) = lower($1)
+      WHERE lower(email) = lower($1) OR lower(username) = lower($1)
       LIMIT 1;
       `,
-      [email],
+      [loginId],
     );
     if (result.rows.length === 0) return null;
     const row = result.rows[0];
@@ -280,35 +308,29 @@ export class PostgresStore {
     const ok =
       looksLikeBcryptHash(stored) ? verifyPassword(password, stored) : stored === password;
     if (!ok) return null;
-    return {
-      id: row.id as string,
-      name: row.name as string,
-      role: row.role as WolfUser['role'],
-      email: row.email as string,
-      coachId: (row.coach_id as string | null) ?? undefined,
-      linkedAthleteId: (row.linked_athlete_id as string | null) ?? undefined,
-    };
+    return this.mapUserRow(row);
   }
 
   async createUser(input: UserCreateInput): Promise<WolfUser> {
     const passHash = hashPassword(input.password);
     const result = await this.pool.query(
       `
-      INSERT INTO users (id, name, role, email, password, coach_id, linked_athlete_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id, name, role, email, coach_id, linked_athlete_id;
+      INSERT INTO users (id, name, role, email, password, coach_id, linked_athlete_id, username)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, name, role, email, username, coach_id, linked_athlete_id;
       `,
-      [input.id, input.name, input.role, input.email, passHash, input.coachId ?? null, input.linkedAthleteId ?? null],
+      [
+        input.id,
+        input.name,
+        input.role,
+        input.email,
+        passHash,
+        input.coachId ?? null,
+        input.linkedAthleteId ?? null,
+        input.username?.toLowerCase() ?? null,
+      ],
     );
-    const row = result.rows[0];
-    return {
-      id: row.id as string,
-      name: row.name as string,
-      role: row.role as WolfUser['role'],
-      email: row.email as string,
-      coachId: (row.coach_id as string | null) ?? undefined,
-      linkedAthleteId: (row.linked_athlete_id as string | null) ?? undefined,
-    };
+    return this.mapUserRow(result.rows[0]);
   }
 
   async updateUser(

@@ -21,6 +21,7 @@ import type {
   TechnicalCollectionWithItems,
 } from '../models/exercise';
 import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
+import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { seedTechnicalCollectionsLocal } from '../data/exercise-intelligence/seedCollections';
 import { seedExerciseDefinitionsFromLegacy, seedRelationshipRules } from '../api/exerciseCatalogSeed';
 import {
@@ -152,11 +153,12 @@ function isWolfAppRole(role: unknown): role is WolfAppRole {
 }
 
 /** Si el API devolvió rol del módulo email (trainer/owner), recuperar coach|athlete desde el catálogo Wolf. */
-function reconcileApiUser(apiUser: WolfUser, email: string, catalog: WolfUser[]): WolfUser {
+function reconcileApiUser(apiUser: WolfUser, loginId: string, catalog: WolfUser[]): WolfUser {
   if (isWolfAppRole(apiUser.role)) return apiUser;
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedLogin = loginId.trim().toLowerCase();
   const seed =
-    catalog.find((u) => u.email?.toLowerCase() === normalizedEmail) ?? catalog.find((u) => u.id === apiUser.id);
+    catalog.find((u) => userMatchesLoginId(u, normalizedLogin)) ??
+    catalog.find((u) => u.id === apiUser.id);
   if (!seed) return apiUser;
   return {
     ...seed,
@@ -164,6 +166,7 @@ function reconcileApiUser(apiUser: WolfUser, email: string, catalog: WolfUser[])
     role: seed.role,
     coachId: apiUser.coachId ?? seed.coachId,
     linkedAthleteId: apiUser.linkedAthleteId ?? seed.linkedAthleteId,
+    username: apiUser.username ?? seed.username,
   };
 }
 
@@ -516,7 +519,10 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const loadAssignmentsFromApi = useCallback(async () => {
     if (!isApiEnabled()) return;
     try {
-      const res = await fetch(`${getApiBase()}/assignments`);
+      const headers: Record<string, string> = {};
+      const token = readApiToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`${getApiBase()}/assignments`, { headers });
       if (!res.ok) return;
       const list = (await res.json()) as ProgramAssignment[];
       if (!Array.isArray(list)) return;
@@ -596,10 +602,14 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     void loadUsersFromApi();
+  }, [loadUsersFromApi]);
+
+  useEffect(() => {
+    if (!isApiEnabled() || !apiToken) return;
     void loadAssignmentsFromApi();
     void loadCompletionsFromApi();
     void loadSetLogsFromApi();
-  }, [loadUsersFromApi, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
+  }, [apiToken, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
 
   useEffect(() => {
     if (!isApiEnabled()) return;
@@ -815,7 +825,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       };
       setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
       if (isApiEnabled()) {
-        void fetch(`${getApiBase()}/assignments`, {
+        void apiRequest('/assignments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -839,7 +849,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       return id;
     },
-    [currentUser, users],
+    [apiRequest, currentUser, users],
   );
 
   const updateAssignmentProgram = useCallback((assignmentId: string, program: ProgramAssignment['program']) => {
@@ -863,7 +873,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       ),
     );
     if (isApiEnabled()) {
-      void fetch(`${getApiBase()}/assignments/${assignmentId}/program`, {
+      void apiRequest(`/assignments/${assignmentId}/program`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ program }),
@@ -877,18 +887,18 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           /* keep optimistic state */
         });
     }
-  }, []);
+  }, [apiRequest]);
 
   const removeAssignment = useCallback((assignmentId: string) => {
     setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
     setSetLogs((prev) => prev.filter((l) => l.assignmentId !== assignmentId));
     if (isApiEnabled()) {
-      void fetch(`${getApiBase()}/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
+      void apiRequest(`/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
         /* keep local state */
       });
     }
-  }, []);
+  }, [apiRequest]);
 
   const restoreAssignmentVersion = useCallback(
     (assignmentId: string, version: number): boolean => {
@@ -1249,7 +1259,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
     if (!isApiEnabled()) {
       const local = users.find(
-        (u) => u.email?.toLowerCase() === email.trim().toLowerCase() && matchesStoredPassword(u, password),
+        (u) => userMatchesLoginId(u, email) && matchesStoredPassword(u, password),
       );
       return local ? commitLoggedInUser(local) : null;
     }

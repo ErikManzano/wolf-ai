@@ -7,6 +7,24 @@
     "passwordHash": "$2b$10$3j7JC1saHqKvrTf7xbj2iO3sD1fNK81hRONKApy963DhP68chdLi2"
   },
   {
+    "id": "user-coach-wl",
+    "name": "Entrenador WL",
+    "role": "coach",
+    "username": "coach-wl",
+    "email": "chiron.traine@gmail.com",
+    "passwordHash": "$2b$10$aFVoGLAaAtRkMCIHWySb8eTBcxgQSMXiee1AYrw5DRu3GL8v2ZqYq"
+  },
+  {
+    "id": "user-erik",
+    "name": "Erik Manzano",
+    "role": "athlete",
+    "username": "erik",
+    "coachId": "user-coach-wl",
+    "linkedAthleteId": "ath-erik",
+    "email": "erik@wolf-ai.temp",
+    "passwordHash": "$2b$10$hMrKHLPJe.UywTMnI0KiFOymb8kHlEhl6xW35Y1zT6BqD4DPwUUwa"
+  },
+  {
     "id": "user-coach",
     "name": "Coach",
     "role": "coach",
