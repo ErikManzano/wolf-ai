@@ -44,6 +44,16 @@ export function buildSessionFromBlocks(
   return applySessionMetrics(base, athlete, exercises);
 }
 
+const HEAVY_TECHNIQUE_TAGS = new Set(['four_stops', 'slow_eccentric', 'pulling_strength']);
+
+function isHeavyForTechniqueDay(ex: Exercise): boolean {
+  if (ex.tags?.some((t) => HEAVY_TECHNIQUE_TAGS.has(t))) return true;
+  if (ex.subtype === 'pull' && (ex.intensityRange[0] ?? 0) >= 88) return true;
+  if (ex.catalogGroup === 'grupo_4' || ex.catalogGroup === 'grupo_9') return true;
+  if (ex.complexity === 'complex' && ex.name.toLowerCase().includes('pull')) return true;
+  return false;
+}
+
 /** Pool ordenado por id; prioriza objetivo semántico y tags cuando el catálogo viene de definitions. */
 export function getExercisePoolForGoal(goal: SessionGoal, catalog: Exercise[]): Exercise[] {
   const taxonomy = getExerciseTaxonomy();
@@ -51,8 +61,9 @@ export function getExercisePoolForGoal(goal: SessionGoal, catalog: Exercise[]): 
   const semanticTags = new Set(GOAL_OBJECTIVES[goal]);
 
   let pool = catalog.filter((e) => {
+    if (goal === 'technique' && isHeavyForTechniqueDay(e)) return false;
     if (legacyGoals.includes(e.goal)) return true;
-    const tags = (e as Exercise & { tags?: string[] }).tags;
+    const tags = e.tags;
     if (tags?.some((t) => semanticTags.has(t))) return true;
     return false;
   });

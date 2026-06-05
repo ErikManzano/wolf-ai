@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ClipboardList, Eye, Library, Search, UserPlus, X } from 'lucide-react';
 import type { GeneratedProgram, ProgramAssignment } from '../../models/training';
 import { mockAthletes } from '../../data/loadMockData';
+import { useWlAssignments } from '../../modules/assignments';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import {
   aggregateWlAttendance,
@@ -55,7 +56,8 @@ const WlAssignmentManagement: React.FC<WlAssignmentManagementProps> = ({
   onOpenProgramInEngine,
 }) => {
   const isEs = language === 'ES';
-  const { assignments, completions, currentUser } = useWolfAssign();
+  const { assignments, completions } = useWlAssignments();
+  const { currentUser } = useWolfAssign();
 
   const [tab, setTab] = useState<ManageTab>('assignments');
   const [search, setSearch] = useState('');

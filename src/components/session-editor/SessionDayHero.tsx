@@ -42,17 +42,14 @@ export const SessionDayHero: React.FC<SessionDayHeroProps> = ({
   return (
     <header className="wolf-se-day-hero">
       <div className="wolf-se-day-hero-main">
-        <p className="wolf-se-day-hero-kicker">{isEs ? 'Programación del día' : "Today's plan"}</p>
+        <p className="wolf-se-day-hero-kicker">{isEs ? 'Resumen' : 'Summary'}</p>
         <h2 className="wolf-se-day-hero-title">{title}</h2>
-        <p className="wolf-se-day-hero-reps">
-          <span className="wolf-se-day-hero-reps-num">{session.totalReps}</span>
-          {isEs ? ' repeticiones' : ' reps'}
-          <span className="wolf-se-day-hero-reps-sub">
-            · {session.exercises.length} {isEs ? 'ejercicios' : 'exercises'}
-          </span>
-        </p>
       </div>
-      <div className="wolf-se-day-hero-stats">
+      <div className="wolf-se-day-hero-stats" role="group" aria-label={isEs ? 'Métricas del día' : 'Day metrics'}>
+        <div className="wolf-se-hero-stat">
+          <span className="wolf-se-hero-stat-val">{session.totalReps}</span>
+          <span className="wolf-se-hero-stat-lbl">{isEs ? 'reps' : 'reps'}</span>
+        </div>
         <div className="wolf-se-hero-stat">
           <span className="wolf-se-hero-stat-val">{session.load}</span>
           <span className="wolf-se-hero-stat-lbl">kg</span>

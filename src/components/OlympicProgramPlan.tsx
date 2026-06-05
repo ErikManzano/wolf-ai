@@ -5,10 +5,8 @@ import {
   Download,
   FileJson,
   LayoutGrid,
-  Plus,
   Trash2,
   UserPlus,
-  X,
 } from 'lucide-react';
 import type { Athlete, GeneratedProgram, Session, SessionGoal } from '../models/training';
 import { generatePeriodizedProgram } from '../services/programGenerator';
@@ -22,7 +20,6 @@ import {
 } from '../services/programStructureMutations';
 import { replaceProgramSession } from '../services/sessionMutations';
 import { exportProgramAsJson } from '../services/programExport';
-import { evaluateSessionFull } from '../services/sessionEvaluator';
 import {
   clearProgramEditDraft,
   readProgramEditDraft,
@@ -31,6 +28,7 @@ import {
 } from '../services/programDraftStore';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import OlympicSessionEditor from './OlympicSessionEditor';
+import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
 import { DraftRecoveryBanner } from './session-editor/DraftRecoveryBanner';
 import ConfirmationModal from './ConfirmationModal';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -52,8 +50,14 @@ interface OlympicProgramPlanProps {
   mode?: 'full' | 'create' | 'customize' | 'assign';
 }
 
-const WEEK_OPTIONS = [4, 8, 12, 16] as const;
-const DAY_OPTIONS = [2, 3, 4, 5] as const;
+const WEEK_OPTIONS = Array.from(
+  { length: PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS },
+  (_, i) => i + 1,
+);
+const DAY_OPTIONS = Array.from(
+  { length: PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK },
+  (_, i) => i + 1,
+);
 const PLAN_NAME_MAX_LEN = 48;
 
 const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
@@ -71,8 +75,20 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   mode = 'full',
 }) => {
   const isEs = language === 'ES';
-  const [totalWeeks, setTotalWeeks] = useState<12 | 8 | 4 | 16>(12);
-  const [daysPerWeek, setDaysPerWeek] = useState<3 | 2 | 4 | 5>(4);
+  const recommendedConfig = useMemo(() => {
+    if (athleteForEngine.level === 'advanced') return { weeks: 12 as const, days: 5 as const };
+    if (athleteForEngine.level === 'intermediate') return { weeks: 8 as const, days: 4 as const };
+    return { weeks: 4 as const, days: 3 as const };
+  }, [athleteForEngine.level]);
+
+  const [totalWeeks, setTotalWeeks] = useState<number>(recommendedConfig.weeks);
+  const [daysPerWeek, setDaysPerWeek] = useState<number>(recommendedConfig.days);
+
+  useEffect(() => {
+    setTotalWeeks(recommendedConfig.weeks);
+    setDaysPerWeek(recommendedConfig.days);
+  }, [recommendedConfig.weeks, recommendedConfig.days]);
+
   const [planName, setPlanName] = useState('');
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState(1);
@@ -98,8 +114,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     () => ({
       title: isEs ? 'Mesociclo' : 'Mesocycle',
       subtitle: isEs
-        ? 'Periodizacion por semanas y fases.'
-        : 'Week-by-week phased planning.',
+        ? `Hasta ${PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS} semanas y ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} días por semana.`
+        : `Up to ${PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS} weeks and ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} days per week.`,
       weeks: isEs ? 'Semanas' : 'Weeks',
       days: isEs ? 'Dias / semana' : 'Days / week',
       name: isEs ? 'Nombre del plan' : 'Plan name',
@@ -109,10 +125,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       copyJson: isEs ? 'Copiar JSON' : 'Copy JSON',
       download: isEs ? 'Descargar .json' : 'Download .json',
       assignedOk: isEs ? `Plan asignado a ${athlete.name}.` : `Plan assigned to ${athlete.name}.`,
-      status: isEs ? 'Estado' : 'Status',
-      under: isEs ? 'Infra' : 'Under',
-      optimal: isEs ? 'Optimo' : 'Optimal',
-      over: isEs ? 'Sobre' : 'Over',
       blockParams: isEs ? 'Parámetros del bloque' : 'Block parameters',
       manualConfig: isEs ? 'Configuración manual' : 'Manual setup',
       quickPresets: isEs ? 'Configuración rápida (Presets)' : 'Quick setup (Presets)',
@@ -158,18 +170,13 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const hasPlanNameError = planName.length > PLAN_NAME_MAX_LEN;
   const canGenerate = !hasPlanNameError;
 
-  const recommendedConfig = useMemo(() => {
-    if (athleteForEngine.level === 'advanced') return { weeks: 12 as const, days: 5 as const };
-    if (athleteForEngine.level === 'intermediate') return { weeks: 8 as const, days: 4 as const };
-    return { weeks: 4 as const, days: 3 as const };
-  }, [athleteForEngine.level]);
-
   const quickConfigs = useMemo(
     () => [
       { weeks: recommendedConfig.weeks, days: recommendedConfig.days, label: t.recommended },
-      { weeks: 4 as const, days: 3 as const, label: '4w · 3d' },
-      { weeks: 8 as const, days: 4 as const, label: '8w · 4d' },
-      { weeks: 12 as const, days: 5 as const, label: '12w · 5d' },
+      { weeks: 4, days: 3, label: '4w · 3d' },
+      { weeks: 8, days: 4, label: '8w · 4d' },
+      { weeks: 12, days: 5, label: '12w · 5d' },
+      { weeks: 16, days: 6, label: '16w · 6d' },
     ],
     [recommendedConfig.days, recommendedConfig.weeks, t.recommended],
   );
@@ -278,7 +285,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     persist(p);
   }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate]);
 
-  const applyQuickConfig = useCallback((weeks: (typeof WEEK_OPTIONS)[number], days: (typeof DAY_OPTIONS)[number]) => {
+  const applyQuickConfig = useCallback((weeks: number, days: number) => {
     setTotalWeeks(weeks);
     setDaysPerWeek(days);
   }, []);
@@ -432,13 +439,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     return w?.days.find((x) => x.dayNumber === selectedDay)?.label;
   }, [program, selectedWeek, selectedDay]);
 
-  const evalDay = useMemo(() => {
-    if (!daySession) return null;
-    return evaluateSessionFull(daySession, athleteForEngine, motorExercises).evaluation;
-  }, [daySession, athleteForEngine]);
-
-  const statusLabel = (s: string) => (s === 'undertrained' ? t.under : s === 'optimal' ? t.optimal : t.over);
-
   const copyJson = useCallback(async () => {
     if (!program) return;
     await navigator.clipboard.writeText(exportProgramAsJson(program));
@@ -484,7 +484,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   <div className="wolf-select-wrap">
                     <select
                       value={totalWeeks}
-                      onChange={(e) => setTotalWeeks(Number(e.target.value) as 12 | 8 | 4 | 16)}
+                      onChange={(e) => setTotalWeeks(Number(e.target.value))}
                     >
                       {WEEK_OPTIONS.map((n) => (
                         <option key={n} value={n}>
@@ -500,7 +500,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   <div className="wolf-select-wrap">
                     <select
                       value={daysPerWeek}
-                      onChange={(e) => setDaysPerWeek(Number(e.target.value) as 3 | 2 | 4 | 5)}
+                      onChange={(e) => setDaysPerWeek(Number(e.target.value))}
                     >
                       {DAY_OPTIONS.map((n) => (
                         <option key={n} value={n}>
@@ -666,121 +666,41 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
             )}
             {syncPending && <> · {isEs ? 'Guardando…' : 'Saving…'}</>}
           </p>
-          <div className="wolf-program-nav wolf-program-nav--editable">
-            <div className="wolf-program-nav-label">{t.weekDayNav}</div>
-
-            <section className="wolf-program-nav-section" aria-label={t.weeksRow}>
-              <div className="wolf-program-nav-section-head">
-                <span className="wolf-program-nav-row-label">{t.weeksRow}</span>
-                {canRemoveWeek && (
-                  <button
-                    type="button"
-                    className="wolf-structure-remove-btn"
-                    onClick={handleRemoveWeek}
-                    title={t.removeWeek}
-                    aria-label={t.removeWeek}
-                  >
-                    <X size={14} strokeWidth={2.5} aria-hidden />
-                    <span>{t.removeWeek}</span>
-                  </button>
-                )}
-              </div>
-              <div className="wolf-program-strip-track">
-                <div className="wolf-week-strip wolf-week-strip-scroll">
-                  {program.weeks.map((w) => (
-                    <button
-                      key={w.weekNumber}
-                      type="button"
-                      className={`wolf-week-pill${selectedWeek === w.weekNumber ? ' active' : ''}`}
-                      onClick={() => {
-                        setSelectedWeek(w.weekNumber);
-                        setSelectedDay(1);
-                      }}
-                    >
-                      W{w.weekNumber}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="wolf-structure-add-btn"
-                    onClick={handleAddWeek}
-                    disabled={!canAddWeek}
-                    title={canAddWeek ? t.addWeek : t.maxWeeks}
-                    aria-label={t.addWeek}
-                  >
-                    <Plus size={16} strokeWidth={2.5} aria-hidden />
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section className="wolf-program-nav-section" aria-label={t.daysRow}>
-              <div className="wolf-program-nav-section-head">
-                <span className="wolf-program-nav-row-label">{t.daysRow}</span>
-                {canRemoveDay && (
-                  <button
-                    type="button"
-                    className="wolf-structure-remove-btn"
-                    onClick={handleRemoveDay}
-                    title={t.removeDay}
-                    aria-label={t.removeDay}
-                  >
-                    <X size={14} strokeWidth={2.5} aria-hidden />
-                    <span>{t.removeDay}</span>
-                  </button>
-                )}
-              </div>
-              <div className="wolf-program-strip-track">
-                <div className="wolf-day-strip wolf-day-strip-scroll">
-                  {selectedWeekData?.days.map((d) => {
-                    const isActive = selectedDay === d.dayNumber;
-                    return isActive ? (
-                      <div key={d.dayNumber} className="wolf-day-pill wolf-day-pill--editing active">
-                        <input
-                          type="text"
-                          className="wolf-day-pill-input"
-                          value={editingDayLabel}
-                          aria-label={t.dayLabelAria}
-                          maxLength={32}
-                          onChange={(e) => setEditingDayLabel(e.target.value)}
-                          onBlur={() => handleDayLabelCommit(selectedWeek, d.dayNumber, editingDayLabel)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') e.currentTarget.blur();
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <button
-                        key={d.dayNumber}
-                        type="button"
-                        className="wolf-day-pill"
-                        onClick={() => setSelectedDay(d.dayNumber)}
-                        title={isEs ? 'Clic para editar el nombre' : 'Click to edit name'}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    className="wolf-structure-add-btn"
-                    onClick={handleAddDay}
-                    disabled={!canAddDay}
-                    title={canAddDay ? t.addDay : t.maxDays}
-                    aria-label={t.addDay}
-                  >
-                    <Plus size={16} strokeWidth={2.5} aria-hidden />
-                  </button>
-                </div>
-              </div>
-            </section>
-          </div>
-          {evalDay && (
-            <div className="wolf-program-day-eval">
-              <span>K {evalDay.kValue.toFixed(1)} · {evalDay.load} kg · {evalDay.totalReps} reps</span>
-              <span className="wolf-status">{t.status}: {statusLabel(evalDay.status)}</span>
-            </div>
-          )}
+          <ProgramWeekDayNav
+            program={program}
+            selectedWeek={selectedWeek}
+            selectedDay={selectedDay}
+            selectedWeekData={selectedWeekData}
+            editingDayLabel={editingDayLabel}
+            isEs={isEs}
+            canAddWeek={canAddWeek}
+            canRemoveWeek={canRemoveWeek}
+            canAddDay={canAddDay}
+            canRemoveDay={canRemoveDay}
+            labels={{
+              weekDayNav: t.weekDayNav,
+              weeksRow: t.weeksRow,
+              daysRow: t.daysRow,
+              addWeek: t.addWeek,
+              addDay: t.addDay,
+              removeWeek: t.removeWeek,
+              removeDay: t.removeDay,
+              dayLabelAria: t.dayLabelAria,
+              maxWeeks: t.maxWeeks,
+              maxDays: t.maxDays,
+            }}
+            onSelectWeek={(weekNumber) => {
+              setSelectedWeek(weekNumber);
+              setSelectedDay(1);
+            }}
+            onSelectDay={setSelectedDay}
+            onDayLabelChange={setEditingDayLabel}
+            onDayLabelCommit={handleDayLabelCommit}
+            onAddWeek={handleAddWeek}
+            onRemoveWeek={handleRemoveWeek}
+            onAddDay={handleAddDay}
+            onRemoveDay={handleRemoveDay}
+          />
           {daySession && (
             <OlympicSessionEditor
               session={daySession}

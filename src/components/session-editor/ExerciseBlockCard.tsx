@@ -1,5 +1,17 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Dumbbell,
+  Flame,
+  Gauge,
+  Plus,
+  Settings2,
+  Trash2,
+  Zap,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -33,6 +45,25 @@ import './exercise-block-card.css';
 import '../../styles/interactive.css';
 
 const PCT_PRESETS = [70, 75, 80, 85, 90] as const;
+
+function BlockZoneHeader({
+  icon: Icon,
+  title,
+  tone,
+}: {
+  icon: LucideIcon;
+  title: string;
+  tone: 'movement' | 'config' | 'sets';
+}) {
+  return (
+    <div className={`wolf-se-zone-header wolf-se-zone-header--${tone}`}>
+      <span className="wolf-se-zone-header-icon" aria-hidden>
+        <Icon size={14} strokeWidth={2.25} />
+      </span>
+      <span className="wolf-se-zone-header-title">{title}</span>
+    </div>
+  );
+}
 
 export interface ExerciseBlockCardProps {
   block: SessionExerciseBlock;
@@ -82,6 +113,18 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
     sessionExercisePicker,
     sessionExercisePickerSingles,
   } = useWolfAssign();
+
+  const filteredPicker = sessionExercisePicker;
+  const filteredPickerSingles = sessionExercisePickerSingles;
+
+  const recentExerciseIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const b of session.exercises) {
+      ids.push(b.exerciseId);
+      for (const s of b.segments ?? []) ids.push(s.exerciseId);
+    }
+    return [...new Set(ids)];
+  }, [session.exercises]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -141,19 +184,32 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
             <h3 className="wolf-se-block-name">{title}</h3>
             <div className="wolf-se-block-stats-row">
-              <span className="wolf-se-block-stat">
-                <strong>{tonnage}</strong> kg
+              <span className="wolf-se-block-stat wolf-se-block-stat--load">
+                <span className="wolf-se-block-stat-label">{isEs ? 'Carga' : 'Load'}</span>
+                <span className="wolf-se-block-stat-value">
+                  <strong>{tonnage}</strong>
+                  <small>kg</small>
+                </span>
               </span>
-              <span className="wolf-se-block-stat">
-                <strong>{workSets}</strong> {isEs ? 'series' : 'sets'}
+              <span className="wolf-se-block-stat wolf-se-block-stat--volume">
+                <span className="wolf-se-block-stat-label">{isEs ? 'Volumen' : 'Volume'}</span>
+                <span className="wolf-se-block-stat-value">
+                  <strong>{workSets}</strong>
+                  <small>{isEs ? 'series' : 'sets'}</small>
+                </span>
               </span>
               {avgPct > 0 && (
-                <span className="wolf-se-block-stat">
-                  <strong>{avgPct}</strong>% ∅
+                <span className="wolf-se-block-stat wolf-se-block-stat--intensity">
+                  <span className="wolf-se-block-stat-label">{isEs ? 'Intensidad' : 'Intensity'}</span>
+                  <span className="wolf-se-block-stat-value">
+                    <strong>{avgPct}</strong>
+                    <small>% ∅</small>
+                  </span>
                 </span>
               )}
             </div>
             <code className="wolf-se-block-rx" title={prescription}>
+              <span className="wolf-se-block-rx-label">{isEs ? 'Rx' : 'Rx'}</span>
               {prescription}
             </code>
           </div>
@@ -196,184 +252,229 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
 
       {expanded && (
         <div className="wolf-se-block-body">
-          <div className="wolf-se-block-layout">
-            <div className="wolf-se-block-layout__config">
-              <div className="wolf-se-block-options">
-                <button
-                  type="button"
-                  className={`wolf-se-option-pill${isWarmup ? ' is-on' : ''}`}
-                  onClick={() =>
-                    apply(() =>
-                      setBlockCountsTowardTechnicalNBL(session, bi, isWarmup, athlete, exercises),
-                    )
-                  }
-                >
-                  {isEs ? 'Calentamiento' : 'Warm-up'}
-                </button>
-                <button
-                  type="button"
-                  className={`wolf-se-option-pill wolf-se-option-pill--mode${isComplex ? ' is-on' : ''}`}
-                  onClick={() =>
-                    apply(() =>
-                      toggleBlockComplex(session, bi, athlete, exercises, defaultComplexSecondId),
-                    )
-                  }
-                >
-                  {isComplex ? (isEs ? 'Modo simple' : 'Simple mode') : isEs ? 'Complejo' : 'Complex'}
-                </button>
-              </div>
-
-              {isComplex && segments.length > 0 ? (
-                isMobile ? (
-                  <ComplexSequence
-                    segmentIds={segments.map((s) => s.exerciseId)}
-                    exercises={exercises}
-                    pickerOptions={sessionExercisePickerSingles}
-                    isEs={isEs}
-                    onSegmentChange={(idx, id) =>
-                      idx === 0
-                        ? apply(() => setBlockExercise(session, bi, id, athlete, exercises))
-                        : apply(() => setSegmentExercise(session, bi, idx, id, athlete, exercises))
-                    }
-                    onAdd={() =>
-                      apply(() => addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises))
-                    }
-                    onRemove={(idx) =>
-                      apply(() => removeComplexSegment(session, bi, idx, athlete, exercises))
-                    }
-                    onReorder={(from, to) =>
-                      apply(() => reorderComplexSegments(session, bi, from, to, athlete, exercises))
-                    }
-                    canRemove={segments.length > 2}
-                  />
-                ) : (
-                <section className="wolf-se-config-section" aria-label={isEs ? 'Movimientos del complejo' : 'Complex movements'}>
-                  <div className="wolf-se-config-section-head">
-                    <h4 className="wolf-se-config-title">
-                      {isEs ? 'Cadena del complejo' : 'Complex chain'}
-                      <span className="wolf-se-chain-count">
-                        {segments.length}/{WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
-                      </span>
-                    </h4>
-                    <div className="wolf-se-chain-tools">
-                      <button
-                        type="button"
-                        className="wolf-se-btn wolf-se-btn--ghost wolf-se-btn--sm"
-                        disabled={atMaxComplexSegments}
-                        title={
-                          atMaxComplexSegments
-                            ? isEs
-                              ? 'Máximo 4 movimientos por complejo'
-                              : 'Maximum 4 movements per complex'
-                            : undefined
-                        }
-                        onClick={() =>
-                          apply(() =>
-                            addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises),
-                          )
-                        }
-                      >
-                        <Plus size={14} /> {isEs ? 'Mov.' : 'Mvt'}
-                      </button>
-                      <button
-                        type="button"
-                        className="wolf-se-btn wolf-se-btn--ghost wolf-se-btn--sm"
-                        disabled={segments.length <= 2}
-                        onClick={() =>
-                          apply(() =>
-                            removeComplexSegment(session, bi, segments.length - 1, athlete, exercises),
-                          )
-                        }
-                        title={isEs ? 'Quitar último' : 'Remove last'}
-                      >
-                        −
-                      </button>
-                    </div>
-                  </div>
-                  <div className="wolf-se-complex-chain">
-                    {segments.map((seg, segIdx) => (
-                      <React.Fragment key={`${seg.exerciseId}-${segIdx}`}>
-                        {segIdx > 0 && (
-                          <span className="wolf-se-chain-arrow" aria-hidden>
-                            →
-                          </span>
-                        )}
-                        <div className="wolf-se-chain-node">
-                          <span className="wolf-se-chain-idx">{segIdx + 1}</span>
-                          <ExerciseAutocomplete
-                            options={sessionExercisePickerSingles}
-                            value={seg.exerciseId}
-                            compact
-                            isEs={isEs}
-                            onChange={(id) =>
-                              segIdx === 0
-                                ? apply(() => setBlockExercise(session, bi, id, athlete, exercises))
-                                : apply(() =>
-                                    setSegmentExercise(session, bi, segIdx, id, athlete, exercises),
-                                  )
-                            }
-                          />
-                        </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </section>
-                )
-              ) : isMobile ? (
-                <>
-                  <section className="wolf-se-config-section">
-                    <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
+          {!isMobile && isComplex && segments.length > 0 ? (
+            <div className="wolf-se-block-zone wolf-se-block-zone--movement">
+              <BlockZoneHeader
+                icon={Dumbbell}
+                title={isEs ? 'Movimiento · cadena del complejo' : 'Movement · complex chain'}
+                tone="movement"
+              />
+              <div className="wolf-se-block-movement-band">
+              <section
+                className="wolf-se-config-section wolf-se-config-section--movement"
+                aria-label={isEs ? 'Movimientos del complejo' : 'Complex movements'}
+              >
+                <div className="wolf-se-config-section-head">
+                  <h4 className="wolf-se-config-title">
+                    {isEs ? 'Cadena del complejo' : 'Complex chain'}
+                    <span className="wolf-se-chain-count">
+                      {segments.length}/{WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
+                    </span>
+                  </h4>
+                  <div className="wolf-se-chain-tools">
                     <button
                       type="button"
-                      className="wolf-se-btn wolf-se-btn--outline"
-                      style={{ minHeight: 48, width: '100%', justifyContent: 'flex-start' }}
-                      onClick={() => setPickerOpen(true)}
-                    >
-                      {exerciseName(exercises, block.exerciseId)}
-                    </button>
-                  </section>
-                  <ExercisePickerSheet
-                    open={pickerOpen}
-                    onClose={() => setPickerOpen(false)}
-                    options={sessionExercisePicker}
-                    exercises={exercises}
-                    value={block.exerciseId}
-                    isEs={isEs}
-                    onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
-                  />
-                </>
-              ) : (
-                <section className="wolf-se-config-section">
-                  <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
-                  <ExerciseAutocomplete
-                    options={sessionExercisePicker}
-                    value={block.exerciseId}
-                    isEs={isEs}
-                    onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
-                  />
-                </section>
-              )}
-
-              <div className="wolf-se-intensity-section">
-                <span className="wolf-se-config-title">{isEs ? 'Intensidad rápida' : 'Quick intensity'}</span>
-                <div className="wolf-se-pct-chip-row" role="group" aria-label={isEs ? 'Presets %1RM' : '%1RM presets'}>
-                  {PCT_PRESETS.map((pct) => (
-                    <button
-                      key={pct}
-                      type="button"
-                      className={`wolf-se-pct-chip${block.sets[0]?.percentage === pct ? ' active' : ''}`}
+                      className="wolf-se-btn wolf-se-btn--ghost wolf-se-btn--sm"
+                      disabled={atMaxComplexSegments}
+                      title={
+                        atMaxComplexSegments
+                          ? isEs
+                            ? 'Máximo 4 movimientos por complejo'
+                            : 'Maximum 4 movements per complex'
+                          : undefined
+                      }
                       onClick={() =>
-                        apply(() => applyBlockPercentagePreset(session, bi, pct, athlete, exercises))
+                        apply(() =>
+                          addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises),
+                        )
                       }
                     >
-                      {pct}%
+                      <Plus size={14} /> {isEs ? 'Mov.' : 'Mvt'}
                     </button>
+                    <button
+                      type="button"
+                      className="wolf-se-btn wolf-se-btn--ghost wolf-se-btn--sm"
+                      disabled={segments.length <= 2}
+                      onClick={() =>
+                        apply(() =>
+                          removeComplexSegment(session, bi, segments.length - 1, athlete, exercises),
+                        )
+                      }
+                      title={isEs ? 'Quitar último' : 'Remove last'}
+                    >
+                      −
+                    </button>
+                  </div>
+                </div>
+                <div className="wolf-se-complex-chain">
+                  {segments.map((seg, segIdx) => (
+                    <React.Fragment key={`${seg.exerciseId}-${segIdx}`}>
+                      {segIdx > 0 && (
+                        <span className="wolf-se-chain-arrow" aria-hidden>
+                          →
+                        </span>
+                      )}
+                      <div className="wolf-se-chain-node">
+                        <span className="wolf-se-chain-idx">{segIdx + 1}</span>
+                        <ExerciseAutocomplete
+                          options={filteredPickerSingles}
+                          value={seg.exerciseId}
+                          compact
+                          isEs={isEs}
+                          recentIds={recentExerciseIds}
+                          panelMatchCard={segIdx === 0}
+                          onChange={(id) =>
+                            segIdx === 0
+                              ? apply(() => setBlockExercise(session, bi, id, athlete, exercises))
+                              : apply(() =>
+                                  setSegmentExercise(session, bi, segIdx, id, athlete, exercises),
+                                )
+                          }
+                        />
+                      </div>
+                    </React.Fragment>
                   ))}
                 </div>
+              </section>
               </div>
             </div>
+          ) : null}
 
-            <div className="wolf-se-block-layout__sets">
+          {!isMobile && !isComplex ? (
+            <div className="wolf-se-block-zone wolf-se-block-zone--movement">
+              <BlockZoneHeader
+                icon={Dumbbell}
+                title={isEs ? 'Movimiento' : 'Movement'}
+                tone="movement"
+              />
+              <div className="wolf-se-block-movement-band">
+              <section className="wolf-se-config-section wolf-se-config-section--movement">
+                <ExerciseAutocomplete
+                  options={filteredPicker}
+                  value={block.exerciseId}
+                  isEs={isEs}
+                  recentIds={recentExerciseIds}
+                  panelMatchCard
+                  onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
+                />
+              </section>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="wolf-se-block-zone wolf-se-block-zone--config">
+            <BlockZoneHeader
+              icon={Settings2}
+              title={isEs ? 'Configuración del bloque' : 'Block configuration'}
+              tone="config"
+            />
+            <div className="wolf-se-block-toolbar-band">
+            <div className="wolf-se-block-panel wolf-se-block-panel--mode">
+              <span className="wolf-se-panel-label">
+                <Flame size={13} aria-hidden />
+                {isEs ? 'Modo' : 'Mode'}
+              </span>
+              <div className="wolf-se-block-options">
+              <button
+                type="button"
+                className={`wolf-se-option-pill${isWarmup ? ' is-on' : ''}`}
+                onClick={() =>
+                  apply(() =>
+                    setBlockCountsTowardTechnicalNBL(session, bi, isWarmup, athlete, exercises),
+                  )
+                }
+              >
+                {isEs ? 'Calentamiento' : 'Warm-up'}
+              </button>
+              <button
+                type="button"
+                className={`wolf-se-option-pill wolf-se-option-pill--mode${isComplex ? ' is-on' : ''}`}
+                onClick={() =>
+                  apply(() =>
+                    toggleBlockComplex(session, bi, athlete, exercises, defaultComplexSecondId),
+                  )
+                }
+              >
+                {isComplex ? (isEs ? 'Modo simple' : 'Simple mode') : isEs ? 'Complejo' : 'Complex'}
+              </button>
+            </div>
+            </div>
+
+            {isMobile && isComplex && segments.length > 0 ? (
+              <ComplexSequence
+                segmentIds={segments.map((s) => s.exerciseId)}
+                exercises={exercises}
+                pickerOptions={filteredPickerSingles}
+                isEs={isEs}
+                onSegmentChange={(idx, id) =>
+                  idx === 0
+                    ? apply(() => setBlockExercise(session, bi, id, athlete, exercises))
+                    : apply(() => setSegmentExercise(session, bi, idx, id, athlete, exercises))
+                }
+                onAdd={() =>
+                  apply(() => addComplexSegment(session, bi, defaultExtraSegmentId, athlete, exercises))
+                }
+                onRemove={(idx) =>
+                  apply(() => removeComplexSegment(session, bi, idx, athlete, exercises))
+                }
+                onReorder={(from, to) =>
+                  apply(() => reorderComplexSegments(session, bi, from, to, athlete, exercises))
+                }
+                canRemove={segments.length > 2}
+              />
+            ) : null}
+
+            {isMobile && !isComplex ? (
+              <>
+                <section className="wolf-se-config-section wolf-se-config-section--movement wolf-se-config-section--inline">
+                  <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
+                  <button
+                    type="button"
+                    className="wolf-se-btn wolf-se-btn--outline wolf-se-movement-pick-btn"
+                    onClick={() => setPickerOpen(true)}
+                  >
+                    {exerciseName(exercises, block.exerciseId)}
+                  </button>
+                </section>
+                <ExercisePickerSheet
+                  open={pickerOpen}
+                  onClose={() => setPickerOpen(false)}
+                  options={filteredPicker}
+                  value={block.exerciseId}
+                    isEs={isEs}
+                    recentIds={recentExerciseIds}
+                    onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
+                />
+              </>
+            ) : null}
+
+            <div className="wolf-se-block-panel wolf-se-block-panel--intensity">
+              <span className="wolf-se-panel-label">
+                <Zap size={13} aria-hidden />
+                {isEs ? 'Intensidad rápida' : 'Quick intensity'}
+              </span>
+            <div className="wolf-se-intensity-section">
+              <div className="wolf-se-pct-chip-row" role="group" aria-label={isEs ? 'Presets %1RM' : '%1RM presets'}>
+                {PCT_PRESETS.map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    className={`wolf-se-pct-chip${block.sets[0]?.percentage === pct ? ' active' : ''}`}
+                    onClick={() =>
+                      apply(() => applyBlockPercentagePreset(session, bi, pct, athlete, exercises))
+                    }
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+            </div>
+            </div>
+            </div>
+          </div>
+
+          <div className="wolf-se-block-zone wolf-se-block-zone--sets">
+          <div className="wolf-se-block-layout__sets">
               <SetsTable
                 block={block}
                 athlete={athlete}
@@ -395,11 +496,14 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 onDuplicateSet={(si) => apply(() => duplicateSetAt(session, bi, si, athlete, exercises))}
                 onRemoveSet={(si) => apply(() => removeSetFromBlock(session, bi, si, athlete, exercises))}
               />
-            </div>
+          </div>
           </div>
 
           <footer className="wolf-se-block-footer">
-            <span>{isEs ? 'Tonelaje del bloque' : 'Block tonnage'}</span>
+            <span className="wolf-se-block-footer-label">
+              <Gauge size={15} aria-hidden />
+              {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
+            </span>
             <strong>{tonnage} kg</strong>
           </footer>
         </div>

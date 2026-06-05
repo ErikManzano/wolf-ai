@@ -36,13 +36,31 @@
 .wolf-se-pct-chip.active{border-color:var(--color-accent);color:var(--color-accent)}
 .wolf-se-pct-chip--suggest{border-color:rgba(56,189,248,.5);color:#38bdf8;font-size:.78rem}
 .wolf-se-suggest-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.wolf-se-autocomplete{position:relative}.wolf-se-autocomplete-input-wrap{display:flex;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-bg-panel)}
-.wolf-se-autocomplete-input-wrap:focus-within{border-color:var(--color-accent)}
+.wolf-se-autocomplete{position:relative}
+.wolf-se-autocomplete--match-card{width:100%}
+.wolf-se-autocomplete-input-wrap{display:flex;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-bg-panel)}
+.wolf-se-autocomplete-input-wrap:focus-within{border-color:var(--color-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-accent) 25%,transparent)}
 .wolf-se-autocomplete-input-wrap--compact{padding:6px 8px}
-.wolf-se-autocomplete-input{flex:1;border:none;background:transparent;color:var(--color-text-primary);outline:none;font-size:.9rem}
-.wolf-se-autocomplete-menu{position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;max-height:220px;overflow:auto;margin:0;padding:4px;list-style:none;border-radius:10px;border:1px solid var(--color-border);background:var(--color-bg-panel)}
-.wolf-se-autocomplete-option{display:flex;width:100%;justify-content:space-between;padding:10px 12px;border:none;background:transparent;color:inherit;text-align:left;border-radius:8px;cursor:pointer}
-.wolf-se-autocomplete-option.is-selected,.wolf-se-autocomplete-option:hover{background:var(--color-bg-hover)}
+.wolf-se-autocomplete-input{flex:1;min-width:0;border:none;background:transparent;color:var(--color-text-primary);outline:none;font-size:.9rem}
+.wolf-se-autocomplete-panel{position:absolute;z-index:55;top:calc(100% + 6px);left:0;right:0;min-width:min(100%,320px);max-width:min(420px,92vw);padding:8px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-bg-panel);box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.wolf-se-autocomplete-panel--fixed{max-width:none;min-width:0;right:auto}
+.wolf-se-autocomplete-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--color-border)}
+.wolf-se-autocomplete-filter-chip{padding:4px 10px;border-radius:999px;border:1px solid var(--color-border);background:var(--color-bg-secondary);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--color-text-secondary)}
+.wolf-se-autocomplete-filter-chip.is-active{border-color:var(--color-accent);color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 12%,transparent)}
+.wolf-se-autocomplete-section-label{margin:0 0 4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--color-accent)}
+.wolf-se-autocomplete-count{margin:0 0 6px;font-size:.68rem;color:var(--color-text-muted)}
+.wolf-se-autocomplete-menu{max-height:min(280px,50vh);overflow:auto;margin:0;padding:4px;list-style:none}
+.wolf-se-autocomplete-option{display:flex;width:100%;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 12px;border:none;background:transparent;color:inherit;text-align:left;border-radius:8px;cursor:pointer}
+.wolf-se-autocomplete-option-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wolf-se-autocomplete-option-name{font-weight:600;font-size:.86rem;line-height:1.25;word-break:break-word}
+.wolf-se-autocomplete-option-meta{font-size:.68rem;color:var(--color-text-muted)}
+.wolf-se-autocomplete-option-badges{display:flex;flex-shrink:0;gap:4px;align-items:center;padding-top:2px}
+.wolf-se-autocomplete-badge{font-size:.6rem!important}
+.wolf-se-autocomplete-option.is-selected,.wolf-se-autocomplete-option.is-active,.wolf-se-autocomplete-option:hover{background:var(--color-bg-hover)}
+.wolf-se-autocomplete-option.is-active{outline:1px solid var(--color-accent)}
+.wolf-se-autocomplete-empty{margin:8px 4px;font-size:.8rem;color:var(--color-text-muted);line-height:1.4}
+.wolf-se-chip-row--scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.wolf-se-chip-row--scroll .wolf-se-pct-chip{flex-shrink:0}
 /* num-compact: ver set-rows.css */
 .wolf-se-table-shell{border:1px solid var(--color-border);border-radius:10px;overflow:auto;background:var(--color-bg-panel)}
 .wolf-se-table{width:100%;border-collapse:collapse;font-size:.85rem}

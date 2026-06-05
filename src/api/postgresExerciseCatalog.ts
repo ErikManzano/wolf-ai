@@ -656,19 +656,31 @@ export async function listTechnicalCollections(
 }
 
 export async function seedTechnicalCollections(pool: Pool): Promise<void> {
-  const seeds = [
-    { id: 'tc-pulling', code: 'pulling_strength', title: 'Pulling Strength', methodology: 'bulgarian', objective: 'pulling_strength' },
-    { id: 'tc-chinese', code: 'chinese_positional', title: 'Chinese Positional Work', methodology: 'chinese', objective: 'positional' },
-    { id: 'tc-soviet', code: 'soviet_intro', title: 'Soviet Intro', methodology: 'soviet', objective: 'technique' },
-    { id: 'tc-jerk-rec', code: 'jerk_recovery', title: 'Jerk Recovery', methodology: 'empirical', objective: 'recovery' },
-    { id: 'tc-snatch-trans', code: 'snatch_transition', title: 'Snatch Transition', methodology: 'custom', objective: 'technique' },
-  ];
-  for (const s of seeds) {
+  const { seedTechnicalCollectionsLocal } = await import('../data/exercise-intelligence/seedCollections');
+  const collections = seedTechnicalCollectionsLocal();
+  for (const col of collections) {
     await pool.query(
-      `INSERT INTO technical_collections (id, coach_id, code, title, methodology, objective_id, sort_order)
-       VALUES ($1,NULL,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING`,
-      [s.id, s.code, s.title, s.methodology, s.objective, seeds.indexOf(s)],
+      `INSERT INTO technical_collections (id, coach_id, code, title, methodology, objective_id, description, sort_order, is_active)
+       VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, true)
+       ON CONFLICT (id) DO UPDATE SET
+         code = EXCLUDED.code,
+         title = EXCLUDED.title,
+         methodology = EXCLUDED.methodology,
+         objective_id = EXCLUDED.objective_id,
+         description = EXCLUDED.description,
+         sort_order = EXCLUDED.sort_order,
+         is_active = true`,
+      [col.id, col.code, col.title, col.methodology ?? null, col.objectiveId ?? null, col.description ?? null, col.sortOrder],
     );
+    await pool.query(`DELETE FROM technical_collection_items WHERE collection_id = $1`, [col.id]);
+    for (const item of col.items) {
+      await pool.query(
+        `INSERT INTO technical_collection_items (collection_id, definition_id, position, progression_notes)
+         VALUES ($1, $2, $3, NULL)
+         ON CONFLICT (collection_id, definition_id) DO UPDATE SET position = EXCLUDED.position`,
+        [item.collectionId, item.definitionId, item.position],
+      );
+    }
   }
 }
 

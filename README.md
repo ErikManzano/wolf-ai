@@ -53,7 +53,8 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 
 - Si `DATABASE_URL` no está configurado, la API cae en modo memoria (`"persistence":"memory"`).
 - Con `DATABASE_URL`, `/users`, `/assignments*` y el catálogo **Exercise OS** (`exercise_definitions`, taxonomía, relaciones) quedan en Postgres.
-- Al arrancar el API se ejecutan migraciones `CREATE TABLE IF NOT EXISTS` + **upsert** del catálogo oficial desde `src/data/exercises.json` (37 movimientos WL reales).
+- Al arrancar el API se ejecutan migraciones `CREATE TABLE IF NOT EXISTS` + **upsert** del catálogo oficial desde `exercises.json` (37) + catálogo búlgaro [exercises-bulgarian-catalog.json](src/data/exercises-bulgarian-catalog.json) (~100 movimientos).
+- Guía coach semana 1 y persistencia: [docs/COACH_PERSISTENCE.md](docs/COACH_PERSISTENCE.md).
 - En la app: menú coach **Ejercicios** — registro composable; los ejercicios creados por coach se guardan con `coach_id` y no se pisan al redeploy.
 - Al ser plan gratis, Render puede “dormir” tras inactividad.
 - Para demo en tiempo real, todos deben usar el mismo backend URL.

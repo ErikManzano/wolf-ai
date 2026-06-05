@@ -26,7 +26,14 @@ export type ExerciseCategory = 'snatch' | 'clean_jerk' | 'squat' | 'accessory';
 
 export type ExerciseSubtype = 'classic' | 'power' | 'pull' | 'complex';
 
-export type StartPosition = 'floor' | 'below_knee' | 'at_knee' | 'above_knee' | 'blocks';
+export type StartPosition =
+  | 'floor'
+  | 'below_knee'
+  | 'at_knee'
+  | 'above_knee'
+  | 'blocks'
+  | 'rack'
+  | 'straight_legs';
 
 export type ExerciseComplexity = 'single' | 'complex';
 
@@ -53,6 +60,10 @@ export interface Exercise {
   intensityRange: [number, number];
   /** Semantic tags from composable definitions (motor filtering). */
   tags?: string[];
+  /** Coach catalog group (grupo_1 … grupo_15). */
+  catalogGroup?: string;
+  /** Spanish display alias for search. */
+  nameEs?: string;
   /**
    * Multiplier applied after resolving the anchor 1RM (e.g. 1.05 ≈ 105 % of clean for clean pulls).
    * Omit or 1 = no extra scaling.

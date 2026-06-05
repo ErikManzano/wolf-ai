@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { BookOpen, Pencil, Search, Trash2, UserPlus } from 'lucide-react';
 import type { CoachWlProgramTemplate, GeneratedProgram } from '../../models/training';
 import { mockAthletes } from '../../data/loadMockData';
-import { useWolfAssign } from '../../context/WolfAssignContext';
+import { useWlAssignments } from '../../modules/assignments';
 import ConfirmationModal from '../ConfirmationModal';
 import WlViewModeToggle, { useWlListViewMode } from './WlViewModeToggle';
 
@@ -19,7 +19,7 @@ const WlCoachProgramLibrary: React.FC<WlCoachProgramLibraryProps> = ({
   onAssigned,
   onOpenInEngine,
 }) => {
-  const { coachTemplates, assignFromTemplate, deleteCoachTemplate } = useWolfAssign();
+  const { coachTemplates, assignFromTemplate, deleteCoachTemplate } = useWlAssignments();
   const [viewMode, setViewMode] = useWlListViewMode('library');
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);

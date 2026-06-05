@@ -99,7 +99,9 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           draftSavedAt={draftSavedAt}
         />
         {session.exercises.length > 0 ? (
-          <div className={isMobile ? 'wolf-se-sheet--sticky-mobile' : undefined}>
+          <div
+            className={`wolf-se-day-top__sheet${isMobile ? ' wolf-se-sheet--sticky-mobile' : ''}`}
+          >
             <SessionSheetOverview
               session={session}
               exercises={exercises}
@@ -111,15 +113,12 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
       </header>
 
       <div className="wolf-se-blocks-area">
-        <div className="wolf-se-toolbar">
-          <p className="wolf-se-toolbar-hint">
-            {isEs ? 'Edita series abajo o toca la hoja' : 'Edit sets below or tap the sheet'}
-          </p>
+        <div className="wolf-se-toolbar wolf-se-toolbar--actions">
           <button
             type="button"
             className="btn-primary wolf-se-session-add"
             disabled={session.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
-            onClick={() => apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises))}
+            onClick={handleAddExercise}
           >
             <Plus size={16} />
             <span className="wolf-se-session-add-text">{isEs ? 'Añadir ejercicio' : 'Add exercise'}</span>
@@ -152,9 +151,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
         type="button"
         className="btn-secondary wolf-se-add-block"
         disabled={session.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
-        onClick={() =>
-          apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises))
-        }
+        onClick={handleAddExercise}
       >
         <Plus size={16} /> {isEs ? 'Añadir ejercicio (bloque)' : 'Add exercise block'}
       </button>

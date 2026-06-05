@@ -14,6 +14,8 @@
     "deploy:netlify": "netlify deploy --dir=dist --prod",
     "hash-password": "node scripts/hash-password.mjs",
     "db:setup": "tsx scripts/db-setup-production.ts",
+    "smoke:coach-week1": "tsx scripts/smoke-coach-week1.ts",
+    "verify:coach-exercises": "tsx scripts/verify-coach-exercises.ts",
     "db:seed-exercises": "tsx scripts/db-setup-production.ts",
     "db:provision-users": "tsx scripts/provision-users.ts"
   },

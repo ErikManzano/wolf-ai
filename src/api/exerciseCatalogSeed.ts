@@ -1,4 +1,7 @@
 import { mockExercises } from '../data/loadMockData';
+
+/** Total official movements (legacy 37 + Bulgarian catalog). */
+export const OFFICIAL_CATALOG_SIZE = mockExercises.length;
 import type { ExerciseDefinition, ExerciseRelationshipRule } from '../models/exercise';
 import { fromLegacyExercise } from '../services/exercise/fromLegacyExercise';
 import { composeDisplayName, getExerciseTaxonomy, getSeedRelationshipRules } from '../services/exercise';

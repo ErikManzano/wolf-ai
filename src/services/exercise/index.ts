@@ -14,8 +14,12 @@ export { browseExerciseRegistry } from './registryBrowse';
 export {
   type SessionPickerOption,
   type SessionPickerBlockKind,
+  catalogGroupLabel,
   matchesCatalogQuery,
   filterPickerOptions,
+  filterPickerByCatalogGroup,
+  searchPickerOptions,
+  pickerOptionsFromIds,
   mergedViewsToPickerOptions,
   browseQueryForPickerKind,
 } from './sessionPickerCatalog';

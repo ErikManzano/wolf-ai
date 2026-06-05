@@ -2,7 +2,15 @@ import type { ExerciseCategory, ExerciseComplexity, ExerciseGoal, ExerciseLoadAn
 
 const CATEGORIES = new Set<ExerciseCategory>(['snatch', 'clean_jerk', 'squat', 'accessory']);
 const SUBTYPES = new Set<ExerciseSubtype>(['classic', 'power', 'pull', 'complex']);
-const POSITIONS = new Set<StartPosition>(['floor', 'below_knee', 'at_knee', 'above_knee', 'blocks']);
+const POSITIONS = new Set<StartPosition>([
+  'floor',
+  'below_knee',
+  'at_knee',
+  'above_knee',
+  'blocks',
+  'rack',
+  'straight_legs',
+]);
 const COMPLEXITIES = new Set<ExerciseComplexity>(['single', 'complex']);
 const GOALS = new Set<ExerciseGoal>(['technique', 'strength', 'power']);
 const ANCHORS = new Set<ExerciseLoadAnchor>(['auto', 'snatch', 'clean_jerk', 'back_squat', 'front_squat']);

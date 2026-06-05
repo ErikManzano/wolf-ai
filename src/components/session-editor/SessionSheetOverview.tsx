@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight } from 'lucide-react';
 import type { Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import { formatBlockPrescription } from './schemeFormat';
@@ -15,7 +16,7 @@ function blockDisplayName(block: SessionExerciseBlock, exercises: Exercise[]): s
   if (isComplex && block.segments?.length) {
     return block.segments
       .map((s) => exercises.find((e) => e.id === s.exerciseId)?.name ?? s.exerciseId)
-      .join(' + ');
+      .join(' → ');
   }
   return exercises.find((e) => e.id === block.exerciseId)?.name ?? block.exerciseId;
 }
@@ -31,7 +32,12 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
   return (
     <section className="wolf-se-sheet" aria-label={isEs ? 'Vista hoja del día' : 'Day sheet overview'}>
       <div className="wolf-se-sheet-head">
-        <h3 className="wolf-se-sheet-title">{isEs ? 'Hoja del día' : 'Day sheet'}</h3>
+        <div className="wolf-se-sheet-head-main">
+          <h3 className="wolf-se-sheet-title">{isEs ? 'Hoja del día' : 'Day sheet'}</h3>
+          <span className="wolf-se-sheet-count" aria-label={isEs ? 'Ejercicios' : 'Exercises'}>
+            {session.exercises.length}
+          </span>
+        </div>
         <span className="wolf-se-sheet-hint">{isEs ? 'Toca una fila para editar' : 'Tap a row to edit'}</span>
       </div>
       <ol className="wolf-se-sheet-rows">
@@ -46,10 +52,13 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
                 onClick={() => onSelectBlock?.(i)}
               >
                 <span className="wolf-se-sheet-row-num">{i + 1}</span>
-                <span className="wolf-se-sheet-row-name">{name}</span>
-                <code className="wolf-se-sheet-row-rx" title={prescription}>
-                  {prescription}
-                </code>
+                <span className="wolf-se-sheet-row-body">
+                  <span className="wolf-se-sheet-row-name">{name}</span>
+                  <code className="wolf-se-sheet-row-rx" title={prescription}>
+                    {prescription}
+                  </code>
+                </span>
+                <ChevronRight size={16} className="wolf-se-sheet-row-chevron" aria-hidden />
               </button>
             </li>
           );

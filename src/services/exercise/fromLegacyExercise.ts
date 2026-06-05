@@ -65,6 +65,9 @@ function inferModifiers(ex: Exercise): SingleComposition['modifiers'] {
   if (n.includes('pause')) mods.push('pause');
   if (n.includes('deficit')) mods.push('deficit');
   if (n.includes('overhead squat')) mods.push('overhead_squat');
+  if (n.includes('4 stop')) mods.push('four_stops');
+  if (n.includes('slow') && (n.includes('eccentric') || n.includes('down'))) mods.push('slow_eccentric');
+  if (n.includes('behind the neck') || n.includes('btn')) mods.push('behind_neck');
   return mods;
 }
 
@@ -123,7 +126,14 @@ export function fromLegacyExercise(ex: Exercise, displayName: string): Omit<Exer
     displayName,
     signature,
     legacyExerciseId: ex.id,
-    searchText: buildSearchText(displayName, composition),
-    tags: [family, objective],
+    searchText: [
+      buildSearchText(displayName, composition),
+      ex.nameEs?.toLowerCase(),
+      ...(ex.tags ?? []).map((t) => t.toLowerCase()),
+      ex.catalogGroup,
+    ]
+      .filter(Boolean)
+      .join(' '),
+    tags: [...new Set([family, objective, ...(ex.tags ?? []), ex.catalogGroup].filter(Boolean) as string[])],
   };
 }

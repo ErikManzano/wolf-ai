@@ -36,7 +36,7 @@ async function main() {
     console.log('Seeding taxonomy + relationship rules…');
     await seedExerciseTaxonomy(pool);
 
-    console.log(`Upserting ${mockExercises.length} official definitions from exercises.json…`);
+    console.log(`Upserting ${mockExercises.length} official definitions (exercises.json + Bulgarian catalog)…`);
     const upserted = await seedExerciseDefinitionsFromLegacy(pool);
 
     console.log('Seeding technical collections…');

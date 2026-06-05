@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+﻿import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   CoachWlProgramTemplate,
   Exercise,
@@ -20,7 +20,7 @@ import type {
   RegistryBrowseResult,
   TechnicalCollectionWithItems,
 } from '../models/exercise';
-import { mockAthletes, mockExercises, mockUsers } from '../data/loadMockData';
+import { mockExercises, mockUsers } from '../data/loadMockData';
 import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { seedTechnicalCollectionsLocal } from '../data/exercise-intelligence/seedCollections';
 import { seedExerciseDefinitionsFromLegacy, seedRelationshipRules } from '../api/exerciseCatalogSeed';
@@ -33,25 +33,10 @@ import {
   type SessionPickerOption,
 } from '../services/exercise';
 import { normalizeExercise } from '../utils/exerciseCatalog';
-import { generatePeriodizedProgram } from '../services/programGenerator';
+import { WlAssignmentsProvider, useWlAssignments } from '../modules/assignments';
+import { getApiBase as getAssignmentsApiBase, isApiEnabled as isAssignmentsApiEnabled } from '../modules/assignments/apiClient';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
-import {
-  completionMatches,
-  isDayComplete,
-  isExerciseComplete,
-  isSessionMarkedComplete,
-} from '../utils/completionHelpers';
-import { findSetLog } from '../utils/athleteSetLogs';
 
-/** Usuario app enlazado a este perfil motor (p. ej. Erik ↔ ath-you). */
-function athleteUserIdForProfile(athleteProfileId: string): string | undefined {
-  return mockUsers.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id;
-}
-
-const STORAGE_ASSIGN = 'wolf_wl_assignments_v1';
-const STORAGE_COMP = 'wolf_wl_completions_v1';
-const STORAGE_SET_LOGS = 'wolf_wl_set_logs_v1';
-const STORAGE_TEMPLATES = 'wolf_wl_program_templates_v1';
 const STORAGE_PERSONA = 'wolf_persona_v1';
 const STORAGE_CURRENT_USER = 'wolf_current_user_v1';
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
@@ -81,7 +66,7 @@ function persistLocalCoachExercises(custom: Exercise[]): void {
   }
 }
 
-/** @deprecated Legacy flat exercise form — use ExerciseDefinitionInput */
+/** @deprecated Legacy flat exercise form â€” use ExerciseDefinitionInput */
 export type MotorExerciseInput = {
   name: string;
   category: import('../models/training').ExerciseCategory;
@@ -116,17 +101,11 @@ function persistLocalExerciseDefinitions(custom: ExerciseDefinition[]): void {
 
 /** URL del API: build `VITE_API_URL`, o `window.__WOLF_API_URL__` en index.html (sin redeploy). */
 export function getApiBase(): string {
-  if (typeof window !== 'undefined') {
-    const injected = (window as Window & { __WOLF_API_URL__?: string }).__WOLF_API_URL__;
-    if (typeof injected === 'string' && injected.trim()) {
-      return injected.trim().replace(/\/+$/, '');
-    }
-  }
-  return ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
+  return getAssignmentsApiBase();
 }
 
 export function isApiEnabled(): boolean {
-  return Boolean(getApiBase());
+  return isAssignmentsApiEnabled();
 }
 
 function websocketUrlFromApiBase(base: string): string | null {
@@ -152,7 +131,7 @@ function isWolfAppRole(role: unknown): role is WolfAppRole {
   return role === 'athlete' || role === 'coach' || role === 'super_admin';
 }
 
-/** Si el API devolvió rol del módulo email (trainer/owner), recuperar coach|athlete desde el catálogo Wolf. */
+/** Si el API devolviÃ³ rol del mÃ³dulo email (trainer/owner), recuperar coach|athlete desde el catÃ¡logo Wolf. */
 function reconcileApiUser(apiUser: WolfUser, loginId: string, catalog: WolfUser[]): WolfUser {
   if (isWolfAppRole(apiUser.role)) return apiUser;
   const normalizedLogin = loginId.trim().toLowerCase();
@@ -170,40 +149,6 @@ function reconcileApiUser(apiUser: WolfUser, loginId: string, catalog: WolfUser[
   };
 }
 
-function normalizeAssignment(a: ProgramAssignment): ProgramAssignment {
-  return {
-    ...a,
-    version: typeof a.version === 'number' && a.version > 0 ? a.version : 1,
-    versionHistory: Array.isArray(a.versionHistory) ? a.versionHistory : [],
-  };
-}
-
-function seedDemoAssignments(): ProgramAssignment[] {
-  const athlete = mockAthletes.find((a) => a.id === 'ath-you');
-  if (!athlete) return [];
-  const program = generatePeriodizedProgram({
-    athleteId: athlete.id,
-    athlete,
-    exercises: mockExercises,
-    totalWeeks: 4,
-    daysPerWeek: 3,
-    primaryGoal: 'strength',
-    programName: 'Plan ejemplo — Ivan → Erik',
-  });
-  return [
-    {
-      id: 'asg-seed-demo',
-      coachId: 'user-coach',
-      athleteUserId: 'user-athlete',
-      athleteProfileId: 'ath-you',
-      version: 1,
-      program,
-      versionHistory: [],
-      assignedAt: new Date().toISOString(),
-    },
-  ];
-}
-
 interface WolfAssignContextValue {
   users: WolfUser[];
   currentUser: WolfUser | undefined;
@@ -216,7 +161,7 @@ interface WolfAssignContextValue {
   assignments: ProgramAssignment[];
   completions: SessionCompletion[];
   assignProgramToAthlete: (program: ProgramAssignment['program'], athleteProfileId: string) => string;
-  /** Actualiza el JSON del programa en una asignación (coach editando plan ya enviado). */
+  /** Actualiza el JSON del programa en una asignaciÃ³n (coach editando plan ya enviado). */
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
   removeAssignment: (assignmentId: string) => void;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
@@ -278,7 +223,7 @@ interface WolfAssignContextValue {
     schemeIndex: number,
     setInstance: number,
   ) => SetCompletionLog | undefined;
-  /** Asignación activa del atleta vinculado (user-athlete) */
+  /** AsignaciÃ³n activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
   loginWithGoogle: (idToken: string) => Promise<WolfUser | null>;
@@ -296,9 +241,9 @@ interface WolfAssignContextValue {
   }) => Promise<string | null>;
   updateUser: (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => Promise<string | null>;
   deleteUser: (userId: string) => Promise<string | null>;
-  /** Limpia token del API (p. ej. al cerrar sesión). */
+  /** Limpia token del API (p. ej. al cerrar sesiÃ³n). */
   clearApiSession: () => void;
-  /** Catálogo WL legacy (motor, editor sesión). */
+  /** CatÃ¡logo WL legacy (motor, editor sesiÃ³n). */
   motorExercises: Exercise[];
   /** Opciones del autocomplete del editor (todas las definiciones asignables). */
   sessionExercisePicker: SessionPickerOption[];
@@ -357,10 +302,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   });
   const [users, setUsers] = useState<WolfUser[]>(mockUsers);
-  const [assignments, setAssignments] = useState<ProgramAssignment[]>([]);
-  const [completions, setCompletions] = useState<SessionCompletion[]>([]);
-  const [setLogs, setSetLogs] = useState<SetCompletionLog[]>([]);
-  const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>([]);
   const [coachCustomExercises, setCoachCustomExercises] = useState<Exercise[]>(() => readLocalCoachExercises());
   const [exerciseTaxonomy, setExerciseTaxonomy] = useState<ExerciseTaxonomyBundle>(() => getExerciseTaxonomy());
   const [motorExerciseDefinitions, setMotorExerciseDefinitions] = useState<ExerciseDefinition[]>(() => {
@@ -432,36 +373,14 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     try {
-      const a = localStorage.getItem(STORAGE_ASSIGN);
-      const c = localStorage.getItem(STORAGE_COMP);
-      const tpl = localStorage.getItem(STORAGE_TEMPLATES);
       const p = localStorage.getItem(STORAGE_PERSONA) as WolfAppRole | null;
       const storedUser = localStorage.getItem(STORAGE_CURRENT_USER);
-      if (tpl) {
-        const parsed = JSON.parse(tpl) as CoachWlProgramTemplate[];
-        if (Array.isArray(parsed)) setCoachTemplates(parsed);
-      }
-      if (a) {
-        const parsed = JSON.parse(a) as ProgramAssignment[];
-        setAssignments(parsed.map(normalizeAssignment));
-      } else {
-        const seed = seedDemoAssignments();
-        setAssignments(seed);
-        localStorage.setItem(STORAGE_ASSIGN, JSON.stringify(seed));
-      }
-      if (c) setCompletions(JSON.parse(c));
-      const sl = localStorage.getItem(STORAGE_SET_LOGS);
-      if (sl) {
-        const parsed = JSON.parse(sl) as SetCompletionLog[];
-        if (Array.isArray(parsed)) setSetLogs(parsed);
-      }
       if (storedUser && mockUsers.some((u) => u.id === storedUser)) {
         setCurrentUserId(storedUser);
       }
       if (p === 'coach' || p === 'athlete') setPersonaState(p);
     } catch {
-      const seed = seedDemoAssignments();
-      setAssignments(seed);
+      /* ignore */
     }
   }, []);
 
@@ -516,52 +435,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     [apiToken],
   );
 
-  const loadAssignmentsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
-    try {
-      const headers: Record<string, string> = {};
-      const token = readApiToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${getApiBase()}/assignments`, { headers });
-      if (!res.ok) return;
-      const list = (await res.json()) as ProgramAssignment[];
-      if (!Array.isArray(list)) return;
-      setAssignments(list.map(normalizeAssignment));
-    } catch {
-      /* fallback to local state */
-    }
-  }, []);
-
-  const loadCompletionsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
-    try {
-      const headers: Record<string, string> = {};
-      const token = readApiToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${getApiBase()}/completions`, { headers });
-      if (!res.ok) return;
-      const list = (await res.json()) as SessionCompletion[];
-      if (Array.isArray(list)) setCompletions(list);
-    } catch {
-      /* fallback to local state */
-    }
-  }, []);
-
-  const loadSetLogsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
-    try {
-      const headers: Record<string, string> = {};
-      const token = readApiToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${getApiBase()}/set-logs`, { headers });
-      if (!res.ok) return;
-      const list = (await res.json()) as SetCompletionLog[];
-      if (Array.isArray(list)) setSetLogs(list);
-    } catch {
-      /* fallback to local state */
-    }
-  }, []);
-
   const loadExerciseCatalogFromApi = useCallback(async () => {
     if (!isApiEnabled()) return;
     const token = readApiToken();
@@ -605,13 +478,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   }, [loadUsersFromApi]);
 
   useEffect(() => {
-    if (!isApiEnabled() || !apiToken) return;
-    void loadAssignmentsFromApi();
-    void loadCompletionsFromApi();
-    void loadSetLogsFromApi();
-  }, [apiToken, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
-
-  useEffect(() => {
     if (!isApiEnabled()) return;
     if (!apiToken) return;
     void loadExerciseCatalogFromApi();
@@ -627,9 +493,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(String(event.data)) as { event?: string };
-          if (msg.event === 'assignments:changed') {
-            void loadAssignmentsFromApi();
-          }
           if (msg.event === 'exercises:changed' || msg.event === 'exercise-catalog:changed') {
             void loadExerciseCatalogFromApi();
           }
@@ -637,50 +500,13 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           /* ignore malformed messages */
         }
       };
-      ws.onclose = () => {
-        // fallback polling if websocket disconnects
-        const timer = window.setInterval(() => void loadAssignmentsFromApi(), 5000);
-        window.setTimeout(() => window.clearInterval(timer), 30000);
-      };
     } catch {
-      /* websocket unavailable, keep silent fallback */
+      /* websocket unavailable */
     }
     return () => {
       if (ws && ws.readyState < 2) ws.close();
     };
-  }, [loadAssignmentsFromApi, loadExerciseCatalogFromApi]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_ASSIGN, JSON.stringify(assignments));
-    } catch {
-      /* ignore */
-    }
-  }, [assignments]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_COMP, JSON.stringify(completions));
-    } catch {
-      /* ignore */
-    }
-  }, [completions]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_SET_LOGS, JSON.stringify(setLogs));
-    } catch {
-      /* ignore */
-    }
-  }, [setLogs]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_TEMPLATES, JSON.stringify(coachTemplates));
-    } catch {
-      /* ignore */
-    }
-  }, [coachTemplates]);
+  }, [loadExerciseCatalogFromApi]);
 
   const setPersona = useCallback((role: WolfAppRole) => {
     const mapped = personaFromUserRole(role);
@@ -715,7 +541,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [users]);
 
-  /** Sincroniza sesión cuando el usuario viene del API (p. ej. GET /auth/me) antes de que `users` esté hidratado. */
+  /** Sincroniza sesiÃ³n cuando el usuario viene del API (p. ej. GET /auth/me) antes de que `users` estÃ© hidratado. */
   const applyUserSession = useCallback((u: Pick<WolfUser, 'id' | 'role'>) => {
     setCurrentUserId(u.id);
     const mapped = personaFromUserRole(u.role);
@@ -792,7 +618,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
         const catalog = loaded && loaded.length > 0 ? loaded : mockUsers;
         applyUserSession(reconcileApiUser(data.user, data.user.email ?? '', catalog));
       } catch {
-        /* red: mantener sesión local */
+        /* red: mantener sesiÃ³n local */
       }
     })();
     return () => {
@@ -806,443 +632,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     () => (currentUser?.role === 'athlete' ? currentUser : undefined),
     [currentUser],
   );
-
-  const assignProgramToAthlete = useCallback(
-    (program: ProgramAssignment['program'], athleteProfileId: string) => {
-      const id = `asg-${Date.now()}`;
-      const uid =
-        users.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id ??
-        athleteUserIdForProfile(athleteProfileId);
-      const next: ProgramAssignment = {
-        id,
-        coachId: currentUser?.role === 'coach' || currentUser?.role === 'super_admin' ? currentUser.id : 'user-coach',
-        ...(uid !== undefined ? { athleteUserId: uid } : {}),
-        athleteProfileId,
-        version: 1,
-        program: { ...program, athleteId: athleteProfileId },
-        versionHistory: [],
-        assignedAt: new Date().toISOString(),
-      };
-      setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
-      if (isApiEnabled()) {
-        void apiRequest('/assignments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachId: next.coachId,
-            athleteUserId: next.athleteUserId,
-            athleteProfileId: next.athleteProfileId,
-            program: next.program,
-          }),
-        })
-          .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
-          .then((saved) => {
-            if (!saved) return;
-            setAssignments((prev) => [
-              ...prev.filter((x) => x.athleteProfileId !== saved.athleteProfileId),
-              normalizeAssignment(saved),
-            ]);
-          })
-          .catch(() => {
-            /* keep optimistic state */
-          });
-      }
-      return id;
-    },
-    [apiRequest, currentUser, users],
-  );
-
-  const updateAssignmentProgram = useCallback((assignmentId: string, program: ProgramAssignment['program']) => {
-    setAssignments((prev) =>
-      prev.map((a) =>
-        a.id === assignmentId
-          ? {
-              ...a,
-              version: (a.version ?? 1) + 1,
-              program: { ...program, athleteId: a.athleteProfileId },
-              versionHistory: [
-                ...(a.versionHistory ?? []),
-                {
-                  version: a.version ?? 1,
-                  editedAt: new Date().toISOString(),
-                  program: a.program,
-                },
-              ],
-            }
-          : a,
-      ),
-    );
-    if (isApiEnabled()) {
-      void apiRequest(`/assignments/${assignmentId}/program`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ program }),
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
-        .then((updated) => {
-          if (!updated) return;
-          setAssignments((prev) => prev.map((a) => (a.id === updated.id ? normalizeAssignment(updated) : a)));
-        })
-        .catch(() => {
-          /* keep optimistic state */
-        });
-    }
-  }, [apiRequest]);
-
-  const removeAssignment = useCallback((assignmentId: string) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
-    setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
-    setSetLogs((prev) => prev.filter((l) => l.assignmentId !== assignmentId));
-    if (isApiEnabled()) {
-      void apiRequest(`/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
-        /* keep local state */
-      });
-    }
-  }, [apiRequest]);
-
-  const restoreAssignmentVersion = useCallback(
-    (assignmentId: string, version: number): boolean => {
-      const asg = assignments.find((a) => a.id === assignmentId);
-      if (!asg) return false;
-      let targetProgram: GeneratedProgram | null = null;
-      if (asg.version === version) {
-        targetProgram = asg.program;
-      } else {
-        const hist = asg.versionHistory.find((h) => h.version === version);
-        if (hist) targetProgram = hist.program;
-      }
-      if (!targetProgram) return false;
-      updateAssignmentProgram(assignmentId, targetProgram);
-      return true;
-    },
-    [assignments, updateAssignmentProgram],
-  );
-
-  const duplicateAssignment = useCallback(
-    (assignmentId: string, targetAthleteProfileId: string): string => {
-      const asg = assignments.find((a) => a.id === assignmentId);
-      if (!asg) return '';
-      return assignProgramToAthlete(asg.program, targetAthleteProfileId);
-    },
-    [assignments, assignProgramToAthlete],
-  );
-
-  const saveCoachTemplate = useCallback(
-    (name: string, program: GeneratedProgram, sourceAssignmentId?: string): string => {
-      const coachId =
-        currentUser?.role === 'coach' || currentUser?.role === 'super_admin'
-          ? currentUser.id
-          : 'user-coach';
-      const id = `tpl-${Date.now()}`;
-      const now = new Date().toISOString();
-      const next: CoachWlProgramTemplate = {
-        id,
-        coachId,
-        name: name.trim() || program.name,
-        program: { ...program },
-        sourceAssignmentId,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setCoachTemplates((prev) => [next, ...prev]);
-      return id;
-    },
-    [currentUser],
-  );
-
-  const deleteCoachTemplate = useCallback((templateId: string) => {
-    setCoachTemplates((prev) => prev.filter((t) => t.id !== templateId));
-  }, []);
-
-  const assignFromTemplate = useCallback(
-    (templateId: string, athleteProfileId: string): string | null => {
-      const tpl = coachTemplates.find((t) => t.id === templateId);
-      if (!tpl) return null;
-      return assignProgramToAthlete(tpl.program, athleteProfileId);
-    },
-    [coachTemplates, assignProgramToAthlete],
-  );
-
-  const applySessionToggleLocal = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount: number) => {
-      setCompletions((prev) => {
-        const done = isDayComplete(prev, assignmentId, weekNumber, dayNumber, exerciseCount);
-        const filtered = prev.filter(
-          (c) =>
-            !(
-              c.assignmentId === assignmentId &&
-              c.weekNumber === weekNumber &&
-              c.dayNumber === dayNumber
-            ),
-        );
-        if (done) return filtered;
-        return [
-          ...filtered,
-          {
-            assignmentId,
-            weekNumber,
-            dayNumber,
-            completedAt: new Date().toISOString(),
-          },
-        ];
-      });
-    },
-    [],
-  );
-
-  const toggleSessionComplete = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount = 0) => {
-      applySessionToggleLocal(assignmentId, weekNumber, dayNumber, exerciseCount);
-      if (!isApiEnabled()) return;
-      void apiRequest('/completions/session-toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseCount }),
-      })
-        .then((res) => {
-          if (!res.ok) void loadCompletionsFromApi();
-        })
-        .catch(() => void loadCompletionsFromApi());
-    },
-    [apiRequest, applySessionToggleLocal, loadCompletionsFromApi],
-  );
-
-  const isSessionComplete = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount = 0) =>
-      isDayComplete(completions, assignmentId, weekNumber, dayNumber, exerciseCount),
-    [completions],
-  );
-
-  const toggleExerciseComplete = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) => {
-      setCompletions((prev) => {
-        const exists = prev.some((c) =>
-          completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
-        );
-        if (exists) {
-          return prev.filter(
-            (c) => !completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
-          );
-        }
-        const withoutSession = prev.filter(
-          (c) =>
-            !(
-              c.assignmentId === assignmentId &&
-              c.weekNumber === weekNumber &&
-              c.dayNumber === dayNumber &&
-              c.exerciseIndex === undefined
-            ),
-        );
-        return [
-          ...withoutSession,
-          {
-            assignmentId,
-            weekNumber,
-            dayNumber,
-            exerciseIndex,
-            completedAt: new Date().toISOString(),
-          },
-        ];
-      });
-      if (!isApiEnabled()) return;
-      void apiRequest('/completions/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseIndex }),
-      })
-        .then((res) => {
-          if (!res.ok) void loadCompletionsFromApi();
-        })
-        .catch(() => void loadCompletionsFromApi());
-    },
-    [apiRequest, loadCompletionsFromApi],
-  );
-
-  const isExerciseCompleteFn = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) =>
-      isExerciseComplete(completions, assignmentId, weekNumber, dayNumber, exerciseIndex) ||
-      isSessionMarkedComplete(completions, assignmentId, weekNumber, dayNumber),
-    [completions],
-  );
-
-  const setLogMatches = useCallback(
-    (
-      l: SetCompletionLog,
-      assignmentId: string,
-      weekNumber: number,
-      dayNumber: number,
-      exerciseIndex: number,
-      schemeIndex: number,
-      setInstance: number,
-    ) =>
-      l.assignmentId === assignmentId &&
-      l.weekNumber === weekNumber &&
-      l.dayNumber === dayNumber &&
-      l.exerciseIndex === exerciseIndex &&
-      l.schemeIndex === schemeIndex &&
-      l.setInstance === setInstance,
-    [],
-  );
-
-  const getSetLogFn = useCallback(
-    (
-      assignmentId: string,
-      weekNumber: number,
-      dayNumber: number,
-      exerciseIndex: number,
-      schemeIndex: number,
-      setInstance: number,
-    ) =>
-      findSetLog(setLogs, assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance),
-    [setLogs],
-  );
-
-  const isSetCompleteFn = useCallback(
-    (
-      assignmentId: string,
-      weekNumber: number,
-      dayNumber: number,
-      exerciseIndex: number,
-      schemeIndex: number,
-      setInstance: number,
-    ) => Boolean(getSetLogFn(assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance)),
-    [getSetLogFn],
-  );
-
-  const updateSetLogFn = useCallback(
-    (input: {
-      assignmentId: string;
-      weekNumber: number;
-      dayNumber: number;
-      exerciseIndex: number;
-      schemeIndex: number;
-      setInstance: number;
-      actualKg?: number;
-      actualReps?: number;
-      actualSegmentReps?: number[];
-    }) => {
-      setSetLogs((prev) => {
-        const idx = prev.findIndex((l) =>
-          setLogMatches(
-            l,
-            input.assignmentId,
-            input.weekNumber,
-            input.dayNumber,
-            input.exerciseIndex,
-            input.schemeIndex,
-            input.setInstance,
-          ),
-        );
-        if (idx < 0) {
-          return [
-            ...prev,
-            {
-              ...input,
-              completedAt: new Date().toISOString(),
-            },
-          ];
-        }
-        const next = [...prev];
-        next[idx] = {
-          ...next[idx]!,
-          actualKg: input.actualKg ?? next[idx]!.actualKg,
-          actualReps: input.actualReps ?? next[idx]!.actualReps,
-          actualSegmentReps: input.actualSegmentReps ?? next[idx]!.actualSegmentReps,
-        };
-        return next;
-      });
-      if (!isApiEnabled()) return;
-      void apiRequest('/set-logs', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      })
-        .then((res) => {
-          if (!res.ok) void loadSetLogsFromApi();
-        })
-        .catch(() => void loadSetLogsFromApi());
-    },
-    [setLogMatches, loadSetLogsFromApi],
-  );
-
-  const toggleSetCompleteFn = useCallback(
-    (input: {
-      assignmentId: string;
-      weekNumber: number;
-      dayNumber: number;
-      exerciseIndex: number;
-      schemeIndex: number;
-      setInstance: number;
-      actualKg?: number;
-      actualReps?: number;
-      actualSegmentReps?: number[];
-    }) => {
-      setSetLogs((prev) => {
-        const exists = prev.some((l) =>
-          setLogMatches(
-            l,
-            input.assignmentId,
-            input.weekNumber,
-            input.dayNumber,
-            input.exerciseIndex,
-            input.schemeIndex,
-            input.setInstance,
-          ),
-        );
-        if (exists) {
-          return prev.filter(
-            (l) =>
-              !setLogMatches(
-                l,
-                input.assignmentId,
-                input.weekNumber,
-                input.dayNumber,
-                input.exerciseIndex,
-                input.schemeIndex,
-                input.setInstance,
-              ),
-          );
-        }
-        return [
-          ...prev,
-          {
-            ...input,
-            completedAt: new Date().toISOString(),
-          },
-        ];
-      });
-      setCompletions((prev) =>
-        prev.filter(
-          (c) =>
-            !(
-              c.assignmentId === input.assignmentId &&
-              c.weekNumber === input.weekNumber &&
-              c.dayNumber === input.dayNumber &&
-              c.exerciseIndex === input.exerciseIndex
-            ),
-        ),
-      );
-      if (!isApiEnabled()) return;
-      void apiRequest('/set-logs/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      })
-        .then((res) => {
-          if (!res.ok) void loadSetLogsFromApi();
-        })
-        .catch(() => void loadSetLogsFromApi());
-    },
-    [setLogMatches, loadSetLogsFromApi],
-  );
-
-  const myAssignment = useMemo(() => {
-    const linked = athleteUser?.linkedAthleteId;
-    if (!linked) return undefined;
-    const mine = assignments.filter((a) => a.athleteProfileId === linked);
-    if (mine.length === 0) return undefined;
-    return [...mine].sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
-  }, [assignments, athleteUser?.linkedAthleteId]);
 
   const loginUser = useCallback(async (email: string, password: string) => {
     const commitLoggedInUser = (user: WolfUser): WolfUser => {
@@ -1282,7 +671,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           /* ignore */
         }
         throw new Error(
-          `El servidor respondió ${res.status}.${detail} Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.`,
+          `El servidor respondiÃ³ ${res.status}.${detail} Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.`,
         );
       }
       const data = (await res.json()) as { user?: WolfUser; token?: string; accessToken?: string; refreshToken?: string };
@@ -1293,11 +682,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (e) {
-      if (e instanceof Error && e.message.startsWith('El servidor respondió')) {
+      if (e instanceof Error && e.message.startsWith('El servidor respondiÃ³')) {
         throw e;
       }
       throw new Error(
-        'Sin conexión al API. Netlify: en Site → Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
+        'Sin conexiÃ³n al API. Netlify: en Site â†’ Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
       );
     }
   }, [applyUserSession, storeTokens, users]);
@@ -1898,7 +1287,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [apiRequest, currentUserId, loadUsersFromApi, setCurrentUserIdSafe]);
 
-  const value: WolfAssignContextValue = {
+  const catalogValue = {
     users,
     currentUser,
     currentUserId,
@@ -1907,27 +1296,6 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     setPersona,
     coach,
     athleteUser,
-    assignments,
-    completions,
-    assignProgramToAthlete,
-    updateAssignmentProgram,
-    removeAssignment,
-    restoreAssignmentVersion,
-    duplicateAssignment,
-    coachTemplates,
-    saveCoachTemplate,
-    deleteCoachTemplate,
-    assignFromTemplate,
-    toggleSessionComplete,
-    isSessionComplete,
-    toggleExerciseComplete,
-    isExerciseComplete: isExerciseCompleteFn,
-    setLogs,
-    toggleSetComplete: toggleSetCompleteFn,
-    updateSetLog: updateSetLogFn,
-    isSetComplete: isSetCompleteFn,
-    getSetLog: getSetLogFn,
-    myAssignment,
     loginUser,
     loginWithGoogle,
     registerUser,
@@ -1966,8 +1334,70 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     deleteMotorExercise,
   };
 
-  return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;
+  return (
+    <WlAssignmentsProvider currentUser={currentUser} athleteUser={athleteUser} users={users}>
+      <WolfAssignMergedProvider catalog={catalogValue}>{children}</WolfAssignMergedProvider>
+    </WlAssignmentsProvider>
+  );
 };
+
+function WolfAssignMergedProvider({
+  children,
+  catalog,
+}: {
+  children: ReactNode;
+  catalog: Omit<
+    WolfAssignContextValue,
+    | 'assignments'
+    | 'completions'
+    | 'setLogs'
+    | 'coachTemplates'
+    | 'assignProgramToAthlete'
+    | 'updateAssignmentProgram'
+    | 'removeAssignment'
+    | 'restoreAssignmentVersion'
+    | 'duplicateAssignment'
+    | 'saveCoachTemplate'
+    | 'deleteCoachTemplate'
+    | 'assignFromTemplate'
+    | 'toggleSessionComplete'
+    | 'isSessionComplete'
+    | 'toggleExerciseComplete'
+    | 'isExerciseComplete'
+    | 'toggleSetComplete'
+    | 'updateSetLog'
+    | 'isSetComplete'
+    | 'getSetLog'
+    | 'myAssignment'
+  >;
+}) {
+  const wl = useWlAssignments();
+  const value: WolfAssignContextValue = {
+    ...catalog,
+    assignments: wl.assignments,
+    completions: wl.completions,
+    setLogs: wl.setLogs,
+    coachTemplates: wl.coachTemplates,
+    assignProgramToAthlete: wl.assignProgramToAthlete,
+    updateAssignmentProgram: wl.updateAssignmentProgram,
+    removeAssignment: wl.removeAssignment,
+    restoreAssignmentVersion: wl.restoreAssignmentVersion,
+    duplicateAssignment: wl.duplicateAssignment,
+    saveCoachTemplate: wl.saveCoachTemplate,
+    deleteCoachTemplate: wl.deleteCoachTemplate,
+    assignFromTemplate: wl.assignFromTemplate,
+    toggleSessionComplete: wl.toggleSessionComplete,
+    isSessionComplete: wl.isSessionComplete,
+    toggleExerciseComplete: wl.toggleExerciseComplete,
+    isExerciseComplete: wl.isExerciseComplete,
+    toggleSetComplete: wl.toggleSetComplete,
+    updateSetLog: wl.updateSetLog,
+    isSetComplete: wl.isSetComplete,
+    getSetLog: wl.getSetLog,
+    myAssignment: wl.myAssignment,
+  };
+  return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;
+}
 
 export function useWolfAssign(): WolfAssignContextValue {
   const ctx = useContext(WolfAssignContext);

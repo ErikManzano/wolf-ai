@@ -1,0 +1,2174 @@
+[
+  {
+    "id": "ex-wl-g01-01",
+    "name": "Classic Snatch (Squat Snatch)",
+    "nameEs": "Snatch clásico (sentadilla completa)",
+    "catalogGroup": "grupo_1",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      70,
+      92
+    ],
+    "tags": [
+      "grupo_1",
+      "snatch",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-01",
+    "name": "Classic Snatch Below Knee",
+    "nameEs": "Snatch clásico bajo rodilla",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      60,
+      85
+    ],
+    "tags": [
+      "grupo_2",
+      "snatch",
+      "classic",
+      "below_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-02",
+    "name": "Classic Snatch at Knee Height",
+    "nameEs": "Snatch clásico a altura de rodilla",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      60,
+      85
+    ],
+    "tags": [
+      "grupo_2",
+      "snatch",
+      "classic",
+      "at_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-03",
+    "name": "Classic Snatch Above Knee",
+    "nameEs": "Snatch clásico sobre rodilla",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      60,
+      85
+    ],
+    "tags": [
+      "grupo_2",
+      "snatch",
+      "classic",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-04",
+    "name": "Classic Snatch, Legs Straight",
+    "nameEs": "Snatch clásico piernas rectas",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      80
+    ],
+    "tags": [
+      "grupo_2",
+      "snatch",
+      "classic",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-05",
+    "name": "Classic Snatch Standing Straight",
+    "nameEs": "Snatch clásico de pie erguido",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      75
+    ],
+    "tags": [
+      "standing",
+      "grupo_2",
+      "snatch",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g02-06",
+    "name": "Classic Snatch on Blocks",
+    "nameEs": "Snatch clásico en bloques",
+    "catalogGroup": "grupo_2",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "blocks",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      90
+    ],
+    "tags": [
+      "grupo_2",
+      "snatch",
+      "classic",
+      "blocks"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-01",
+    "name": "Power Snatch",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      65,
+      88
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-02",
+    "name": "Power Snatch Below Knee",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      65,
+      88
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "below_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-03",
+    "name": "Power Snatch at Knee Height",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      65,
+      88
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "at_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-04",
+    "name": "Power Snatch Above Knee",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      65,
+      88
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-05",
+    "name": "Power Snatch, Legs Straight",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      60,
+      82
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-06",
+    "name": "Power Snatch on Blocks",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "blocks",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "power",
+      "blocks"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g03-07",
+    "name": "Power Snatch & Overhead Squat",
+    "catalogGroup": "grupo_3",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      60,
+      82
+    ],
+    "tags": [
+      "grupo_3",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-01",
+    "name": "Snatch Pull",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-02",
+    "name": "Snatch Pull from Below Knee",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "below_knee"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-03",
+    "name": "Snatch Pull at Knee Height",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "at_knee"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-04",
+    "name": "Snatch Pull from Above Knee",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      88,
+      108
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-05",
+    "name": "Snatch Pull to Knee (Deadlift)",
+    "nameEs": "Snatch pull hasta rodilla (peso muerto)",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      95,
+      115
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.1
+  },
+  {
+    "id": "ex-wl-g04-06",
+    "name": "Snatch Pull on Blocks",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "blocks",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "blocks"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-07",
+    "name": "Snatch Pull to Straight Legs",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "pull",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g04-08",
+    "name": "Snatch Pull Slow + Fast",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-09",
+    "name": "Snatch Pull to Knee + Snatch Pull",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      88,
+      108
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-10",
+    "name": "Snatch Pull + Slow Down",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "slow_eccentric",
+      "grupo_4",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-11",
+    "name": "Snatch Pull Below Knee + Above Knee",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "below_knee",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "complex",
+      "below_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-12",
+    "name": "Snatch Pull 4 Stops",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      80,
+      100
+    ],
+    "tags": [
+      "four_stops",
+      "grupo_4",
+      "snatch",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-13",
+    "name": "Snatch Pull 4 Stop + Slow Down + Snatch Pull",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      80,
+      100
+    ],
+    "tags": [
+      "four_stops",
+      "slow_eccentric",
+      "grupo_4",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g04-14",
+    "name": "Snatch Pull + Classic Snatch",
+    "catalogGroup": "grupo_4",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      75,
+      92
+    ],
+    "tags": [
+      "grupo_4",
+      "snatch",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g05-01",
+    "name": "Classic Clean & Jerk",
+    "catalogGroup": "grupo_5",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      75,
+      92
+    ],
+    "tags": [
+      "grupo_5",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g06-01",
+    "name": "Classic Clean & Jerk Below Knee",
+    "catalogGroup": "grupo_6",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "below_knee",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_6",
+      "clean_jerk",
+      "complex",
+      "below_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g06-02",
+    "name": "Classic Clean & Jerk at Knee Height",
+    "catalogGroup": "grupo_6",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "at_knee",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_6",
+      "clean_jerk",
+      "complex",
+      "at_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g06-03",
+    "name": "Classic Clean & Jerk Above Knee",
+    "catalogGroup": "grupo_6",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "above_knee",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_6",
+      "clean_jerk",
+      "complex",
+      "above_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-01",
+    "name": "Power Clean",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "power",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "power",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-02",
+    "name": "Power Clean Below Knee",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "power",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "power",
+      "below_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-03",
+    "name": "Power Clean at Knee Height",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "power",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "power",
+      "at_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-04",
+    "name": "Power Clean Above Knee",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "power",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "power",
+      "above_knee"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-05",
+    "name": "Power Clean & Front Squat & Jerk",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      72,
+      90
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-06",
+    "name": "Power Clean & Power Jerk & Overhead Squat",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      65,
+      85
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g07-07",
+    "name": "Power Clean & Power Jerk",
+    "catalogGroup": "grupo_7",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "power",
+    "intensityRange": [
+      72,
+      90
+    ],
+    "tags": [
+      "grupo_7",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-01",
+    "name": "Power Jerk off Rack",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "power",
+    "startPosition": "rack",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      75,
+      92
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "power",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-02",
+    "name": "Power Jerk & Jerk off Rack",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "rack",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      78,
+      95
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "complex",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-03",
+    "name": "Clean Grip Power Jerk & Overhead Squat",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "rack",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      65,
+      85
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "complex",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-04",
+    "name": "Half Jerk & Jerk",
+    "nameEs": "Medio jerk y jerk",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "rack",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      78,
+      95
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "complex",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-05",
+    "name": "Jerk off Rack",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "classic",
+    "startPosition": "rack",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      80,
+      95
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "classic",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-06",
+    "name": "Behind the Neck Jerk off Rack",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "classic",
+    "startPosition": "rack",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      75,
+      92
+    ],
+    "tags": [
+      "behind_neck",
+      "grupo_8",
+      "clean_jerk",
+      "classic",
+      "rack"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g08-07",
+    "name": "Back Squat & Behind the Neck Jerk",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      70,
+      88
+    ],
+    "tags": [
+      "behind_neck",
+      "grupo_8",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "back_squat"
+  },
+  {
+    "id": "ex-wl-g08-08",
+    "name": "Front Squat & Jerk",
+    "catalogGroup": "grupo_8",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      72,
+      90
+    ],
+    "tags": [
+      "grupo_8",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-01",
+    "name": "Clean Pull",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      95,
+      115
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-02",
+    "name": "Clean Pull Below Knee",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      95,
+      115
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "below_knee"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-03",
+    "name": "Clean Pull at Knee Height",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      95,
+      115
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "at_knee"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-04",
+    "name": "Clean Pull Above Knee",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      93,
+      112
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "above_knee"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-05",
+    "name": "Clean Pull to Knee (Deadlift)",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      100,
+      120
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.1
+  },
+  {
+    "id": "ex-wl-g09-06",
+    "name": "Clean Pull on Blocks",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "blocks",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      95,
+      115
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "blocks"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-07",
+    "name": "Clean Pull to Straight Legs",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "straight_legs"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-08",
+    "name": "Clean Pull Slow & Clean Pull",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-09",
+    "name": "Clean Pull & Slow Eccentric",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      88,
+      108
+    ],
+    "tags": [
+      "slow_eccentric",
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-10",
+    "name": "Clean Pull Slow & Slow Eccentric",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "slow_eccentric",
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-11",
+    "name": "Clean Pull with 4 Stops",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "four_stops",
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-12",
+    "name": "Clean Pull with 4 Stops & Clean Pull",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      85,
+      105
+    ],
+    "tags": [
+      "four_stops",
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-13",
+    "name": "Clean Pull with Medium Hand Spacing",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      93,
+      112
+    ],
+    "tags": [
+      "medium_grip",
+      "grupo_9",
+      "clean_jerk",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk",
+    "loadScale": 1.05
+  },
+  {
+    "id": "ex-wl-g09-14",
+    "name": "Clean Pull to Knee & Clean Pull",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      90,
+      110
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g09-15",
+    "name": "Clean Pull and Clean",
+    "catalogGroup": "grupo_9",
+    "category": "clean_jerk",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "strength",
+    "intensityRange": [
+      80,
+      95
+    ],
+    "tags": [
+      "grupo_9",
+      "clean_jerk",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "clean_jerk"
+  },
+  {
+    "id": "ex-wl-g10-01",
+    "name": "Back Squat",
+    "catalogGroup": "grupo_10",
+    "category": "squat",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      70,
+      92
+    ],
+    "tags": [
+      "grupo_10",
+      "squat",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "back_squat"
+  },
+  {
+    "id": "ex-wl-g10-02",
+    "name": "Front Squat",
+    "catalogGroup": "grupo_10",
+    "category": "squat",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      70,
+      90
+    ],
+    "tags": [
+      "grupo_10",
+      "squat",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "front_squat"
+  },
+  {
+    "id": "ex-wl-g10-03",
+    "name": "Back Squat Slow Lowering & Fast Rise",
+    "catalogGroup": "grupo_10",
+    "category": "squat",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      65,
+      85
+    ],
+    "tags": [
+      "tempo",
+      "grupo_10",
+      "squat",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "back_squat"
+  },
+  {
+    "id": "ex-wl-g10-04",
+    "name": "Bend Overs",
+    "nameEs": "Inclinaciones (bend over)",
+    "catalogGroup": "grupo_10",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      40,
+      60
+    ],
+    "tags": [
+      "grupo_10",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g11-01",
+    "name": "Snatch Grip Pulley Pull",
+    "catalogGroup": "grupo_11",
+    "category": "accessory",
+    "subtype": "pull",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      70
+    ],
+    "tags": [
+      "grupo_11",
+      "accessory",
+      "pull",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g11-02",
+    "name": "Good Morning with Knee Flexed",
+    "catalogGroup": "grupo_11",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      40,
+      60
+    ],
+    "tags": [
+      "grupo_11",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g11-03",
+    "name": "Good Morning Knees Flexed + Vertical Jump",
+    "catalogGroup": "grupo_11",
+    "category": "accessory",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "power",
+    "intensityRange": [
+      40,
+      55
+    ],
+    "tags": [
+      "grupo_11",
+      "accessory",
+      "complex",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g12-01",
+    "name": "Press",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      55,
+      75
+    ],
+    "tags": [
+      "grupo_12",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g12-02",
+    "name": "Push Press",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      65,
+      85
+    ],
+    "tags": [
+      "grupo_12",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g12-03",
+    "name": "Push Press & Overhead Squat",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      60,
+      80
+    ],
+    "tags": [
+      "grupo_12",
+      "accessory",
+      "complex",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g12-04",
+    "name": "Behind the Neck Push Press & Overhead Squat",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "behind_neck",
+      "grupo_12",
+      "accessory",
+      "complex",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g12-05",
+    "name": "Snatch Grip Behind the Neck Push Press & OHS",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      75
+    ],
+    "tags": [
+      "behind_neck",
+      "grupo_12",
+      "accessory",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g12-06",
+    "name": "Pressing Snatch Balance",
+    "catalogGroup": "grupo_12",
+    "category": "snatch",
+    "subtype": "power",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      75
+    ],
+    "tags": [
+      "grupo_12",
+      "snatch",
+      "power",
+      "at_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g12-07",
+    "name": "Bench Press (Clean Grip Wide)",
+    "nameEs": "Press banca agarre clean abierto",
+    "catalogGroup": "grupo_12",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      75
+    ],
+    "tags": [
+      "grupo_12",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g13-01",
+    "name": "Back Squat with Heels Raised",
+    "catalogGroup": "grupo_13",
+    "category": "squat",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      65,
+      85
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "squat",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "back_squat"
+  },
+  {
+    "id": "ex-wl-g13-02",
+    "name": "Leg Press on Machine",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      60,
+      85
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g13-03",
+    "name": "Lunge, Barbell on Shoulders",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      70
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g13-04",
+    "name": "Lunge, Barbell on Chest",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      70
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g13-05",
+    "name": "Lunge, Barbell Between Legs",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      70
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g13-06",
+    "name": "Vertical Jump, Snatch Grip Below Knees",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "below_knee",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      30,
+      50
+    ],
+    "tags": [
+      "al",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "below_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g13-07",
+    "name": "Depth Jump",
+    "catalogGroup": "grupo_13",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "power",
+    "intensityRange": [
+      0,
+      0
+    ],
+    "tags": [
+      "al",
+      "plyometric",
+      "grupo_13",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g14-01",
+    "name": "Hyperextension",
+    "catalogGroup": "grupo_14",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      40,
+      60
+    ],
+    "tags": [
+      "back",
+      "grupo_14",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g14-02",
+    "name": "Good Morning, Legs Straight",
+    "catalogGroup": "grupo_14",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      40,
+      60
+    ],
+    "tags": [
+      "back",
+      "grupo_14",
+      "accessory",
+      "classic",
+      "straight_legs"
+    ]
+  },
+  {
+    "id": "ex-wl-g14-03",
+    "name": "Good Morning Seated on Floor",
+    "catalogGroup": "grupo_14",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      35,
+      55
+    ],
+    "tags": [
+      "back",
+      "grupo_14",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g14-04",
+    "name": "Good Morning Seated on Bench",
+    "catalogGroup": "grupo_14",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      35,
+      55
+    ],
+    "tags": [
+      "back",
+      "grupo_14",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g15-01",
+    "name": "Snatch Grip Behind the Neck Press",
+    "catalogGroup": "grupo_15",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      72
+    ],
+    "tags": [
+      "behind_neck",
+      "arms",
+      "grupo_15",
+      "accessory",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-02",
+    "name": "Snatch Grip BTN Press + Overhead Squat",
+    "catalogGroup": "grupo_15",
+    "category": "accessory",
+    "subtype": "complex",
+    "startPosition": "floor",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      72
+    ],
+    "tags": [
+      "behind_neck",
+      "arms",
+      "grupo_15",
+      "accessory",
+      "complex",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-03",
+    "name": "Squat Snatch Press",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      45,
+      65
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "floor"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-04",
+    "name": "Seated Press",
+    "catalogGroup": "grupo_15",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      50,
+      70
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g15-05",
+    "name": "Incline Barbell Press",
+    "catalogGroup": "grupo_15",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      55,
+      75
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "accessory",
+      "classic",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g15-06",
+    "name": "Clean Grip Straight Legged Snatch",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-07",
+    "name": "Snatch Grip Straight Legged Snatch",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-08",
+    "name": "Clean Grip Straight Legged Snatch & OHS",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "complex",
+    "startPosition": "straight_legs",
+    "complexity": "complex",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "complex",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-09",
+    "name": "Clean Grip Straight Legged Snatch from Knee",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "at_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "at_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-10",
+    "name": "Thumbless Snatch Grip SLS from Above Knee",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      72
+    ],
+    "tags": [
+      "arms",
+      "thumbless",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-11",
+    "name": "Clean Grip Straight Legged Snatch Above Knee",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-12",
+    "name": "Snatch Grip Straight Legged Snatch Above Knee",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "above_knee",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      55,
+      78
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "above_knee"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-13",
+    "name": "Clean Grip SLS Legs & Torso Straight at Start",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      72
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  },
+  {
+    "id": "ex-wl-g15-14",
+    "name": "Snatch Grip SLS Legs & Torso Straight at Start",
+    "catalogGroup": "grupo_15",
+    "category": "snatch",
+    "subtype": "classic",
+    "startPosition": "straight_legs",
+    "complexity": "single",
+    "goal": "technique",
+    "intensityRange": [
+      50,
+      72
+    ],
+    "tags": [
+      "arms",
+      "grupo_15",
+      "snatch",
+      "classic",
+      "straight_legs"
+    ],
+    "loadAnchor": "snatch"
+  }
+]

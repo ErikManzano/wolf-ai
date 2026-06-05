@@ -1,55 +1,83 @@
-/* Exercise block card — premium WL coach UX */
+/* Exercise block card — zoned coach UX with extended palette */
 
 article.wolf-se-block.wolf-se-block-card {
+  --block-accent: var(--color-accent);
+  --block-rail: var(--color-accent);
+  --block-glow: var(--color-accent-glow);
   position: relative;
   padding: 0;
   overflow: hidden;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 90%, #fff 4%);
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--color-bg-secondary) 96%, #1a2030 4%) 0%,
-    var(--color-bg-secondary) 42%,
-    color-mix(in srgb, var(--color-bg-panel) 55%, var(--color-bg-secondary)) 100%
-  );
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--block-accent) 22%, var(--color-border));
+  background:
+    radial-gradient(ellipse 120% 80% at 100% -20%, color-mix(in srgb, var(--block-accent) 8%, transparent), transparent 55%),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--color-bg-secondary) 94%, #0f1218) 0%,
+      var(--color-bg-secondary) 48%,
+      color-mix(in srgb, var(--color-bg-panel) 70%, var(--color-bg-secondary)) 100%
+    );
   box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 5%, transparent) inset,
-    0 12px 32px color-mix(in srgb, #000 22%, transparent);
+    0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+    0 16px 40px color-mix(in srgb, #000 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--block-accent) 6%, transparent);
   scroll-margin-top: 88px;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+article.wolf-se-block.wolf-se-block-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 20px 0 0 20px;
+  background: linear-gradient(180deg, var(--block-rail), color-mix(in srgb, var(--block-rail) 40%, transparent));
+  pointer-events: none;
+}
+
+article.wolf-se-block.wolf-se-block-card:hover {
+  border-color: color-mix(in srgb, var(--block-accent) 38%, var(--color-border));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 7%, transparent) inset,
+    0 20px 48px color-mix(in srgb, #000 32%, transparent),
+    0 0 32px var(--block-glow);
 }
 
 article.wolf-se-block.wolf-se-block-card.wolf-se-block--complex {
-  border-color: color-mix(in srgb, #38bdf8 38%, var(--color-border));
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #38bdf8 14%, transparent) inset,
-    0 12px 36px color-mix(in srgb, #0ea5e9 12%, transparent);
+  --block-accent: var(--wolf-block-complex);
+  --block-rail: var(--wolf-block-complex);
+  --block-glow: rgba(56, 189, 248, 0.18);
 }
 
 article.wolf-se-block.wolf-se-block-card.wolf-se-block--warmup {
+  --block-accent: var(--wolf-block-warmup);
+  --block-rail: var(--wolf-block-warmup);
+  --block-glow: rgba(250, 204, 21, 0.14);
   border-style: dashed;
-  border-color: color-mix(in srgb, #facc15 35%, var(--color-border));
-  opacity: 0.97;
 }
 
+/* ── Header / identity ── */
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: 12px;
   align-items: start;
-  padding: 12px 12px 12px 14px;
-  margin-bottom: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  padding: 14px 16px 14px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-bg-panel) 88%, transparent),
-    transparent
+    color-mix(in srgb, var(--color-bg-panel) 92%, transparent),
+    color-mix(in srgb, var(--color-bg-panel) 40%, transparent)
   );
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-expand {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   cursor: pointer;
   border: none;
@@ -60,9 +88,9 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-expand {
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-expand:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-  border-radius: 12px;
+  outline: 2px solid var(--block-accent);
+  outline-offset: 4px;
+  border-radius: 14px;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-summary {
@@ -72,124 +100,179 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-summary {
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-num {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-panel));
-  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
-  color: var(--color-accent);
-  font-size: 0.88rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--block-accent) 16%, var(--color-bg-panel));
+  border: 1px solid color-mix(in srgb, var(--block-accent) 32%, transparent);
+  color: var(--block-accent);
+  font-size: 0.95rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-}
-
-article.wolf-se-block.wolf-se-block-card.wolf-se-block--complex .wolf-se-block-num {
-  background: color-mix(in srgb, #38bdf8 14%, var(--color-bg-panel));
-  border-color: color-mix(in srgb, #38bdf8 28%, transparent);
-  color: #7dd3fc;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--block-accent) 18%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-bg-panel) 90%, transparent);
-  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-bg-panel) 88%, transparent);
+  color: var(--color-text-secondary);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-badge--single {
-  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  color: #fdba74;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-badge--complex {
-  border-color: color-mix(in srgb, #38bdf8 35%, transparent);
+  border-color: color-mix(in srgb, var(--wolf-block-complex) 40%, transparent);
   color: #7dd3fc;
-  background: color-mix(in srgb, #38bdf8 12%, transparent);
+  background: var(--wolf-zone-movement-soft);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-badge--warmup {
-  border-color: color-mix(in srgb, #facc15 40%, transparent);
+  border-color: color-mix(in srgb, var(--wolf-block-warmup) 45%, transparent);
   color: #fde047;
-  background: color-mix(in srgb, #facc15 10%, transparent);
+  background: color-mix(in srgb, var(--wolf-block-warmup) 12%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-name {
-  margin: 0 0 8px;
-  font-size: clamp(0.92rem, 2.8vw, 1.06rem);
+  margin: 0 0 10px;
+  font-size: clamp(1rem, 2.6vw, 1.12rem);
   font-weight: 700;
-  line-height: 1.28;
-  letter-spacing: -0.025em;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
   color: var(--color-text-primary);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-stats-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  min-height: 48px;
-  padding: 6px 4px;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  background: color-mix(in srgb, var(--color-bg-panel) 75%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 82%, transparent);
+  transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat strong {
-  font-size: 0.95rem;
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-value strong {
+  font-size: 1.05rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
-  line-height: 1.1;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-value small {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--load {
+  border-top: 2px solid var(--wolf-stat-load);
+  background: linear-gradient(180deg, var(--wolf-stat-load-soft), transparent 70%);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--load .wolf-se-block-stat-value strong {
+  color: var(--wolf-stat-load);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--volume {
+  border-top: 2px solid var(--wolf-stat-volume);
+  background: linear-gradient(180deg, var(--wolf-stat-volume-soft), transparent 70%);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--volume .wolf-se-block-stat-value strong {
+  color: var(--wolf-stat-volume);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--intensity {
+  border-top: 2px solid var(--wolf-stat-intensity);
+  background: linear-gradient(180deg, var(--wolf-stat-intensity-soft), transparent 70%);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--intensity .wolf-se-block-stat-value strong {
+  color: var(--wolf-stat-intensity);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-rx {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0;
-  padding: 7px 10px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
-  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+  color: var(--wolf-block-rx);
+  background: var(--wolf-block-rx-soft);
+  border: 1px solid color-mix(in srgb, var(--wolf-block-rx) 28%, transparent);
   word-break: break-word;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-rx-label {
+  display: inline-flex;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wolf-block-rx);
+  background: color-mix(in srgb, var(--wolf-block-rx) 18%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -197,45 +280,52 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-panel);
+  background: color-mix(in srgb, var(--color-bg-panel) 90%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.15s ease;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-toolbar-btn:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-panel));
+  border-color: var(--block-accent);
+  color: var(--block-accent);
+  background: color-mix(in srgb, var(--block-accent) 12%, var(--color-bg-panel));
+  transform: translateY(-1px);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-toolbar-btn:disabled {
-  opacity: 0.32;
+  opacity: 0.28;
   cursor: not-allowed;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-toolbar-btn--danger:hover:not(:disabled) {
-  border-color: #f87171;
-  color: #fca5a5;
-  background: color-mix(in srgb, #ef4444 12%, var(--color-bg-panel));
+  border-color: var(--color-danger);
+  color: #fda4af;
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg-panel));
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-chevron {
   flex-shrink: 0;
-  margin-top: 10px;
+  margin-top: 12px;
   color: var(--color-text-muted);
-  transition: transform 0.22s ease;
+  transition: transform 0.22s ease, color 0.18s ease;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-expand:hover .wolf-se-block-chevron {
+  color: var(--block-accent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-chevron.is-open {
   transform: rotate(90deg);
+  color: var(--block-accent);
 }
 
 article.wolf-se-block.wolf-se-block-card.wolf-se-block--collapsed .wolf-se-block-body {
@@ -248,76 +338,182 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-body {
   padding: 0;
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout {
+/* ── Zones ── */
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone {
+  position: relative;
+  padding: 12px 14px 14px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone--movement {
+  background: linear-gradient(180deg, var(--wolf-zone-movement-soft), transparent 85%);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone--config {
+  background: linear-gradient(180deg, var(--wolf-zone-config-soft), transparent 88%);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone--sets {
+  background: linear-gradient(180deg, var(--wolf-zone-sets-soft), transparent 90%);
+  border-bottom: none;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-zone-header {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__config {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-bg-panel) 35%, transparent);
+article.wolf-se-block.wolf-se-block-card .wolf-se-zone-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  flex-shrink: 0;
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets {
-  padding: 10px;
-  min-width: 0;
-  flex: 1;
+article.wolf-se-block.wolf-se-block-card .wolf-se-zone-header--movement .wolf-se-zone-header-icon {
+  color: var(--wolf-zone-movement);
+  background: var(--wolf-zone-movement-soft);
+  border: 1px solid color-mix(in srgb, var(--wolf-zone-movement) 35%, transparent);
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-sets-section {
-  gap: 8px;
-  min-width: 0;
+article.wolf-se-block.wolf-se-block-card .wolf-se-zone-header--config .wolf-se-zone-header-icon {
+  color: var(--wolf-zone-config);
+  background: var(--wolf-zone-config-soft);
+  border: 1px solid color-mix(in srgb, var(--wolf-zone-config) 35%, transparent);
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-table-shell {
+article.wolf-se-block.wolf-se-block-card .wolf-se-zone-header-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-movement-band {
   width: 100%;
+  padding: 0;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-config-section--movement {
+  width: 100%;
+  max-width: none;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--wolf-zone-movement) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-bg-panel) 92%, transparent);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--wolf-zone-movement) 8%, transparent);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-config-section--movement .wolf-se-autocomplete,
+article.wolf-se-block.wolf-se-block-card .wolf-se-config-section--movement .wolf-se-autocomplete-input-wrap {
+  width: 100%;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-movement-pick-btn {
+  min-height: 48px;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+/* ── Config toolbar ── */
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar-band {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 88%, transparent);
   min-width: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel--mode {
+  border-color: color-mix(in srgb, var(--wolf-zone-config) 25%, var(--color-border));
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel--intensity {
+  border-color: color-mix(in srgb, var(--wolf-zone-intensity) 28%, var(--color-border));
+  background: linear-gradient(135deg, var(--wolf-zone-intensity-soft), color-mix(in srgb, var(--color-bg-panel) 90%, transparent));
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-panel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel--mode .wolf-se-panel-label {
+  color: color-mix(in srgb, var(--wolf-zone-config) 80%, var(--color-text-muted));
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel--intensity .wolf-se-panel-label {
+  color: color-mix(in srgb, var(--wolf-zone-intensity) 75%, var(--color-text-muted));
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill {
-  min-height: 36px;
-  padding: 6px 10px;
-  border-radius: 12px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-secondary);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill:hover {
+  border-color: color-mix(in srgb, var(--wolf-block-warmup) 40%, var(--color-border));
+  color: var(--color-text-primary);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill.is-on {
-  border-color: #facc15;
+  border-color: var(--wolf-block-warmup);
   color: #fde047;
-  background: color-mix(in srgb, #facc15 12%, var(--color-bg-panel));
+  background: color-mix(in srgb, var(--wolf-block-warmup) 16%, var(--color-bg-panel));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--wolf-block-warmup) 15%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill--mode.is-on {
-  border-color: #38bdf8;
+  border-color: var(--wolf-block-complex);
   color: #7dd3fc;
-  background: color-mix(in srgb, #38bdf8 14%, var(--color-bg-panel));
+  background: var(--wolf-zone-movement-soft);
+  box-shadow: 0 0 20px var(--wolf-zone-movement-glow);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-config-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
   background: var(--color-bg-panel);
 }
@@ -343,7 +539,6 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-config-title {
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-chain-count {
-  margin-left: 0;
   padding: 2px 7px;
   border-radius: 999px;
   font-size: 0.62rem;
@@ -351,9 +546,9 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-chain-count {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  color: #7dd3fc;
+  background: var(--wolf-zone-movement-soft);
+  border: 1px solid color-mix(in srgb, var(--wolf-block-complex) 30%, transparent);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-complex-chain {
@@ -380,7 +575,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-chain-idx {
   font-size: 0.72rem;
   font-weight: 800;
   color: #7dd3fc;
-  background: color-mix(in srgb, #38bdf8 16%, transparent);
+  background: var(--wolf-zone-movement-soft);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-chain-node .wolf-se-autocomplete {
@@ -388,16 +583,12 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-chain-node .wolf-se-autocomple
   min-width: 0;
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-autocomplete-menu {
-  z-index: 80;
-}
-
 article.wolf-se-block.wolf-se-block-card .wolf-se-chain-arrow {
   align-self: center;
   padding-left: 10px;
   font-size: 1rem;
   font-weight: 700;
-  color: color-mix(in srgb, #38bdf8 65%, var(--color-text-muted));
+  color: var(--wolf-zone-movement);
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-chain-tools {
@@ -409,66 +600,116 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-chain-tools {
 article.wolf-se-block.wolf-se-block-card .wolf-se-intensity-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-  background: var(--color-bg-panel);
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip-row {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip {
-  min-height: 34px;
-  padding: 4px 2px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  flex: 1 1 52px;
+  min-width: 52px;
+  min-height: 36px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
   color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip:hover {
+  border-color: color-mix(in srgb, var(--wolf-zone-intensity) 45%, var(--color-border));
+  color: #fde68a;
 }
 
 article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-panel));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  border-color: var(--wolf-zone-intensity);
+  color: #fde047;
+  background: color-mix(in srgb, var(--wolf-zone-intensity) 22%, var(--color-bg-panel));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--wolf-zone-intensity) 25%, transparent);
 }
 
+/* ── Sets zone ── */
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets {
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-sets-section {
+  gap: 10px;
+  min-width: 0;
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-section-title {
+  color: color-mix(in srgb, var(--wolf-zone-sets) 75%, var(--color-text-muted));
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-section-title svg {
+  color: var(--wolf-zone-sets);
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-table-shell {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--wolf-zone-sets) 22%, var(--color-border));
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--wolf-zone-sets) 8%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Footer ── */
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-  border-top: 1px solid var(--color-border);
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-panel) 90%, transparent));
+  padding: 14px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--wolf-stat-load) 25%, var(--color-border));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--wolf-stat-load) 10%, var(--color-bg-panel)),
+    color-mix(in srgb, var(--color-bg-panel) 95%, transparent)
+  );
+}
+
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-muted);
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
-  font-size: 1.1rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-accent);
-  text-transform: none;
-  letter-spacing: 0;
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer-label svg {
+  color: var(--wolf-stat-load);
 }
 
-article.wolf-se-block.wolf-se-block-card .wolf-se-table-shell {
-  border-radius: 14px;
+article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--wolf-stat-load);
+  text-transform: none;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 480px) {
@@ -490,27 +731,18 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-table-shell {
 }
 
 @media (min-width: 768px) {
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout {
-    display: grid;
-    grid-template-columns: minmax(0, min(300px, 34%)) minmax(0, 1fr);
-    align-items: start;
-    gap: 0;
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar-band {
+    grid-template-columns: minmax(200px, auto) minmax(0, 1fr);
   }
 
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__config {
-    border-bottom: none;
-    border-right: 1px solid var(--color-border);
-    max-width: 300px;
-  }
-
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets {
-    padding: 10px 12px;
+  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-table {
     table-layout: fixed;
     width: 100%;
-    min-width: 520px;
   }
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-col-idx {
@@ -561,14 +793,6 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-table-shell {
 }
 
 @media (min-width: 1100px) {
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout {
-    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-  }
-
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__config {
-    max-width: 280px;
-  }
-
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-table {
     min-width: 0;
     table-layout: auto;
@@ -582,19 +806,32 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-table-shell {
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar {
     justify-content: flex-end;
-    padding-top: 4px;
-    border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    padding-top: 6px;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar-band {
+    grid-template-columns: 1fr;
   }
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-stats-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat:last-child {
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat--intensity {
     grid-column: 1 / -1;
   }
 
-  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone {
+    padding: 10px 12px 12px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  article.wolf-se-block.wolf-se-block-card,
+  article.wolf-se-block.wolf-se-block-card .wolf-se-toolbar-btn,
+  article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill,
+  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip {
+    transition: none;
   }
 }

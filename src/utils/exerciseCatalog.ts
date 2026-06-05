@@ -18,7 +18,15 @@ export const EXERCISE_LOAD_ANCHOR_OPTIONS: { value: ExerciseLoadAnchor; labelEs:
 
 const CATEGORIES = new Set<ExerciseCategory>(['snatch', 'clean_jerk', 'squat', 'accessory']);
 const SUBTYPES = new Set<ExerciseSubtype>(['classic', 'power', 'pull', 'complex']);
-const POSITIONS = new Set<StartPosition>(['floor', 'below_knee', 'at_knee', 'above_knee', 'blocks']);
+const POSITIONS = new Set<StartPosition>([
+  'floor',
+  'below_knee',
+  'at_knee',
+  'above_knee',
+  'blocks',
+  'rack',
+  'straight_legs',
+]);
 const COMPLEXITIES = new Set<ExerciseComplexity>(['single', 'complex']);
 const GOALS = new Set<ExerciseGoal>(['technique', 'strength', 'power']);
 const ANCHORS = new Set<ExerciseLoadAnchor>(['auto', 'snatch', 'clean_jerk', 'back_squat', 'front_squat']);
@@ -81,6 +89,14 @@ export function normalizeExercise(raw: Record<string, unknown>): Exercise {
   if (loadScale !== undefined && loadScale !== 1) {
     ex.loadScale = loadScale;
   }
+  const tagsRaw = raw.tags;
+  if (Array.isArray(tagsRaw)) {
+    ex.tags = tagsRaw.map((t) => String(t).trim()).filter(Boolean);
+  }
+  const catalogGroup = raw.catalogGroup ?? raw.catalog_group;
+  if (catalogGroup) ex.catalogGroup = String(catalogGroup);
+  const nameEs = raw.nameEs ?? raw.name_es;
+  if (nameEs) ex.nameEs = String(nameEs).trim();
   return ex;
 }
 

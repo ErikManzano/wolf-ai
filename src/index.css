@@ -54,6 +54,27 @@
   --color-border: #334155;
   /* Subtle slate border */
 
+  /* Coach session editor — extended zone palette */
+  --wolf-zone-movement: #22d3ee;
+  --wolf-zone-movement-soft: rgba(34, 211, 238, 0.14);
+  --wolf-zone-movement-glow: rgba(34, 211, 238, 0.28);
+  --wolf-zone-config: #a78bfa;
+  --wolf-zone-config-soft: rgba(167, 139, 250, 0.14);
+  --wolf-zone-intensity: #fbbf24;
+  --wolf-zone-intensity-soft: rgba(251, 191, 36, 0.16);
+  --wolf-zone-sets: #818cf8;
+  --wolf-zone-sets-soft: rgba(129, 140, 248, 0.14);
+  --wolf-stat-load: #34d399;
+  --wolf-stat-load-soft: rgba(52, 211, 153, 0.16);
+  --wolf-stat-volume: #c084fc;
+  --wolf-stat-volume-soft: rgba(192, 132, 252, 0.16);
+  --wolf-stat-intensity: #fb923c;
+  --wolf-stat-intensity-soft: rgba(251, 146, 60, 0.16);
+  --wolf-block-complex: #38bdf8;
+  --wolf-block-warmup: #facc15;
+  --wolf-block-rx: #f472b6;
+  --wolf-block-rx-soft: rgba(244, 114, 182, 0.12);
+
   /* Layout Settings */
   --sidebar-width: 250px;
   --chat-width: 350px;

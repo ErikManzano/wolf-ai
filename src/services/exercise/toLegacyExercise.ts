@@ -82,6 +82,8 @@ export function toLegacyExercise(def: ExerciseDefinition, bundle: ExerciseTaxono
     ex.loadAnchor = def.loadAnchor;
   }
   if (def.tags.length) ex.tags = [...def.tags];
+  const grupoTag = def.tags.find((t) => /^grupo_\d+$/.test(t));
+  if (grupoTag) ex.catalogGroup = grupoTag;
 
   return ex;
 }

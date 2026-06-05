@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { ProgramAssignment } from '../../models/training';
 import { mockAthletes } from '../../data/loadMockData';
+import { useWlAssignments } from '../../modules/assignments';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import {
   buildWlAssignmentRows,
@@ -50,13 +51,13 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
   const {
     completions,
     setLogs,
-    motorExercises,
-    isSessionComplete,
     removeAssignment,
     restoreAssignmentVersion,
     duplicateAssignment,
     saveCoachTemplate,
-  } = useWolfAssign();
+    isSessionComplete,
+  } = useWlAssignments();
+  const { motorExercises } = useWolfAssign();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [templatePromptOpen, setTemplatePromptOpen] = useState(false);
