@@ -83,28 +83,28 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   return (
     <div className="wolf-program-nav wolf-program-nav--editable">
       <header className="wolf-program-nav-top">
-        <div className="wolf-program-nav-top-main">
+        <div className="wolf-program-nav-top-bar">
           <div className="wolf-program-nav-label">{labels.weekDayNav}</div>
-          <p className="wolf-program-structure-hint">
-            {isEs
-              ? 'Elige semana y día. Usa + para añadir; quitar elimina la selección actual.'
-              : 'Pick week and day. Use + to add; remove deletes the current selection.'}
-          </p>
-        </div>
-        <div className="wolf-program-nav-stats" aria-label={isEs ? 'Estructura del plan' : 'Plan structure'}>
-          <span className="wolf-program-nav-stat wolf-program-nav-stat--weeks">
-            <span className="wolf-program-nav-stat-val">
-              {weekCount}/{PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS}
+          <div className="wolf-program-nav-stats" aria-label={isEs ? 'Estructura del plan' : 'Plan structure'}>
+            <span className="wolf-program-nav-stat wolf-program-nav-stat--weeks">
+              <span className="wolf-program-nav-stat-val">
+                {weekCount}/{PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS}
+              </span>
+              <span className="wolf-program-nav-stat-lbl">{isEs ? 'sem' : 'wk'}</span>
             </span>
-            <span className="wolf-program-nav-stat-lbl">{isEs ? 'sem' : 'wk'}</span>
-          </span>
-          <span className="wolf-program-nav-stat wolf-program-nav-stat--days">
-            <span className="wolf-program-nav-stat-val">
-              {dayCount}/{PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK}
+            <span className="wolf-program-nav-stat wolf-program-nav-stat--days">
+              <span className="wolf-program-nav-stat-val">
+                {dayCount}/{PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK}
+              </span>
+              <span className="wolf-program-nav-stat-lbl">{isEs ? 'días' : 'days'}</span>
             </span>
-            <span className="wolf-program-nav-stat-lbl">{isEs ? 'días' : 'days'}</span>
-          </span>
+          </div>
         </div>
+        <p className="wolf-program-structure-hint">
+          {isEs
+            ? 'Elige semana y día. Usa + para añadir; quitar elimina la selección actual.'
+            : 'Pick week and day. Use + to add; remove deletes the current selection.'}
+        </p>
       </header>
 
       <div className="wolf-program-nav-grid">

@@ -869,7 +869,9 @@
 }
 
 .wolf-program-nav--editable {
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -878,26 +880,38 @@
   border: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-bg-main) 92%, var(--color-bg-panel));
   box-shadow: 0 8px 28px color-mix(in srgb, #000 12%, transparent);
+  container-type: inline-size;
+  container-name: wolf-program-nav;
 }
 
 .wolf-program-nav-top {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px 16px;
+  flex-direction: column;
+  gap: 6px;
   min-width: 0;
 }
 
-.wolf-program-nav-top-main {
-  flex: 1 1 220px;
+.wolf-program-nav-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
   min-width: 0;
 }
 
 .wolf-program-nav-stats {
   display: flex;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.wolf-program-nav-top .wolf-program-structure-hint {
+  margin: 0;
+  width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 .wolf-program-nav-stat {
@@ -905,8 +919,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
-  padding: 6px 10px;
+  min-width: 44px;
+  padding: 4px 8px;
   border-radius: 10px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-secondary);
@@ -940,8 +954,8 @@
 
 .wolf-program-nav-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
   min-width: 0;
 }
 
@@ -949,8 +963,23 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
   gap: 6px;
+}
+
+.wolf-program-nav--editable .wolf-program-nav-section-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.wolf-program-nav--editable .wolf-program-nav-row-label {
+  display: block;
+  line-height: 1.3;
+}
+
+.wolf-program-nav--editable .wolf-program-nav-section-actions {
+  justify-content: flex-start;
 }
 
 .wolf-program-nav-row-context {
@@ -962,12 +991,13 @@
 
 .wolf-program-nav--editable .wolf-program-nav-label {
   margin: 0;
-  padding-bottom: 2px;
+  padding: 0;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+  line-height: 1.3;
 }
 
 .wolf-program-structure-hint {
@@ -980,12 +1010,13 @@
 .wolf-program-nav-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .wolf-program-nav-section + .wolf-program-nav-section {
-  padding-top: 8px;
+  padding-top: 14px;
   border-top: 1px solid var(--color-border);
 }
 
@@ -1010,6 +1041,11 @@
   position: relative;
   min-width: 0;
   width: 100%;
+  isolation: isolate;
+}
+
+.wolf-program-strip-track--scroll {
+  padding-right: 4px;
 }
 
 .wolf-program-strip-track--scroll::after {
@@ -1017,27 +1053,23 @@
   position: absolute;
   top: 0;
   right: 0;
-  bottom: 4px;
-  width: 28px;
+  bottom: 8px;
+  width: 24px;
   pointer-events: none;
+  z-index: 1;
   background: linear-gradient(to left, color-mix(in srgb, var(--color-bg-main) 92%, var(--color-bg-panel)), transparent);
-}
-
-@media (min-width: 640px) {
-  .wolf-program-strip-track--scroll::after {
-    display: none;
-  }
 }
 
 .wolf-program-nav--editable .wolf-week-strip-scroll,
 .wolf-program-nav--editable .wolf-day-strip-scroll {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   min-width: 0;
-  padding: 2px 0 4px;
+  min-height: 38px;
+  padding: 2px 0 2px;
   margin: 0;
 }
 
@@ -1050,7 +1082,8 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--wolf-motor-accent, #ff6600) 35%, transparent) transparent;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
+  box-sizing: border-box;
 }
 
 .wolf-program-strip-track--scroll .wolf-week-strip-scroll::-webkit-scrollbar,
@@ -1064,24 +1097,14 @@
   background: color-mix(in srgb, var(--wolf-motor-accent, #ff6600) 40%, var(--wolf-motor-border, #333));
 }
 
-@media (min-width: 640px) {
-  .wolf-program-strip-track--scroll .wolf-week-strip-scroll,
-  .wolf-program-strip-track--scroll .wolf-day-strip-scroll {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    overflow-y: visible;
-    scroll-snap-type: none;
-    padding-bottom: 2px;
-  }
-}
-
 .wolf-program-nav--editable .wolf-week-pill,
 .wolf-program-nav--editable .wolf-day-pill {
   flex: 0 0 auto;
   scroll-snap-align: center;
-  min-height: 40px;
-  min-width: 44px;
-  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 40px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
 }
 
 .wolf-program-nav--editable .wolf-day-pill {
@@ -1104,6 +1127,19 @@
   font-size: 0.72rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.wolf-program-nav--editable .wolf-structure-add-btn-label,
+.wolf-program-nav--editable .wolf-structure-remove-btn span {
+  display: none;
+}
+
+.wolf-program-nav--editable .wolf-structure-add-btn--labeled,
+.wolf-program-nav--editable .wolf-structure-remove-btn {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px 10px;
+  justify-content: center;
 }
 
 .wolf-program-nav--editable .wolf-structure-add-btn:not(.wolf-structure-add-btn--labeled) {
@@ -2370,6 +2406,7 @@
   z-index: 5;
   padding: 8px 10px;
   gap: 8px;
+  box-shadow: 0 4px 16px color-mix(in srgb, #000 10%, transparent);
 }
 
 .wolf-engine--customize .wolf-session-editor {
@@ -2533,17 +2570,35 @@
   flex-direction: column;
 }
 
-@media (min-width: 900px) {
+@container wolf-program-nav (min-width: 720px) {
   .wolf-program-nav-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 14px;
+    gap: 16px;
+    align-items: start;
   }
 
   .wolf-program-nav-section + .wolf-program-nav-section {
     padding-top: 0;
     border-top: none;
-    padding-left: 14px;
+    padding-left: 16px;
     border-left: 1px solid var(--color-border);
+  }
+}
+
+@container wolf-program-nav (max-width: 719px) {
+  .wolf-program-nav-top .wolf-program-structure-hint {
+    display: none;
+  }
+}
+
+@container wolf-program-nav (max-width: 480px) {
+  .wolf-program-nav-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wolf-program-nav-stats {
+    margin-left: 0;
   }
 }
 
@@ -2561,29 +2616,21 @@
   .wolf-program-nav--editable .wolf-week-pill,
   .wolf-program-nav--editable .wolf-day-pill {
     min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
   }
 
   .wolf-structure-add-btn--labeled {
     min-height: 44px;
-    padding: 8px 12px;
+    min-width: 44px;
+    padding: 8px 10px;
   }
 
   .wolf-structure-remove-btn {
     min-height: 44px;
-  }
-
-  .wolf-structure-add-btn-label {
-    display: none;
-  }
-
-  .wolf-structure-remove-btn span {
-    display: none;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 899px) {
-  .wolf-structure-add-btn-label {
-    display: none;
+    min-width: 44px;
+    padding: 8px 10px;
+    justify-content: center;
   }
 }
 
