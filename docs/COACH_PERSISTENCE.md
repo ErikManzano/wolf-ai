@@ -21,10 +21,11 @@
 # Terminal 1
 npm run server
 
-# Terminal 2 — .env or .env.local
-VITE_API_URL=http://localhost:4000
+# Terminal 2 — .env.development incluye VITE_API_URL=/api (proxy Vite → :4000)
 npm run dev
 ```
+
+Con API activo, las asignaciones y ediciones de plan se sincronizan en **tiempo real** vía WebSocket (`assignments:changed`): coach asigna o edita → el atleta ve el cambio en «Mi plan WL» sin recargar (misma BD o memoria del API).
 
 Health: `GET http://localhost:4000/health` → `"persistence":"memory"` or `"postgres"` if `DATABASE_URL` is set.
 

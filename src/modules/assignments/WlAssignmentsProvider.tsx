@@ -23,9 +23,8 @@ import { findSetLog } from '../../utils/athleteSetLogs';
 import {
   assignmentApiFetch,
   isApiEnabled,
-  websocketUrlFromApiBase,
-  getApiBase,
 } from './apiClient';
+import { subscribeAssignmentsRealtime } from './realtimeClient';
 import {
   athleteUserIdForProfile,
   initialAssignmentsState,
@@ -47,14 +46,18 @@ export function WlAssignmentsProvider({
   currentUser,
   athleteUser,
   users,
+  apiToken,
 }: WlAssignmentsProviderProps) {
-  const [assignments, setAssignments] = useState<ProgramAssignment[]>(() => initialAssignmentsState());
+  const apiMode = isApiEnabled();
+  const [assignments, setAssignments] = useState<ProgramAssignment[]>(() =>
+    apiMode ? [] : initialAssignmentsState(),
+  );
   const [completions, setCompletions] = useState<SessionCompletion[]>(() => loadCompletionsFromLocal());
   const [setLogs, setSetLogs] = useState<SetCompletionLog[]>(() => loadSetLogsFromLocal());
   const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>(() => loadTemplatesFromLocal());
 
   const loadAssignmentsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
+    if (!apiMode || !apiToken) return;
     try {
       const res = await assignmentApiFetch('/assignments');
       if (!res.ok) return;
@@ -63,10 +66,10 @@ export function WlAssignmentsProvider({
     } catch {
       /* keep local */
     }
-  }, []);
+  }, [apiMode, apiToken]);
 
   const loadCompletionsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
+    if (!apiMode || !apiToken) return;
     try {
       const res = await assignmentApiFetch('/completions');
       if (!res.ok) return;
@@ -75,10 +78,10 @@ export function WlAssignmentsProvider({
     } catch {
       /* keep local */
     }
-  }, []);
+  }, [apiMode, apiToken]);
 
   const loadSetLogsFromApi = useCallback(async () => {
-    if (!isApiEnabled()) return;
+    if (!apiMode || !apiToken) return;
     try {
       const res = await assignmentApiFetch('/set-logs');
       if (!res.ok) return;
@@ -87,45 +90,26 @@ export function WlAssignmentsProvider({
     } catch {
       /* keep local */
     }
-  }, []);
+  }, [apiMode, apiToken]);
 
   useEffect(() => {
-    if (!isApiEnabled()) return;
+    if (!apiMode || !apiToken) return;
     void loadAssignmentsFromApi();
     void loadCompletionsFromApi();
     void loadSetLogsFromApi();
-  }, [loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
+  }, [apiMode, apiToken, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
 
   useEffect(() => {
-    if (!isApiEnabled()) return;
-    let ws: WebSocket | null = null;
-    const wsUrl = websocketUrlFromApiBase(getApiBase());
-    if (!wsUrl) return;
-    try {
-      ws = new WebSocket(wsUrl);
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(String(event.data)) as { event?: string };
-          if (msg.event === 'assignments:changed') void loadAssignmentsFromApi();
-        } catch {
-          /* ignore */
-        }
-      };
-      ws.onclose = () => {
-        const timer = window.setInterval(() => void loadAssignmentsFromApi(), 5000);
-        window.setTimeout(() => window.clearInterval(timer), 30000);
-      };
-    } catch {
-      /* ignore */
-    }
-    return () => {
-      if (ws && ws.readyState < 2) ws.close();
-    };
-  }, [loadAssignmentsFromApi]);
+    if (!apiMode || !apiToken) return;
+    return subscribeAssignmentsRealtime(() => {
+      void loadAssignmentsFromApi();
+    });
+  }, [apiMode, apiToken, loadAssignmentsFromApi]);
 
   useEffect(() => {
+    if (apiMode) return;
     persistAssignmentsLocal(assignments);
-  }, [assignments]);
+  }, [apiMode, assignments]);
 
   useEffect(() => {
     persistCompletionsLocal(completions);

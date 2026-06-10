@@ -34,7 +34,7 @@ import {
 } from '../services/exercise';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { WlAssignmentsProvider, useWlAssignments } from '../modules/assignments';
-import { getApiBase as getAssignmentsApiBase, isApiEnabled as isAssignmentsApiEnabled } from '../modules/assignments/apiClient';
+import { getApiBase as getAssignmentsApiBase, isApiEnabled as isAssignmentsApiEnabled, getWebSocketUrl } from '../modules/assignments/apiClient';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 
 const STORAGE_PERSONA = 'wolf_persona_v1';
@@ -106,13 +106,6 @@ export function getApiBase(): string {
 
 export function isApiEnabled(): boolean {
   return isAssignmentsApiEnabled();
-}
-
-function websocketUrlFromApiBase(base: string): string | null {
-  if (!base) return null;
-  if (base.startsWith('https://')) return `wss://${base.slice('https://'.length)}/ws`;
-  if (base.startsWith('http://')) return `ws://${base.slice('http://'.length)}/ws`;
-  return null;
 }
 
 function readApiToken(): string | null {
@@ -485,9 +478,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!isApiEnabled()) return;
-    let ws: WebSocket | null = null;
-    const wsUrl = websocketUrlFromApiBase(getApiBase());
+    const wsUrl = getWebSocketUrl();
     if (!wsUrl) return;
+    let ws: WebSocket | null = null;
     try {
       ws = new WebSocket(wsUrl);
       ws.onmessage = (event) => {
@@ -1335,7 +1328,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <WlAssignmentsProvider currentUser={currentUser} athleteUser={athleteUser} users={users}>
+    <WlAssignmentsProvider
+      currentUser={currentUser}
+      athleteUser={athleteUser}
+      users={users}
+      apiToken={apiToken}
+    >
       <WolfAssignMergedProvider catalog={catalogValue}>{children}</WolfAssignMergedProvider>
     </WlAssignmentsProvider>
   );

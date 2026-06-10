@@ -27,7 +27,7 @@ export function athleteUserIdForProfile(athleteProfileId: string): string | unde
 }
 
 export function seedDemoAssignments(): ProgramAssignment[] {
-  const athlete = mockAthletes.find((a) => a.id === 'ath-you');
+  const athlete = mockAthletes.find((a) => a.id === 'ath-erik');
   if (!athlete) return [];
   const program = generatePeriodizedProgram({
     athleteId: athlete.id,
@@ -36,14 +36,14 @@ export function seedDemoAssignments(): ProgramAssignment[] {
     totalWeeks: 4,
     daysPerWeek: 3,
     primaryGoal: 'strength',
-    programName: 'Plan ejemplo — Ivan → Erik',
+    programName: 'Plan ejemplo — Coach → Erik Manzano',
   });
   return [
     {
       id: 'asg-seed-demo',
-      coachId: 'user-coach',
-      athleteUserId: 'user-athlete',
-      athleteProfileId: 'ath-you',
+      coachId: 'user-coach-wl',
+      athleteUserId: 'user-erik',
+      athleteProfileId: 'ath-erik',
       version: 1,
       program,
       versionHistory: [],

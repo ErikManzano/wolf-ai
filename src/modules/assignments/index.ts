@@ -6,4 +6,5 @@ export {
   STORAGE_SET_LOGS,
   STORAGE_TEMPLATES,
 } from './constants';
-export { getApiBase, isApiEnabled } from './apiClient';
+export { getApiBase, isApiEnabled, getWebSocketUrl } from './apiClient';
+export { subscribeAssignmentsRealtime } from './realtimeClient';

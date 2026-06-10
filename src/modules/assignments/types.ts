@@ -83,4 +83,6 @@ export interface WlAssignmentsProviderProps {
   currentUser: WolfUser | undefined;
   athleteUser: WolfUser | undefined;
   users: WolfUser[];
+  /** JWT del API; al cambiar (login/logout) se recargan asignaciones desde el servidor. */
+  apiToken: string | null;
 }

@@ -3,6 +3,7 @@ import type { IntakeData } from '../context/AppContext';
 
 /** Perfil Motor WL (`Athlete.id`) → atleta numérico en AppContext (Stats / PRs). */
 export const WL_PROFILE_TO_APP_ATHLETE_ID: Record<string, number> = {
+  'ath-erik': 1,
   'ath-you': 1,
 };
 

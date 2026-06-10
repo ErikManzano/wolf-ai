@@ -34,7 +34,7 @@ function corsAllowedOrigins(): string[] {
 }
 
 function seedAssignments(): ProgramAssignment[] {
-  const athlete = mockAthletes.find((a) => a.id === 'ath-you');
+  const athlete = mockAthletes.find((a) => a.id === 'ath-erik');
   if (!athlete) return [];
   const program = generatePeriodizedProgram({
     athleteId: athlete.id,
@@ -43,13 +43,13 @@ function seedAssignments(): ProgramAssignment[] {
     totalWeeks: 4,
     daysPerWeek: 3,
     primaryGoal: 'strength',
-    programName: 'Plan inicial API — Ivan → Erik',
+    programName: 'Plan inicial API — Coach → Erik Manzano',
   });
   return [
     {
       id: 'asg-api-seed-1',
-      coachId: 'user-coach',
-      athleteUserId: 'user-athlete',
+      coachId: 'user-coach-wl',
+      athleteUserId: 'user-erik',
       athleteProfileId: athlete.id,
       version: 1,
       versionHistory: [],

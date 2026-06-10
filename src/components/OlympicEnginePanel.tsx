@@ -110,7 +110,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
 
   const [activeStep, setActiveStep] = useState<StepId>(1);
   const [athleteId, setAthleteId] = useState(
-    () => mockAthletes.find((a) => a.id === 'ath-you')?.id ?? mockAthletes[0]?.id ?? '',
+    () => mockAthletes.find((a) => a.id === 'ath-erik')?.id ?? mockAthletes[0]?.id ?? '',
   );
   const [goal, setGoal] = useState<SessionGoal>('strength');
   const [program, setProgram] = useState<GeneratedProgram | null>(() => readStoredProgram());
@@ -121,6 +121,16 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
   useEffect(() => {
     editingAssignmentRef.current = editingAssignmentId;
   }, [editingAssignmentId]);
+
+  /** Tras POST al API, el id de la asignación puede cambiar; mantener sync para PATCH en vivo. */
+  useEffect(() => {
+    if (!editingAssignmentId || !athleteId) return;
+    const asg = assignments.find((a) => a.athleteProfileId === athleteId);
+    if (asg && asg.id !== editingAssignmentId) {
+      editingAssignmentRef.current = asg.id;
+      setEditingAssignmentId(asg.id);
+    }
+  }, [assignments, athleteId, editingAssignmentId]);
 
   const debouncedAssignmentSync = useDebouncedCallback((assignmentId: string, p: GeneratedProgram) => {
     updateAssignmentProgram(assignmentId, p);
