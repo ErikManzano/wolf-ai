@@ -12,14 +12,17 @@ export interface WlAssignmentsContextValue {
   completions: SessionCompletion[];
   setLogs: SetCompletionLog[];
   coachTemplates: CoachWlProgramTemplate[];
-  assignProgramToAthlete: (program: ProgramAssignment['program'], athleteProfileId: string) => string;
+  assignProgramToAthlete: (
+    program: ProgramAssignment['program'],
+    athleteProfileId: string,
+  ) => Promise<string>;
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
   removeAssignment: (assignmentId: string) => void;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
-  duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => string;
+  duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
   saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => string;
   deleteCoachTemplate: (templateId: string) => void;
-  assignFromTemplate: (templateId: string, athleteProfileId: string) => string | null;
+  assignFromTemplate: (templateId: string, athleteProfileId: string) => Promise<string | null>;
   toggleSessionComplete: (
     assignmentId: string,
     weekNumber: number,
@@ -63,6 +66,7 @@ export interface WlAssignmentsContextValue {
     setInstance: number,
   ) => SetCompletionLog | undefined;
   myAssignment: ProgramAssignment | undefined;
+  assignmentsLoading: boolean;
   reloadAssignmentsFromApi: () => Promise<void>;
 }
 

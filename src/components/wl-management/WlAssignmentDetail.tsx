@@ -123,11 +123,15 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
     setTemplatePromptOpen(false);
   };
 
-  const handleDuplicate = () => {
-    const id = duplicateAssignment(assignment.id, dupAthleteId);
-    if (id) {
-      setShowDup(false);
-      onDuplicated?.(id);
+  const handleDuplicate = async () => {
+    try {
+      const id = await duplicateAssignment(assignment.id, dupAthleteId);
+      if (id) {
+        setShowDup(false);
+        onDuplicated?.(id);
+      }
+    } catch {
+      /* alerta mostrada en el provider */
     }
   };
 

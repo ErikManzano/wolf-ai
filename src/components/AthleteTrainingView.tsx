@@ -21,6 +21,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const isEs = language === 'ES';
   const {
     myAssignment,
+    assignmentsLoading,
     completions,
     setLogs,
     toggleSessionComplete,
@@ -120,6 +121,17 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       }
     }
   }, [program, myAssignment, isDayDone]);
+
+  if (assignmentsLoading) {
+    return (
+      <div className="wolf-athlete-plan wolf-athlete-plan--empty">
+        <div className="wolf-athlete-empty-visual">
+          <ClipboardList size={40} strokeWidth={1.35} />
+        </div>
+        <h2 className="wolf-athlete-empty-title">{isEs ? 'Cargando tu plan…' : 'Loading your plan…'}</h2>
+      </div>
+    );
+  }
 
   if (!myAssignment || !program || !weekData) {
     return (

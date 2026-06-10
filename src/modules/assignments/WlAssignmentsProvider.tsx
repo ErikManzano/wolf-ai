@@ -28,6 +28,7 @@ import { subscribeAssignmentsRealtime } from './realtimeClient';
 import {
   athleteUserIdForProfile,
   initialAssignmentsState,
+  loadAssignmentsFromLocal,
   loadCompletionsFromLocal,
   loadSetLogsFromLocal,
   loadTemplatesFromLocal,
@@ -38,8 +39,18 @@ import {
   persistTemplatesLocal,
 } from './assignmentStore';
 import type { SetLogInput, WlAssignmentsContextValue, WlAssignmentsProviderProps } from './types';
+import { useWolfAlert } from '../../context/WolfAlertContext';
 
 const WlAssignmentsContext = createContext<WlAssignmentsContextValue | null>(null);
+
+async function readApiError(res: Response): Promise<string> {
+  try {
+    const j = (await res.json()) as { error?: string };
+    return j.error?.trim() || `HTTP ${res.status}`;
+  } catch {
+    return `HTTP ${res.status}`;
+  }
+}
 
 export function WlAssignmentsProvider({
   children,
@@ -48,25 +59,57 @@ export function WlAssignmentsProvider({
   users,
   apiToken,
 }: WlAssignmentsProviderProps) {
+  const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
   const [assignments, setAssignments] = useState<ProgramAssignment[]>(() =>
     apiMode ? [] : initialAssignmentsState(),
   );
+  const [assignmentsLoading, setAssignmentsLoading] = useState(() => apiMode && Boolean(apiToken));
   const [completions, setCompletions] = useState<SessionCompletion[]>(() => loadCompletionsFromLocal());
   const [setLogs, setSetLogs] = useState<SetCompletionLog[]>(() => loadSetLogsFromLocal());
   const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>(() => loadTemplatesFromLocal());
 
   const loadAssignmentsFromApi = useCallback(async () => {
-    if (!apiMode || !apiToken) return;
+    if (!apiMode || !apiToken) {
+      setAssignmentsLoading(false);
+      return;
+    }
+    setAssignmentsLoading(true);
     try {
       const res = await assignmentApiFetch('/assignments');
-      if (!res.ok) return;
+      if (!res.ok) {
+        const detail = await readApiError(res);
+        if (res.status === 401) {
+          pushAlert({
+            tone: 'warning',
+            title: 'Sesión expirada',
+            message: 'Vuelve a iniciar sesión para ver las rutinas asignadas.',
+          });
+        } else {
+          pushAlert({
+            tone: 'error',
+            title: 'No se pudieron cargar las rutinas',
+            message: detail,
+          });
+        }
+        const cached = loadAssignmentsFromLocal();
+        if (cached?.length) setAssignments(cached.map(normalizeAssignment));
+        return;
+      }
       const list = (await res.json()) as ProgramAssignment[];
       if (Array.isArray(list)) setAssignments(list.map(normalizeAssignment));
     } catch {
-      /* keep local */
+      const cached = loadAssignmentsFromLocal();
+      if (cached?.length) setAssignments(cached.map(normalizeAssignment));
+      pushAlert({
+        tone: 'error',
+        title: 'Sin conexión al API',
+        message: 'No se pudieron cargar las rutinas. ¿Está corriendo npm run server?',
+      });
+    } finally {
+      setAssignmentsLoading(false);
     }
-  }, [apiMode, apiToken]);
+  }, [apiMode, apiToken, pushAlert]);
 
   const loadCompletionsFromApi = useCallback(async () => {
     if (!apiMode || !apiToken) return;
@@ -124,49 +167,72 @@ export function WlAssignmentsProvider({
   }, [coachTemplates]);
 
   const assignProgramToAthlete = useCallback(
-    (program: ProgramAssignment['program'], athleteProfileId: string) => {
-      const id = `asg-${Date.now()}`;
+    async (program: ProgramAssignment['program'], athleteProfileId: string): Promise<string> => {
       const uid =
         users.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id ??
         athleteUserIdForProfile(athleteProfileId);
-      const next: ProgramAssignment = {
-        id,
-        coachId:
-          currentUser?.role === 'coach' || currentUser?.role === 'super_admin' ? currentUser.id : 'user-coach',
+      const coachId =
+        currentUser?.role === 'coach' || currentUser?.role === 'super_admin'
+          ? currentUser.id
+          : 'user-coach-wl';
+      const payload = {
+        coachId,
         ...(uid !== undefined ? { athleteUserId: uid } : {}),
         athleteProfileId,
-        version: 1,
         program: { ...program, athleteId: athleteProfileId },
-        versionHistory: [],
-        assignedAt: new Date().toISOString(),
       };
-      setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
-      if (isApiEnabled()) {
-        void assignmentApiFetch('/assignments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            coachId: next.coachId,
-            athleteUserId: next.athleteUserId,
-            athleteProfileId: next.athleteProfileId,
-            program: next.program,
-          }),
-        })
-          .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
-          .then((saved) => {
-            if (!saved) return;
-            setAssignments((prev) => [
-              ...prev.filter((x) => x.athleteProfileId !== saved.athleteProfileId),
-              normalizeAssignment(saved),
-            ]);
-          })
-          .catch(() => {
-            /* optimistic */
-          });
+
+      if (!apiMode) {
+        const id = `asg-${Date.now()}`;
+        const next: ProgramAssignment = {
+          id,
+          coachId,
+          ...(uid !== undefined ? { athleteUserId: uid } : {}),
+          athleteProfileId,
+          version: 1,
+          program: payload.program,
+          versionHistory: [],
+          assignedAt: new Date().toISOString(),
+        };
+        setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
+        return id;
       }
-      return id;
+
+      if (!apiToken) {
+        const msg = 'Inicia sesión de nuevo antes de asignar la rutina.';
+        pushAlert({ tone: 'error', title: 'Sin sesión API', message: msg });
+        throw new Error(msg);
+      }
+
+      const res = await assignmentApiFetch('/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const detail = await readApiError(res);
+        pushAlert({
+          tone: 'error',
+          title: 'No se pudo asignar la rutina',
+          message: detail,
+        });
+        throw new Error(detail);
+      }
+
+      const saved = normalizeAssignment((await res.json()) as ProgramAssignment);
+      setAssignments((prev) => [
+        ...prev.filter((x) => x.athleteProfileId !== saved.athleteProfileId),
+        saved,
+      ]);
+      pushAlert({
+        tone: 'success',
+        title: 'Rutina asignada',
+        message: 'El atleta la verá en «Mi plan WL» al instante.',
+      });
+      return saved.id;
     },
-    [currentUser, users],
+    [apiMode, apiToken, currentUser, users, pushAlert],
   );
 
   const updateAssignmentProgram = useCallback((assignmentId: string, program: ProgramAssignment['program']) => {
@@ -231,7 +297,7 @@ export function WlAssignmentsProvider({
   );
 
   const duplicateAssignment = useCallback(
-    (assignmentId: string, targetAthleteProfileId: string): string => {
+    async (assignmentId: string, targetAthleteProfileId: string): Promise<string> => {
       const asg = assignments.find((a) => a.id === assignmentId);
       if (!asg) return '';
       return assignProgramToAthlete(asg.program, targetAthleteProfileId);
@@ -265,7 +331,7 @@ export function WlAssignmentsProvider({
   }, []);
 
   const assignFromTemplate = useCallback(
-    (templateId: string, athleteProfileId: string): string | null => {
+    async (templateId: string, athleteProfileId: string): Promise<string | null> => {
       const tpl = coachTemplates.find((t) => t.id === templateId);
       if (!tpl) return null;
       return assignProgramToAthlete(tpl.program, athleteProfileId);
@@ -497,11 +563,16 @@ export function WlAssignmentsProvider({
 
   const myAssignment = useMemo(() => {
     const linked = athleteUser?.linkedAthleteId;
-    if (!linked) return undefined;
-    const mine = assignments.filter((a) => a.athleteProfileId === linked);
+    const userId = athleteUser?.id;
+    if (!linked && !userId) return undefined;
+    const mine = assignments.filter(
+      (a) =>
+        (linked != null && a.athleteProfileId === linked) ||
+        (userId != null && a.athleteUserId === userId),
+    );
     if (mine.length === 0) return undefined;
     return [...mine].sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
-  }, [assignments, athleteUser?.linkedAthleteId]);
+  }, [assignments, athleteUser?.linkedAthleteId, athleteUser?.id]);
 
   const value: WlAssignmentsContextValue = {
     assignments,
@@ -525,6 +596,7 @@ export function WlAssignmentsProvider({
     isSetComplete: isSetCompleteFn,
     getSetLog: getSetLogFn,
     myAssignment,
+    assignmentsLoading,
     reloadAssignmentsFromApi: loadAssignmentsFromApi,
   };
 

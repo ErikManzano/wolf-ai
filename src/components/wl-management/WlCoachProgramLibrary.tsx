@@ -159,11 +159,15 @@ const WlCoachProgramLibrary: React.FC<WlCoachProgramLibraryProps> = ({
             <button
               type="button"
               className="btn-primary"
-              onClick={() => {
-                const id = assignFromTemplate(assignTplId, targetAthleteId);
-                if (id) {
-                  onAssigned(id);
-                  setAssignTplId(null);
+              onClick={async () => {
+                try {
+                  const id = await assignFromTemplate(assignTplId, targetAthleteId);
+                  if (id) {
+                    onAssigned(id);
+                    setAssignTplId(null);
+                  }
+                } catch {
+                  /* alerta mostrada en el provider */
                 }
               }}
             >

@@ -16,6 +16,7 @@ import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
+import { athletesForCoach } from '../utils/coachAthleteRoster';
 import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import { CompactWizardBar } from './mobile-wl/navigation/CompactWizardBar';
 import { CollapsibleContextChip } from './mobile-wl/navigation/CollapsibleContextChip';
@@ -46,7 +47,7 @@ const GOALS: SessionGoal[] = ['technique', 'strength', 'power'];
 
 const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => {
   const isEs = language === 'ES';
-  const { assignProgramToAthlete, updateAssignmentProgram, assignments } = useWolfAssign();
+  const { assignProgramToAthlete, updateAssignmentProgram, assignments, currentUser, users } = useWolfAssign();
   const { intakes } = useAppContext();
 
   const t = useMemo(
@@ -109,9 +110,19 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     g === 'technique' ? t.technique : g === 'strength' ? t.strength : t.power;
 
   const [activeStep, setActiveStep] = useState<StepId>(1);
-  const [athleteId, setAthleteId] = useState(
-    () => mockAthletes.find((a) => a.id === 'ath-erik')?.id ?? mockAthletes[0]?.id ?? '',
+  const coachAthletes = useMemo(
+    () => athletesForCoach(currentUser, users, mockAthletes),
+    [currentUser, users],
   );
+
+  const [athleteId, setAthleteId] = useState(
+    () => coachAthletes.find((a) => a.id === 'ath-erik')?.id ?? coachAthletes[0]?.id ?? '',
+  );
+
+  useEffect(() => {
+    if (coachAthletes.length === 0) return;
+    setAthleteId((prev) => (coachAthletes.some((a) => a.id === prev) ? prev : coachAthletes[0]!.id));
+  }, [coachAthletes]);
   const [goal, setGoal] = useState<SessionGoal>('strength');
   const [program, setProgram] = useState<GeneratedProgram | null>(() => readStoredProgram());
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
@@ -231,12 +242,16 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     }
   }, []);
 
-  const handleAssignDraft = useCallback(() => {
+  const handleAssignDraft = useCallback(async () => {
     if (!program) return;
-    const id = assignProgramToAthlete(program, athleteId);
-    editingAssignmentRef.current = id;
-    setEditingAssignmentId(id);
-    setActiveStep(4);
+    try {
+      const id = await assignProgramToAthlete(program, athleteId);
+      editingAssignmentRef.current = id;
+      setEditingAssignmentId(id);
+      setActiveStep(4);
+    } catch {
+      /* alerta mostrada en el provider */
+    }
   }, [program, athleteId, assignProgramToAthlete]);
 
   const handleDiscardDraft = useCallback(() => {
@@ -411,7 +426,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
             <span className="wolf-engine-field-label">{t.athlete}</span>
             <div className="wolf-select-wrap">
               <select value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
-                {mockAthletes.map((a) => (
+                {coachAthletes.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.level})
                   </option>

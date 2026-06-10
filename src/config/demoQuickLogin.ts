@@ -10,7 +10,7 @@ export type DemoQuickProfile = {
 };
 
 export const DEMO_QUICK_PROFILES: DemoQuickProfile[] = [
-  { id: 'coach', email: 'coach@wolf-ai.app', password: 'WolfCoach_7kM9pX2wLq' },
-  { id: 'athlete', email: 'atleta@wolf-ai.app', password: 'WolfAtleta_4nR8tY5wZx' },
+  { id: 'coach', email: 'coach-wl', password: 'CoachWL2026!' },
+  { id: 'athlete', email: 'erik', password: 'ErikWL2026!' },
   { id: 'admin', email: 'admin@wolf-ai.app', password: 'WolfAdmin_9jH3nM8vPq' },
 ];

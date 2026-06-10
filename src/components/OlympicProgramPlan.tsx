@@ -418,12 +418,16 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setRecoveryDraft(null);
   }, []);
 
-  const handleAssignAthlete = useCallback(() => {
+  const handleAssignAthlete = useCallback(async () => {
     if (!program) return;
-    const id = assignProgramToAthlete(program, athleteId);
-    onAssignmentSynced?.(id);
-    setAssignFlash(true);
-    window.setTimeout(() => setAssignFlash(false), 2400);
+    try {
+      const id = await assignProgramToAthlete(program, athleteId);
+      onAssignmentSynced?.(id);
+      setAssignFlash(true);
+      window.setTimeout(() => setAssignFlash(false), 2400);
+    } catch {
+      /* alerta mostrada en el provider */
+    }
   }, [program, athleteId, assignProgramToAthlete, onAssignmentSynced]);
 
   const daySession = useMemo(() => {
