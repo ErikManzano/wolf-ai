@@ -34,6 +34,8 @@ import {
 } from '../services/exercise';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { WlAssignmentsProvider, useWlAssignments } from '../modules/assignments';
+import { WlAthletesProvider, useWlAthletes } from '../modules/wl-athletes';
+import { WlTemplatesProvider, useWlTemplates } from '../modules/wl-templates';
 import { getApiBase as getAssignmentsApiBase, isApiEnabled as isAssignmentsApiEnabled, getWebSocketUrl } from '../modules/assignments/apiClient';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 
@@ -163,9 +165,18 @@ interface WolfAssignContextValue {
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
   coachTemplates: CoachWlProgramTemplate[];
-  saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => string;
-  deleteCoachTemplate: (templateId: string) => void;
+  saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => Promise<string>;
+  deleteCoachTemplate: (templateId: string) => Promise<boolean>;
   assignFromTemplate: (templateId: string, athleteProfileId: string) => Promise<string | null>;
+  wlAthletes: import('../models/training').Athlete[];
+  athletesLoading: boolean;
+  rosterForCoach: (coach: WolfUser | undefined) => import('../models/training').Athlete[];
+  createWlAthlete: (
+    input: Omit<import('../models/training').Athlete, 'fatigueScore' | 'readinessScore'> &
+      Partial<Pick<import('../models/training').Athlete, 'fatigueScore' | 'readinessScore'>>,
+  ) => Promise<import('../models/training').Athlete | null>;
+  updateWlAthlete: (id: string, patch: Partial<import('../models/training').Athlete>) => Promise<import('../models/training').Athlete | null>;
+  deleteWlAthlete: (id: string) => Promise<boolean>;
   toggleSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => void;
   isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => boolean;
   toggleExerciseComplete: (
@@ -222,6 +233,26 @@ interface WolfAssignContextValue {
   /** AsignaciÃ³n activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
   assignmentsLoading: boolean;
+  isTrackingPending: (key: string) => boolean;
+  isTrackingFailed: (key: string) => boolean;
+  setLogTrackingKey: (input: {
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    exerciseIndex: number;
+    schemeIndex: number;
+    setInstance: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+  }) => string;
+  exerciseTrackingKey: (
+    assignmentId: string,
+    weekNumber: number,
+    dayNumber: number,
+    exerciseIndex: number,
+  ) => string;
+  sessionTrackingKey: (assignmentId: string, weekNumber: number, dayNumber: number) => string;
   loginUser: (email: string, password: string) => Promise<WolfUser | null>;
   loginWithGoogle: (idToken: string) => Promise<WolfUser | null>;
   registerUser: (payload: { name: string; email: string; password: string; role: WolfAppRole }) => Promise<string | null>;
@@ -1338,10 +1369,79 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       users={users}
       apiToken={apiToken}
     >
-      <WolfAssignMergedProvider catalog={catalogValue}>{children}</WolfAssignMergedProvider>
+      <WlTemplatesBridge
+        catalog={catalogValue}
+        currentUser={currentUser}
+        users={users}
+        apiToken={apiToken}
+      >
+        {children}
+      </WlTemplatesBridge>
     </WlAssignmentsProvider>
   );
 };
+
+function WlTemplatesBridge({
+  children,
+  catalog,
+  currentUser,
+  users,
+  apiToken,
+}: {
+  children: ReactNode;
+  catalog: Omit<
+    WolfAssignContextValue,
+    | 'assignments'
+    | 'completions'
+    | 'setLogs'
+    | 'coachTemplates'
+    | 'assignProgramToAthlete'
+    | 'updateAssignmentProgram'
+    | 'removeAssignment'
+    | 'restoreAssignmentVersion'
+    | 'duplicateAssignment'
+    | 'saveCoachTemplate'
+    | 'deleteCoachTemplate'
+    | 'assignFromTemplate'
+    | 'toggleSessionComplete'
+    | 'isSessionComplete'
+    | 'toggleExerciseComplete'
+    | 'isExerciseComplete'
+    | 'toggleSetComplete'
+    | 'updateSetLog'
+    | 'isSetComplete'
+    | 'getSetLog'
+    | 'myAssignment'
+    | 'assignmentsLoading'
+    | 'isTrackingPending'
+    | 'isTrackingFailed'
+    | 'setLogTrackingKey'
+    | 'exerciseTrackingKey'
+    | 'sessionTrackingKey'
+    | 'wlAthletes'
+    | 'athletesLoading'
+    | 'rosterForCoach'
+    | 'createWlAthlete'
+    | 'updateWlAthlete'
+    | 'deleteWlAthlete'
+  >;
+  currentUser: WolfUser | undefined;
+  users: WolfUser[];
+  apiToken: string | null;
+}) {
+  const wl = useWlAssignments();
+  return (
+    <WlTemplatesProvider
+      currentUser={currentUser}
+      apiToken={apiToken}
+      assignProgramToAthlete={wl.assignProgramToAthlete}
+    >
+      <WlAthletesProvider currentUser={currentUser} users={users} apiToken={apiToken}>
+        <WolfAssignMergedProvider catalog={catalog}>{children}</WolfAssignMergedProvider>
+      </WlAthletesProvider>
+    </WlTemplatesProvider>
+  );
+}
 
 function WolfAssignMergedProvider({
   children,
@@ -1372,23 +1472,36 @@ function WolfAssignMergedProvider({
     | 'getSetLog'
     | 'myAssignment'
     | 'assignmentsLoading'
+    | 'isTrackingPending'
+    | 'isTrackingFailed'
+    | 'setLogTrackingKey'
+    | 'exerciseTrackingKey'
+    | 'sessionTrackingKey'
+    | 'wlAthletes'
+    | 'athletesLoading'
+    | 'rosterForCoach'
+    | 'createWlAthlete'
+    | 'updateWlAthlete'
+    | 'deleteWlAthlete'
   >;
 }) {
   const wl = useWlAssignments();
+  const tpl = useWlTemplates();
+  const athletesCtx = useWlAthletes();
   const value: WolfAssignContextValue = {
     ...catalog,
     assignments: wl.assignments,
     completions: wl.completions,
     setLogs: wl.setLogs,
-    coachTemplates: wl.coachTemplates,
+    coachTemplates: tpl.coachTemplates,
     assignProgramToAthlete: wl.assignProgramToAthlete,
     updateAssignmentProgram: wl.updateAssignmentProgram,
     removeAssignment: wl.removeAssignment,
     restoreAssignmentVersion: wl.restoreAssignmentVersion,
     duplicateAssignment: wl.duplicateAssignment,
-    saveCoachTemplate: wl.saveCoachTemplate,
-    deleteCoachTemplate: wl.deleteCoachTemplate,
-    assignFromTemplate: wl.assignFromTemplate,
+    saveCoachTemplate: tpl.saveCoachTemplate,
+    deleteCoachTemplate: tpl.deleteCoachTemplate,
+    assignFromTemplate: tpl.assignFromTemplate,
     toggleSessionComplete: wl.toggleSessionComplete,
     isSessionComplete: wl.isSessionComplete,
     toggleExerciseComplete: wl.toggleExerciseComplete,
@@ -1399,6 +1512,17 @@ function WolfAssignMergedProvider({
     getSetLog: wl.getSetLog,
     myAssignment: wl.myAssignment,
     assignmentsLoading: wl.assignmentsLoading,
+    isTrackingPending: wl.isTrackingPending,
+    isTrackingFailed: wl.isTrackingFailed,
+    setLogTrackingKey: wl.setLogTrackingKey,
+    exerciseTrackingKey: wl.exerciseTrackingKey,
+    sessionTrackingKey: wl.sessionTrackingKey,
+    wlAthletes: athletesCtx.athletes,
+    athletesLoading: athletesCtx.athletesLoading,
+    rosterForCoach: (coach) => athletesCtx.rosterForCoach(coach),
+    createWlAthlete: athletesCtx.createAthlete,
+    updateWlAthlete: athletesCtx.updateAthlete,
+    deleteWlAthlete: athletesCtx.deleteAthlete,
   };
   return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;
 }

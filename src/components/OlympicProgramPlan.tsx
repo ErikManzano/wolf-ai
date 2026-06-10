@@ -28,6 +28,7 @@ import {
 } from '../services/programDraftStore';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import OlympicSessionEditor from './OlympicSessionEditor';
+import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
 import { DraftRecoveryBanner } from './session-editor/DraftRecoveryBanner';
 import ConfirmationModal from './ConfirmationModal';
@@ -100,7 +101,16 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [editingDayLabel, setEditingDayLabel] = useState('');
   const [confirmRemove, setConfirmRemove] = useState<'week' | 'day' | null>(null);
   const programRef = useRef(program);
-  const { assignProgramToAthlete, motorExercises } = useWolfAssign();
+  const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles } =
+    useWolfAssign();
+
+  const sessionCatalog = useMemo<SessionCatalogProps>(
+    () => ({
+      pickerOptions: sessionExercisePicker,
+      pickerSingles: sessionExercisePickerSingles,
+    }),
+    [sessionExercisePicker, sessionExercisePickerSingles],
+  );
 
   useEffect(() => {
     programRef.current = program;
@@ -710,6 +720,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               session={daySession}
               athlete={athleteForEngine}
               exercises={motorExercises}
+              catalog={sessionCatalog}
               isEs={isEs}
               onChange={handleSessionEdit}
               draftSavedAt={draftSavedAt}

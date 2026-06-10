@@ -73,6 +73,13 @@ const state = {
   assignments: seedAssignments(),
   completions: [],
   setLogs: [],
+  coachWlTemplates: [],
+  wlAthleteCoachById: Object.fromEntries(
+    mockAthletes.map((a) => {
+      const linked = mockUsers.find((u) => u.linkedAthleteId === a.id && u.coachId);
+      return [a.id, linked?.coachId ?? 'user-coach-wl'];
+    }),
+  ),
 };
 
 async function bootstrap() {

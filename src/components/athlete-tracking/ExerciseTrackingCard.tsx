@@ -24,6 +24,10 @@ export interface ExerciseTrackingCardProps {
   legacyExerciseDone: boolean;
   isSetComplete: (schemeIndex: number, setInstance: number) => boolean;
   getSetLog: (schemeIndex: number, setInstance: number) => SetCompletionLog | undefined;
+  isSetSyncPending?: (schemeIndex: number, setInstance: number) => boolean;
+  isSetSyncFailed?: (schemeIndex: number, setInstance: number) => boolean;
+  exerciseSyncPending?: boolean;
+  exerciseSyncFailed?: boolean;
   onToggleSet: (
     schemeIndex: number,
     setInstance: number,
@@ -64,6 +68,10 @@ export const ExerciseTrackingCard: React.FC<ExerciseTrackingCardProps> = ({
   legacyExerciseDone,
   isSetComplete,
   getSetLog,
+  isSetSyncPending,
+  isSetSyncFailed,
+  exerciseSyncPending = false,
+  exerciseSyncFailed = false,
   onToggleSet,
   onUpdateSet,
   onMarkAllComplete,
@@ -162,6 +170,8 @@ export const ExerciseTrackingCard: React.FC<ExerciseTrackingCardProps> = ({
               {flatSets.map((row) => {
                 const log = getSetLog(row.schemeIndex, row.setInstance);
                 const done = isSetComplete(row.schemeIndex, row.setInstance);
+                const syncPending = isSetSyncPending?.(row.schemeIndex, row.setInstance) ?? false;
+                const syncFailed = isSetSyncFailed?.(row.schemeIndex, row.setInstance) ?? false;
 
                 if (row.isComplex && row.prescribedSegmentReps && row.segmentLabels) {
                   return (
@@ -176,6 +186,8 @@ export const ExerciseTrackingCard: React.FC<ExerciseTrackingCardProps> = ({
                       actualSegmentReps={log?.actualSegmentReps}
                       done={done}
                       isEs={isEs}
+                      syncPending={syncPending}
+                      syncFailed={syncFailed}
                       onToggle={(kg, segs) =>
                         onToggleSet(row.schemeIndex, row.setInstance, kg, sumReps(segs), segs)
                       }
@@ -197,6 +209,8 @@ export const ExerciseTrackingCard: React.FC<ExerciseTrackingCardProps> = ({
                     actualReps={log?.actualReps}
                     done={done}
                     isEs={isEs}
+                    syncPending={syncPending}
+                    syncFailed={syncFailed}
                     onToggle={(kg, reps) => onToggleSet(row.schemeIndex, row.setInstance, kg, reps)}
                     onUpdate={(kg, reps) => onUpdateSet(row.schemeIndex, row.setInstance, kg, reps)}
                   />
@@ -209,7 +223,12 @@ export const ExerciseTrackingCard: React.FC<ExerciseTrackingCardProps> = ({
                 type="button"
                 variant="outline"
                 size="md"
-                className="w-full mt-2.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                className={cn(
+                  'w-full mt-2.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800',
+                  exerciseSyncPending && 'opacity-70',
+                  exerciseSyncFailed && 'border-amber-500/40',
+                )}
+                aria-busy={exerciseSyncPending}
                 onClick={onMarkAllComplete}
               >
                 {isEs ? 'Marcar todo el ejercicio' : 'Mark entire exercise'}

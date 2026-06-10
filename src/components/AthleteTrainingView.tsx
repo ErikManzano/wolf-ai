@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ClipboardList, TrendingUp } from 'lucide-react';
 import type { SessionExerciseBlock } from '../models/training';
-import { mockAthletes } from '../data/loadMockData';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import {
   countCompletedExercisesWithSets,
@@ -31,7 +30,13 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     updateSetLog,
     isSetComplete,
     getSetLog,
+    isTrackingPending,
+    isTrackingFailed,
+    setLogTrackingKey,
+    exerciseTrackingKey,
+    sessionTrackingKey,
     motorExercises,
+    wlAthletes,
   } = useWolfAssign();
 
   const exName = useCallback(
@@ -42,8 +47,8 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const [week, setWeek] = useState(1);
 
   const athleteProfile = useMemo(
-    () => mockAthletes.find((a) => a.id === myAssignment?.athleteProfileId),
-    [myAssignment?.athleteProfileId],
+    () => wlAthletes.find((a) => a.id === myAssignment?.athleteProfileId),
+    [wlAthletes, myAssignment?.athleteProfileId],
   );
 
   const program = myAssignment?.program;
@@ -253,6 +258,56 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
                   setInstance,
                 )
               }
+              isSetSyncPending={(exerciseIndex, schemeIndex, setInstance) =>
+                isTrackingPending(
+                  setLogTrackingKey({
+                    assignmentId: myAssignment.id,
+                    weekNumber: weekData.weekNumber,
+                    dayNumber: day.dayNumber,
+                    exerciseIndex,
+                    schemeIndex,
+                    setInstance,
+                  }),
+                )
+              }
+              isSetSyncFailed={(exerciseIndex, schemeIndex, setInstance) =>
+                isTrackingFailed(
+                  setLogTrackingKey({
+                    assignmentId: myAssignment.id,
+                    weekNumber: weekData.weekNumber,
+                    dayNumber: day.dayNumber,
+                    exerciseIndex,
+                    schemeIndex,
+                    setInstance,
+                  }),
+                )
+              }
+              isExerciseSyncPending={(exerciseIndex) =>
+                isTrackingPending(
+                  exerciseTrackingKey(
+                    myAssignment.id,
+                    weekData.weekNumber,
+                    day.dayNumber,
+                    exerciseIndex,
+                  ),
+                )
+              }
+              isExerciseSyncFailed={(exerciseIndex) =>
+                isTrackingFailed(
+                  exerciseTrackingKey(
+                    myAssignment.id,
+                    weekData.weekNumber,
+                    day.dayNumber,
+                    exerciseIndex,
+                  ),
+                )
+              }
+              isSessionSyncPending={isTrackingPending(
+                sessionTrackingKey(myAssignment.id, weekData.weekNumber, day.dayNumber),
+              )}
+              isSessionSyncFailed={isTrackingFailed(
+                sessionTrackingKey(myAssignment.id, weekData.weekNumber, day.dayNumber),
+              )}
               onToggleSet={(exerciseIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
                 toggleSetComplete({
                   assignmentId: myAssignment.id,

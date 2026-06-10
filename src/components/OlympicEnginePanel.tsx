@@ -7,16 +7,14 @@ import {
   Scale,
   UserCog,
 } from 'lucide-react';
-import type { GeneratedProgram, SessionGoal } from '../models/training';
+import type { GeneratedProgram, ProgramAssignment, SessionGoal } from '../models/training';
 import { K_VALUE_RANGES } from '../models/training';
-import { mockAthletes } from '../data/loadMockData';
-import type { ProgramAssignment } from '../models/training';
 import { useAppContext } from '../context/AppContext';
 import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
-import { athletesForCoach } from '../utils/coachAthleteRoster';
+import WlAthletesHub from './wl-management/WlAthletesHub';
 import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import { CompactWizardBar } from './mobile-wl/navigation/CompactWizardBar';
 import { CollapsibleContextChip } from './mobile-wl/navigation/CollapsibleContextChip';
@@ -47,7 +45,8 @@ const GOALS: SessionGoal[] = ['technique', 'strength', 'power'];
 
 const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => {
   const isEs = language === 'ES';
-  const { assignProgramToAthlete, updateAssignmentProgram, assignments, currentUser, users } = useWolfAssign();
+  const { assignProgramToAthlete, updateAssignmentProgram, assignments, currentUser, rosterForCoach, wlAthletes } =
+    useWolfAssign();
   const { intakes } = useAppContext();
 
   const t = useMemo(
@@ -110,9 +109,10 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     g === 'technique' ? t.technique : g === 'strength' ? t.strength : t.power;
 
   const [activeStep, setActiveStep] = useState<StepId>(1);
+  const [athletesHubOpen, setAthletesHubOpen] = useState(false);
   const coachAthletes = useMemo(
-    () => athletesForCoach(currentUser, users, mockAthletes),
-    [currentUser, users],
+    () => rosterForCoach(currentUser),
+    [rosterForCoach, currentUser],
   );
 
   const [athleteId, setAthleteId] = useState(
@@ -187,7 +187,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     setActiveStep(3);
   }, []);
 
-  const baseWlAthlete = useMemo(() => mockAthletes.find((a) => a.id === athleteId), [athleteId]);
+  const baseWlAthlete = useMemo(() => wlAthletes.find((a) => a.id === athleteId), [wlAthletes, athleteId]);
   const latestStatsIntake = useMemo(() => latestIntakeForWlProfile(athleteId, intakes), [athleteId, intakes]);
   const athlete = useMemo(
     () => (baseWlAthlete ? mergeAthleteWithLatestIntake(baseWlAthlete, latestStatsIntake) : null),
@@ -434,6 +434,14 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
               </select>
               <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
             </div>
+            <button
+              type="button"
+              className="btn-outline wolf-engine-manage-athletes"
+              onClick={() => setAthletesHubOpen(true)}
+            >
+              <UserCog size={14} aria-hidden />
+              {isEs ? 'Gestionar atletas' : 'Manage athletes'}
+            </button>
           </label>
           <label className="wolf-engine-field">
             <span className="wolf-engine-field-label">{t.goal}</span>
@@ -575,6 +583,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
         )}
       </div>
 
+      <WlAthletesHub isEs={isEs} open={athletesHubOpen} onClose={() => setAthletesHubOpen(false)} />
 
     </div>
   );

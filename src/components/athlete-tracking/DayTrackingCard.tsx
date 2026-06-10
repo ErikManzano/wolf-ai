@@ -36,6 +36,20 @@ interface DayTrackingCardProps {
     schemeIndex: number,
     setInstance: number,
   ) => SetCompletionLog | undefined;
+  isSetSyncPending?: (
+    exerciseIndex: number,
+    schemeIndex: number,
+    setInstance: number,
+  ) => boolean;
+  isSetSyncFailed?: (
+    exerciseIndex: number,
+    schemeIndex: number,
+    setInstance: number,
+  ) => boolean;
+  isExerciseSyncPending?: (exerciseIndex: number) => boolean;
+  isExerciseSyncFailed?: (exerciseIndex: number) => boolean;
+  isSessionSyncPending?: boolean;
+  isSessionSyncFailed?: boolean;
   onToggleSet: (
     exerciseIndex: number,
     schemeIndex: number,
@@ -75,6 +89,12 @@ export const DayTrackingCard: React.FC<DayTrackingCardProps> = ({
   defaultExpanded = false,
   isSetComplete,
   getSetLog,
+  isSetSyncPending,
+  isSetSyncFailed,
+  isExerciseSyncPending,
+  isExerciseSyncFailed,
+  isSessionSyncPending = false,
+  isSessionSyncFailed = false,
   onToggleSet,
   onUpdateSet,
   onMarkExercise,
@@ -205,6 +225,10 @@ export const DayTrackingCard: React.FC<DayTrackingCardProps> = ({
                   setLogs={setLogs}
                   isSetComplete={isSetComplete}
                   getSetLog={getSetLog}
+                  isSetSyncPending={isSetSyncPending}
+                  isSetSyncFailed={isSetSyncFailed}
+                  isExerciseSyncPending={isExerciseSyncPending}
+                  isExerciseSyncFailed={isExerciseSyncFailed}
                   onToggleSet={onToggleSet}
                   onUpdateSet={onUpdateSet}
                   onMarkExercise={onMarkExercise}
@@ -216,8 +240,11 @@ export const DayTrackingCard: React.FC<DayTrackingCardProps> = ({
           <div className="wolf-athlete-day-footer">
             <button
               type="button"
-              className={`wolf-athlete-done-btn wolf-athlete-done-btn--block ${sessionDone ? 'active' : ''}`}
+              className={`wolf-athlete-done-btn wolf-athlete-done-btn--block ${sessionDone ? 'active' : ''} ${
+                isSessionSyncPending ? 'is-sync-pending' : ''
+              } ${isSessionSyncFailed ? 'is-sync-failed' : ''}`}
               aria-pressed={sessionDone}
+              aria-busy={isSessionSyncPending}
               onClick={onToggleSession}
             >
               {sessionDone ? (
@@ -248,6 +275,10 @@ interface DayExerciseBlockProps {
   setLogs: DayTrackingCardProps['setLogs'];
   isSetComplete: DayTrackingCardProps['isSetComplete'];
   getSetLog: DayTrackingCardProps['getSetLog'];
+  isSetSyncPending?: DayTrackingCardProps['isSetSyncPending'];
+  isSetSyncFailed?: DayTrackingCardProps['isSetSyncFailed'];
+  isExerciseSyncPending?: DayTrackingCardProps['isExerciseSyncPending'];
+  isExerciseSyncFailed?: DayTrackingCardProps['isExerciseSyncFailed'];
   onToggleSet: DayTrackingCardProps['onToggleSet'];
   onUpdateSet: DayTrackingCardProps['onUpdateSet'];
   onMarkExercise: (exerciseIndex: number) => void;
@@ -267,6 +298,10 @@ const DayExerciseBlock: React.FC<DayExerciseBlockProps> = ({
   setLogs,
   isSetComplete,
   getSetLog,
+  isSetSyncPending,
+  isSetSyncFailed,
+  isExerciseSyncPending,
+  isExerciseSyncFailed,
   onToggleSet,
   onUpdateSet,
   onMarkExercise,
@@ -302,6 +337,18 @@ const DayExerciseBlock: React.FC<DayExerciseBlockProps> = ({
       getSetLog={(schemeIndex, setInstance) =>
         getSetLog(blockIndex, schemeIndex, setInstance)
       }
+      isSetSyncPending={
+        isSetSyncPending
+          ? (schemeIndex, setInstance) => isSetSyncPending(blockIndex, schemeIndex, setInstance)
+          : undefined
+      }
+      isSetSyncFailed={
+        isSetSyncFailed
+          ? (schemeIndex, setInstance) => isSetSyncFailed(blockIndex, schemeIndex, setInstance)
+          : undefined
+      }
+      exerciseSyncPending={isExerciseSyncPending?.(blockIndex) ?? false}
+      exerciseSyncFailed={isExerciseSyncFailed?.(blockIndex) ?? false}
       onToggleSet={(schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
         onToggleSet(blockIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps)
       }

@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import type { ProgramAssignment } from '../../models/training';
 import { mockAthletes } from '../../data/loadMockData';
-import { useWlAssignments } from '../../modules/assignments';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import {
   buildWlAssignmentRows,
@@ -56,8 +55,8 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
     duplicateAssignment,
     saveCoachTemplate,
     isSessionComplete,
-  } = useWlAssignments();
-  const { motorExercises } = useWolfAssign();
+    motorExercises,
+  } = useWolfAssign();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [templatePromptOpen, setTemplatePromptOpen] = useState(false);
@@ -118,8 +117,8 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
     setTemplatePromptOpen(true);
   };
 
-  const confirmSaveTemplate = (name: string) => {
-    saveCoachTemplate(name, assignment.program, assignment.id);
+  const confirmSaveTemplate = async (name: string) => {
+    await saveCoachTemplate(name, assignment.program, assignment.id);
     setTemplatePromptOpen(false);
   };
 

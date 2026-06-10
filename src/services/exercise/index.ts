@@ -19,6 +19,7 @@ export {
   filterPickerOptions,
   filterPickerByCatalogGroup,
   searchPickerOptions,
+  fuzzySearchPickerOptions,
   pickerOptionsFromIds,
   mergedViewsToPickerOptions,
   browseQueryForPickerKind,

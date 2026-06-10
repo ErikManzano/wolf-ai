@@ -21,6 +21,8 @@ export interface ComplexSetContainerProps {
   actualSegmentReps?: number[];
   done: boolean;
   isEs: boolean;
+  syncPending?: boolean;
+  syncFailed?: boolean;
   onToggle: (actualKg: number, actualSegmentReps: number[]) => void;
   onUpdate: (actualKg: number, actualSegmentReps: number[]) => void;
 }
@@ -35,6 +37,8 @@ export const ComplexSetContainer: React.FC<ComplexSetContainerProps> = ({
   actualSegmentReps,
   done,
   isEs,
+  syncPending = false,
+  syncFailed = false,
   onToggle,
   onUpdate,
 }) => {
@@ -154,6 +158,8 @@ export const ComplexSetContainer: React.FC<ComplexSetContainerProps> = ({
         <SetCheckButton
           status={checkStatus}
           pressed={done}
+          syncPending={syncPending}
+          syncFailed={syncFailed}
           label={
             done
               ? isEs

@@ -4,17 +4,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type {
-  CoachWlProgramTemplate,
   GeneratedProgram,
   ProgramAssignment,
   SessionCompletion,
   SetCompletionLog,
 } from '../../models/training';
 import {
-  completionMatches,
   isDayComplete,
   isExerciseComplete,
   isSessionMarkedComplete,
@@ -31,17 +30,27 @@ import {
   loadAssignmentsFromLocal,
   loadCompletionsFromLocal,
   loadSetLogsFromLocal,
-  loadTemplatesFromLocal,
   normalizeAssignment,
   persistAssignmentsLocal,
   persistCompletionsLocal,
   persistSetLogsLocal,
-  persistTemplatesLocal,
 } from './assignmentStore';
 import type { SetLogInput, WlAssignmentsContextValue, WlAssignmentsProviderProps } from './types';
 import { useWolfAlert } from '../../context/WolfAlertContext';
+import {
+  applyExerciseToggleLocal,
+  applySessionToggleLocal,
+  applySetLogUpdateLocal,
+  applySetToggleLocal,
+  createTrackingQueue,
+  exerciseTrackingKey,
+  sessionTrackingKey,
+  setLogTrackingKey,
+  snapshotTracking,
+} from './trackingOptimistic';
 
 const WlAssignmentsContext = createContext<WlAssignmentsContextValue | null>(null);
+const FAILED_CLEAR_MS = 4000;
 
 async function readApiError(res: Response): Promise<string> {
   try {
@@ -61,13 +70,27 @@ export function WlAssignmentsProvider({
 }: WlAssignmentsProviderProps) {
   const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
+  const trackingQueueRef = useRef(createTrackingQueue());
+  const failedTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const setLogsRef = useRef<SetCompletionLog[]>([]);
+  const completionsRef = useRef<SessionCompletion[]>([]);
+
   const [assignments, setAssignments] = useState<ProgramAssignment[]>(() =>
     apiMode ? [] : initialAssignmentsState(),
   );
   const [assignmentsLoading, setAssignmentsLoading] = useState(() => apiMode && Boolean(apiToken));
   const [completions, setCompletions] = useState<SessionCompletion[]>(() => loadCompletionsFromLocal());
   const [setLogs, setSetLogs] = useState<SetCompletionLog[]>(() => loadSetLogsFromLocal());
-  const [coachTemplates, setCoachTemplates] = useState<CoachWlProgramTemplate[]>(() => loadTemplatesFromLocal());
+  const [pendingTrackingKeys, setPendingTrackingKeys] = useState<Set<string>>(() => new Set());
+  const [failedTrackingKeys, setFailedTrackingKeys] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setLogsRef.current = setLogs;
+  }, [setLogs]);
+
+  useEffect(() => {
+    completionsRef.current = completions;
+  }, [completions]);
 
   const loadAssignmentsFromApi = useCallback(async () => {
     if (!apiMode || !apiToken) {
@@ -161,10 +184,6 @@ export function WlAssignmentsProvider({
   useEffect(() => {
     persistSetLogsLocal(setLogs);
   }, [setLogs]);
-
-  useEffect(() => {
-    persistTemplatesLocal(coachTemplates);
-  }, [coachTemplates]);
 
   const assignProgramToAthlete = useCallback(
     async (program: ProgramAssignment['program'], athleteProfileId: string): Promise<string> => {
@@ -305,70 +324,130 @@ export function WlAssignmentsProvider({
     [assignments, assignProgramToAthlete],
   );
 
-  const saveCoachTemplate = useCallback(
-    (name: string, program: GeneratedProgram, sourceAssignmentId?: string): string => {
-      const coachId =
-        currentUser?.role === 'coach' || currentUser?.role === 'super_admin' ? currentUser.id : 'user-coach';
-      const id = `tpl-${Date.now()}`;
-      const now = new Date().toISOString();
-      const next: CoachWlProgramTemplate = {
-        id,
-        coachId,
-        name: name.trim() || program.name,
-        program: { ...program },
-        sourceAssignmentId,
-        createdAt: now,
-        updatedAt: now,
-      };
-      setCoachTemplates((prev) => [next, ...prev]);
-      return id;
-    },
-    [currentUser],
-  );
-
-  const deleteCoachTemplate = useCallback((templateId: string) => {
-    setCoachTemplates((prev) => prev.filter((t) => t.id !== templateId));
+  const clearFailedTracking = useCallback((key: string) => {
+    setFailedTrackingKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    const timer = failedTimersRef.current.get(key);
+    if (timer) clearTimeout(timer);
+    failedTimersRef.current.delete(key);
   }, []);
 
-  const assignFromTemplate = useCallback(
-    async (templateId: string, athleteProfileId: string): Promise<string | null> => {
-      const tpl = coachTemplates.find((t) => t.id === templateId);
-      if (!tpl) return null;
-      return assignProgramToAthlete(tpl.program, athleteProfileId);
+  const markFailedTracking = useCallback(
+    (key: string) => {
+      setFailedTrackingKeys((prev) => new Set(prev).add(key));
+      const existing = failedTimersRef.current.get(key);
+      if (existing) clearTimeout(existing);
+      const timer = setTimeout(() => clearFailedTracking(key), FAILED_CLEAR_MS);
+      failedTimersRef.current.set(key, timer);
     },
-    [coachTemplates, assignProgramToAthlete],
+    [clearFailedTracking],
   );
 
-  const applySessionToggleLocal = useCallback(
-    (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount: number) => {
-      setCompletions((prev) => {
-        const done = isDayComplete(prev, assignmentId, weekNumber, dayNumber, exerciseCount);
-        const filtered = prev.filter(
-          (c) =>
-            !(c.assignmentId === assignmentId && c.weekNumber === weekNumber && c.dayNumber === dayNumber),
-        );
-        if (done) return filtered;
-        return [...filtered, { assignmentId, weekNumber, dayNumber, completedAt: new Date().toISOString() }];
+  const addPendingTracking = useCallback(
+    (key: string) => {
+      clearFailedTracking(key);
+      setPendingTrackingKeys((prev) => new Set(prev).add(key));
+    },
+    [clearFailedTracking],
+  );
+
+  const removePendingTracking = useCallback((key: string) => {
+    setPendingTrackingKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      failedTimersRef.current.forEach((timer) => clearTimeout(timer));
+      failedTimersRef.current.clear();
+    };
+  }, []);
+
+  const isTrackingPending = useCallback(
+    (key: string) => pendingTrackingKeys.has(key),
+    [pendingTrackingKeys],
+  );
+
+  const isTrackingFailed = useCallback(
+    (key: string) => failedTrackingKeys.has(key),
+    [failedTrackingKeys],
+  );
+
+  const runTrackingMutation = useCallback(
+    (key: string, applyOptimistic: () => void, apiCall: () => Promise<Response>) => {
+      if (!apiMode) {
+        applyOptimistic();
+        return;
+      }
+      void trackingQueueRef.current.enqueue(async () => {
+        const snapshot = snapshotTracking(setLogsRef.current, completionsRef.current);
+        addPendingTracking(key);
+        applyOptimistic();
+        try {
+          const res = await apiCall();
+          if (!res.ok) {
+            setSetLogs(snapshot.setLogs);
+            setCompletions(snapshot.completions);
+            markFailedTracking(key);
+            pushAlert({
+              tone: 'warning',
+              title: 'No se guardó el cambio',
+              message: await readApiError(res),
+            });
+            return;
+          }
+          clearFailedTracking(key);
+        } catch {
+          setSetLogs(snapshot.setLogs);
+          setCompletions(snapshot.completions);
+          markFailedTracking(key);
+          pushAlert({
+            tone: 'warning',
+            title: 'Sin conexión',
+            message: 'No se pudo sincronizar. Toca de nuevo para reintentar.',
+          });
+        } finally {
+          removePendingTracking(key);
+        }
       });
     },
-    [],
+    [
+      apiMode,
+      addPendingTracking,
+      removePendingTracking,
+      markFailedTracking,
+      clearFailedTracking,
+      pushAlert,
+    ],
   );
 
   const toggleSessionComplete = useCallback(
     (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount = 0) => {
-      applySessionToggleLocal(assignmentId, weekNumber, dayNumber, exerciseCount);
-      if (!isApiEnabled()) return;
-      void assignmentApiFetch('/completions/session-toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseCount }),
-      })
-        .then((res) => {
-          if (!res.ok) void loadCompletionsFromApi();
-        })
-        .catch(() => void loadCompletionsFromApi());
+      const key = sessionTrackingKey(assignmentId, weekNumber, dayNumber);
+      runTrackingMutation(
+        key,
+        () => {
+          setCompletions((prev) =>
+            applySessionToggleLocal(prev, assignmentId, weekNumber, dayNumber, exerciseCount),
+          );
+        },
+        () =>
+          assignmentApiFetch('/completions/session-toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseCount }),
+          }),
+      );
     },
-    [applySessionToggleLocal, loadCompletionsFromApi],
+    [runTrackingMutation],
   );
 
   const isSessionComplete = useCallback(
@@ -379,41 +458,23 @@ export function WlAssignmentsProvider({
 
   const toggleExerciseComplete = useCallback(
     (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) => {
-      setCompletions((prev) => {
-        const exists = prev.some((c) =>
-          completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
-        );
-        if (exists) {
-          return prev.filter(
-            (c) => !completionMatches(c, assignmentId, weekNumber, dayNumber, exerciseIndex),
+      const key = exerciseTrackingKey(assignmentId, weekNumber, dayNumber, exerciseIndex);
+      runTrackingMutation(
+        key,
+        () => {
+          setCompletions((prev) =>
+            applyExerciseToggleLocal(prev, assignmentId, weekNumber, dayNumber, exerciseIndex),
           );
-        }
-        const withoutSession = prev.filter(
-          (c) =>
-            !(
-              c.assignmentId === assignmentId &&
-              c.weekNumber === weekNumber &&
-              c.dayNumber === dayNumber &&
-              c.exerciseIndex === undefined
-            ),
-        );
-        return [
-          ...withoutSession,
-          { assignmentId, weekNumber, dayNumber, exerciseIndex, completedAt: new Date().toISOString() },
-        ];
-      });
-      if (!isApiEnabled()) return;
-      void assignmentApiFetch('/completions/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseIndex }),
-      })
-        .then((res) => {
-          if (!res.ok) void loadCompletionsFromApi();
-        })
-        .catch(() => void loadCompletionsFromApi());
+        },
+        () =>
+          assignmentApiFetch('/completions/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assignmentId, weekNumber, dayNumber, exerciseIndex }),
+          }),
+      );
     },
-    [loadCompletionsFromApi],
+    [runTrackingMutation],
   );
 
   const isExerciseCompleteFn = useCallback(
@@ -421,25 +482,6 @@ export function WlAssignmentsProvider({
       isExerciseComplete(completions, assignmentId, weekNumber, dayNumber, exerciseIndex) ||
       isSessionMarkedComplete(completions, assignmentId, weekNumber, dayNumber),
     [completions],
-  );
-
-  const setLogMatches = useCallback(
-    (
-      l: SetCompletionLog,
-      assignmentId: string,
-      weekNumber: number,
-      dayNumber: number,
-      exerciseIndex: number,
-      schemeIndex: number,
-      setInstance: number,
-    ) =>
-      l.assignmentId === assignmentId &&
-      l.weekNumber === weekNumber &&
-      l.dayNumber === dayNumber &&
-      l.exerciseIndex === exerciseIndex &&
-      l.schemeIndex === schemeIndex &&
-      l.setInstance === setInstance,
-    [],
   );
 
   const getSetLogFn = useCallback(
@@ -468,97 +510,42 @@ export function WlAssignmentsProvider({
 
   const updateSetLogFn = useCallback(
     (input: SetLogInput) => {
-      setSetLogs((prev) => {
-        const idx = prev.findIndex((l) =>
-          setLogMatches(
-            l,
-            input.assignmentId,
-            input.weekNumber,
-            input.dayNumber,
-            input.exerciseIndex,
-            input.schemeIndex,
-            input.setInstance,
-          ),
-        );
-        if (idx < 0) {
-          return [...prev, { ...input, completedAt: new Date().toISOString() }];
-        }
-        const next = [...prev];
-        next[idx] = {
-          ...next[idx]!,
-          actualKg: input.actualKg ?? next[idx]!.actualKg,
-          actualReps: input.actualReps ?? next[idx]!.actualReps,
-          actualSegmentReps: input.actualSegmentReps ?? next[idx]!.actualSegmentReps,
-        };
-        return next;
-      });
-      if (!isApiEnabled()) return;
-      void assignmentApiFetch('/set-logs', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      })
-        .then((res) => {
-          if (!res.ok) void loadSetLogsFromApi();
-        })
-        .catch(() => void loadSetLogsFromApi());
+      const key = setLogTrackingKey(input);
+      runTrackingMutation(
+        key,
+        () => {
+          setSetLogs((prev) => applySetLogUpdateLocal(prev, input));
+        },
+        () =>
+          assignmentApiFetch('/set-logs', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          }),
+      );
     },
-    [setLogMatches, loadSetLogsFromApi],
+    [runTrackingMutation],
   );
 
   const toggleSetCompleteFn = useCallback(
     (input: SetLogInput) => {
-      setSetLogs((prev) => {
-        const exists = prev.some((l) =>
-          setLogMatches(
-            l,
-            input.assignmentId,
-            input.weekNumber,
-            input.dayNumber,
-            input.exerciseIndex,
-            input.schemeIndex,
-            input.setInstance,
-          ),
-        );
-        if (exists) {
-          return prev.filter(
-            (l) =>
-              !setLogMatches(
-                l,
-                input.assignmentId,
-                input.weekNumber,
-                input.dayNumber,
-                input.exerciseIndex,
-                input.schemeIndex,
-                input.setInstance,
-              ),
-          );
-        }
-        return [...prev, { ...input, completedAt: new Date().toISOString() }];
-      });
-      setCompletions((prev) =>
-        prev.filter(
-          (c) =>
-            !(
-              c.assignmentId === input.assignmentId &&
-              c.weekNumber === input.weekNumber &&
-              c.dayNumber === input.dayNumber &&
-              c.exerciseIndex === input.exerciseIndex
-            ),
-        ),
+      const key = setLogTrackingKey(input);
+      runTrackingMutation(
+        key,
+        () => {
+          const next = applySetToggleLocal(setLogsRef.current, completionsRef.current, input);
+          setSetLogs(next.setLogs);
+          setCompletions(next.completions);
+        },
+        () =>
+          assignmentApiFetch('/set-logs/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          }),
       );
-      if (!isApiEnabled()) return;
-      void assignmentApiFetch('/set-logs/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
-      })
-        .then((res) => {
-          if (!res.ok) void loadSetLogsFromApi();
-        })
-        .catch(() => void loadSetLogsFromApi());
     },
-    [setLogMatches, loadSetLogsFromApi],
+    [runTrackingMutation],
   );
 
   const myAssignment = useMemo(() => {
@@ -578,15 +565,11 @@ export function WlAssignmentsProvider({
     assignments,
     completions,
     setLogs,
-    coachTemplates,
     assignProgramToAthlete,
     updateAssignmentProgram,
     removeAssignment,
     restoreAssignmentVersion,
     duplicateAssignment,
-    saveCoachTemplate,
-    deleteCoachTemplate,
-    assignFromTemplate,
     toggleSessionComplete,
     isSessionComplete,
     toggleExerciseComplete,
@@ -597,6 +580,11 @@ export function WlAssignmentsProvider({
     getSetLog: getSetLogFn,
     myAssignment,
     assignmentsLoading,
+    isTrackingPending,
+    isTrackingFailed,
+    setLogTrackingKey,
+    exerciseTrackingKey,
+    sessionTrackingKey,
     reloadAssignmentsFromApi: loadAssignmentsFromApi,
   };
 

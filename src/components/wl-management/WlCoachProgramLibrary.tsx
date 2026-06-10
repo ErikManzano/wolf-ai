@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Pencil, Search, Trash2, UserPlus } from 'lucide-react';
 import type { CoachWlProgramTemplate, GeneratedProgram } from '../../models/training';
-import { mockAthletes } from '../../data/loadMockData';
-import { useWlAssignments } from '../../modules/assignments';
+import { useWolfAssign } from '../../context/WolfAssignContext';
 import ConfirmationModal from '../ConfirmationModal';
 import WlViewModeToggle, { useWlListViewMode } from './WlViewModeToggle';
 
@@ -19,12 +18,18 @@ const WlCoachProgramLibrary: React.FC<WlCoachProgramLibraryProps> = ({
   onAssigned,
   onOpenInEngine,
 }) => {
-  const { coachTemplates, assignFromTemplate, deleteCoachTemplate } = useWlAssignments();
+  const { coachTemplates, assignFromTemplate, deleteCoachTemplate, rosterForCoach, currentUser } = useWolfAssign();
   const [viewMode, setViewMode] = useWlListViewMode('library');
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [assignTplId, setAssignTplId] = useState<string | null>(null);
-  const [targetAthleteId, setTargetAthleteId] = useState(mockAthletes[0]?.id ?? '');
+  const [targetAthleteId, setTargetAthleteId] = useState('');
+  const coachAthletes = useMemo(() => rosterForCoach(currentUser), [rosterForCoach, currentUser]);
+
+  useEffect(() => {
+    if (targetAthleteId && coachAthletes.some((a) => a.id === targetAthleteId)) return;
+    setTargetAthleteId(coachAthletes[0]?.id ?? '');
+  }, [coachAthletes, targetAthleteId]);
 
   const templates = useMemo(() => {
     const scoped = !coachId ? coachTemplates : coachTemplates.filter((t) => t.coachId === coachId);
@@ -148,7 +153,7 @@ const WlCoachProgramLibrary: React.FC<WlCoachProgramLibraryProps> = ({
           <label className="wolf-engine-field">
             <span>{isEs ? 'Atleta' : 'Athlete'}</span>
             <select value={targetAthleteId} onChange={(e) => setTargetAthleteId(e.target.value)}>
-              {mockAthletes.map((a) => (
+              {coachAthletes.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name}
                 </option>
@@ -193,7 +198,7 @@ const WlCoachProgramLibrary: React.FC<WlCoachProgramLibraryProps> = ({
         danger
         onCancel={() => setDeleteId(null)}
         onConfirm={() => {
-          if (deleteId) deleteCoachTemplate(deleteId);
+          if (deleteId) void deleteCoachTemplate(deleteId);
           setDeleteId(null);
         }}
       />

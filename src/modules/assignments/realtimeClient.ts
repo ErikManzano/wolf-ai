@@ -12,9 +12,10 @@ export function isAssignmentsChangedEvent(msg: RealtimeMessage): boolean {
   return msg.event === ASSIGNMENTS_EVENT;
 }
 
-/** WebSocket con reconexión exponencial para eventos de asignaciones WL. */
-export function subscribeAssignmentsRealtime(
-  onAssignmentsChanged: (payload: unknown) => void,
+/** WebSocket con reconexión exponencial para un evento concreto. */
+export function subscribeRealtimeEvent(
+  eventName: string,
+  onEvent: (payload: unknown) => void,
   options?: { enabled?: boolean },
 ): () => void {
   if (typeof window === 'undefined') return () => {};
@@ -38,7 +39,7 @@ export function subscribeAssignmentsRealtime(
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(String(event.data)) as RealtimeMessage;
-          if (isAssignmentsChangedEvent(msg)) onAssignmentsChanged(msg.payload);
+          if (msg.event === eventName) onEvent(msg.payload);
         } catch {
           /* ignore malformed messages */
         }
@@ -65,4 +66,12 @@ export function subscribeAssignmentsRealtime(
     if (reconnectTimer) clearTimeout(reconnectTimer);
     if (ws && ws.readyState < 2) ws.close();
   };
+}
+
+/** WebSocket con reconexión exponencial para eventos de asignaciones WL. */
+export function subscribeAssignmentsRealtime(
+  onAssignmentsChanged: (payload: unknown) => void,
+  options?: { enabled?: boolean },
+): () => void {
+  return subscribeRealtimeEvent(ASSIGNMENTS_EVENT, onAssignmentsChanged, options);
 }

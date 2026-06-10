@@ -5,10 +5,12 @@ import type { ExerciseCategory } from '../../models/training';
 import type { ExerciseLifecycleStatus } from '../../models/exercise';
 import {
   catalogGroupLabel,
+  fuzzySearchPickerOptions,
   pickerOptionsFromIds,
-  searchPickerOptions,
   type SessionPickerOption,
 } from '../../services/exercise';
+
+const GROUP_ORDER: ExerciseCategory[] = ['snatch', 'clean_jerk', 'squat', 'accessory'];
 
 const CAT: Record<ExerciseCategory, string> = {
   snatch: 'SN',
@@ -59,6 +61,8 @@ interface ExerciseAutocompleteProps {
   pickerIdsInGroup?: Set<string>;
   /** Align dropdown to full exercise card width (coach editor). */
   panelMatchCard?: boolean;
+  /** Enter selects but keeps panel open (coach multi-add). */
+  keepOpenOnSelect?: boolean;
 }
 
 interface PanelRect {
@@ -97,6 +101,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   catalogGroupFilter = null,
   pickerIdsInGroup,
   panelMatchCard = false,
+  keepOpenOnSelect = false,
 }) => {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -117,7 +122,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   const suggestions = useMemo(
     () =>
-      searchPickerOptions(options, query, 24, {
+      fuzzySearchPickerOptions(options, query, 24, {
         catalogGroup: catalogGroupFilter,
         exerciseIdsInGroup: pickerIdsInGroup,
         category: categoryFilter,
@@ -135,13 +140,39 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     return suggestions;
   }, [query, recentOptions, suggestions]);
 
+  const groupedSections = useMemo(() => {
+    if (categoryFilter) return null;
+    const buckets = new Map<ExerciseCategory, SessionPickerOption[]>();
+    for (const cat of GROUP_ORDER) buckets.set(cat, []);
+    for (const opt of displayList) {
+      buckets.get(opt.category)?.push(opt);
+    }
+    return GROUP_ORDER.map((cat) => ({ cat, items: buckets.get(cat) ?? [] })).filter((s) => s.items.length > 0);
+  }, [categoryFilter, displayList]);
+
+  const flatList = useMemo(() => {
+    if (!groupedSections) return displayList;
+    return groupedSections.flatMap((s) => s.items);
+  }, [groupedSections, displayList]);
+
   useEffect(() => {
     if (!open) setQuery(selected?.name ?? '');
   }, [value, selected?.name, open]);
 
   useEffect(() => {
+    if (!open) return;
+    inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
     setActiveIndex(0);
   }, [query, categoryFilter, catalogGroupFilter]);
+
+  useEffect(() => {
+    if (!open || !panelRef.current) return;
+    const active = panelRef.current.querySelector('.wolf-se-autocomplete-option.is-active');
+    active?.scrollIntoView({ block: 'nearest' });
+  }, [open, activeIndex, flatList]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -173,17 +204,47 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const pick = useCallback(
     (id: string) => {
       onChange(id);
+      if (keepOpenOnSelect) {
+        setQuery('');
+        requestAnimationFrame(() => inputRef.current?.focus());
+        return;
+      }
       setOpen(false);
       setQuery('');
       inputRef.current?.blur();
     },
-    [onChange],
+    [onChange, keepOpenOnSelect],
   );
 
   const moveActive = (delta: number) => {
-    if (displayList.length === 0) return;
-    setActiveIndex((i) => (i + delta + displayList.length) % displayList.length);
+    if (flatList.length === 0) return;
+    setActiveIndex((i) => (i + delta + flatList.length) % flatList.length);
   };
+
+  const renderOption = (opt: SessionPickerOption, idx: number) => (
+    <li key={opt.id} id={`${listId}-opt-${idx}`} role="option" aria-selected={opt.id === value}>
+      <button
+        type="button"
+        className={`wolf-se-autocomplete-option${opt.id === value ? ' is-selected' : ''}${idx === activeIndex ? ' is-active' : ''}`}
+        onMouseDown={(e) => e.preventDefault()}
+        onMouseEnter={() => setActiveIndex(idx)}
+        onClick={() => pick(opt.id)}
+      >
+        <span className="wolf-se-autocomplete-option-text">
+          <span className="wolf-se-autocomplete-option-name">{opt.name}</span>
+          <span className="wolf-se-autocomplete-option-meta">{optionMeta(opt)}</span>
+        </span>
+        <span className="wolf-se-autocomplete-option-badges">
+          {opt.kind === 'complex' ? (
+            <span className="wolf-ei-badge wolf-ei-badge--coach_modified wolf-se-autocomplete-badge">C+</span>
+          ) : null}
+          <span className={`${lifecycleBadgeClass(opt.lifecycleStatus)} wolf-se-autocomplete-badge`}>
+            {SHORT_LIFECYCLE[opt.lifecycleStatus][isEs ? 0 : 1]}
+          </span>
+        </span>
+      </button>
+    </li>
+  );
 
   const panelContent = open ? (
     <div
@@ -219,43 +280,29 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
         <p className="wolf-se-autocomplete-section-label">{isEs ? 'En esta sesión' : 'In this session'}</p>
       )}
 
-      {displayList.length > 0 ? (
+      {flatList.length > 0 ? (
         <>
           <p className="wolf-se-autocomplete-count" aria-live="polite">
-            {displayList.length}
-            {options.length > displayList.length ? ` / ${options.length}` : ''}{' '}
+            {flatList.length}
+            {options.length > flatList.length ? ` / ${options.length}` : ''}{' '}
             {isEs ? 'movimientos' : 'movements'}
             {catalogGroupLabel(undefined, catalogGroupFilter ?? undefined)
               ? ` · ${catalogGroupLabel(undefined, catalogGroupFilter ?? undefined)}`
               : ''}
           </p>
           <ul id={listId} role="listbox" className="wolf-se-autocomplete-menu">
-            {displayList.map((opt, idx) => (
-              <li key={opt.id} id={`${listId}-opt-${idx}`} role="option" aria-selected={opt.id === value}>
-                <button
-                  type="button"
-                  className={`wolf-se-autocomplete-option${opt.id === value ? ' is-selected' : ''}${idx === activeIndex ? ' is-active' : ''}`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onMouseEnter={() => setActiveIndex(idx)}
-                  onClick={() => pick(opt.id)}
-                >
-                  <span className="wolf-se-autocomplete-option-text">
-                    <span className="wolf-se-autocomplete-option-name">{opt.name}</span>
-                    <span className="wolf-se-autocomplete-option-meta">{optionMeta(opt)}</span>
-                  </span>
-                  <span className="wolf-se-autocomplete-option-badges">
-                    {opt.kind === 'complex' ? (
-                      <span className="wolf-ei-badge wolf-ei-badge--coach_modified wolf-se-autocomplete-badge">
-                        C+
-                      </span>
-                    ) : null}
-                    <span className={`${lifecycleBadgeClass(opt.lifecycleStatus)} wolf-se-autocomplete-badge`}>
-                      {SHORT_LIFECYCLE[opt.lifecycleStatus][isEs ? 0 : 1]}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
+            {(() => {
+              let globalIdx = 0;
+              if (!groupedSections) return flatList.map((opt) => renderOption(opt, globalIdx++));
+              return groupedSections.map((section) => (
+                <li key={section.cat} className="wolf-se-autocomplete-group" role="presentation">
+                  <span className="wolf-se-autocomplete-group-label">{CAT[section.cat]}</span>
+                  <ul role="group">
+                    {section.items.map((opt) => renderOption(opt, globalIdx++))}
+                  </ul>
+                </li>
+              ));
+            })()}
           </ul>
         </>
       ) : (
@@ -278,7 +325,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}
-          aria-activedescendant={open && displayList[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined}
+          aria-activedescendant={open && flatList[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined}
           className="wolf-se-autocomplete-input"
           placeholder={placeholder ?? (isEs ? 'Buscar: snatch, pull, G4…' : 'Search: snatch, pull, G4…')}
           value={open ? query : (selected?.name ?? '')}
@@ -304,9 +351,9 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
               e.preventDefault();
               moveActive(-1);
             }
-            if (e.key === 'Enter' && open && displayList[activeIndex]) {
+            if (e.key === 'Enter' && open && flatList[activeIndex]) {
               e.preventDefault();
-              pick(displayList[activeIndex]!.id);
+              pick(flatList[activeIndex]!.id);
             }
           }}
         />

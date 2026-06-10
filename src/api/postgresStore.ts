@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
-import type { Exercise, ProgramAssignment, SessionCompletion, SetCompletionLog, WolfUser } from '../models/training';
-import { mockExercises } from '../data/loadMockData';
+import type { Exercise, ProgramAssignment, SessionCompletion, SetCompletionLog, WolfUser, Athlete, CoachWlProgramTemplate, GeneratedProgram, AthleteLevel } from '../models/training';
+import { mockExercises, mockAthletes, mockUsers } from '../data/loadMockData';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
 import type { ExerciseUpsertPayload } from './exercisePayload';
@@ -187,6 +187,38 @@ export class PostgresStore {
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS coach_exercises_coach_id_idx ON coach_exercises (coach_id);
     `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS wl_athlete_profiles (
+        id TEXT PRIMARY KEY,
+        coach_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        level TEXT NOT NULL,
+        bodyweight NUMERIC,
+        one_rm JSONB NOT NULL,
+        fatigue_score INT,
+        readiness_score INT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS wl_athlete_profiles_coach_id_idx ON wl_athlete_profiles (coach_id);
+    `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS coach_wl_templates (
+        id TEXT PRIMARY KEY,
+        coach_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        program JSONB NOT NULL,
+        source_assignment_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS coach_wl_templates_coach_id_idx ON coach_wl_templates (coach_id);
+    `);
+    await this.seedWlAthleteProfilesIfEmpty();
     await this.seedSystemExercises();
     await initExerciseCatalogTables(this.pool);
     await seedExerciseTaxonomy(this.pool);
@@ -1093,5 +1125,245 @@ export class PostgresStore {
       createdAt: row.created_at ? new Date(row.created_at as string | Date).toISOString() : new Date().toISOString(),
       updatedAt: row.updated_at ? new Date(row.updated_at as string | Date).toISOString() : new Date().toISOString(),
     };
+  }
+
+  private coachIdForAthleteProfile(athleteId: string): string {
+    const linked = mockUsers.find((u) => u.linkedAthleteId === athleteId && u.coachId);
+    return linked?.coachId ?? 'user-coach-wl';
+  }
+
+  private mapWlAthleteRow(row: Record<string, unknown>): Athlete & { coachId: string; createdAt: string; updatedAt: string } {
+    const oneRm = row.one_rm as Athlete['oneRM'];
+    return {
+      id: row.id as string,
+      coachId: row.coach_id as string,
+      name: row.name as string,
+      level: row.level as AthleteLevel,
+      bodyweight: Number(row.bodyweight ?? 0),
+      oneRM: oneRm,
+      fatigueScore: Number(row.fatigue_score ?? 0),
+      readinessScore: Number(row.readiness_score ?? 0),
+      createdAt: new Date(row.created_at as string | Date).toISOString(),
+      updatedAt: new Date(row.updated_at as string | Date).toISOString(),
+    };
+  }
+
+  private mapWlTemplateRow(row: Record<string, unknown>): CoachWlProgramTemplate {
+    return {
+      id: row.id as string,
+      coachId: row.coach_id as string,
+      name: row.name as string,
+      program: row.program as GeneratedProgram,
+      sourceAssignmentId: (row.source_assignment_id as string | null) ?? undefined,
+      createdAt: new Date(row.created_at as string | Date).toISOString(),
+      updatedAt: new Date(row.updated_at as string | Date).toISOString(),
+    };
+  }
+
+  private async seedWlAthleteProfilesIfEmpty(): Promise<void> {
+    const count = await this.pool.query('SELECT COUNT(*)::int AS c FROM wl_athlete_profiles;');
+    if ((count.rows[0]?.c as number) > 0) return;
+    for (const athlete of mockAthletes) {
+      const coachId = this.coachIdForAthleteProfile(athlete.id);
+      await this.pool.query(
+        `
+        INSERT INTO wl_athlete_profiles (
+          id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score
+        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)
+        ON CONFLICT (id) DO NOTHING;
+        `,
+        [
+          athlete.id,
+          coachId,
+          athlete.name,
+          athlete.level,
+          athlete.bodyweight,
+          JSON.stringify(athlete.oneRM),
+          athlete.fatigueScore,
+          athlete.readinessScore,
+        ],
+      );
+    }
+  }
+
+  async listAthleteProfiles(coachId: string): Promise<(Athlete & { coachId: string; createdAt: string; updatedAt: string })[]> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at
+      FROM wl_athlete_profiles
+      WHERE coach_id = $1
+      ORDER BY name ASC;
+      `,
+      [coachId],
+    );
+    return result.rows.map((row) => this.mapWlAthleteRow(row));
+  }
+
+  async listAllAthleteProfiles(): Promise<(Athlete & { coachId: string; createdAt: string; updatedAt: string })[]> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at
+      FROM wl_athlete_profiles
+      ORDER BY name ASC;
+      `,
+    );
+    return result.rows.map((row) => this.mapWlAthleteRow(row));
+  }
+
+  async createAthleteProfile(
+    coachId: string,
+    input: Omit<Athlete, 'fatigueScore' | 'readinessScore'> & Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>>,
+  ): Promise<Athlete & { coachId: string; createdAt: string; updatedAt: string }> {
+    const result = await this.pool.query(
+      `
+      INSERT INTO wl_athlete_profiles (
+        id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score
+      ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)
+      RETURNING id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at;
+      `,
+      [
+        input.id,
+        coachId,
+        input.name,
+        input.level,
+        input.bodyweight,
+        JSON.stringify(input.oneRM),
+        input.fatigueScore ?? 40,
+        input.readinessScore ?? 70,
+      ],
+    );
+    return this.mapWlAthleteRow(result.rows[0]);
+  }
+
+  async updateAthleteProfile(
+    coachId: string,
+    id: string,
+    patch: Partial<Pick<Athlete, 'name' | 'level' | 'bodyweight' | 'oneRM' | 'fatigueScore' | 'readinessScore'>>,
+  ): Promise<(Athlete & { coachId: string; createdAt: string; updatedAt: string }) | null> {
+    const existing = await this.pool.query(
+      `
+      SELECT id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at
+      FROM wl_athlete_profiles WHERE id = $1 AND coach_id = $2 LIMIT 1;
+      `,
+      [id, coachId],
+    );
+    if (existing.rows.length === 0) return null;
+    const row = existing.rows[0];
+    const nextOneRm = patch.oneRM ?? (row.one_rm as Athlete['oneRM']);
+    const result = await this.pool.query(
+      `
+      UPDATE wl_athlete_profiles SET
+        name = $3,
+        level = $4,
+        bodyweight = $5,
+        one_rm = $6::jsonb,
+        fatigue_score = $7,
+        readiness_score = $8,
+        updated_at = now()
+      WHERE id = $1 AND coach_id = $2
+      RETURNING id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at;
+      `,
+      [
+        id,
+        coachId,
+        patch.name ?? (row.name as string),
+        patch.level ?? (row.level as AthleteLevel),
+        patch.bodyweight ?? Number(row.bodyweight ?? 0),
+        JSON.stringify(nextOneRm),
+        patch.fatigueScore ?? Number(row.fatigue_score ?? 0),
+        patch.readinessScore ?? Number(row.readiness_score ?? 0),
+      ],
+    );
+    return this.mapWlAthleteRow(result.rows[0]);
+  }
+
+  async deleteAthleteProfile(coachId: string, id: string): Promise<{ ok: boolean; error?: string }> {
+    const owned = await this.pool.query(
+      'SELECT id FROM wl_athlete_profiles WHERE id = $1 AND coach_id = $2 LIMIT 1;',
+      [id, coachId],
+    );
+    if (owned.rows.length === 0) return { ok: false, error: 'Not found.' };
+    const active = await this.getAssignmentByAthlete(id);
+    if (active) return { ok: false, error: 'Cannot delete athlete with an active assignment.' };
+    await this.pool.query('DELETE FROM wl_athlete_profiles WHERE id = $1 AND coach_id = $2;', [id, coachId]);
+    return { ok: true };
+  }
+
+  async listCoachTemplates(coachId: string): Promise<CoachWlProgramTemplate[]> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, program, source_assignment_id, created_at, updated_at
+      FROM coach_wl_templates
+      WHERE coach_id = $1
+      ORDER BY updated_at DESC;
+      `,
+      [coachId],
+    );
+    return result.rows.map((row) => this.mapWlTemplateRow(row));
+  }
+
+  async createCoachTemplate(input: {
+    id: string;
+    coachId: string;
+    name: string;
+    program: GeneratedProgram;
+    sourceAssignmentId?: string;
+  }): Promise<CoachWlProgramTemplate> {
+    const result = await this.pool.query(
+      `
+      INSERT INTO coach_wl_templates (id, coach_id, name, program, source_assignment_id)
+      VALUES ($1, $2, $3, $4::jsonb, $5)
+      RETURNING id, coach_id, name, program, source_assignment_id, created_at, updated_at;
+      `,
+      [
+        input.id,
+        input.coachId,
+        input.name,
+        JSON.stringify(input.program),
+        input.sourceAssignmentId ?? null,
+      ],
+    );
+    return this.mapWlTemplateRow(result.rows[0]);
+  }
+
+  async updateCoachTemplate(
+    coachId: string,
+    id: string,
+    patch: { name?: string; program?: GeneratedProgram },
+  ): Promise<CoachWlProgramTemplate | null> {
+    const existing = await this.pool.query(
+      `
+      SELECT id, coach_id, name, program, source_assignment_id, created_at, updated_at
+      FROM coach_wl_templates WHERE id = $1 AND coach_id = $2 LIMIT 1;
+      `,
+      [id, coachId],
+    );
+    if (existing.rows.length === 0) return null;
+    const row = existing.rows[0];
+    const result = await this.pool.query(
+      `
+      UPDATE coach_wl_templates SET
+        name = $3,
+        program = $4::jsonb,
+        updated_at = now()
+      WHERE id = $1 AND coach_id = $2
+      RETURNING id, coach_id, name, program, source_assignment_id, created_at, updated_at;
+      `,
+      [
+        id,
+        coachId,
+        patch.name ?? (row.name as string),
+        JSON.stringify(patch.program ?? (row.program as GeneratedProgram)),
+      ],
+    );
+    return this.mapWlTemplateRow(result.rows[0]);
+  }
+
+  async deleteCoachTemplate(coachId: string, id: string): Promise<boolean> {
+    const result = await this.pool.query(
+      'DELETE FROM coach_wl_templates WHERE id = $1 AND coach_id = $2;',
+      [id, coachId],
+    );
+    return (result.rowCount ?? 0) > 0;
   }
 }

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
-import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
@@ -40,6 +39,7 @@ import { blockTonnage, exerciseName } from './blockMetrics';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExercisePickerSheet } from '../mobile-wl/sheets/ExercisePickerSheet';
 import { formatBlockPrescription } from './schemeFormat';
+import type { SessionCatalogProps } from './types';
 import './session-editor.css';
 import './exercise-block-card.css';
 import '../../styles/interactive.css';
@@ -77,6 +77,7 @@ export interface ExerciseBlockCardProps {
   onToggle: () => void;
   onApply: (fn: () => Session) => void;
   blockRef?: (el: HTMLElement | null) => void;
+  catalog: SessionCatalogProps;
   defaultComplexSecondId: string;
   defaultExtraSegmentId: string;
 }
@@ -105,26 +106,23 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   onToggle,
   onApply,
   blockRef,
+  catalog,
   defaultComplexSecondId,
   defaultExtraSegmentId,
 }) => {
   const apply = onApply;
-  const {
-    sessionExercisePicker,
-    sessionExercisePickerSingles,
-  } = useWolfAssign();
-
-  const filteredPicker = sessionExercisePicker;
-  const filteredPickerSingles = sessionExercisePickerSingles;
+  const filteredPicker = catalog.pickerOptions;
+  const filteredPickerSingles = catalog.pickerSingles;
 
   const recentExerciseIds = useMemo(() => {
-    const ids: string[] = [];
+    const fromCatalog = catalog.recentIds ?? [];
+    const ids: string[] = [...fromCatalog];
     for (const b of session.exercises) {
       ids.push(b.exerciseId);
       for (const s of b.segments ?? []) ids.push(s.exerciseId);
     }
     return [...new Set(ids)];
-  }, [session.exercises]);
+  }, [session.exercises, catalog.recentIds]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -355,6 +353,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                   isEs={isEs}
                   recentIds={recentExerciseIds}
                   panelMatchCard
+                  keepOpenOnSelect
                   onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
                 />
               </section>

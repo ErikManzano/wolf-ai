@@ -1,6 +1,9 @@
 import type { Athlete, WolfUser } from '../models/training';
 
-/** Atletas WL que pertenecen al coach autenticado (por `coachId` en usuarios). */
+/**
+ * Filtra atletas WL del roster del coach.
+ * Prefer `useWolfAssign().rosterForCoach(coach)` en componentes React (datos API).
+ */
 export function athletesForCoach(
   coach: WolfUser | undefined,
   users: WolfUser[],

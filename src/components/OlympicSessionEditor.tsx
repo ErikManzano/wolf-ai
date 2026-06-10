@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
+import type { SessionCatalogProps } from './session-editor/types';
 import { addExerciseBlock, WL_SESSION_LIMITS } from '../services/sessionMutations';
 import { ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { SessionDayHero } from './session-editor/SessionDayHero';
@@ -20,6 +21,7 @@ interface OlympicSessionEditorProps {
   session: Session;
   athlete: Athlete;
   exercises: Exercise[];
+  catalog: SessionCatalogProps;
   isEs: boolean;
   onChange: (s: Session) => void;
   draftSavedAt?: string | null;
@@ -33,6 +35,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   session,
   athlete,
   exercises,
+  catalog,
   isEs,
   onChange,
   draftSavedAt = null,
@@ -143,6 +146,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             }}
             defaultComplexSecondId={DEFAULT_COMPLEX_SECOND_ID}
             defaultExtraSegmentId={DEFAULT_EXTRA_SEGMENT_ID}
+            catalog={catalog}
           />
         ))}
       </div>

@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 import type {
   ExerciseDefinitionKind,
   ExerciseLifecycleStatus,
@@ -152,6 +153,62 @@ export function searchPickerOptions(
     .sort((a, b) => b.score - a.score || a.o.name.localeCompare(b.o.name, undefined, { sensitivity: 'base' }));
 
   return scored.slice(0, limit).map((x) => x.o);
+}
+
+let fuseIndexCache: { options: SessionPickerOption[]; fuse: Fuse<SessionPickerOption> } | null = null;
+
+function fuseForOptions(options: SessionPickerOption[]): Fuse<SessionPickerOption> {
+  if (fuseIndexCache?.options === options) return fuseIndexCache.fuse;
+  const fuse = new Fuse(options, {
+    keys: [
+      { name: 'name', weight: 0.45 },
+      { name: 'searchText', weight: 0.35 },
+      { name: 'tags', weight: 0.2 },
+    ],
+    threshold: 0.38,
+    ignoreLocation: true,
+  });
+  fuseIndexCache = { options, fuse };
+  return fuse;
+}
+
+/** Fuzzy ranked search (Fuse.js) with SN/CJ/SQ/AC and catalog group pre-filters. */
+export function fuzzySearchPickerOptions(
+  options: SessionPickerOption[],
+  query: string,
+  limit = 24,
+  opts?: {
+    catalogGroup?: string | null;
+    exerciseIdsInGroup?: Set<string>;
+    category?: ExerciseCategory | null;
+    preferIds?: string[];
+  },
+): SessionPickerOption[] {
+  if (!query.trim()) {
+    return searchPickerOptions(options, query, limit, opts);
+  }
+
+  let base = options;
+  if (opts?.catalogGroup) {
+    base = filterPickerByCatalogGroup(base, opts.catalogGroup, opts.exerciseIdsInGroup);
+  }
+  if (opts?.category) {
+    base = filterPickerByCategory(base, opts.category);
+  }
+
+  const fuse = fuseForOptions(base);
+  const preferSet = opts?.preferIds?.length ? new Set(opts.preferIds) : null;
+  const results = fuse.search(query.trim(), { limit: limit * 2 });
+
+  const ranked = results
+    .map(({ item, score }) => {
+      let rank = 1 - (score ?? 0);
+      if (preferSet?.has(item.id)) rank += 0.4;
+      return { item, rank };
+    })
+    .sort((a, b) => b.rank - a.rank || a.item.name.localeCompare(b.item.name, undefined, { sensitivity: 'base' }));
+
+  return ranked.slice(0, limit).map((x) => x.item);
 }
 
 /** @deprecated Prefer searchPickerOptions for ranked results */

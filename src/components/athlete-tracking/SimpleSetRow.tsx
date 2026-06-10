@@ -14,6 +14,8 @@ export interface SimpleSetRowProps {
   actualReps?: number;
   done: boolean;
   isEs: boolean;
+  syncPending?: boolean;
+  syncFailed?: boolean;
   onToggle: (actualKg: number, actualReps: number) => void;
   onUpdate: (actualKg: number, actualReps: number) => void;
 }
@@ -27,6 +29,8 @@ export const SimpleSetRow: React.FC<SimpleSetRowProps> = ({
   actualReps,
   done,
   isEs,
+  syncPending = false,
+  syncFailed = false,
   onToggle,
   onUpdate,
 }) => {
@@ -98,6 +102,8 @@ export const SimpleSetRow: React.FC<SimpleSetRowProps> = ({
         <SetCheckButton
           status={status}
           pressed={done}
+          syncPending={syncPending}
+          syncFailed={syncFailed}
           label={
             done
               ? isEs

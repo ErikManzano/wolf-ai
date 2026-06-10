@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
 import type {
   AthleteLoadCalibration,
   CoachExerciseOverride,
@@ -47,6 +47,9 @@ export interface MockApiState {
   assignments: ProgramAssignment[];
   completions: SessionCompletion[];
   setLogs: SetCompletionLog[];
+  coachWlTemplates: CoachWlProgramTemplate[];
+  /** athleteProfileId → coachId dueño (modo memoria sin Postgres) */
+  wlAthleteCoachById: Record<string, string>;
 }
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
 
@@ -101,6 +104,27 @@ function canWriteAssignment(actor: WolfUser, assignment: ProgramAssignment): boo
 
 function canLogAssignment(actor: WolfUser, assignment: ProgramAssignment): boolean {
   return canReadAssignment(actor, assignment);
+}
+
+function coachIdForMockAthlete(athleteId: string, users: WolfUser[], owners: Record<string, string>): string {
+  if (owners[athleteId]) return owners[athleteId];
+  const linked = users.find((u) => u.linkedAthleteId === athleteId && u.coachId);
+  return linked?.coachId ?? 'user-coach-wl';
+}
+
+function listMockWlAthletes(actor: WolfUser, state: MockApiState): Athlete[] {
+  if (actor.role === 'super_admin') return state.athletes;
+  if (actor.role === 'coach') {
+    return state.athletes.filter(
+      (a) => coachIdForMockAthlete(a.id, state.users, state.wlAthleteCoachById) === actor.id,
+    );
+  }
+  return [];
+}
+
+function coachScopeId(actor: WolfUser): string {
+  if (actor.role === 'coach') return actor.id;
+  return 'user-coach-wl';
 }
 
 async function findAssignmentById(
@@ -1581,6 +1605,240 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       return;
     }
     notify?.('assignments:changed', { id });
+    res.status(204).send();
+  });
+
+  router.get('/wl-athletes', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    if (store) {
+      const rows =
+        actor.role === 'super_admin'
+          ? await store.listAllAthleteProfiles()
+          : await store.listAthleteProfiles(actor.id);
+      res.json(rows.map(({ coachId: _c, createdAt: _ca, updatedAt: _ua, ...athlete }) => athlete));
+      return;
+    }
+    if (actor.role === 'super_admin') {
+      res.json(state.athletes);
+      return;
+    }
+    res.json(listMockWlAthletes(actor, state));
+  });
+
+  router.post('/wl-athletes', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const body = (req.body ?? {}) as Partial<Athlete> & { id?: string };
+    if (!body.name?.trim() || !body.level || !body.oneRM) {
+      res.status(400).json({ error: 'name, level and oneRM are required.' });
+      return;
+    }
+    const id = body.id?.trim() || `ath-${Date.now()}`;
+    const athlete: Athlete = {
+      id,
+      name: body.name.trim(),
+      level: body.level,
+      bodyweight: Number(body.bodyweight ?? 70),
+      oneRM: body.oneRM,
+      fatigueScore: Number(body.fatigueScore ?? 40),
+      readinessScore: Number(body.readinessScore ?? 70),
+    };
+    if (store) {
+      const created = await store.createAthleteProfile(actor.id, athlete);
+      notify?.('wl-athletes:changed', { coachId: actor.id });
+      const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...profile } = created;
+      res.status(201).json(profile);
+      return;
+    }
+    if (state.athletes.some((a) => a.id === id)) {
+      res.status(409).json({ error: 'Athlete id already exists.' });
+      return;
+    }
+    state.athletes.push(athlete);
+    state.wlAthleteCoachById[id] = actor.id;
+    notify?.('wl-athletes:changed', { coachId: actor.id });
+    res.status(201).json({ ...athlete, coachId: actor.id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  });
+
+  router.patch('/wl-athletes/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const patch = (req.body ?? {}) as Partial<Athlete>;
+    if (store) {
+      const updated = await store.updateAthleteProfile(actor.id, id, patch);
+      if (!updated) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      notify?.('wl-athletes:changed', { coachId: actor.id });
+      const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...profile } = updated;
+      res.json(profile);
+      return;
+    }
+    const idx = state.athletes.findIndex((a) => a.id === id);
+    if (idx < 0 || coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById) !== actor.id) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    state.athletes[idx] = { ...state.athletes[idx]!, ...patch, id };
+    notify?.('wl-athletes:changed', { coachId: actor.id });
+    res.json(state.athletes[idx]);
+  });
+
+  router.delete('/wl-athletes/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const result = await store.deleteAthleteProfile(actor.id, id);
+      if (!result.ok) {
+        res.status(result.error?.includes('active') ? 409 : 404).json({ error: result.error ?? 'Not found.' });
+        return;
+      }
+      notify?.('wl-athletes:changed', { coachId: actor.id });
+      res.status(204).send();
+      return;
+    }
+    if (coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById) !== actor.id) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    if (state.assignments.some((a) => a.athleteProfileId === id)) {
+      res.status(409).json({ error: 'Cannot delete athlete with an active assignment.' });
+      return;
+    }
+    state.athletes = state.athletes.filter((a) => a.id !== id);
+    delete state.wlAthleteCoachById[id];
+    notify?.('wl-athletes:changed', { coachId: actor.id });
+    res.status(204).send();
+  });
+
+  router.get('/wl-templates', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const coachId = actor.role === 'super_admin' ? coachScopeId(actor) : actor.id;
+    if (store) {
+      res.json(await store.listCoachTemplates(coachId));
+      return;
+    }
+    res.json(state.coachWlTemplates.filter((t) => t.coachId === coachId));
+  });
+
+  router.post('/wl-templates', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const body = (req.body ?? {}) as { name?: string; program?: GeneratedProgram; sourceAssignmentId?: string };
+    if (!body.name?.trim() || !body.program) {
+      res.status(400).json({ error: 'name and program are required.' });
+      return;
+    }
+    const id = `tpl-${Date.now()}`;
+    const now = new Date().toISOString();
+    if (store) {
+      const created = await store.createCoachTemplate({
+        id,
+        coachId: actor.id,
+        name: body.name.trim(),
+        program: body.program,
+        sourceAssignmentId: body.sourceAssignmentId,
+      });
+      notify?.('wl-templates:changed', { coachId: actor.id });
+      res.status(201).json(created);
+      return;
+    }
+    const next: CoachWlProgramTemplate = {
+      id,
+      coachId: actor.id,
+      name: body.name.trim(),
+      program: body.program,
+      sourceAssignmentId: body.sourceAssignmentId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    state.coachWlTemplates = [next, ...state.coachWlTemplates];
+    notify?.('wl-templates:changed', { coachId: actor.id });
+    res.status(201).json(next);
+  });
+
+  router.patch('/wl-templates/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const patch = (req.body ?? {}) as { name?: string; program?: GeneratedProgram };
+    if (store) {
+      const updated = await store.updateCoachTemplate(actor.id, id, patch);
+      if (!updated) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      notify?.('wl-templates:changed', { coachId: actor.id });
+      res.json(updated);
+      return;
+    }
+    const idx = state.coachWlTemplates.findIndex((t) => t.id === id && t.coachId === actor.id);
+    if (idx < 0) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    const current = state.coachWlTemplates[idx]!;
+    const updated: CoachWlProgramTemplate = {
+      ...current,
+      name: patch.name?.trim() || current.name,
+      program: patch.program ?? current.program,
+      updatedAt: new Date().toISOString(),
+    };
+    state.coachWlTemplates[idx] = updated;
+    notify?.('wl-templates:changed', { coachId: actor.id });
+    res.json(updated);
+  });
+
+  router.delete('/wl-templates/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor) || actor.role !== 'coach') {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const ok = await store.deleteCoachTemplate(actor.id, id);
+      if (!ok) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      notify?.('wl-templates:changed', { coachId: actor.id });
+      res.status(204).send();
+      return;
+    }
+    const before = state.coachWlTemplates.length;
+    state.coachWlTemplates = state.coachWlTemplates.filter((t) => !(t.id === id && t.coachId === actor.id));
+    if (state.coachWlTemplates.length === before) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    notify?.('wl-templates:changed', { coachId: actor.id });
     res.status(204).send();
   });
 

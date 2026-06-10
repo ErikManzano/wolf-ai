@@ -1,6 +1,4 @@
 import type {
-  CoachWlProgramTemplate,
-  GeneratedProgram,
   ProgramAssignment,
   SessionCompletion,
   SetCompletionLog,
@@ -11,7 +9,6 @@ export interface WlAssignmentsContextValue {
   assignments: ProgramAssignment[];
   completions: SessionCompletion[];
   setLogs: SetCompletionLog[];
-  coachTemplates: CoachWlProgramTemplate[];
   assignProgramToAthlete: (
     program: ProgramAssignment['program'],
     athleteProfileId: string,
@@ -20,9 +17,6 @@ export interface WlAssignmentsContextValue {
   removeAssignment: (assignmentId: string) => void;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
-  saveCoachTemplate: (name: string, program: GeneratedProgram, sourceAssignmentId?: string) => string;
-  deleteCoachTemplate: (templateId: string) => void;
-  assignFromTemplate: (templateId: string, athleteProfileId: string) => Promise<string | null>;
   toggleSessionComplete: (
     assignmentId: string,
     weekNumber: number,
@@ -67,6 +61,11 @@ export interface WlAssignmentsContextValue {
   ) => SetCompletionLog | undefined;
   myAssignment: ProgramAssignment | undefined;
   assignmentsLoading: boolean;
+  isTrackingPending: (key: string) => boolean;
+  isTrackingFailed: (key: string) => boolean;
+  setLogTrackingKey: (input: SetLogInput) => string;
+  exerciseTrackingKey: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) => string;
+  sessionTrackingKey: (assignmentId: string, weekNumber: number, dayNumber: number) => string;
   reloadAssignmentsFromApi: () => Promise<void>;
 }
 
