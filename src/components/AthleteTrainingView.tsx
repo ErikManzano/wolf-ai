@@ -109,8 +109,8 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       reps: isEs ? 'reps' : 'reps',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
-        ? 'Tu coach debe generar un programa en Motor WL y pulsar «Asignar al atleta».'
-        : 'Your coach should build a program in the WL Engine and tap “Assign to athlete”.',
+        ? 'Cuando tu coach te asigne un programa desde «Programas», aparecerá aquí al instante. Si acabas de recibirla, espera unos segundos o recarga.'
+        : 'When your coach assigns a program from “Programs”, it will show here right away. If you were just assigned, wait a few seconds or refresh.',
     }),
     [isEs],
   );

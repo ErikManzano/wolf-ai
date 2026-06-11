@@ -11,12 +11,13 @@ import { useWolfAlert } from '../../context/WolfAlertContext';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, wlAthletesApiFetch } from './apiClient';
 import {
+  coachIdForAthleteLocal,
   loadCoachAthletesFromLocal,
   normalizeAthleteFromApi,
   removeCoachAthleteLocal,
   upsertCoachAthleteLocal,
 } from './athleteStore';
-import type { WlAthletesContextValue, WlAthletesProviderProps } from './types';
+import type { CreateWlAthleteInput, WlAthletesContextValue, WlAthletesProviderProps } from './types';
 
 const WlAthletesContext = createContext<WlAthletesContextValue | null>(null);
 const REALTIME_EVENT = 'wl-athletes:changed';
@@ -46,6 +47,7 @@ export function WlAthletesProvider({
   const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
   const scopedCoachId = coachScopeId(currentUser);
+  const canManageWlAthletes = currentUser?.role === 'super_admin';
 
   const [athletes, setAthletes] = useState<Athlete[]>(() => {
     if (apiMode) return [];
@@ -116,13 +118,18 @@ export function WlAthletesProvider({
   );
 
   const createAthlete = useCallback(
-    async (
-      input: Omit<Athlete, 'fatigueScore' | 'readinessScore'> &
-        Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>>,
-    ): Promise<Athlete | null> => {
-      const coachId = coachScopeId(currentUser);
+    async (input: CreateWlAthleteInput): Promise<Athlete | null> => {
+      if (!canManageWlAthletes) {
+        pushAlert({
+          tone: 'error',
+          title: 'Sin permiso',
+          message: 'Solo el super admin puede crear perfiles WL.',
+        });
+        return null;
+      }
+      const coachId = input.coachId ?? coachScopeId(currentUser);
       if (!coachId) {
-        pushAlert({ tone: 'error', title: 'Sin coach', message: 'Inicia sesión como coach.' });
+        pushAlert({ tone: 'error', title: 'Sin coach', message: 'Indica el coach asignado.' });
         return null;
       }
 
@@ -151,7 +158,7 @@ export function WlAthletesProvider({
       const res = await wlAthletesApiFetch('/wl-athletes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, coachId }),
       });
 
       if (!res.ok) {
@@ -165,19 +172,26 @@ export function WlAthletesProvider({
       pushAlert({ tone: 'success', title: 'Atleta creado', message: created.name });
       return created;
     },
-    [apiMode, apiToken, currentUser, pushAlert],
+    [apiMode, apiToken, currentUser, canManageWlAthletes, pushAlert],
   );
 
   const updateAthlete = useCallback(
     async (id: string, patch: Partial<Athlete>): Promise<Athlete | null> => {
-      const coachId = coachScopeId(currentUser);
-      if (!coachId) return null;
-
+      if (!canManageWlAthletes) {
+        pushAlert({
+          tone: 'error',
+          title: 'Sin permiso',
+          message: 'Solo el super admin puede editar perfiles WL.',
+        });
+        return null;
+      }
       if (!apiMode) {
         const existing = athletes.find((a) => a.id === id);
         if (!existing) return null;
+        const ownerCoachId = coachIdForAthleteLocal(id) ?? coachScopeId(currentUser);
+        if (!ownerCoachId) return null;
         const merged = { ...existing, ...patch, id };
-        const next = upsertCoachAthleteLocal(coachId, merged);
+        const next = upsertCoachAthleteLocal(ownerCoachId, merged);
         setAthletes(next);
         pushAlert({ tone: 'success', title: 'Atleta actualizado', message: merged.name });
         return merged;
@@ -202,16 +216,23 @@ export function WlAthletesProvider({
       pushAlert({ tone: 'success', title: 'Atleta actualizado', message: saved.name });
       return saved;
     },
-    [apiMode, apiToken, currentUser, athletes, pushAlert],
+    [apiMode, apiToken, currentUser, athletes, canManageWlAthletes, pushAlert],
   );
 
   const deleteAthlete = useCallback(
     async (id: string): Promise<boolean> => {
-      const coachId = coachScopeId(currentUser);
-      if (!coachId) return false;
-
+      if (!canManageWlAthletes) {
+        pushAlert({
+          tone: 'error',
+          title: 'Sin permiso',
+          message: 'Solo el super admin puede eliminar perfiles WL.',
+        });
+        return false;
+      }
       if (!apiMode) {
-        const next = removeCoachAthleteLocal(coachId, id);
+        const ownerCoachId = coachIdForAthleteLocal(id) ?? coachScopeId(currentUser);
+        if (!ownerCoachId) return false;
+        const next = removeCoachAthleteLocal(ownerCoachId, id);
         setAthletes(next);
         return true;
       }
@@ -228,20 +249,21 @@ export function WlAthletesProvider({
       setAthletes((prev) => prev.filter((a) => a.id !== id));
       return true;
     },
-    [apiMode, apiToken, currentUser, pushAlert],
+    [apiMode, apiToken, currentUser, canManageWlAthletes, pushAlert],
   );
 
   const value = useMemo<WlAthletesContextValue>(
     () => ({
       athletes,
       athletesLoading,
+      canManageWlAthletes,
       createAthlete,
       updateAthlete,
       deleteAthlete,
       reloadAthletesFromApi: loadAthletesFromApi,
       rosterForCoach,
     }),
-    [athletes, athletesLoading, createAthlete, updateAthlete, deleteAthlete, loadAthletesFromApi, rosterForCoach],
+    [athletes, athletesLoading, canManageWlAthletes, createAthlete, updateAthlete, deleteAthlete, loadAthletesFromApi, rosterForCoach],
   );
 
   return <WlAthletesContext.Provider value={value}>{children}</WlAthletesContext.Provider>;

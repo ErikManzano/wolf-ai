@@ -1,12 +1,17 @@
 # Coach workflow: week 1, persistence, catalog
 
-## Coach programs week 1 (Motor WL)
+## Flujo coach → Erik (producción)
 
-1. Log in as **coach** (`wolf-engine` view).
-2. **Step 1 — Context:** pick athlete, goal, K-band; confirm PRs in Stats.
-3. **Step 2 — Create:** preset **4 weeks × 3 days**, generate mesocycle.
-4. **Step 3 — Customize:** stay on **Week 1**, edit each day in the session editor. Use filter chips **G1–G4** (snatch groups) in the toolbar to narrow the exercise picker; full list also in **Ejercicios** → technical collections Grupo 1–15.
-5. **Step 4 — Assign:** tap **Assign to athlete**; athlete sees the plan under **My WL plan**.
+1. **Coach** (`coach-wl` / `CoachWL2026!` o `chiron.traine@gmail.com`): **Programas** → crear/editar mesociclo → **Asignar** → marcar **Erik Manzano**.
+2. **Atleta Erik** (`erik` / `ErikWL2026!`): **Mi plan WL** — ve la rutina clonada al instante (WebSocket `assignments:changed` + recarga de `/assignments`).
+3. Requisitos: front con `VITE_API_URL`, API con `DATABASE_URL` + `JWT_SECRET`, perfiles `user-coach-wl` + `user-erik` (`linkedAthleteId`: `ath-erik`) en Postgres.
+
+## Coach programs week 1
+
+1. Log in as **coach** (`programs` view).
+2. **Generar:** atleta de referencia, objetivo, preset semanas/días, generar mesociclo.
+3. **Personalizar:** semana 1, editor de sesión (picker G1–G4 o catálogo completo).
+4. **Asignar:** desde el editor o la tabla de programas; el atleta ve el plan en **Mi plan WL**.
 
 ## Persistence (local + production)
 
@@ -44,7 +49,7 @@ DATABASE_URL="postgresql://..." npm run db:setup
 ## Exercise catalog (Bulgarian groups)
 
 - Data: [src/data/bulgarianCatalogData.ts](../src/data/bulgarianCatalogData.ts) + [src/data/exercises-bulgarian-catalog.json](../src/data/exercises-bulgarian-catalog.json)
-- Merged with legacy 37 movements in [loadMockData.ts](../src/data/loadMockData.ts)
+- Merged with legacy **39** movements in [loadMockData.ts](../src/data/loadMockData.ts) (incl. Snatch Extension, Clean Extension)
 - Technical collections **Grupo 1–15** in Ejercicios hub via [seedCollections.ts](../src/data/exercise-intelligence/seedCollections.ts)
 
 ## Assignments module

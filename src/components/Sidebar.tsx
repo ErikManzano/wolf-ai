@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, ShieldCheck, Gauge, ClipboardCheck, ListTree, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, ShieldCheck, BookMarked, ClipboardCheck, ListTree, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
@@ -25,7 +25,7 @@ interface SidebarProps {
   showRailToggle?: boolean;
 }
 
-const COACH_ONLY_NAV = new Set(['wolf-engine', 'wl-exercises', 'exercise-intelligence', 'athletes']);
+const COACH_ONLY_NAV = new Set(['programs', 'wolf-engine', 'wl-exercises', 'exercise-intelligence', 'athletes']);
 /** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
 const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
 const SUPER_ADMIN_ONLY_NAV = new Set(['admin-users']);
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'dashboard', label: isEs ? 'Dashboard' : 'Dashboard', icon: LayoutDashboard },
     { id: 'my-wl-plan', label: isEs ? 'Mi plan WL' : 'My WL plan', icon: ClipboardCheck },
     { id: 'athletes', label: isEs ? 'Atletas' : 'Athletes', icon: Users },
-    { id: 'wolf-engine', label: isEs ? 'Motor Weightlifting' : 'Weightlifting Engine', icon: Gauge },
+    { id: 'programs', label: isEs ? 'Programas' : 'Programs', icon: BookMarked },
     { id: 'exercise-intelligence', label: isEs ? 'Ejercicios' : 'Exercises', icon: ListTree },
     { id: 'global-calendar', label: isEs ? 'Calendario' : 'Calendar', icon: CalendarRange },
     { id: 'admin-users', label: isEs ? 'Panel maestro' : 'Master panel', icon: ShieldCheck },
@@ -94,11 +94,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             title={item.label}
             aria-label={item.label}
           >
-            <item.icon size={20} className={item.id === 'wolf-engine' && activeView === 'wolf-engine' ? 'icon-glow' : ''} />
+            <item.icon size={20} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
             <span
               style={{
-                fontWeight: item.id === 'wolf-engine' ? 'bold' : 'normal',
-                color: item.id === 'wolf-engine' && activeView !== 'wolf-engine' ? 'var(--color-accent)' : 'inherit',
+                fontWeight: item.id === 'programs' ? 'bold' : 'normal',
+                color: item.id === 'programs' && activeView !== 'programs' ? 'var(--color-accent)' : 'inherit',
               }}
             >
               {item.label}

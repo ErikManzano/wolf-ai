@@ -16,7 +16,7 @@ import type { WolfAppRole } from './models/training';
 const AUTH_STORAGE = 'wolf_auth_v1';
 
 function AppShell() {
-  const [activeView, setActiveView] = useState('wolf-engine');
+  const [activeView, setActiveView] = useState('programs');
   const [language, setLanguage] = useState<'ES' | 'EN'>('ES');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -59,7 +59,7 @@ function AppShell() {
         ? 'my-wl-plan'
         : currentUser.role === 'super_admin'
           ? 'admin-users'
-          : 'wolf-engine',
+          : 'programs',
     );
   }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole]);
 

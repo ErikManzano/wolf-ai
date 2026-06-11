@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import type { CoachWlProgramTemplate, GeneratedProgram } from '../../models/training';
+import { cloneProgramForAthlete } from '../../models/coach-architecture';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, wlTemplatesApiFetch } from './apiClient';
 import { loadTemplatesFromLocal, persistTemplatesLocal } from './templateStore';
@@ -161,9 +162,22 @@ export function WlTemplatesProvider({
     async (templateId: string, athleteProfileId: string): Promise<string | null> => {
       const tpl = coachTemplates.find((t) => t.id === templateId);
       if (!tpl) return null;
-      return assignProgramToAthlete(tpl.program, athleteProfileId);
+
+      if (apiMode && apiToken) {
+        const res = await wlTemplatesApiFetch(`/wl-templates/${templateId}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ athleteProfileId }),
+        });
+        if (!res.ok) return null;
+        const saved = (await res.json()) as { id?: string };
+        return saved.id ?? null;
+      }
+
+      const cloned = cloneProgramForAthlete(tpl.program, athleteProfileId, { name: tpl.name });
+      return assignProgramToAthlete(cloned, athleteProfileId);
     },
-    [coachTemplates, assignProgramToAthlete],
+    [coachTemplates, assignProgramToAthlete, apiMode, apiToken],
   );
 
   const value = useMemo<WlTemplatesContextValue>(

@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import type { Exercise, ProgramAssignment, SessionCompletion, SetCompletionLog, WolfUser, Athlete, CoachWlProgramTemplate, GeneratedProgram, AthleteLevel } from '../models/training';
+import type { CoachProgram, CoachProgramStatus } from '../models/coach-architecture';
 import { mockExercises, mockAthletes, mockUsers } from '../data/loadMockData';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { hashPassword, looksLikeBcryptHash, verifyPassword } from '../utils/passwordCrypto';
@@ -46,6 +47,8 @@ type AssignmentCreateInput = {
   athleteProfileId: string;
   athleteUserId?: string;
   program: ProgramAssignment['program'];
+  sourceTemplateId?: string;
+  coachProgramId?: string;
 };
 
 type UserCreateInput = {
@@ -122,12 +125,16 @@ export class PostgresStore {
         coach_id TEXT NOT NULL,
         athlete_user_id TEXT,
         athlete_profile_id TEXT NOT NULL UNIQUE,
+        source_template_id TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
         version INTEGER NOT NULL,
         version_history JSONB NOT NULL DEFAULT '[]'::jsonb,
         program JSONB NOT NULL,
         assigned_at TIMESTAMPTZ NOT NULL
       );
     `);
+    await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS source_template_id TEXT;`);
+    await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS workout_completions (
         id TEXT PRIMARY KEY,
@@ -218,6 +225,22 @@ export class PostgresStore {
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS coach_wl_templates_coach_id_idx ON coach_wl_templates (coach_id);
     `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS coach_programs (
+        id TEXT PRIMARY KEY,
+        coach_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        program JSONB NOT NULL,
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS coach_programs_coach_id_idx ON coach_programs (coach_id);
+    `);
+    await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS coach_program_id TEXT;`);
+    await this.seedCoachProgramsFromTemplates();
     await this.seedWlAthleteProfilesIfEmpty();
     await this.seedSystemExercises();
     await initExerciseCatalogTables(this.pool);
@@ -417,15 +440,24 @@ export class PostgresStore {
     return (result.rowCount ?? 0) > 0;
   }
 
+  async setUserPassword(id: string, newPassword: string): Promise<boolean> {
+    const newHash = hashPassword(newPassword);
+    const result = await this.pool.query(`UPDATE users SET password = $2 WHERE id = $1;`, [id, newHash]);
+    return (result.rowCount ?? 0) > 0;
+  }
+
   async deleteUser(id: string): Promise<boolean> {
     const result = await this.pool.query('DELETE FROM users WHERE id = $1;', [id]);
     return (result.rowCount ?? 0) > 0;
   }
 
+  private assignmentSelectColumns =
+    'id, coach_id, athlete_user_id, athlete_profile_id, source_template_id, coach_program_id, version, version_history, program, assigned_at';
+
   async getAssignments(): Promise<ProgramAssignment[]> {
     const result = await this.pool.query(
       `
-      SELECT id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at
+      SELECT ${this.assignmentSelectColumns}
       FROM assignments
       ORDER BY assigned_at DESC;
       `,
@@ -433,10 +465,24 @@ export class PostgresStore {
     return result.rows.map(this.mapAssignmentRow);
   }
 
+  async getAssignmentById(id: string): Promise<ProgramAssignment | null> {
+    const result = await this.pool.query(
+      `
+      SELECT ${this.assignmentSelectColumns}
+      FROM assignments
+      WHERE id = $1
+      LIMIT 1;
+      `,
+      [id],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapAssignmentRow(result.rows[0]);
+  }
+
   async getAssignmentByAthlete(athleteProfileId: string): Promise<ProgramAssignment | null> {
     const result = await this.pool.query(
       `
-      SELECT id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at
+      SELECT ${this.assignmentSelectColumns}
       FROM assignments
       WHERE athlete_profile_id = $1
       LIMIT 1;
@@ -453,16 +499,19 @@ export class PostgresStore {
     const result = await this.pool.query(
       `
       INSERT INTO assignments (
-        id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at
+        id, coach_id, athlete_user_id, athlete_profile_id, source_template_id, coach_program_id, status,
+        version, version_history, program, assigned_at
       )
-      VALUES ($1, $2, $3, $4, 1, '[]'::jsonb, $5::jsonb, $6::timestamptz)
-      RETURNING id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at;
+      VALUES ($1, $2, $3, $4, $5, $6, 'active', 1, '[]'::jsonb, $7::jsonb, $8::timestamptz)
+      RETURNING ${this.assignmentSelectColumns};
       `,
       [
         input.id,
         input.coachId,
         input.athleteUserId ?? null,
         input.athleteProfileId,
+        input.sourceTemplateId ?? null,
+        input.coachProgramId ?? null,
         JSON.stringify({ ...input.program, athleteId: input.athleteProfileId }),
         assignedAt,
       ],
@@ -476,7 +525,7 @@ export class PostgresStore {
       await client.query('BEGIN');
       const currentRes = await client.query(
         `
-        SELECT id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at
+        SELECT ${this.assignmentSelectColumns}
         FROM assignments
         WHERE id = $1
         FOR UPDATE;
@@ -497,7 +546,7 @@ export class PostgresStore {
         UPDATE assignments
         SET version = $2, version_history = $3::jsonb, program = $4::jsonb
         WHERE id = $1
-        RETURNING id, coach_id, athlete_user_id, athlete_profile_id, version, version_history, program, assigned_at;
+        RETURNING ${this.assignmentSelectColumns};
         `,
         [
           id,
@@ -767,7 +816,19 @@ export class PostgresStore {
           id, coach_id, name, category, subtype, start_position, complexity, goal,
           intensity_min, intensity_max, load_anchor, load_scale
         ) VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        ON CONFLICT (id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          category = EXCLUDED.category,
+          subtype = EXCLUDED.subtype,
+          start_position = EXCLUDED.start_position,
+          complexity = EXCLUDED.complexity,
+          goal = EXCLUDED.goal,
+          intensity_min = EXCLUDED.intensity_min,
+          intensity_max = EXCLUDED.intensity_max,
+          load_anchor = EXCLUDED.load_anchor,
+          load_scale = EXCLUDED.load_scale,
+          updated_at = now()
+        WHERE coach_exercises.coach_id IS NULL;
         `,
         [
           ex.id,
@@ -1001,6 +1062,8 @@ export class PostgresStore {
     coachId: row.coach_id as string,
     athleteUserId: (row.athlete_user_id as string | null) ?? undefined,
     athleteProfileId: row.athlete_profile_id as string,
+    sourceTemplateId: (row.source_template_id as string | null) ?? undefined,
+    coachProgramId: (row.coach_program_id as string | null) ?? undefined,
     version: Number(row.version),
     versionHistory: (row.version_history as ProgramAssignment['versionHistory']) ?? [],
     program: row.program as ProgramAssignment['program'],
@@ -1289,6 +1352,35 @@ export class PostgresStore {
     return { ok: true };
   }
 
+  async getAthleteProfileById(
+    id: string,
+  ): Promise<(Athlete & { coachId: string; createdAt: string; updatedAt: string }) | null> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, level, bodyweight, one_rm, fatigue_score, readiness_score, created_at, updated_at
+      FROM wl_athlete_profiles WHERE id = $1 LIMIT 1;
+      `,
+      [id],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapWlAthleteRow(result.rows[0]);
+  }
+
+  async updateAthleteProfileById(
+    id: string,
+    patch: Partial<Pick<Athlete, 'name' | 'level' | 'bodyweight' | 'oneRM' | 'fatigueScore' | 'readinessScore'>>,
+  ): Promise<(Athlete & { coachId: string; createdAt: string; updatedAt: string }) | null> {
+    const existing = await this.getAthleteProfileById(id);
+    if (!existing) return null;
+    return this.updateAthleteProfile(existing.coachId, id, patch);
+  }
+
+  async deleteAthleteProfileById(id: string): Promise<{ ok: boolean; error?: string }> {
+    const existing = await this.getAthleteProfileById(id);
+    if (!existing) return { ok: false, error: 'Not found.' };
+    return this.deleteAthleteProfile(existing.coachId, id);
+  }
+
   async listCoachTemplates(coachId: string): Promise<CoachWlProgramTemplate[]> {
     const result = await this.pool.query(
       `
@@ -1365,5 +1457,155 @@ export class PostgresStore {
       [id, coachId],
     );
     return (result.rowCount ?? 0) > 0;
+  }
+
+  private mapCoachProgramRow(row: Record<string, unknown>): CoachProgram {
+    return {
+      id: row.id as string,
+      coachId: row.coach_id as string,
+      name: row.name as string,
+      program: row.program as GeneratedProgram,
+      status: row.status as CoachProgramStatus,
+      createdAt: new Date(row.created_at as string | Date).toISOString(),
+      updatedAt: new Date(row.updated_at as string | Date).toISOString(),
+    };
+  }
+
+  private async seedCoachProgramsFromTemplates(): Promise<void> {
+    const count = await this.pool.query('SELECT COUNT(*)::int AS c FROM coach_programs;');
+    if ((count.rows[0]?.c as number) > 0) return;
+    const templates = await this.pool.query(
+      `SELECT id, coach_id, name, program, created_at, updated_at FROM coach_wl_templates ORDER BY updated_at DESC;`,
+    );
+    for (const row of templates.rows) {
+      await this.pool.query(
+        `
+        INSERT INTO coach_programs (id, coach_id, name, program, status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4::jsonb, 'published', $5, $6)
+        ON CONFLICT (id) DO NOTHING;
+        `,
+        [
+          `cpr-${row.id as string}`,
+          row.coach_id,
+          row.name,
+          JSON.stringify(row.program),
+          row.created_at,
+          row.updated_at,
+        ],
+      );
+    }
+  }
+
+  async listCoachPrograms(coachId: string): Promise<CoachProgram[]> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, program, status, created_at, updated_at
+      FROM coach_programs
+      WHERE coach_id = $1 AND status <> 'archived'
+      ORDER BY updated_at DESC;
+      `,
+      [coachId],
+    );
+    return result.rows.map((row) => this.mapCoachProgramRow(row));
+  }
+
+  async getCoachProgramById(coachId: string, id: string): Promise<CoachProgram | null> {
+    const result = await this.pool.query(
+      `
+      SELECT id, coach_id, name, program, status, created_at, updated_at
+      FROM coach_programs
+      WHERE id = $1 AND coach_id = $2
+      LIMIT 1;
+      `,
+      [id, coachId],
+    );
+    if (result.rows.length === 0) return null;
+    return this.mapCoachProgramRow(result.rows[0]);
+  }
+
+  async createCoachProgram(input: {
+    id: string;
+    coachId: string;
+    name: string;
+    program: GeneratedProgram;
+    status?: CoachProgramStatus;
+  }): Promise<CoachProgram> {
+    const result = await this.pool.query(
+      `
+      INSERT INTO coach_programs (id, coach_id, name, program, status)
+      VALUES ($1, $2, $3, $4::jsonb, $5)
+      RETURNING id, coach_id, name, program, status, created_at, updated_at;
+      `,
+      [input.id, input.coachId, input.name, JSON.stringify(input.program), input.status ?? 'draft'],
+    );
+    return this.mapCoachProgramRow(result.rows[0]);
+  }
+
+  async updateCoachProgram(
+    coachId: string,
+    id: string,
+    patch: { name?: string; program?: GeneratedProgram; status?: CoachProgramStatus },
+  ): Promise<CoachProgram | null> {
+    const existing = await this.getCoachProgramById(coachId, id);
+    if (!existing) return null;
+    const result = await this.pool.query(
+      `
+      UPDATE coach_programs SET
+        name = $3,
+        program = $4::jsonb,
+        status = $5,
+        updated_at = now()
+      WHERE id = $1 AND coach_id = $2
+      RETURNING id, coach_id, name, program, status, created_at, updated_at;
+      `,
+      [
+        id,
+        coachId,
+        patch.name ?? existing.name,
+        JSON.stringify(patch.program ?? existing.program),
+        patch.status ?? existing.status,
+      ],
+    );
+    return this.mapCoachProgramRow(result.rows[0]);
+  }
+
+  async deleteCoachProgram(coachId: string, id: string): Promise<{ ok: boolean; error?: string }> {
+    const linked = await this.pool.query(
+      `SELECT COUNT(*)::int AS c FROM assignments WHERE coach_program_id = $1;`,
+      [id],
+    );
+    if ((linked.rows[0]?.c as number) > 0) {
+      return { ok: false, error: 'Cannot delete program with active athlete enrollments.' };
+    }
+    const result = await this.pool.query(
+      'DELETE FROM coach_programs WHERE id = $1 AND coach_id = $2;',
+      [id, coachId],
+    );
+    return { ok: (result.rowCount ?? 0) > 0 };
+  }
+
+  async archiveCoachProgram(coachId: string, id: string): Promise<CoachProgram | null> {
+    return this.updateCoachProgram(coachId, id, { status: 'archived' });
+  }
+
+  async getAssignmentsByCoachProgramId(coachProgramId: string): Promise<ProgramAssignment[]> {
+    const result = await this.pool.query(
+      `
+      SELECT ${this.assignmentSelectColumns}
+      FROM assignments
+      WHERE coach_program_id = $1
+      ORDER BY assigned_at DESC;
+      `,
+      [coachProgramId],
+    );
+    return result.rows.map((row) => this.mapAssignmentRow(row));
+  }
+
+  async countAssignmentsForCoachProgram(coachProgramId: string): Promise<number> {
+    const result = await this.pool.query(
+      `SELECT COUNT(*)::int AS c FROM assignments WHERE coach_program_id = $1;`,
+      [coachProgramId],
+    );
+    return (result.rows[0]?.c as number) ?? 0;
   }
 }

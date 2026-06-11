@@ -74,6 +74,7 @@ const state = {
   completions: [],
   setLogs: [],
   coachWlTemplates: [],
+  coachPrograms: [],
   wlAthleteCoachById: Object.fromEntries(
     mockAthletes.map((a) => {
       const linked = mockUsers.find((u) => u.linkedAthleteId === a.id && u.coachId);
@@ -136,6 +137,7 @@ async function bootstrap() {
       corsOrigins: allowedOrigins,
       persistence: store ? 'postgres' : 'memory',
       exerciseCatalog,
+      features: { coachPrograms: true },
     });
   });
 

@@ -6,14 +6,16 @@ Documento de referencia para handoff a otra IA o desarrollador. Proyecto: **wolf
 
 ## 1. Qué es y para qué sirve
 
-El **Motor de halterofilia** (`wolf-engine`) es el flujo principal del coach para:
+El módulo **Programas** (`programs`) reemplaza al antiguo Motor WL (`wolf-engine`). Es el flujo principal del coach para:
 
-1. Elegir atleta y objetivo
-2. **Generar** un mesociclo periodizado (semanas × días × sesiones)
-3. **Personalizar** sesiones (ejercicios, series, %, complejos)
-4. **Asignar** el plan al atleta
+1. **Gestionar** mesociclos en una tabla CRUD (hub principal)
+2. **Editar** cada programa en pestañas: Contexto → Generar → Personalizar
+3. **Asignar** a uno o varios atletas (clones independientes agrupados por `coach_program_id`)
+4. Revisar **adherencia** por atleta desde filas expandibles
 
-El atleta lo ve en **Mi plan WL** (`my-wl-plan`): semanas, días, cargas prescritas y registro de series/sesiones.
+El atleta sigue viendo su instancia clonada en **Mi plan WL** (`my-wl-plan`).
+
+**Deprecado:** `OlympicEnginePanel` (wizard 4 pasos) y paso 4 de `WlAssignmentManagement`. Se mantienen en el repo temporalmente; la navegación apunta a `programs`.
 
 **Fuera de alcance del motor WL (legacy — no mezclar):**
 
@@ -28,14 +30,14 @@ El atleta lo ve en **Mi plan WL** (`my-wl-plan`): semanas, días, cargas prescri
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  UI                                                         │
-│  OlympicEnginePanel (4 pasos) │ AthleteTrainingView         │
-│  OlympicProgramPlan │ OlympicSessionEditor │ wl-management   │
+│  WlProgramsPanel (hub + editor) │ AthleteTrainingView         │
+│  OlympicProgramPlan │ OlympicSessionEditor │ wl-programs     │
 └───────────────────────────┬─────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────┐
 │  Estado                                                     │
 │  WolfAssignContext (auth, catálogo ejercicios, usuarios)    │
-│    └── WlAssignmentsProvider (asignaciones, completions)    │
+│    └── WlProgramsProvider (coach_programs CRUD + assign bulk) │
 │  AppContext (intakes/Stats PRs — puente vía wlStatsBridge)  │
 └───────────────────────────┬─────────────────────────────────┘
                             │
@@ -315,7 +317,8 @@ npm run dev
 
 | Key | Uso |
 |-----|-----|
-| `wolf_manage_focus_assignment_id` | Deep-link al paso 4 / detalle de asignación |
+| `wolf_programs_focus_id` | Deep-link al hub Programas (fila expandida) |
+| `wolf_manage_focus_assignment_id` | Legacy — redirige a Programas |
 
 ---
 
@@ -325,15 +328,25 @@ npm run dev
 src/
 ├── models/training.ts              # Tipos WL (GeneratedProgram, ProgramAssignment, …)
 ├── components/
-│   ├── OlympicEnginePanel.tsx      # Wizard 4 pasos coach
+│   ├── wl-programs/
+│   │   ├── WlProgramsPanel.tsx     # Hub ↔ editor
+│   │   ├── WlProgramsHub.tsx       # Tabla CRUD + KPIs
+│   │   ├── WlProgramEditor.tsx     # Pestañas contexto/generar/personalizar
+│   │   └── WlProgramAssignSheet.tsx # Multi-asignación
+│   ├── OlympicEnginePanel.tsx      # (deprecado) wizard 4 pasos
 │   ├── OlympicProgramPlan.tsx      # Generar / customizar / asignar UI
 │   ├── OlympicSessionEditor.tsx    # Editor de sesión
 │   ├── AthleteTrainingView.tsx     # Mi plan WL (atleta)
 │   ├── CentralPanel.tsx            # Router de vistas
-│   ├── Sidebar.tsx                 # Nav wolf-engine / my-wl-plan
+│   ├── Sidebar.tsx                 # Nav programs / my-wl-plan
 │   ├── session-editor/             # Bloques, tablas, nav semana/día
-│   ├── wl-management/              # Paso 4: asignaciones, biblioteca, detalle
+│   ├── wl-management/              # Detalle instancia, biblioteca legacy
 │   └── athlete-tracking/           # Cards tracking atleta
+├── modules/wl-programs/
+│   ├── WlProgramsProvider.tsx      # coach_programs CRUD + WS
+│   ├── apiClient.ts
+│   ├── programStore.ts             # localStorage fallback
+│   └── types.ts
 ├── modules/assignments/
 │   ├── WlAssignmentsProvider.tsx   # Estado + API asignaciones
 │   ├── assignmentStore.ts          # localStorage + seed demo

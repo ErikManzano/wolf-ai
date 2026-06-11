@@ -59,6 +59,10 @@ export function upsertCoachAthleteLocal(coachId: string, profile: Athlete): Athl
   return records.filter((r) => r.coachId === coachId).map((r) => r.profile);
 }
 
+export function coachIdForAthleteLocal(athleteId: string): string | null {
+  return readRecords().find((r) => r.profile.id === athleteId)?.coachId ?? null;
+}
+
 export function removeCoachAthleteLocal(coachId: string, athleteId: string): Athlete[] {
   const records = readRecords().filter((r) => !(r.coachId === coachId && r.profile.id === athleteId));
   persistAthleteRecords(records);

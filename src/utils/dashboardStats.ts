@@ -10,7 +10,7 @@ export type DashboardAlert = {
   title: string;
   description: string;
   actionLabel: string;
-  targetView: 'athletes' | 'wolf-engine' | 'onboarding' | 'my-wl-plan';
+  targetView: 'athletes' | 'programs' | 'onboarding' | 'my-wl-plan';
   athleteId?: number;
 };
 
@@ -31,6 +31,7 @@ export type WlAssignmentRow = {
   athleteProfileId: string;
   athleteName: string;
   programName: string;
+  coachProgramId?: string;
   assignedAt: string;
   completionPct: number;
   sessionsDone: number;
@@ -213,8 +214,8 @@ export function buildAlertsAppCoach(input: {
         description: isEs
           ? `${ath?.name ?? 'Atleta'}: menos del 8% de bloques con registro en el plan plantilla.`
           : `${ath?.name ?? 'Athlete'}: under 8% of training blocks logged on the template plan.`,
-        actionLabel: isEs ? 'Abrir motor WL' : 'Open WL engine',
-        targetView: 'wolf-engine',
+        actionLabel: isEs ? 'Abrir programas' : 'Open programs',
+        targetView: 'programs',
         athleteId: a.athleteId,
       });
     }
@@ -264,6 +265,7 @@ export function buildWlAssignmentRows(
       athleteProfileId: a.athleteProfileId,
       athleteName: nameByProfileId[a.athleteProfileId] ?? a.athleteProfileId,
       programName: a.program.name,
+      coachProgramId: a.coachProgramId,
       assignedAt: a.assignedAt.slice(0, 10),
       completionPct: slots > 0 ? Math.min(100, Math.round((done / slots) * 100)) : 0,
       sessionsDone: done,
@@ -310,8 +312,8 @@ export function buildAlertsWl(input: {
         description: input.isEs
           ? `«${a.program.name}» lleva más de 10 días sin sesiones completadas en el calendario del motor.`
           : `“${a.program.name}” has had no sessions marked complete in the WL calendar for 10+ days.`,
-        actionLabel: input.isEs ? 'Abrir motor' : 'Open engine',
-        targetView: 'wolf-engine',
+        actionLabel: input.isEs ? 'Abrir programas' : 'Open programs',
+        targetView: 'programs',
       });
     }
   }

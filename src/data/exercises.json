@@ -35,5 +35,7 @@
   {"id":"ex-034","name":"Snatch Deadlift","category":"snatch","subtype":"pull","startPosition":"floor","complexity":"single","goal":"strength","intensityRange":[90,115]},
   {"id":"ex-035","name":"Jerk From Rack","category":"clean_jerk","subtype":"classic","startPosition":"floor","complexity":"single","goal":"strength","intensityRange":[80,95]},
   {"id":"ex-036","name":"Behind-the-Neck Push Press","category":"accessory","subtype":"classic","startPosition":"floor","complexity":"single","goal":"power","intensityRange":[55,78]},
-  {"id":"ex-037","name":"Drop Snatch","category":"snatch","subtype":"power","startPosition":"at_knee","complexity":"single","goal":"technique","intensityRange":[45,65]}
+  {"id":"ex-037","name":"Drop Snatch","category":"snatch","subtype":"power","startPosition":"at_knee","complexity":"single","goal":"technique","intensityRange":[45,65]},
+  {"id":"ex-038","name":"Snatch Extension","category":"snatch","subtype":"pull","startPosition":"floor","complexity":"single","goal":"technique","intensityRange":[50,75],"loadAnchor":"snatch","loadScale":0.8},
+  {"id":"ex-039","name":"Clean Extension","category":"clean_jerk","subtype":"pull","startPosition":"floor","complexity":"single","goal":"technique","intensityRange":[55,80],"loadAnchor":"clean_jerk","loadScale":0.8}
 ]

@@ -156,6 +156,10 @@ export interface ProgramAssignment {
   athleteUserId?: string;
   /** Perfil `Athlete.id` usado para métricas/K-value */
   athleteProfileId: string;
+  /** Plantilla origen al asignar desde biblioteca (trazabilidad). */
+  sourceTemplateId?: string;
+  /** Programa coach agrupador (`coach_programs.id`). */
+  coachProgramId?: string;
   /** Versión activa del plan asignado (empieza en 1). */
   version: number;
   program: GeneratedProgram;

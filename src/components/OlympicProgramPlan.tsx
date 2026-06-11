@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarRange,
-  ChevronDown,
   Download,
   FileJson,
   LayoutGrid,
+  Minus,
+  Plus,
   Trash2,
   UserPlus,
 } from 'lucide-react';
@@ -36,6 +37,13 @@ import { useWolfAssign } from '../context/WolfAssignContext';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
 
+export interface OlympicProgramPlanCreateActions {
+  generate: () => void;
+  clear: () => void;
+  canGenerate: boolean;
+  canClear: boolean;
+}
+
 interface OlympicProgramPlanProps {
   language: 'ES' | 'EN';
   athleteId: string;
@@ -49,17 +57,74 @@ interface OlympicProgramPlanProps {
   editingAssignmentId?: string | null;
   onAssignmentSynced?: (assignmentId: string) => void;
   mode?: 'full' | 'create' | 'customize' | 'assign';
+  externalCreateActions?: boolean;
+  onCreateActionsChange?: (actions: OlympicProgramPlanCreateActions | null) => void;
 }
 
-const WEEK_OPTIONS = Array.from(
-  { length: PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS },
-  (_, i) => i + 1,
-);
-const DAY_OPTIONS = Array.from(
-  { length: PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK },
-  (_, i) => i + 1,
-);
 const PLAN_NAME_MAX_LEN = 48;
+
+function clampStructure(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+interface ParamStepperProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit: string;
+  onChange: (next: number) => void;
+  decrementAria: string;
+  incrementAria: string;
+}
+
+const ParamStepper: React.FC<ParamStepperProps> = ({
+  label,
+  value,
+  min,
+  max,
+  unit,
+  onChange,
+  decrementAria,
+  incrementAria,
+}) => (
+  <div className="wolf-program-stepper">
+    <span className="wolf-program-param-label">{label}</span>
+    <div className="wolf-program-stepper-control">
+      <button
+        type="button"
+        className="wolf-program-stepper-btn"
+        onClick={() => onChange(clampStructure(value - 1, min, max))}
+        disabled={value <= min}
+        aria-label={decrementAria}
+      >
+        <Minus size={16} strokeWidth={2.5} aria-hidden />
+      </button>
+      <div className="wolf-program-stepper-value">
+        <input
+          type="number"
+          className="wolf-program-stepper-input"
+          value={value}
+          min={min}
+          max={max}
+          onChange={(e) => onChange(clampStructure(Number(e.target.value), min, max))}
+          aria-label={label}
+        />
+        <span className="wolf-program-stepper-unit">{unit}</span>
+      </div>
+      <button
+        type="button"
+        className="wolf-program-stepper-btn"
+        onClick={() => onChange(clampStructure(value + 1, min, max))}
+        disabled={value >= max}
+        aria-label={incrementAria}
+      >
+        <Plus size={16} strokeWidth={2.5} aria-hidden />
+      </button>
+    </div>
+  </div>
+);
 
 const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   language,
@@ -74,6 +139,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   editingAssignmentId = null,
   onAssignmentSynced,
   mode = 'full',
+  externalCreateActions = false,
+  onCreateActionsChange,
 }) => {
   const isEs = language === 'ES';
   const recommendedConfig = useMemo(() => {
@@ -123,9 +190,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const t = useMemo(
     () => ({
       title: isEs ? 'Mesociclo' : 'Mesocycle',
-      subtitle: isEs
-        ? `Hasta ${PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS} semanas y ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} días por semana.`
-        : `Up to ${PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS} weeks and ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} days per week.`,
       weeks: isEs ? 'Semanas' : 'Weeks',
       days: isEs ? 'Dias / semana' : 'Days / week',
       name: isEs ? 'Nombre del plan' : 'Plan name',
@@ -135,19 +199,20 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       copyJson: isEs ? 'Copiar JSON' : 'Copy JSON',
       download: isEs ? 'Descargar .json' : 'Download .json',
       assignedOk: isEs ? `Plan asignado a ${athlete.name}.` : `Plan assigned to ${athlete.name}.`,
-      blockParams: isEs ? 'Parámetros del bloque' : 'Block parameters',
-      manualConfig: isEs ? 'Configuración manual' : 'Manual setup',
-      quickPresets: isEs ? 'Configuración rápida (Presets)' : 'Quick setup (Presets)',
-      quickPresetsHint: isEs
-        ? 'Selecciona un preset para rellenar semanas y días arriba; luego genera con un solo clic.'
-        : 'Pick a preset to fill weeks and days above, then generate in one click.',
-      recommended: isEs ? 'Recomendado' : 'Recommended',
+      structureLabel: isEs ? 'Estructura del bloque' : 'Block structure',
+      manualConfig: isEs ? 'Configuración del plan' : 'Plan setup',
+      weekUnit: isEs ? 'sem' : 'wk',
+      dayUnit: isEs ? 'días/sem' : 'd/wk',
+      sessionsTotal: isEs ? 'sesiones totales' : 'total sessions',
+      decWeeks: isEs ? 'Menos semanas' : 'Fewer weeks',
+      incWeeks: isEs ? 'Más semanas' : 'More weeks',
+      decDays: isEs ? 'Menos días por semana' : 'Fewer days per week',
+      incDays: isEs ? 'Más días por semana' : 'More days per week',
       previewTitle: isEs ? 'Vista previa del mesociclo' : 'Mesocycle preview',
       previewEmpty: isEs
         ? 'Configura los parámetros superiores para visualizar la estructura del mesociclo.'
         : 'Set the parameters above to preview your mesocycle structure.',
       previewWeeks: isEs ? 'Semanas del bloque' : 'Block weeks',
-      nameHint: isEs ? 'Opcional, pero ayuda para organizar atletas.' : 'Optional, but helps organize athletes.',
       nameError: isEs ? `Máximo ${PLAN_NAME_MAX_LEN} caracteres.` : `Maximum ${PLAN_NAME_MAX_LEN} characters.`,
       noProgramYet: isEs ? 'Aún no hay programa generado.' : 'No program generated yet.',
       draftRecovery: isEs ? 'Hay cambios guardados en este dispositivo más recientes.' : 'More recent changes saved on this device.',
@@ -180,16 +245,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const hasPlanNameError = planName.length > PLAN_NAME_MAX_LEN;
   const canGenerate = !hasPlanNameError;
 
-  const quickConfigs = useMemo(
-    () => [
-      { weeks: recommendedConfig.weeks, days: recommendedConfig.days, label: t.recommended },
-      { weeks: 4, days: 3, label: '4w · 3d' },
-      { weeks: 8, days: 4, label: '8w · 4d' },
-      { weeks: 12, days: 5, label: '12w · 5d' },
-      { weeks: 16, days: 6, label: '16w · 6d' },
-    ],
-    [recommendedConfig.days, recommendedConfig.weeks, t.recommended],
-  );
+  const totalSessions = totalWeeks * daysPerWeek;
 
   const persist = useCallback(
     (p: GeneratedProgram | null) => {
@@ -293,12 +349,33 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setSelectedDay(1);
     onProgramGenerated?.();
     persist(p);
-  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate]);
+  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate, motorExercises]);
 
-  const applyQuickConfig = useCallback((weeks: number, days: number) => {
-    setTotalWeeks(weeks);
-    setDaysPerWeek(days);
-  }, []);
+  const handleClearProgram = useCallback(() => {
+    persist(null);
+  }, [persist]);
+
+  useEffect(() => {
+    if (!externalCreateActions || !showCreate) {
+      onCreateActionsChange?.(null);
+      return;
+    }
+    onCreateActionsChange?.({
+      generate: handleGenerate,
+      clear: handleClearProgram,
+      canGenerate,
+      canClear: Boolean(program),
+    });
+    return () => onCreateActionsChange?.(null);
+  }, [
+    externalCreateActions,
+    showCreate,
+    handleGenerate,
+    handleClearProgram,
+    canGenerate,
+    program,
+    onCreateActionsChange,
+  ]);
 
   const applyProgramUpdate = useCallback(
     (next: GeneratedProgram, selection?: { week?: number; day?: number }) => {
@@ -473,7 +550,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       {showCreate && (
         <header className="wolf-program-meso-head">
           <h2 className="wolf-program-meso-title">{t.title}</h2>
-          <p className="wolf-program-meso-sub">{t.subtitle}</p>
         </header>
       )}
 
@@ -486,45 +562,52 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       {showCreate && (
         <>
           <div className="wolf-program-gen-card wolf-program-gen-card--primary">
-            <p className="wolf-program-gen-label">{t.blockParams}</p>
+            <div className="wolf-program-structure-summary" aria-live="polite">
+              <span className="wolf-program-structure-summary-label">{t.structureLabel}</span>
+              <div className="wolf-program-structure-stats">
+                <span className="wolf-program-structure-stat">
+                  <strong>{totalWeeks}</strong>
+                  <small>{t.weekUnit}</small>
+                </span>
+                <span className="wolf-program-structure-sep" aria-hidden>
+                  ×
+                </span>
+                <span className="wolf-program-structure-stat">
+                  <strong>{daysPerWeek}</strong>
+                  <small>{t.dayUnit}</small>
+                </span>
+                <span className="wolf-program-structure-eq" aria-hidden>
+                  =
+                </span>
+                <span className="wolf-program-structure-total">
+                  <strong>{totalSessions}</strong>
+                  <small>{t.sessionsTotal}</small>
+                </span>
+              </div>
+            </div>
 
-            <section className="wolf-program-manual" aria-labelledby="wolf-program-manual-heading">
-              <h3 id="wolf-program-manual-heading" className="wolf-program-section-title">
-                {t.manualConfig}
-              </h3>
+            <section className="wolf-program-manual" aria-label={t.manualConfig}>
               <div className="wolf-program-params-grid">
-                <label className="wolf-program-param">
-                  <span className="wolf-program-param-label">{t.weeks}</span>
-                  <div className="wolf-select-wrap">
-                    <select
-                      value={totalWeeks}
-                      onChange={(e) => setTotalWeeks(Number(e.target.value))}
-                    >
-                      {WEEK_OPTIONS.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
-                  </div>
-                </label>
-                <label className="wolf-program-param">
-                  <span className="wolf-program-param-label">{t.days}</span>
-                  <div className="wolf-select-wrap">
-                    <select
-                      value={daysPerWeek}
-                      onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-                    >
-                      {DAY_OPTIONS.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
-                  </div>
-                </label>
+                <ParamStepper
+                  label={t.weeks}
+                  value={totalWeeks}
+                  min={PROGRAM_STRUCTURE_LIMITS.MIN_WEEKS}
+                  max={PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS}
+                  unit={t.weekUnit}
+                  onChange={setTotalWeeks}
+                  decrementAria={t.decWeeks}
+                  incrementAria={t.incWeeks}
+                />
+                <ParamStepper
+                  label={t.days}
+                  value={daysPerWeek}
+                  min={PROGRAM_STRUCTURE_LIMITS.MIN_DAYS_PER_WEEK}
+                  max={PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK}
+                  unit={t.dayUnit}
+                  onChange={setDaysPerWeek}
+                  decrementAria={t.decDays}
+                  incrementAria={t.incDays}
+                />
                 <label className="wolf-program-param wolf-program-param--name">
                   <span className="wolf-program-param-label">{t.name}</span>
                   <input
@@ -533,61 +616,36 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     onChange={(e) => setPlanName(e.target.value)}
                     onBlur={() => setNameTouched(true)}
                     maxLength={PLAN_NAME_MAX_LEN + 4}
-                    placeholder={isEs ? 'Opcional' : 'Optional'}
+                    placeholder={isEs ? 'Opcional — ej. Mesociclo fuerza' : 'Optional — e.g. Strength block'}
                     aria-invalid={hasPlanNameError}
                   />
-                  <small
-                    className={`wolf-program-help ${hasPlanNameError && nameTouched ? 'wolf-program-help--error' : ''}`}
-                  >
-                    {hasPlanNameError && nameTouched ? t.nameError : t.nameHint}
-                  </small>
+                  {hasPlanNameError && nameTouched ? (
+                    <small className="wolf-program-help wolf-program-help--error">{t.nameError}</small>
+                  ) : null}
                 </label>
               </div>
-              <div className="wolf-program-cta-row">
-                <button
-                  type="button"
-                  className="btn-primary wolf-program-generate-btn"
-                  onClick={handleGenerate}
-                  disabled={!canGenerate}
-                >
-                  <CalendarRange size={18} strokeWidth={2} aria-hidden />
-                  {t.generate}
-                </button>
-                <button
-                  type="button"
-                  className="wolf-program-clear-btn"
-                  onClick={() => persist(null)}
-                  disabled={!program}
-                >
-                  <Trash2 size={15} strokeWidth={2} aria-hidden />
-                  {t.clear}
-                </button>
-              </div>
-            </section>
-
-            <div className="wolf-program-params-divider" role="separator" aria-hidden />
-
-            <section className="wolf-program-quick" aria-labelledby="wolf-program-quick-heading">
-              <h3 id="wolf-program-quick-heading" className="wolf-program-section-title">
-                {t.quickPresets}
-              </h3>
-              <p className="wolf-program-quick-hint">{t.quickPresetsHint}</p>
-              <div className="wolf-program-preset-tags" role="group" aria-label={t.quickPresets}>
-                {quickConfigs.map((cfg) => {
-                  const isActive = totalWeeks === cfg.weeks && daysPerWeek === cfg.days;
-                  return (
-                    <button
-                      key={`${cfg.weeks}-${cfg.days}-${cfg.label}`}
-                      type="button"
-                      className={`wolf-program-preset-tag${isActive ? ' is-active' : ''}`}
-                      onClick={() => applyQuickConfig(cfg.weeks, cfg.days)}
-                      aria-pressed={isActive}
-                    >
-                      {cfg.label}
-                    </button>
-                  );
-                })}
-              </div>
+              {!externalCreateActions ? (
+                <div className="wolf-program-cta-row">
+                  <button
+                    type="button"
+                    className="btn-primary wolf-program-generate-btn"
+                    onClick={handleGenerate}
+                    disabled={!canGenerate}
+                  >
+                    <CalendarRange size={18} strokeWidth={2} aria-hidden />
+                    {t.generate}
+                  </button>
+                  <button
+                    type="button"
+                    className="wolf-program-clear-btn"
+                    onClick={handleClearProgram}
+                    disabled={!program}
+                  >
+                    <Trash2 size={15} strokeWidth={2} aria-hidden />
+                    {t.clear}
+                  </button>
+                </div>
+              ) : null}
             </section>
           </div>
 

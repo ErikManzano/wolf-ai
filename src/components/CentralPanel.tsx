@@ -6,12 +6,14 @@ import {
   ChevronRight, Settings2, SlidersHorizontal, Share, Download, GripVertical, Plus,
   LayoutDashboard, Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp, Award,
   BarChart3, Clock, Users, BotMessageSquare as IntakeIcon, Search, Info, ShieldCheck, CheckCircle2,
-  Save, X, BookMarked, Layers, MoveDiagonal, Pencil, Trash2, Undo2
+  Save, X, BookMarked, Layers, MoveDiagonal
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import type { Athlete, IntakeData } from '../context/AppContext';
-import OlympicEnginePanel from './OlympicEnginePanel';
-import { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
+import type { IntakeData } from '../context/AppContext';
+import WlAthletesSection from './wl-management/WlAthletesSection';
+import WlProgramsPanel from './wl-programs/WlProgramsPanel';
+import './wl-management/wl-management.css';
+import { WL_PROGRAMS_FOCUS_KEY } from './wl-programs/WlProgramsHub';
 import CoachExerciseLibrary from './CoachExerciseLibrary';
 import AthleteTrainingView from './AthleteTrainingView';
 import PerformanceStatsHistory from './PerformanceStatsHistory';
@@ -33,6 +35,7 @@ import {
   type DashboardAlert,
 } from '../utils/dashboardStats';
 import { mockAthletes } from '../data/loadMockData';
+import type { AthleteLevel } from '../models/training';
 
 interface CentralPanelProps {
   language: 'ES' | 'EN';
@@ -50,12 +53,18 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     currentUser,
     createUser,
     updateUser,
+    resetUserPassword,
     deleteUser,
     assignments: wlProgramAssignments,
     completions,
+    wlAthletes,
+    updateWlAthlete,
+    deleteWlAthlete,
+    reloadWlAthletesFromApi,
+    canManageWlAthletes,
   } = useWolfAssign();
   const {
-    athletes, archivedAthletes, addAthlete, updateAthlete, removeAthlete, restoreAthlete, programs,
+    athletes, programs,
     assignments, assignProgram, intakes, submitIntake,
     exerciseLibrary, updateExerciseLog, setSelectedExerciseId,
     userRole, customGroups, createCustomGroup, addToCustomGroup, addMasterExercise,
@@ -64,20 +73,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   const [currentTab, setCurrentTab] = useState<'micro' | 'session'>('micro');
 
   // Athlete View States
-  const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
-  const [showAddAthlete, setShowAddAthlete] = useState(false);
-  const [newAthleteName, setNewAthleteName] = useState('');
-  const [newAthleteLevel, setNewAthleteLevel] = useState('Beginner');
-  const [editingAthleteId, setEditingAthleteId] = useState<number | null>(null);
-  const [editingAthleteName, setEditingAthleteName] = useState('');
-  const [editingAthleteLevel, setEditingAthleteLevel] = useState('Beginner');
-  const [assigningTo, setAssigningTo] = useState<number | null>(null);
-  const [athleteSearch, setAthleteSearch] = useState('');
-  const [athleteLevelFilter, setAthleteLevelFilter] = useState('All');
-  const [athleteSortBy, setAthleteSortBy] = useState<'name' | 'level' | 'program'>('name');
-  const [athleteSortDir, setAthleteSortDir] = useState<'asc' | 'desc'>('asc');
-  const [athletePage, setAthletePage] = useState(1);
-
   // Intake Questionnaire States
   const [intakeStep, setIntakeStep] = useState(1);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -120,14 +115,20 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   /** Stats/PRs es vista de atleta; el coach no debe quedar en esta ruta. */
   useEffect(() => {
     if (persona === 'coach' && activeView === 'onboarding') {
-      setActiveView('wolf-engine');
+      setActiveView('programs');
     }
   }, [persona, activeView, setActiveView]);
 
-  /** Atleta: no quedar en vistas exclusivas de coach (motor, atletas, planificación). */
+  /** Compatibilidad: bookmarks y sessionStorage antiguos apuntaban a wolf-engine. */
+  useEffect(() => {
+    if (activeView === 'wolf-engine') setActiveView('programs');
+  }, [activeView, setActiveView]);
+
+  /** Atleta: no quedar en vistas exclusivas de coach (programas, atletas, planificación). */
   useEffect(() => {
     if (persona !== 'athlete') return;
     const coachOnly =
+      activeView === 'programs' ||
       activeView === 'wolf-engine' ||
       activeView === 'exercise-intelligence' ||
       activeView === 'athletes' ||
@@ -137,9 +138,13 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
 
   useEffect(() => {
     if (activeView === 'admin-users' && currentUser?.role !== 'super_admin') {
-      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'wolf-engine');
+      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'programs');
     }
   }, [activeView, currentUser?.role, persona, setActiveView]);
+
+  useEffect(() => {
+    if (activeView === 'athletes') void reloadWlAthletesFromApi();
+  }, [activeView, reloadWlAthletesFromApi]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,20 +155,32 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
   const [showGroupSelectorFor, setShowGroupSelectorFor] = useState<number | null>(null);
   const [isAthletePreview, setIsAthletePreview] = useState(false);
+  const emptyAdminOneRm = () => ({
+    snatch: 60,
+    cleanJerk: 80,
+    backSquat: 100,
+    frontSquat: 85,
+  });
   const [adminDraft, setAdminDraft] = useState({
     name: '',
     email: '',
+    username: '',
     role: 'athlete' as 'athlete' | 'coach' | 'super_admin',
     password: 'wolf2026',
+    coachId: 'user-coach-wl',
+    level: 'intermediate' as AthleteLevel,
+    bodyweight: 75,
+    oneRM: emptyAdminOneRm(),
   });
   const [adminError, setAdminError] = useState('');
+  const [wlProfileEditId, setWlProfileEditId] = useState<string | null>(null);
+  const coachOptions = useMemo(
+    () => authUsers.filter((u) => u.role === 'coach'),
+    [authUsers],
+  );
 
   // Calendar States
   const [calendarDate, setCalendarDate] = useState(new Date());
-
-  useEffect(() => {
-    setAthletePage(1);
-  }, [athleteSearch, athleteLevelFilter, athleteSortBy, athleteSortDir]);
 
   const wlNameByProfileId = useMemo(
     () => Object.fromEntries(mockAthletes.map((a) => [a.id, a.name] as const)),
@@ -278,8 +295,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
 
   const handleDashboardNavigate = (alert: DashboardAlert) => {
     if (alert.athleteId != null) {
-      const ath = athletes.find((a) => a.id === alert.athleteId);
-      if (ath) setSelectedAthlete(ath);
       setActiveAthleteId(alert.athleteId);
     }
     setActiveView(alert.targetView);
@@ -297,461 +312,8 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
     // This is a demo, so we'll just log it or we could update a local state if we had one for sessions
   };
 
-  // Athlete Management
-  const handleAddAthlete = () => {
-    const cleanName = newAthleteName.trim();
-    if (!cleanName) return;
-    addAthlete({ name: cleanName, level: newAthleteLevel });
-    setNewAthleteName('');
-    setNewAthleteLevel('Beginner');
-    setShowAddAthlete(false);
-  };
-
-  const startEditAthlete = (ath: Athlete) => {
-    setEditingAthleteId(ath.id);
-    setEditingAthleteName(ath.name);
-    setEditingAthleteLevel(ath.level);
-  };
-
-  const cancelEditAthlete = () => {
-    setEditingAthleteId(null);
-    setEditingAthleteName('');
-    setEditingAthleteLevel('Beginner');
-  };
-
-  const saveEditAthlete = () => {
-    if (editingAthleteId == null) return;
-    const cleanName = editingAthleteName.trim();
-    if (!cleanName) return;
-    updateAthlete(editingAthleteId, { name: cleanName, level: editingAthleteLevel });
-    if (selectedAthlete?.id === editingAthleteId) {
-      setSelectedAthlete({ ...selectedAthlete, name: cleanName, level: editingAthleteLevel });
-    }
-    cancelEditAthlete();
-  };
-
-  const handleAssignProgram = (athleteId: number, programId: number) => {
-    assignProgram({
-      athleteId,
-      programId,
-      startDate: new Date().toISOString().split('T')[0]
-    });
-    setAssigningTo(null);
-  };
-
-  const getAthleteAssignment = (athleteId: number) => {
-    const assignment = assignments.find(a => a.athleteId === athleteId);
-    if (!assignment) return null;
-    const program = programs.find(p => p.id === assignment.programId);
-    return { ...assignment, program };
-  };
-
-  // Calendar Calculation
-  const renderAthleteCalendar = (athlete: Athlete) => {
-    const assignment = getAthleteAssignment(athlete.id);
-
-    if (!assignment || !assignment.program) {
-      return (
-        <div className="mock-view" style={{ marginTop: '24px' }}>
-          <p style={{ color: 'var(--color-text-muted)' }}>
-            {isEs ? 'Este atleta no tiene un programa asignado.' : 'This athlete has no assigned program.'}
-          </p>
-        </div>
-      );
-    }
-
-    const start = new Date(assignment.startDate);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - start.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    // Assume 7 days a week for training blocks
-    const durationWeeks = assignment.program.weeks.length;
-    const currentWeek = Math.floor(diffDays / 7) + 1;
-    const currentDay = (diffDays % 7) + 1;
-
-    const isCompleted = currentWeek > durationWeeks;
-
-    return (
-      <div className="calendar-view" style={{ marginTop: '24px' }}>
-        <div className="micro-card glass" style={{ backgroundColor: 'var(--color-bg-hover)' }}>
-          <h3 style={{ color: 'var(--color-accent)' }}>{assignment.program.name}</h3>
-          <p style={{ marginTop: '8px', color: 'var(--color-text-secondary)' }}>
-            {isEs ? 'Iniciado:' : 'Started:'} {assignment.startDate}
-          </p>
-          <div style={{ marginTop: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div style={{ padding: '16px', backgroundColor: 'var(--color-bg-main)', borderRadius: '8px', textAlign: 'center', minWidth: '120px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>{isEs ? 'Semana Actual' : 'Current Week'}</span>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: isCompleted ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
-                {isCompleted ? 'Done' : `${currentWeek} / ${durationWeeks}`}
-              </p>
-            </div>
-            <div style={{ padding: '16px', backgroundColor: 'var(--color-bg-main)', borderRadius: '8px', textAlign: 'center', minWidth: '120px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>{isEs ? 'Día de la semana' : 'Day of Week'}</span>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: isCompleted ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
-                {isCompleted ? '-' : currentDay}
-              </p>
-            </div>
-          </div>
-
-          <div style={{ marginTop: '24px' }}>
-            <h4 style={{ marginBottom: '12px', color: 'var(--color-text-secondary)' }}>{isEs ? 'Progreso' : 'Progress'}</h4>
-            <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: isCompleted ? '100%' : `${Math.min(100, (currentWeek / durationWeeks) * 100)}%`,
-                backgroundColor: 'var(--color-accent)'
-              }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderAthletesView = () => {
-    const filteredAthletes = athletes.filter((ath) => {
-      const matchesSearch = ath.name.toLowerCase().includes(athleteSearch.trim().toLowerCase());
-      const matchesLevel = athleteLevelFilter === 'All' || ath.level === athleteLevelFilter;
-      return matchesSearch && matchesLevel;
-    });
-    const sortedAthletes = [...filteredAthletes].sort((a, b) => {
-      const direction = athleteSortDir === 'asc' ? 1 : -1;
-      if (athleteSortBy === 'name') return a.name.localeCompare(b.name) * direction;
-      if (athleteSortBy === 'level') return a.level.localeCompare(b.level) * direction;
-      const aProgram = getAthleteAssignment(a.id)?.program?.name ?? '';
-      const bProgram = getAthleteAssignment(b.id)?.program?.name ?? '';
-      return aProgram.localeCompare(bProgram) * direction;
-    });
-    const pageSize = 8;
-    const totalPages = Math.max(1, Math.ceil(sortedAthletes.length / pageSize));
-    const currentPage = Math.min(athletePage, totalPages);
-    const pagedAthletes = sortedAthletes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    const assignedCount = athletes.filter((ath) => Boolean(getAthleteAssignment(ath.id)?.program)).length;
-
-    if (selectedAthlete) {
-      return (
-        <div className="athletes-view">
-          <header className="panel-header">
-            <div className="header-left">
-              <button
-                onClick={() => setSelectedAthlete(null)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)', marginBottom: '16px' }}
-              >
-                <ArrowLeft size={16} /> {isEs ? 'Volver a la lista' : 'Back to list'}
-              </button>
-              <h1 className="view-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                  {selectedAthlete.name.charAt(0)}
-                </div>
-                {selectedAthlete.name}
-              </h1>
-              <span className="badge" style={{ marginTop: '8px', display: 'inline-block' }}>{selectedAthlete.level}</span>
-            </div>
-          </header>
-          {renderAthleteCalendar(selectedAthlete)}
-        </div>
-      );
-    }
-
-    return (
-      <div className="athletes-view">
-        <header className="panel-header">
-          <div className="header-left">
-            <h1 className="view-title">
-              {isEs ? 'Gestión de Atletas' : 'Athletes Management'}
-            </h1>
-          </div>
-          <div className="header-actions">
-            <button className="btn-primary" onClick={() => setShowAddAthlete(!showAddAthlete)}>
-              <Plus size={16} />
-              <span>{isEs ? 'Nuevo Atleta' : 'New Athlete'}</span>
-            </button>
-          </div>
-        </header>
-
-        {showAddAthlete && (
-          <div className="micro-card glass" style={{ marginBottom: '24px', backgroundColor: 'var(--color-bg-hover)' }}>
-            <h3 style={{ marginBottom: '16px' }}>{isEs ? 'Añadir Nuevo Atleta' : 'Add New Athlete'}</h3>
-            <div className="athletes-add-grid">
-              <input
-                type="text"
-                className="edit-input"
-                style={{ border: '1px solid var(--color-border)' }}
-                placeholder={isEs ? 'Nombre del Atleta' : 'Athlete Name'}
-                value={newAthleteName}
-                onChange={e => setNewAthleteName(e.target.value)}
-              />
-              <select
-                className="edit-input"
-                style={{ border: '1px solid var(--color-border)' }}
-                value={newAthleteLevel}
-                onChange={e => setNewAthleteLevel(e.target.value)}
-              >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-                <option value="Elite">Elite</option>
-              </select>
-              <button className="btn-primary" onClick={handleAddAthlete}>{isEs ? 'Guardar' : 'Save'}</button>
-            </div>
-          </div>
-        )}
-
-        <div className="athletes-kpis">
-          <div className="athletes-kpi-card">
-            <span>{isEs ? 'Total atletas' : 'Total athletes'}</span>
-            <strong>{athletes.length}</strong>
-          </div>
-          <div className="athletes-kpi-card">
-            <span>{isEs ? 'Con programa activo' : 'With active program'}</span>
-            <strong>{assignedCount}</strong>
-          </div>
-          <div className="athletes-kpi-card">
-            <span>{isEs ? 'En papelera' : 'In trash'}</span>
-            <strong>{archivedAthletes.length}</strong>
-          </div>
-        </div>
-
-        <div className="athletes-toolbar">
-          <div className="athletes-search-wrap">
-            <Search size={16} className="athletes-search-ico" />
-            <input
-              type="text"
-              className="edit-input athletes-search-input"
-              placeholder={isEs ? 'Buscar atleta...' : 'Search athlete...'}
-              value={athleteSearch}
-              onChange={(e) => setAthleteSearch(e.target.value)}
-            />
-          </div>
-          <select
-            className="edit-input athletes-level-filter"
-            value={athleteLevelFilter}
-            onChange={(e) => setAthleteLevelFilter(e.target.value)}
-          >
-            <option value="All">{isEs ? 'Todos los niveles' : 'All levels'}</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-            <option value="Elite">Elite</option>
-          </select>
-          <select
-            className="edit-input athletes-level-filter"
-            value={athleteSortBy}
-            onChange={(e) => setAthleteSortBy(e.target.value as 'name' | 'level' | 'program')}
-          >
-            <option value="name">{isEs ? 'Ordenar: Nombre' : 'Sort: Name'}</option>
-            <option value="level">{isEs ? 'Ordenar: Nivel' : 'Sort: Level'}</option>
-            <option value="program">{isEs ? 'Ordenar: Programa' : 'Sort: Program'}</option>
-          </select>
-          <button
-            type="button"
-            className="btn-outline athletes-sort-dir"
-            onClick={() => setAthleteSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-          >
-            {athleteSortDir === 'asc' ? (isEs ? 'Ascendente' : 'Ascending') : (isEs ? 'Descendente' : 'Descending')}
-          </button>
-        </div>
-
-        <div className="table-container athletes-table-wrap" style={{ marginTop: '24px' }}>
-          <table className="exercise-table">
-            <thead>
-              <tr>
-                <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                <th>{isEs ? 'Nivel' : 'Level'}</th>
-                <th>{isEs ? 'Programa Actual' : 'Current Program'}</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedAthletes.map(ath => {
-                const assignment = getAthleteAssignment(ath.id);
-                const isEditing = editingAthleteId === ath.id;
-                return (
-                  <tr key={ath.id} className="exercise-row">
-                    <td style={{ fontWeight: 'bold', color: 'var(--color-text-primary)' }}>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          className="edit-input"
-                          style={{ border: '1px solid var(--color-border)', width: '100%', maxWidth: '260px' }}
-                          value={editingAthleteName}
-                          onChange={(e) => setEditingAthleteName(e.target.value)}
-                        />
-                      ) : (
-                        ath.name
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <select
-                          className="edit-input"
-                          style={{ border: '1px solid var(--color-border)', width: '160px' }}
-                          value={editingAthleteLevel}
-                          onChange={(e) => setEditingAthleteLevel(e.target.value)}
-                        >
-                          <option value="Beginner">Beginner</option>
-                          <option value="Intermediate">Intermediate</option>
-                          <option value="Advanced">Advanced</option>
-                          <option value="Elite">Elite</option>
-                        </select>
-                      ) : (
-                        <span className="badge">{ath.level}</span>
-                      )}
-                    </td>
-                    <td>
-                      {assigningTo === ath.id ? (
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <select
-                            className="edit-input"
-                            style={{ border: '1px solid var(--color-border)' }}
-                            onChange={(e) => handleAssignProgram(ath.id, parseInt(e.target.value))}
-                            defaultValue=""
-                          >
-                            <option value="" disabled>Select...</option>
-                            {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                          </select>
-                          <button className="icon-btn" onClick={() => setAssigningTo(null)}>✖</button>
-                        </div>
-                      ) : (
-                        assignment?.program ? (
-                          <span style={{ color: 'var(--color-accent)' }}>{assignment.program.name}</span>
-                        ) : (
-                          <span style={{ color: 'var(--color-text-muted)' }}>{isEs ? 'Sin Asignar' : 'Unassigned'}</span>
-                        )
-                      )}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="btn-outline" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => setSelectedAthlete(ath)}>
-                          <CalendarIcon size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Ver Calendario' : 'View Calendar'}
-                        </button>
-                        {!assigningTo && (
-                          <button className="btn-secondary glass" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => setAssigningTo(ath.id)}>
-                            {isEs ? 'Asignar Prog.' : 'Assign Prog.'}
-                          </button>
-                        )}
-                        {isEditing ? (
-                          <>
-                            <button
-                              className="btn-primary"
-                              style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                              onClick={saveEditAthlete}
-                            >
-                              <Save size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Guardar' : 'Save'}
-                            </button>
-                            <button
-                              className="btn-outline"
-                              style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                              onClick={cancelEditAthlete}
-                            >
-                              <X size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Cancelar' : 'Cancel'}
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="btn-outline"
-                              style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                              onClick={() => startEditAthlete(ath)}
-                            >
-                              <Pencil size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Editar' : 'Edit'}
-                            </button>
-                            <button
-                              className="btn-outline"
-                              style={{ padding: '4px 8px', fontSize: '0.8rem', color: 'var(--color-error)' }}
-                              onClick={() => {
-                                if (window.confirm(isEs ? `¿Eliminar a ${ath.name}? Podrás restaurarlo desde la papelera.` : `Delete ${ath.name}? You can restore from trash.`)) {
-                                  removeAthlete(ath.id);
-                                  if (editingAthleteId === ath.id) cancelEditAthlete();
-                                }
-                              }}
-                            >
-                              <Trash2 size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Eliminar' : 'Delete'}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-              {pagedAthletes.length === 0 && (
-                <tr>
-                  <td colSpan={4}>
-                    <p className="athletes-empty-message">
-                      {isEs ? 'No hay atletas con esos filtros.' : 'No athletes match those filters.'}
-                    </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {sortedAthletes.length > 0 && (
-          <div className="athletes-pagination">
-            <button
-              type="button"
-              className="btn-outline"
-              disabled={currentPage <= 1}
-              onClick={() => setAthletePage((p) => Math.max(1, p - 1))}
-            >
-              {isEs ? 'Anterior' : 'Previous'}
-            </button>
-            <span className="athletes-page-indicator">
-              {isEs ? 'Página' : 'Page'} {currentPage} / {totalPages}
-            </span>
-            <button
-              type="button"
-              className="btn-outline"
-              disabled={currentPage >= totalPages}
-              onClick={() => setAthletePage((p) => Math.min(totalPages, p + 1))}
-            >
-              {isEs ? 'Siguiente' : 'Next'}
-            </button>
-          </div>
-        )}
-
-        <div className="micro-card glass" style={{ marginTop: '20px' }}>
-          <h3 style={{ marginBottom: '10px' }}>{isEs ? 'Papelera de atletas' : 'Athlete trash'}</h3>
-          {archivedAthletes.length === 0 ? (
-            <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
-              {isEs ? 'No hay atletas eliminados recientemente.' : 'No recently deleted athletes.'}
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {archivedAthletes.map((ath) => (
-                <div
-                  key={ath.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-border)',
-                  }}
-                >
-                  <div>
-                    <strong>{ath.name}</strong>
-                    <span className="badge" style={{ marginLeft: '8px' }}>{ath.level}</span>
-                  </div>
-                  <button
-                    className="btn-secondary"
-                    style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                    onClick={() => restoreAthlete(ath.id)}
-                  >
-                    <Undo2 size={14} style={{ marginRight: '4px' }} /> {isEs ? 'Restaurar' : 'Restore'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return <WlAthletesSection isEs={isEs} />;
   };
 
   const renderBreadcrumbs = () => (
@@ -1432,8 +994,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                             className="btn-outline"
                             style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                             onClick={() => {
-                              const ath = athletes.find((a) => a.id === row.athleteId);
-                              if (ath) setSelectedAthlete(ath);
                               setActiveAthleteId(row.athleteId);
                               setActiveView('athletes');
                             }}
@@ -1493,14 +1053,15 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                             style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                             onClick={() => {
                               try {
-                                sessionStorage.setItem(WL_MANAGE_FOCUS_KEY, row.assignmentId);
+                                const focusId = row.coachProgramId ?? row.assignmentId;
+                                sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, focusId);
                               } catch {
                                 /* ignore */
                               }
-                              setActiveView('wolf-engine');
+                              setActiveView('programs');
                             }}
                           >
-                            {isEs ? 'Motor' : 'Engine'}
+                            {isEs ? 'Programas' : 'Programs'}
                           </button>
                         </td>
                       </tr>
@@ -1542,8 +1103,8 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
           <h3 style={{ marginBottom: '8px' }}>{isEs ? 'Tu rol' : 'Your role'}</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
             {isEs
-              ? 'Iniciaste sesión como propietario. Desde aquí gestionas cuentas de coaches y atletas. Cambia la contraseña del propietario en la pantalla de login → «Cambiar contraseña». Con API activa, las acciones envían tu sesión al servidor.'
-              : 'You signed in as the app owner. Manage coach and athlete accounts here. Change the owner password from the login screen → «Change password». With the API enabled, actions use your server session.'}
+              ? 'Iniciaste sesión como propietario. Desde aquí das de alta coaches y atletas (usuario, contraseña y PRs). El coach solo consulta el roster en «Atletas».'
+              : 'You signed in as the app owner. Create coach and athlete accounts here (username, password, PRs). Coaches only view the roster under «Athletes».'}
           </p>
         </div>
         <div className="micro-card glass">
@@ -1577,18 +1138,82 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
               value={adminDraft.password}
               onChange={(e) => setAdminDraft((prev) => ({ ...prev, password: e.target.value }))}
             />
+            {adminDraft.role === 'athlete' ? (
+              <>
+                <input
+                  className="edit-input"
+                  placeholder={isEs ? 'Usuario (login)' : 'Username (login)'}
+                  value={adminDraft.username}
+                  onChange={(e) => setAdminDraft((prev) => ({ ...prev, username: e.target.value }))}
+                />
+                <select
+                  className="edit-input"
+                  value={adminDraft.coachId}
+                  onChange={(e) => setAdminDraft((prev) => ({ ...prev, coachId: e.target.value }))}
+                >
+                  {coachOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="edit-input"
+                  value={adminDraft.level}
+                  onChange={(e) => setAdminDraft((prev) => ({ ...prev, level: e.target.value as AthleteLevel }))}
+                >
+                  <option value="beginner">{isEs ? 'Principiante' : 'Beginner'}</option>
+                  <option value="intermediate">{isEs ? 'Intermedio' : 'Intermediate'}</option>
+                  <option value="advanced">{isEs ? 'Avanzado' : 'Advanced'}</option>
+                </select>
+                <input
+                  className="edit-input"
+                  type="number"
+                  placeholder={isEs ? 'Peso corporal (kg)' : 'Bodyweight (kg)'}
+                  value={adminDraft.bodyweight}
+                  onChange={(e) => setAdminDraft((prev) => ({ ...prev, bodyweight: Number(e.target.value) || 0 }))}
+                />
+                {(['snatch', 'cleanJerk', 'backSquat', 'frontSquat'] as const).map((key) => (
+                  <input
+                    key={key}
+                    className="edit-input"
+                    type="number"
+                    placeholder={key}
+                    value={adminDraft.oneRM[key]}
+                    onChange={(e) =>
+                      setAdminDraft((prev) => ({
+                        ...prev,
+                        oneRM: { ...prev.oneRM, [key]: Number(e.target.value) || 0 },
+                      }))
+                    }
+                  />
+                ))}
+              </>
+            ) : null}
           </div>
           <button
             className="btn-primary"
             style={{ marginTop: '12px' }}
             onClick={() => {
+              const wasAthlete = adminDraft.role === 'athlete';
               void createUser(adminDraft).then((err) => {
                 if (err) {
                   setAdminError(err);
                   return;
                 }
                 setAdminError('');
-                setAdminDraft({ name: '', email: '', role: 'athlete', password: 'wolf2026' });
+                setAdminDraft({
+                  name: '',
+                  email: '',
+                  username: '',
+                  role: 'athlete',
+                  password: 'wolf2026',
+                  coachId: coachOptions[0]?.id ?? 'user-coach-wl',
+                  level: 'intermediate',
+                  bodyweight: 75,
+                  oneRM: emptyAdminOneRm(),
+                });
+                if (wasAthlete) void reloadWlAthletesFromApi();
               });
             }}
           >
@@ -1641,6 +1266,21 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                       </button>
                       <button
                         className="btn-outline"
+                        onClick={() => {
+                          const next = window.prompt(
+                            isEs ? `Nueva contraseña para ${user.name} (mín. 6):` : `New password for ${user.name} (min 6):`,
+                          );
+                          if (!next || next.trim().length < 6) return;
+                          void resetUserPassword(user.id, next.trim()).then((err) => {
+                            if (err) setAdminError(err);
+                            else setAdminError('');
+                          });
+                        }}
+                      >
+                        {isEs ? 'Contraseña' : 'Password'}
+                      </button>
+                      <button
+                        className="btn-outline"
                         style={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
                         disabled={currentUser?.id === user.id}
                         onClick={() => {
@@ -1657,6 +1297,101 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
             </table>
           </div>
         </div>
+
+        {canManageWlAthletes ? (
+          <div className="micro-card glass">
+            <h3 style={{ marginBottom: '12px' }}>{isEs ? 'Perfiles WL (PRs)' : 'WL profiles (PRs)'}</h3>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '12px', fontSize: '0.9rem' }}>
+              {isEs
+                ? 'Edita récords y nivel del motor. Las altas de atleta con cuenta se hacen arriba; aquí puedes ajustar PRs.'
+                : 'Edit engine level and PRs. Create athlete accounts above; adjust PRs here.'}
+            </p>
+            <div className="table-container">
+              <table className="exercise-table">
+                <thead>
+                  <tr>
+                    <th>{isEs ? 'Nombre' : 'Name'}</th>
+                    <th>{isEs ? 'Nivel' : 'Level'}</th>
+                    <th>SN / CJ / SQ</th>
+                    <th>{isEs ? 'Acciones' : 'Actions'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {wlAthletes.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.name}</td>
+                      <td>{a.level}</td>
+                      <td>
+                        {a.oneRM.snatch} / {a.oneRM.cleanJerk} / {a.oneRM.backSquat}
+                      </td>
+                      <td style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className="btn-outline"
+                          onClick={() => setWlProfileEditId(a.id)}
+                        >
+                          {isEs ? 'Editar PRs' : 'Edit PRs'}
+                        </button>
+                        <button
+                          className="btn-outline"
+                          style={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
+                          onClick={() => {
+                            if (!window.confirm(isEs ? 'Eliminar perfil WL?' : 'Delete WL profile?')) return;
+                            void deleteWlAthlete(a.id).then(() => reloadWlAthletesFromApi());
+                          }}
+                        >
+                          {isEs ? 'Eliminar' : 'Delete'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {wlProfileEditId ? (() => {
+              const profile = wlAthletes.find((a) => a.id === wlProfileEditId);
+              if (!profile) return null;
+              return (
+                <div className="wl-mgmt-inline-form" style={{ marginTop: '16px' }}>
+                  <h4 className="wl-mgmt-inline-form-title">{profile.name}</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                    {(['snatch', 'cleanJerk', 'backSquat', 'frontSquat'] as const).map((key) => (
+                      <label key={key} className="wolf-engine-field">
+                        <span className="wolf-engine-field-label">{key}</span>
+                        <input
+                          type="number"
+                          defaultValue={profile.oneRM[key]}
+                          id={`wl-pr-${key}-${profile.id}`}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="wl-mgmt-inline-form-btns">
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        const oneRM = {
+                          snatch: Number((document.getElementById(`wl-pr-snatch-${profile.id}`) as HTMLInputElement)?.value) || 0,
+                          cleanJerk: Number((document.getElementById(`wl-pr-cleanJerk-${profile.id}`) as HTMLInputElement)?.value) || 0,
+                          backSquat: Number((document.getElementById(`wl-pr-backSquat-${profile.id}`) as HTMLInputElement)?.value) || 0,
+                          frontSquat: Number((document.getElementById(`wl-pr-frontSquat-${profile.id}`) as HTMLInputElement)?.value) || 0,
+                        };
+                        void updateWlAthlete(profile.id, { oneRM }).then(() => {
+                          setWlProfileEditId(null);
+                          void reloadWlAthletesFromApi();
+                        });
+                      }}
+                    >
+                      {isEs ? 'Guardar' : 'Save'}
+                    </button>
+                    <button className="btn-outline" onClick={() => setWlProfileEditId(null)}>
+                      {isEs ? 'Cancelar' : 'Cancel'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })() : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -1837,10 +1572,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
                   className="btn-outline"
                   onClick={() => {
                     setIntakeSubmitSuccess(false);
-                    setActiveView('wolf-engine');
+                    setActiveView('programs');
                   }}
                 >
-                  {isEs ? 'Ir al motor WL' : 'Go to WL engine'}
+                  {isEs ? 'Ir a programas' : 'Go to programs'}
                 </button>
               </div>
             </div>
@@ -2636,7 +2371,9 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
       {activeView === 'onboarding' && renderIntakeView()}
       {(activeView === 'micros' || activeView === 'sessions' || activeView === 'macros' || activeView === 'mesos') && renderPeriodization()}
       {activeView === 'library' && renderExerciseLibrary()}
-      {activeView === 'wolf-engine' && <OlympicEnginePanel language={language} />}
+      {(activeView === 'programs' || activeView === 'wolf-engine') && (
+        <WlProgramsPanel language={language} />
+      )}
       {(activeView === 'wl-exercises' || activeView === 'exercise-intelligence') && (
         <CoachExerciseLibrary language={language} />
       )}

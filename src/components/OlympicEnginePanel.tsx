@@ -14,7 +14,6 @@ import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
-import WlAthletesHub from './wl-management/WlAthletesHub';
 import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import { CompactWizardBar } from './mobile-wl/navigation/CompactWizardBar';
 import { CollapsibleContextChip } from './mobile-wl/navigation/CollapsibleContextChip';
@@ -38,12 +37,13 @@ function readStoredProgram(): GeneratedProgram | null {
 
 interface OlympicEnginePanelProps {
   language: 'ES' | 'EN';
+  onNavigateToAthletes?: () => void;
 }
 
 type StepId = 1 | 2 | 3 | 4;
 const GOALS: SessionGoal[] = ['technique', 'strength', 'power'];
 
-const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => {
+const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNavigateToAthletes }) => {
   const isEs = language === 'ES';
   const { assignProgramToAthlete, updateAssignmentProgram, assignments, currentUser, rosterForCoach, wlAthletes } =
     useWolfAssign();
@@ -109,7 +109,6 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
     g === 'technique' ? t.technique : g === 'strength' ? t.strength : t.power;
 
   const [activeStep, setActiveStep] = useState<StepId>(1);
-  const [athletesHubOpen, setAthletesHubOpen] = useState(false);
   const coachAthletes = useMemo(
     () => rosterForCoach(currentUser),
     [rosterForCoach, currentUser],
@@ -437,10 +436,10 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
             <button
               type="button"
               className="btn-outline wolf-engine-manage-athletes"
-              onClick={() => setAthletesHubOpen(true)}
+              onClick={() => onNavigateToAthletes?.()}
             >
               <UserCog size={14} aria-hidden />
-              {isEs ? 'Gestionar atletas' : 'Manage athletes'}
+              {isEs ? 'Ver atletas' : 'View athletes'}
             </button>
           </label>
           <label className="wolf-engine-field">
@@ -582,8 +581,6 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language }) => 
           </div>
         )}
       </div>
-
-      <WlAthletesHub isEs={isEs} open={athletesHubOpen} onClose={() => setAthletesHubOpen(false)} />
 
     </div>
   );

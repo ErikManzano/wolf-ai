@@ -1,9 +1,13 @@
 import type { Athlete, WolfUser } from '../../models/training';
 
+export type CreateWlAthleteInput = Omit<Athlete, 'fatigueScore' | 'readinessScore'> &
+  Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>> & { coachId?: string };
+
 export interface WlAthletesContextValue {
   athletes: Athlete[];
   athletesLoading: boolean;
-  createAthlete: (input: Omit<Athlete, 'fatigueScore' | 'readinessScore'> & Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>>) => Promise<Athlete | null>;
+  canManageWlAthletes: boolean;
+  createAthlete: (input: CreateWlAthleteInput) => Promise<Athlete | null>;
   updateAthlete: (id: string, patch: Partial<Athlete>) => Promise<Athlete | null>;
   deleteAthlete: (id: string) => Promise<boolean>;
   reloadAthletesFromApi: () => Promise<void>;

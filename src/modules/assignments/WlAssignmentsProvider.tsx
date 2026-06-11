@@ -13,6 +13,7 @@ import type {
   SessionCompletion,
   SetCompletionLog,
 } from '../../models/training';
+import { cloneProgramForAthlete } from '../../models/coach-architecture';
 import {
   isDayComplete,
   isExerciseComplete,
@@ -186,7 +187,11 @@ export function WlAssignmentsProvider({
   }, [setLogs]);
 
   const assignProgramToAthlete = useCallback(
-    async (program: ProgramAssignment['program'], athleteProfileId: string): Promise<string> => {
+    async (
+      program: ProgramAssignment['program'],
+      athleteProfileId: string,
+      coachProgramId?: string,
+    ): Promise<string> => {
       const uid =
         users.find((u) => u.role === 'athlete' && u.linkedAthleteId === athleteProfileId)?.id ??
         athleteUserIdForProfile(athleteProfileId);
@@ -194,11 +199,13 @@ export function WlAssignmentsProvider({
         currentUser?.role === 'coach' || currentUser?.role === 'super_admin'
           ? currentUser.id
           : 'user-coach-wl';
+      const clonedProgram = cloneProgramForAthlete(program, athleteProfileId);
       const payload = {
         coachId,
         ...(uid !== undefined ? { athleteUserId: uid } : {}),
         athleteProfileId,
-        program: { ...program, athleteId: athleteProfileId },
+        program: clonedProgram,
+        ...(coachProgramId ? { coachProgramId } : {}),
       };
 
       if (!apiMode) {
@@ -208,6 +215,7 @@ export function WlAssignmentsProvider({
           coachId,
           ...(uid !== undefined ? { athleteUserId: uid } : {}),
           athleteProfileId,
+          ...(coachProgramId ? { coachProgramId } : {}),
           version: 1,
           program: payload.program,
           versionHistory: [],

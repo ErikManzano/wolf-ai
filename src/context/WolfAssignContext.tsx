@@ -34,8 +34,10 @@ import {
 } from '../services/exercise';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { WlAssignmentsProvider, useWlAssignments } from '../modules/assignments';
+import { upsertCoachAthleteLocal } from '../modules/wl-athletes/athleteStore';
 import { WlAthletesProvider, useWlAthletes } from '../modules/wl-athletes';
 import { WlTemplatesProvider, useWlTemplates } from '../modules/wl-templates';
+import { WlProgramsProvider, useWlPrograms } from '../modules/wl-programs';
 import { getApiBase as getAssignmentsApiBase, isApiEnabled as isAssignmentsApiEnabled, getWebSocketUrl } from '../modules/assignments/apiClient';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 
@@ -158,6 +160,7 @@ interface WolfAssignContextValue {
   assignProgramToAthlete: (
     program: ProgramAssignment['program'],
     athleteProfileId: string,
+    coachProgramId?: string,
   ) => Promise<string>;
   /** Actualiza el JSON del programa en una asignaciÃ³n (coach editando plan ya enviado). */
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
@@ -170,13 +173,34 @@ interface WolfAssignContextValue {
   assignFromTemplate: (templateId: string, athleteProfileId: string) => Promise<string | null>;
   wlAthletes: import('../models/training').Athlete[];
   athletesLoading: boolean;
+  canManageWlAthletes: boolean;
   rosterForCoach: (coach: WolfUser | undefined) => import('../models/training').Athlete[];
+  reloadWlAthletesFromApi: () => Promise<void>;
   createWlAthlete: (
-    input: Omit<import('../models/training').Athlete, 'fatigueScore' | 'readinessScore'> &
-      Partial<Pick<import('../models/training').Athlete, 'fatigueScore' | 'readinessScore'>>,
+    input: import('../modules/wl-athletes/types').CreateWlAthleteInput,
   ) => Promise<import('../models/training').Athlete | null>;
   updateWlAthlete: (id: string, patch: Partial<import('../models/training').Athlete>) => Promise<import('../models/training').Athlete | null>;
   deleteWlAthlete: (id: string) => Promise<boolean>;
+  coachPrograms: import('../models/coach-architecture').CoachProgramRow[];
+  programsLoading: boolean;
+  programsView: import('../modules/wl-programs').WlProgramsView;
+  editingProgramId: string | null;
+  openProgramEditor: (programId: string | null) => void;
+  closeProgramEditor: () => void;
+  reloadProgramsFromApi: () => Promise<void>;
+  createCoachProgram: (name: string, program?: GeneratedProgram) => Promise<import('../models/coach-architecture').CoachProgram | null>;
+  updateCoachProgram: (
+    id: string,
+    patch: {
+      name?: string;
+      program?: GeneratedProgram;
+      status?: import('../models/coach-architecture').CoachProgramStatus;
+    },
+  ) => Promise<import('../models/coach-architecture').CoachProgram | null>;
+  deleteCoachProgram: (id: string) => Promise<boolean>;
+  duplicateCoachProgram: (id: string) => Promise<import('../models/coach-architecture').CoachProgram | null>;
+  assignCoachProgramToAthletes: (programId: string, athleteProfileIds: string[]) => Promise<string[]>;
+  getCoachProgramById: (id: string) => import('../models/coach-architecture').CoachProgramRow | undefined;
   toggleSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => void;
   isSessionComplete: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseCount?: number) => boolean;
   toggleExerciseComplete: (
@@ -264,10 +288,15 @@ interface WolfAssignContextValue {
     email: string;
     role: WolfAppRole;
     password: string;
+    username?: string;
     coachId?: string;
     linkedAthleteId?: string;
+    level?: import('../models/training').Athlete['level'];
+    bodyweight?: number;
+    oneRM?: import('../models/training').Athlete['oneRM'];
   }) => Promise<string | null>;
   updateUser: (userId: string, payload: Partial<Pick<WolfUser, 'name' | 'email' | 'role' | 'coachId' | 'linkedAthleteId'>>) => Promise<string | null>;
+  resetUserPassword: (userId: string, newPassword: string) => Promise<string | null>;
   deleteUser: (userId: string) => Promise<string | null>;
   /** Limpia token del API (p. ej. al cerrar sesiÃ³n). */
   clearApiSession: () => void;
@@ -845,23 +874,44 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     email: string;
     role: WolfAppRole;
     password: string;
+    username?: string;
     coachId?: string;
     linkedAthleteId?: string;
+    level?: import('../models/training').Athlete['level'];
+    bodyweight?: number;
+    oneRM?: import('../models/training').Athlete['oneRM'];
   }) => {
     if (!isApiEnabled()) {
       if (users.some((u) => u.email?.toLowerCase() === payload.email.trim().toLowerCase())) return 'Email already exists.';
+      const username = payload.username?.trim().toLowerCase();
+      if (username && users.some((u) => u.username?.toLowerCase() === username)) return 'Username already exists.';
+      const profileId =
+        payload.linkedAthleteId ?? (payload.role === 'athlete' ? `ath-${Date.now()}` : undefined);
+      const coachId = payload.role === 'athlete' ? (payload.coachId ?? 'user-coach-wl') : payload.coachId;
       setUsers((prev) => [
         ...prev,
         {
           id: `user-${Date.now()}`,
           name: payload.name.trim(),
           email: payload.email.trim().toLowerCase(),
+          username,
           role: payload.role,
           passwordHash: hashPassword(payload.password),
-          coachId: payload.coachId,
-          linkedAthleteId: payload.linkedAthleteId,
+          coachId,
+          linkedAthleteId: profileId,
         },
       ]);
+      if (payload.role === 'athlete' && profileId && coachId) {
+        upsertCoachAthleteLocal(coachId, {
+          id: profileId,
+          name: payload.name.trim(),
+          level: payload.level ?? 'intermediate',
+          bodyweight: payload.bodyweight ?? 75,
+          oneRM: payload.oneRM ?? { snatch: 60, cleanJerk: 80, backSquat: 100, frontSquat: 85 },
+          fatigueScore: 40,
+          readinessScore: 70,
+        });
+      }
       return null;
     }
     try {
@@ -906,6 +956,32 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       return 'Could not connect to backend.';
     }
   }, [apiRequest, loadUsersFromApi]);
+
+  const resetUserPassword = useCallback(async (userId: string, newPassword: string): Promise<string | null> => {
+    if (newPassword.trim().length < 6) return 'Password must be at least 6 characters.';
+    if (!isApiEnabled()) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, passwordHash: hashPassword(newPassword.trim()) } : u,
+        ),
+      );
+      return null;
+    }
+    try {
+      const res = await apiRequest(`/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword.trim() }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        return err?.error ?? 'Could not reset password.';
+      }
+      return null;
+    } catch {
+      return 'Could not connect to backend.';
+    }
+  }, [apiRequest]);
 
   const refreshExerciseCatalog = useCallback(async () => {
     await loadExerciseCatalogFromApi();
@@ -1332,6 +1408,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     resetPassword,
     createUser,
     updateUser,
+    resetUserPassword,
     deleteUser,
     clearApiSession,
     motorExercises,
@@ -1420,10 +1497,25 @@ function WlTemplatesBridge({
     | 'sessionTrackingKey'
     | 'wlAthletes'
     | 'athletesLoading'
+    | 'canManageWlAthletes'
     | 'rosterForCoach'
+    | 'reloadWlAthletesFromApi'
     | 'createWlAthlete'
     | 'updateWlAthlete'
     | 'deleteWlAthlete'
+    | 'coachPrograms'
+    | 'programsLoading'
+    | 'programsView'
+    | 'editingProgramId'
+    | 'openProgramEditor'
+    | 'closeProgramEditor'
+    | 'reloadProgramsFromApi'
+    | 'createCoachProgram'
+    | 'updateCoachProgram'
+    | 'deleteCoachProgram'
+    | 'duplicateCoachProgram'
+    | 'assignCoachProgramToAthletes'
+    | 'getCoachProgramById'
   >;
   currentUser: WolfUser | undefined;
   users: WolfUser[];
@@ -1437,9 +1529,43 @@ function WlTemplatesBridge({
       assignProgramToAthlete={wl.assignProgramToAthlete}
     >
       <WlAthletesProvider currentUser={currentUser} users={users} apiToken={apiToken}>
-        <WolfAssignMergedProvider catalog={catalog}>{children}</WolfAssignMergedProvider>
+        <WlProgramsBridge catalog={catalog} currentUser={currentUser} apiToken={apiToken}>
+          {children}
+        </WlProgramsBridge>
       </WlAthletesProvider>
     </WlTemplatesProvider>
+  );
+}
+
+function WlProgramsBridge({
+  children,
+  catalog,
+  currentUser,
+  apiToken,
+}: {
+  children: ReactNode;
+  catalog: Parameters<typeof WolfAssignMergedProvider>[0]['catalog'];
+  currentUser: WolfUser | undefined;
+  apiToken: string | null;
+}) {
+  const wl = useWlAssignments();
+  const athletesCtx = useWlAthletes();
+  const athleteNameByProfileId = useMemo(
+    () => Object.fromEntries(athletesCtx.athletes.map((a) => [a.id, a.name] as const)),
+    [athletesCtx.athletes],
+  );
+  return (
+    <WlProgramsProvider
+      currentUser={currentUser}
+      apiToken={apiToken}
+      assignments={wl.assignments}
+      completions={wl.completions}
+      athleteNameByProfileId={athleteNameByProfileId}
+      assignProgramToAthlete={wl.assignProgramToAthlete}
+      reloadAssignmentsFromApi={wl.reloadAssignmentsFromApi}
+    >
+      <WolfAssignMergedProvider catalog={catalog}>{children}</WolfAssignMergedProvider>
+    </WlProgramsProvider>
   );
 }
 
@@ -1479,15 +1605,31 @@ function WolfAssignMergedProvider({
     | 'sessionTrackingKey'
     | 'wlAthletes'
     | 'athletesLoading'
+    | 'canManageWlAthletes'
     | 'rosterForCoach'
+    | 'reloadWlAthletesFromApi'
     | 'createWlAthlete'
     | 'updateWlAthlete'
     | 'deleteWlAthlete'
+    | 'coachPrograms'
+    | 'programsLoading'
+    | 'programsView'
+    | 'editingProgramId'
+    | 'openProgramEditor'
+    | 'closeProgramEditor'
+    | 'reloadProgramsFromApi'
+    | 'createCoachProgram'
+    | 'updateCoachProgram'
+    | 'deleteCoachProgram'
+    | 'duplicateCoachProgram'
+    | 'assignCoachProgramToAthletes'
+    | 'getCoachProgramById'
   >;
 }) {
   const wl = useWlAssignments();
   const tpl = useWlTemplates();
   const athletesCtx = useWlAthletes();
+  const programsCtx = useWlPrograms();
   const value: WolfAssignContextValue = {
     ...catalog,
     assignments: wl.assignments,
@@ -1519,10 +1661,25 @@ function WolfAssignMergedProvider({
     sessionTrackingKey: wl.sessionTrackingKey,
     wlAthletes: athletesCtx.athletes,
     athletesLoading: athletesCtx.athletesLoading,
+    canManageWlAthletes: athletesCtx.canManageWlAthletes,
     rosterForCoach: (coach) => athletesCtx.rosterForCoach(coach),
+    reloadWlAthletesFromApi: athletesCtx.reloadAthletesFromApi,
     createWlAthlete: athletesCtx.createAthlete,
     updateWlAthlete: athletesCtx.updateAthlete,
     deleteWlAthlete: athletesCtx.deleteAthlete,
+    coachPrograms: programsCtx.coachPrograms,
+    programsLoading: programsCtx.programsLoading,
+    programsView: programsCtx.programsView,
+    editingProgramId: programsCtx.editingProgramId,
+    openProgramEditor: programsCtx.openProgramEditor,
+    closeProgramEditor: programsCtx.closeProgramEditor,
+    reloadProgramsFromApi: programsCtx.reloadProgramsFromApi,
+    createCoachProgram: programsCtx.createProgram,
+    updateCoachProgram: programsCtx.updateProgram,
+    deleteCoachProgram: programsCtx.deleteProgram,
+    duplicateCoachProgram: programsCtx.duplicateProgram,
+    assignCoachProgramToAthletes: programsCtx.assignProgramToAthletes,
+    getCoachProgramById: programsCtx.getProgramById,
   };
   return <WolfAssignContext.Provider value={value}>{children}</WolfAssignContext.Provider>;
 }

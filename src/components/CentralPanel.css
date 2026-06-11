@@ -8,6 +8,8 @@
 
 /* Vistas largas (motor WL, plan atleta): crece el panel y el scroll lo hace .workspace-area (evita recortes). */
 .central-panel:has(.wolf-engine),
+.central-panel:has(.wl-programs-hub),
+.central-panel:has(.wl-programs-panel),
 .central-panel:has(.wolf-athlete-plan),
 .central-panel:has(.wolf-ei) {
   height: auto;
