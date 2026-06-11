@@ -1,5 +1,65 @@
 # Coach workflow: week 1, persistence, catalog
 
+## Primera prueba end-to-end (coach-wl → erik)
+
+### A) Local rápido (memoria, sin Postgres)
+
+| Variable | Valor |
+|----------|--------|
+| `.env.development` | `VITE_API_URL=/api` |
+| API | `npm run server` → `http://localhost:4000` |
+| Front | `npm run dev` → `http://localhost:5173` |
+
+**Login**
+
+| Rol | Usuario | Contraseña |
+|-----|---------|------------|
+| Coach | `coach-wl` | `CoachWL2026!` |
+| Atleta | `erik` | `ErikWL2026!` |
+| Admin (cuentas) | `admin@wolf-ai.app` | `WolfAdmin_9jH3nM8vPq` |
+
+**Flujo**
+
+1. Coach → **Atletas**: revisar roster (Erik), editar PRs si hace falta.
+2. Coach → **Programas** → Nuevo → Paso *Programa* → Generar → *Personalizar* → **Asignar** → Erik.
+3. Atleta Erik → **Mi plan WL**: sesión del día, marcar series completadas.
+
+Los datos viven en memoria del API mientras el servidor esté encendido. Reiniciar `npm run server` borra asignaciones nuevas (el seed incluye un plan demo para Erik).
+
+### B) Local persistente (Postgres / Neon)
+
+```bash
+# .env del API (no commitear)
+DATABASE_URL=postgresql://...
+JWT_SECRET=openssl rand -base64 48   # 32+ chars
+WOLF_SYNC_SEED_PASSWORDS=1           # alinear hashes con users.json
+
+npm run db:setup
+npm run db:provision-users           # coach-wl + erik + ath-erik
+npm run server
+npm run dev
+```
+
+Comprobar: `GET http://localhost:4000/health` → `"persistence":"postgres"`.
+
+### C) Producción (Render + front)
+
+- Render: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `WOLF_SYNC_SEED_PASSWORDS=0` tras provisionar.
+- Front: `VITE_API_URL=/api` (Netlify proxy) o URL directa del API.
+- `npm run db:setup` + `npm run db:provision-users` en Neon una vez.
+
+### Roles y control del coach
+
+| Acción | Coach | Admin |
+|--------|-------|-------|
+| Ver roster y adherencia | ✓ | ✓ |
+| Editar PRs / nivel / añadir atleta al roster | ✓ | ✓ |
+| Crear programas y asignar | ✓ | ✓ |
+| Crear usuario login (email/user/pass) | — | Panel maestro |
+| Eliminar perfil WL | — | ✓ |
+
+La cuenta de login del atleta (`erik` ↔ perfil `ath-erik`) la crea el **admin** hoy; a futuro correo + auth avanzada.
+
 ## Flujo coach → Erik (producción)
 
 1. **Coach** (`coach-wl` / `CoachWL2026!` o `chiron.traine@gmail.com`): **Programas** → crear/editar mesociclo → **Asignar** → marcar **Erik Manzano**.

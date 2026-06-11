@@ -3,7 +3,6 @@ import {
   CalendarRange,
   Download,
   FileJson,
-  LayoutGrid,
   Minus,
   Plus,
   Trash2,
@@ -208,11 +207,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       incWeeks: isEs ? 'Más semanas' : 'More weeks',
       decDays: isEs ? 'Menos días por semana' : 'Fewer days per week',
       incDays: isEs ? 'Más días por semana' : 'More days per week',
-      previewTitle: isEs ? 'Vista previa del mesociclo' : 'Mesocycle preview',
-      previewEmpty: isEs
-        ? 'Configura los parámetros superiores para visualizar la estructura del mesociclo.'
-        : 'Set the parameters above to preview your mesocycle structure.',
-      previewWeeks: isEs ? 'Semanas del bloque' : 'Block weeks',
       nameError: isEs ? `Máximo ${PLAN_NAME_MAX_LEN} caracteres.` : `Maximum ${PLAN_NAME_MAX_LEN} characters.`,
       noProgramYet: isEs ? 'Aún no hay programa generado.' : 'No program generated yet.',
       draftRecovery: isEs ? 'Hay cambios guardados en este dispositivo más recientes.' : 'More recent changes saved on this device.',
@@ -648,43 +642,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               ) : null}
             </section>
           </div>
-
-          <article
-            className={`wolf-program-preview${program ? ' wolf-program-preview--live' : ' wolf-program-preview--empty'}`}
-            aria-label={t.previewTitle}
-          >
-            <header className="wolf-program-preview-head">
-              <LayoutGrid size={18} strokeWidth={2} aria-hidden className="wolf-program-preview-icon" />
-              <div>
-                <h3 className="wolf-program-preview-title">{t.previewTitle}</h3>
-                {program ? (
-                  <p className="wolf-program-preview-meta">
-                    <strong>{program.name}</strong>
-                    <span className="wolf-program-preview-meta-sep" aria-hidden>
-                      ·
-                    </span>
-                    <span className="muted">
-                      {program.totalWeeks}w · {program.daysPerWeek}d/w
-                    </span>
-                  </p>
-                ) : (
-                  <p className="wolf-program-preview-empty-copy">{t.previewEmpty}</p>
-                )}
-              </div>
-            </header>
-            {program ? (
-              <div className="wolf-program-preview-body">
-                <span className="wolf-program-preview-weeks-label">{t.previewWeeks}</span>
-                <div className="wolf-program-preview-week-grid" role="list">
-                  {program.weeks.map((w) => (
-                    <span key={w.weekNumber} className="wolf-program-preview-week-chip" role="listitem">
-                      W{w.weekNumber}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </article>
         </>
       )}
 

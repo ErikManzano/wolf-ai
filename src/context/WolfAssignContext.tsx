@@ -174,6 +174,7 @@ interface WolfAssignContextValue {
   wlAthletes: import('../models/training').Athlete[];
   athletesLoading: boolean;
   canManageWlAthletes: boolean;
+  canEditWlRoster: boolean;
   rosterForCoach: (coach: WolfUser | undefined) => import('../models/training').Athlete[];
   reloadWlAthletesFromApi: () => Promise<void>;
   createWlAthlete: (
@@ -1498,6 +1499,7 @@ function WlTemplatesBridge({
     | 'wlAthletes'
     | 'athletesLoading'
     | 'canManageWlAthletes'
+    | 'canEditWlRoster'
     | 'rosterForCoach'
     | 'reloadWlAthletesFromApi'
     | 'createWlAthlete'
@@ -1606,6 +1608,7 @@ function WolfAssignMergedProvider({
     | 'wlAthletes'
     | 'athletesLoading'
     | 'canManageWlAthletes'
+    | 'canEditWlRoster'
     | 'rosterForCoach'
     | 'reloadWlAthletesFromApi'
     | 'createWlAthlete'
@@ -1662,6 +1665,7 @@ function WolfAssignMergedProvider({
     wlAthletes: athletesCtx.athletes,
     athletesLoading: athletesCtx.athletesLoading,
     canManageWlAthletes: athletesCtx.canManageWlAthletes,
+    canEditWlRoster: athletesCtx.canEditWlRoster,
     rosterForCoach: (coach) => athletesCtx.rosterForCoach(coach),
     reloadWlAthletesFromApi: athletesCtx.reloadAthletesFromApi,
     createWlAthlete: athletesCtx.createAthlete,

@@ -6,7 +6,10 @@ export type CreateWlAthleteInput = Omit<Athlete, 'fatigueScore' | 'readinessScor
 export interface WlAthletesContextValue {
   athletes: Athlete[];
   athletesLoading: boolean;
+  /** super_admin: eliminar perfiles y gestión completa en panel maestro */
   canManageWlAthletes: boolean;
+  /** coach + super_admin: crear atletas en roster y editar PRs/nivel */
+  canEditWlRoster: boolean;
   createAthlete: (input: CreateWlAthleteInput) => Promise<Athlete | null>;
   updateAthlete: (id: string, patch: Partial<Athlete>) => Promise<Athlete | null>;
   deleteAthlete: (id: string) => Promise<boolean>;

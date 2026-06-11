@@ -1768,12 +1768,12 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
 
   router.post('/wl-athletes', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
-    if (!actor || actor.role !== 'super_admin') {
-      res.status(403).json({ error: 'Super admin session required.' });
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
       return;
     }
     const body = (req.body ?? {}) as Partial<Athlete> & { id?: string; coachId?: string };
-    const coachId = body.coachId?.trim();
+    const coachId = actor!.role === 'coach' ? actor!.id : body.coachId?.trim();
     if (!coachId) {
       res.status(400).json({ error: 'coachId is required.' });
       return;
@@ -1811,14 +1811,23 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
 
   router.patch('/wl-athletes/:id', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
-    if (!actor || actor.role !== 'super_admin') {
-      res.status(403).json({ error: 'Super admin session required.' });
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
       return;
     }
     const { id } = req.params as { id: string };
     const patch = (req.body ?? {}) as Partial<Athlete>;
     if (store) {
-      const updated = await store.updateAthleteProfileById(id, patch);
+      const existing = await store.getAthleteProfileById(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      if (actor!.role === 'coach' && existing.coachId !== actor!.id) {
+        res.status(403).json({ error: 'Not your athlete.' });
+        return;
+      }
+      const updated = await store.updateAthleteProfile(existing.coachId, id, patch);
       if (!updated) {
         res.status(404).json({ error: 'Not found.' });
         return;
@@ -1826,6 +1835,11 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       notify?.('wl-athletes:changed', { coachId: updated.coachId });
       const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...profile } = updated;
       res.json(profile);
+      return;
+    }
+    const ownerCoachId = coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById);
+    if (actor!.role === 'coach' && ownerCoachId !== actor!.id) {
+      res.status(403).json({ error: 'Not your athlete.' });
       return;
     }
     const idx = state.athletes.findIndex((a) => a.id === id);
