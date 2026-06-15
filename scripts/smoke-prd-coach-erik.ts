@@ -85,9 +85,16 @@ async function main() {
           {
             dayNumber: 1,
             label: 'Smoke day 1',
-            exercises: [
-              { name: 'Back Squat', sets: 3, reps: 3, loadPct: 75, restSec: 180 },
-            ],
+            session: {
+              id: 'session-smoke-1',
+              athleteId: athleteProfileId,
+              exercises: [{ exerciseId: 'ex-001', sets: [{ reps: 3, sets: 3, percentage: 75 }] }],
+              totalReps: 9,
+              avgRelativeIntensity: 75,
+              avgAbsoluteIntensity: 0,
+              load: 0,
+              kValue: 75,
+            },
           },
         ],
       },

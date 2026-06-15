@@ -17,6 +17,9 @@ import type {
   AthleteLevel,
   GeneratedProgram,
   ProgramAssignmentVersion,
+  ProgramDay,
+  Session,
+  SessionExerciseBlock,
   WolfUser,
 } from './training';
 
@@ -169,7 +172,7 @@ export function cloneProgramForAthlete(
   athleteProfileId: string,
   overrides?: Partial<Pick<GeneratedProgram, 'id' | 'name' | 'createdAt'>>,
 ): GeneratedProgram {
-  const cloned: GeneratedProgram = structuredClone(source);
+  const cloned: GeneratedProgram = normalizeGeneratedProgram(structuredClone(source));
   cloned.id = overrides?.id ?? `prog-${crypto.randomUUID()}`;
   cloned.athleteId = athleteProfileId;
   cloned.name = overrides?.name ?? source.name;
@@ -177,10 +180,72 @@ export function cloneProgramForAthlete(
   return cloned;
 }
 
+type LegacyProgramDay = ProgramDay & { exercises?: unknown[] };
+
+function emptySession(athleteId: string, dayNumber: number): Session {
+  return {
+    id: `session-d${dayNumber}`,
+    athleteId,
+    exercises: [],
+    totalReps: 0,
+    avgRelativeIntensity: 0,
+    avgAbsoluteIntensity: 0,
+    load: 0,
+    kValue: 0,
+  };
+}
+
+function isSessionExerciseBlock(value: unknown): value is SessionExerciseBlock {
+  if (!value || typeof value !== 'object') return false;
+  const block = value as SessionExerciseBlock;
+  return typeof block.exerciseId === 'string' && Array.isArray(block.sets);
+}
+
+function legacyExercisesFromDay(day: LegacyProgramDay): SessionExerciseBlock[] {
+  if (!Array.isArray(day.exercises)) return [];
+  return day.exercises.filter(isSessionExerciseBlock);
+}
+
+/** Ensure each program day has `session.exercises` (guards malformed API/seed data). */
+export function normalizeGeneratedProgram(program: GeneratedProgram): GeneratedProgram {
+  const athleteId = program.athleteId || TEMPLATE_PROGRAM_ATHLETE_ID;
+  return {
+    ...program,
+    weeks: (program.weeks ?? []).map((week) => ({
+      weekNumber: week.weekNumber,
+      days: (week.days ?? []).map((day) => {
+        const legacyDay = day as LegacyProgramDay;
+        if (legacyDay.session && Array.isArray(legacyDay.session.exercises)) {
+          return {
+            dayNumber: legacyDay.dayNumber,
+            label: legacyDay.label ?? `Día ${legacyDay.dayNumber}`,
+            session: {
+              ...legacyDay.session,
+              athleteId: legacyDay.session.athleteId || athleteId,
+              exercises: legacyDay.session.exercises,
+            },
+          };
+        }
+        const legacyExercises = legacyExercisesFromDay(legacyDay);
+        const session = legacyDay.session ?? emptySession(athleteId, legacyDay.dayNumber);
+        return {
+          dayNumber: legacyDay.dayNumber,
+          label: legacyDay.label ?? `Día ${legacyDay.dayNumber}`,
+          session: {
+            ...session,
+            athleteId: session.athleteId || athleteId,
+            exercises: legacyExercises,
+          },
+        };
+      }),
+    })),
+  };
+}
+
 /** Normalize template programs so they never reference a real athlete id. */
 export function normalizeProgramForTemplate(program: GeneratedProgram): GeneratedProgram {
   return {
-    ...structuredClone(program),
+    ...normalizeGeneratedProgram(structuredClone(program)),
     athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
   };
 }

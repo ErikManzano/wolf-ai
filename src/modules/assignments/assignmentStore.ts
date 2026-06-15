@@ -7,6 +7,7 @@ import type {
 } from '../../models/training';
 import { generatePeriodizedProgram } from '../../services/programGenerator';
 import { mockUsers } from '../../data/loadMockData';
+import { normalizeGeneratedProgram } from '../../models/coach-architecture';
 import {
   STORAGE_ASSIGN,
   STORAGE_COMP,
@@ -17,6 +18,7 @@ import {
 export function normalizeAssignment(a: ProgramAssignment): ProgramAssignment {
   return {
     ...a,
+    program: normalizeGeneratedProgram(a.program),
     version: typeof a.version === 'number' && a.version > 0 ? a.version : 1,
     versionHistory: Array.isArray(a.versionHistory) ? a.versionHistory : [],
   };
