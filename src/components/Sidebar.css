@@ -87,27 +87,6 @@
   background: var(--color-bg-panel);
 }
 
-.lang-toggle {
-  display: flex;
-  background: var(--color-bg-main);
-  border-radius: 8px;
-  padding: 4px;
-}
-
-.lang-toggle button {
-  flex: 1;
-  min-height: 34px;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-
-.lang-toggle button.active {
-  background: var(--color-bg-panel);
-  color: var(--color-text-primary);
-}
-
 .user-profile {
   display: flex;
   align-items: center;
@@ -162,6 +141,38 @@
   color: var(--color-accent);
 }
 
+.sidebar-account-btn {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-main);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.sidebar-account-btn:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+.sidebar-account-btn.active {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
 .sidebar.compact {
   padding-left: 8px;
   padding-right: 8px;
@@ -169,7 +180,6 @@
 
 .sidebar.compact .logo h2,
 .sidebar.compact .nav-item span,
-.sidebar.compact .lang-toggle,
 .sidebar.compact .user-info {
   display: none;
 }
@@ -204,6 +214,7 @@
   padding: 4px 0;
 }
 
+.sidebar.compact .sidebar-account-btn,
 .sidebar.compact .sidebar-logout-btn {
   min-height: 44px;
   padding: 5px 4px;
@@ -211,6 +222,7 @@
   gap: 2px;
 }
 
+.sidebar.compact .sidebar-account-btn span,
 .sidebar.compact .sidebar-logout-btn span {
   display: inline;
   text-align: center;

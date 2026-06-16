@@ -167,29 +167,6 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 35%, transparent);
 }
 
-.lang-toggle button {
-  transition:
-    background-color var(--ix-duration) var(--ix-ease),
-    color var(--ix-duration) var(--ix-ease),
-    box-shadow var(--ix-duration) var(--ix-ease);
-}
-
-.lang-toggle button:hover:not(.active) {
-  color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-bg-hover) 60%, transparent);
-}
-
-.lang-toggle button.active {
-  background: var(--color-bg-panel);
-  color: var(--color-accent);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-.lang-toggle button:focus-visible {
-  outline: none;
-  box-shadow: var(--ix-focus-ring);
-}
-
 /* ——— Motor WL: stepper, semanas, días ——— */
 .wolf-tab {
   transition:

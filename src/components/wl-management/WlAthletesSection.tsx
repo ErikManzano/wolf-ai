@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { CalendarRange, Plus } from 'lucide-react';
 import type { Athlete, AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -20,13 +20,14 @@ import '../wl-athletes/wl-athletes.css';
 
 interface WlAthletesSectionProps {
   isEs: boolean;
+  onOpenCalendar?: () => void;
 }
 
 type AthletesSectionView = 'list' | 'detail';
 
 const LEVELS: AthleteLevel[] = ['beginner', 'intermediate', 'advanced'];
 
-const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
+const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalendar }) => {
   const {
     currentUser,
     users,
@@ -162,7 +163,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
         {canEditWlRoster ? (
           <button
             type="button"
-            className="btn-primary wl-athletes-header__cta"
+            className="btn-primary wl-athletes-header__cta wl-athletes-header__cta--desktop"
             onClick={() => setShowAdd((v) => !v)}
           >
             <Plus size={18} aria-hidden />
@@ -230,11 +231,30 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
 
       <WlAthletesToolbar
         isEs={isEs}
+        isMobile={isMobile}
         search={search}
         onSearchChange={setSearch}
         sort={sort}
         onSortChange={setSort}
+        canAdd={canEditWlRoster}
+        onAdd={() => setShowAdd((v) => !v)}
       />
+
+      {onOpenCalendar ? (
+        <div className="wl-athletes-quick-nav">
+          <button type="button" className="wl-athletes-quick-nav__btn" onClick={onOpenCalendar}>
+            <CalendarRange size={18} aria-hidden />
+            <span className="wl-athletes-quick-nav__text">
+              <span className="wl-athletes-quick-nav__label">
+                {isEs ? 'Calendario de entrenamientos' : 'Training calendar'}
+              </span>
+              <span className="wl-athletes-quick-nav__hint">
+                {isEs ? 'Ver planificación y sesiones' : 'View planning & sessions'}
+              </span>
+            </span>
+          </button>
+        </div>
+      ) : null}
 
       {athletesLoading ? (
         <p className="wl-athletes-empty">{isEs ? 'Cargando atletas…' : 'Loading athletes…'}</p>

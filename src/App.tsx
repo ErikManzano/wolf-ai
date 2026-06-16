@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import './App.css';
 import './styles/interactive.css';
 import Sidebar from './components/Sidebar';
@@ -8,14 +8,18 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { MessageSquare, Plus } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
 import { getNavLabel } from './navigation/appNavigation';
 import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
-import { WL_PROGRAMS_MOBILE_CREATE_CHROME } from './components/wl-programs/programsMobileChrome';
+import {
+  SIDEBAR_WIDTH_MAX,
+  SIDEBAR_WIDTH_MIN,
+  useSidebarResize,
+} from './hooks/useSidebarResize';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
 const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
@@ -37,7 +41,6 @@ function AppShell() {
   const [isNarrowLayout, setIsNarrowLayout] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)').matches : false,
   );
-  const [programsMobileCreateVisible, setProgramsMobileCreateVisible] = useState(false);
   const gestureRef = useRef<{ startX: number; startY: number; tracking: boolean }>({
     startX: 0,
     startY: 0,
@@ -46,31 +49,8 @@ function AppShell() {
   /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
   const initialViewUserIdRef = useRef<string | null>(null);
 
-  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, createCoachProgram, openProgramEditor, programsView } = useWolfAssign();
+  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
   const { setUserRole } = useAppContext();
-
-  useEffect(() => {
-    const onProgramsChrome = (event: Event) => {
-      const detail = (event as CustomEvent<{ visible: boolean }>).detail;
-      setProgramsMobileCreateVisible(Boolean(detail?.visible));
-    };
-    window.addEventListener(WL_PROGRAMS_MOBILE_CREATE_CHROME, onProgramsChrome);
-    return () => window.removeEventListener(WL_PROGRAMS_MOBILE_CREATE_CHROME, onProgramsChrome);
-  }, []);
-
-  const handleMobileCreateProgram = async () => {
-    const isEs = language === 'ES';
-    const name = window.prompt(
-      isEs ? 'Nombre del programa:' : 'Program name:',
-      isEs ? 'Nuevo mesociclo' : 'New mesocycle',
-    );
-    if (!name?.trim()) return;
-    const created = await createCoachProgram(name.trim());
-    if (created) openProgramEditor(created.id);
-  };
-
-  const showProgramsMobileCreate =
-    isNarrowLayout && activeView === 'programs' && programsView === 'hub' && programsMobileCreateVisible;
 
   const appRoleFromWolf = (role: WolfAppRole) => {
     if (role === 'super_admin') return 'admin' as const;
@@ -126,6 +106,20 @@ function AppShell() {
   }, []);
 
   const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
+  const sidebarResizeEnabled = !isNarrowLayout && !effectiveSidebarCollapsed;
+  const {
+    width: sidebarWidth,
+    isResizing: sidebarResizing,
+    onPointerDown: onSidebarResizeDown,
+    onPointerMove: onSidebarResizeMove,
+    onPointerUp: onSidebarResizeUp,
+    onPointerCancel: onSidebarResizeCancel,
+    onDoubleClick: onSidebarResizeReset,
+  } = useSidebarResize(sidebarResizeEnabled);
+
+  const appContainerStyle = sidebarResizeEnabled
+    ? ({ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties)
+    : undefined;
 
   if (!isAuthenticated) {
     return (
@@ -162,7 +156,8 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${effectiveSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}`}
+        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${effectiveSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}`}
+        style={appContainerStyle}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse') return;
           gestureRef.current = { startX: e.clientX, startY: e.clientY, tracking: true };
@@ -191,16 +186,6 @@ function AppShell() {
             <div className="mobile-header-title">{getNavLabel(activeView, language === 'ES')}</div>
           </div>
           <div className="mobile-header-actions">
-            {showProgramsMobileCreate ? (
-              <button
-                type="button"
-                className="mobile-header-btn mobile-header-btn--fab"
-                aria-label={language === 'ES' ? 'Nuevo programa' : 'New program'}
-                onClick={() => void handleMobileCreateProgram()}
-              >
-                <Plus size={22} strokeWidth={2.5} />
-              </button>
-            ) : null}
             <button
               type="button"
               className="mobile-header-btn mobile-header-btn--chat"
@@ -229,14 +214,13 @@ function AppShell() {
         )}
 
         <div
-          className={`sidebar-area${mobileMenuOpen ? ' open' : ''}`}
+          className={`sidebar-area${mobileMenuOpen ? ' open' : ''}${sidebarResizing ? ' sidebar-area--resizing' : ''}`}
           inert={isNarrowLayout && !mobileMenuOpen ? true : undefined}
         >
           <Sidebar 
             activeView={activeView} 
             setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); }} 
             language={language}
-            setLanguage={setLanguage}
             collapsed={effectiveSidebarCollapsed}
             showRailToggle={!isNarrowLayout}
             mobileDrawer={isNarrowLayout}
@@ -251,11 +235,33 @@ function AppShell() {
               setLogoutConfirmOpen(true);
             }}
           />
+          {sidebarResizeEnabled ? (
+            <div
+              className="sidebar-resize-handle"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label={language === 'ES' ? 'Redimensionar sidebar' : 'Resize sidebar'}
+              aria-valuemin={SIDEBAR_WIDTH_MIN}
+              aria-valuemax={SIDEBAR_WIDTH_MAX}
+              aria-valuenow={sidebarWidth}
+              onPointerDown={onSidebarResizeDown}
+              onPointerMove={onSidebarResizeMove}
+              onPointerUp={onSidebarResizeUp}
+              onPointerCancel={onSidebarResizeCancel}
+              onDoubleClick={onSidebarResizeReset}
+            />
+          ) : null}
         </div>
         
         {/* Workspace */}
         <div className="workspace-area">
-          <CentralPanel language={language} activeView={activeView} setActiveView={setActiveView} />
+          <CentralPanel
+            language={language}
+            activeView={activeView}
+            setActiveView={setActiveView}
+            setLanguage={setLanguage}
+            onRequestLogout={() => setLogoutConfirmOpen(true)}
+          />
         </div>
         
         {/* Chat Panel */}

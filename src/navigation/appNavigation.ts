@@ -3,6 +3,7 @@ import {
   BookMarked,
   BotMessageSquare,
   CalendarRange,
+  CircleUser,
   ClipboardCheck,
   LayoutDashboard,
   ListTree,
@@ -19,6 +20,7 @@ export type AppViewId =
   | 'programs'
   | 'exercise-intelligence'
   | 'global-calendar'
+  | 'account'
   | 'admin-users'
   | 'onboarding';
 
@@ -30,6 +32,7 @@ export type AppNavItem = {
 };
 
 const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes']);
+const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
 const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan', 'onboarding']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
 
@@ -39,16 +42,16 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'exercise-intelligence',
   'programs',
   'athletes',
-  'global-calendar',
+  'account',
 ];
 
-const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan', 'onboarding', 'global-calendar'];
+const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan', 'onboarding', 'account'];
 const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
   'athletes',
-  'global-calendar',
+  'account',
 ];
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
@@ -58,6 +61,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { id: 'programs', labelEs: 'Programas', labelEn: 'Programs', icon: BookMarked },
   { id: 'exercise-intelligence', labelEs: 'Ejercicios', labelEn: 'Exercises', icon: ListTree },
   { id: 'global-calendar', labelEs: 'Calendario', labelEn: 'Calendar', icon: CalendarRange },
+  { id: 'account', labelEs: 'Cuenta', labelEn: 'Account', icon: CircleUser },
   { id: 'admin-users', labelEs: 'Panel maestro', labelEn: 'Master panel', icon: ShieldCheck },
   { id: 'onboarding', labelEs: 'Stats y PRs', labelEn: 'Stats & PRs', icon: BotMessageSquare },
 ];
@@ -78,6 +82,7 @@ export function isNavItemVisible(
   if (ATHLETE_ONLY_NAV.has(id)) return persona === 'athlete';
   if (role === 'super_admin') return !ATHLETE_ONLY_NAV.has(id);
   if (persona === 'athlete' && COACH_ONLY_NAV.has(id)) return false;
+  if (persona === 'coach' && COACH_HIDDEN_NAV.has(id)) return false;
   return true;
 }
 
@@ -130,4 +135,34 @@ export function getNavLabel(id: string, isEs: boolean): string {
   const item = APP_NAV_ITEMS.find((nav) => nav.id === id);
   if (!item) return id;
   return isEs ? item.labelEs : item.labelEn;
+}
+
+/** Maps nested views (editor, plantillas, etc.) to the bottom-nav tab that should look active. */
+export function isMobileBottomNavItemActive(
+  navId: AppViewId,
+  activeView: string,
+  ctx?: { programsView?: 'hub' | 'editor' },
+): boolean {
+  switch (navId) {
+    case 'programs':
+      return (
+        activeView === 'programs' ||
+        activeView === 'wolf-engine' ||
+        ctx?.programsView === 'editor'
+      );
+    case 'exercise-intelligence':
+      return (
+        activeView === 'exercise-intelligence' ||
+        activeView === 'wl-exercises' ||
+        activeView === 'library'
+      );
+    case 'athletes':
+      return activeView === 'athletes' || activeView === 'planning' || activeView === 'global-calendar';
+    case 'account':
+      return activeView === 'account';
+    case 'admin-users':
+      return activeView === 'admin-users';
+    default:
+      return activeView === navId;
+  }
 }

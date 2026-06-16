@@ -5,8 +5,10 @@ import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import {
+  APP_NAV_ITEMS,
   getMobileSecondaryNavItems,
   getVisibleNavItems,
+  isNavItemVisible,
 } from '../navigation/appNavigation';
 
 const WolfIcon = ({ size = 28, className = '' }) => (
@@ -19,7 +21,6 @@ interface SidebarProps {
   activeView: string;
   setActiveView: (view: string) => void;
   language: 'ES' | 'EN';
-  setLanguage: (lang: 'ES' | 'EN') => void;
   onLogout: () => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
@@ -32,7 +33,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeView,
   setActiveView,
   language,
-  setLanguage,
   onLogout,
   collapsed,
   onToggleCollapsed,
@@ -44,9 +44,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { persona, currentUser } = useWolfAssign();
 
   const visibleMenuItems = getVisibleNavItems(persona, currentUser?.role);
-  const navItems = mobileDrawer
-    ? getMobileSecondaryNavItems(persona, currentUser?.role)
-    : visibleMenuItems;
+  const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
+  const showAccount =
+    accountItem && isNavItemVisible('account', persona, currentUser?.role);
+  const navItems = (
+    mobileDrawer
+      ? getMobileSecondaryNavItems(persona, currentUser?.role)
+      : visibleMenuItems
+  ).filter((item) => item.id !== 'account');
+  const AccountIcon = accountItem?.icon;
 
   return (
     <div className={`sidebar${collapsed ? ' compact' : ''}${mobileDrawer ? ' sidebar--mobile-drawer' : ''}`}>
@@ -99,14 +105,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="sidebar-footer">
-        <div className="lang-toggle">
-          <button className={language === 'ES' ? 'active' : ''} onClick={() => setLanguage('ES')}>
-            ES
-          </button>
-          <button className={language === 'EN' ? 'active' : ''} onClick={() => setLanguage('EN')}>
-            EN
-          </button>
-        </div>
         <div
           className="user-profile"
           style={{ transition: 'all 0.2s', border: userRole === 'admin' ? '1px solid var(--color-accent)' : '1px solid transparent' }}
@@ -131,6 +129,18 @@ const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
         </div>
+        {showAccount && accountItem && AccountIcon ? (
+          <button
+            type="button"
+            className={`sidebar-account-btn${activeView === 'account' ? ' active' : ''}`}
+            onClick={() => setActiveView('account')}
+            aria-label={isEs ? accountItem.labelEs : accountItem.labelEn}
+            title={isEs ? accountItem.labelEs : accountItem.labelEn}
+          >
+            <AccountIcon size={15} aria-hidden />
+            <span>{isEs ? accountItem.labelEs : accountItem.labelEn}</span>
+          </button>
+        ) : null}
         <button
           type="button"
           className="sidebar-logout-btn"

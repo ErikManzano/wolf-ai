@@ -36,15 +36,25 @@ import {
 } from '../utils/dashboardStats';
 import { mockAthletes } from '../data/loadMockData';
 import type { AthleteLevel } from '../models/training';
+import type { AppViewId } from '../navigation/appNavigation';
+import { WlAccountView } from './account/WlAccountView';
 
 interface CentralPanelProps {
   language: 'ES' | 'EN';
   activeView: string;
   setActiveView: (view: string) => void;
+  setLanguage: (lang: 'ES' | 'EN') => void;
+  onRequestLogout: () => void;
 }
 
 
-const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setActiveView }) => {
+const CentralPanel: React.FC<CentralPanelProps> = ({
+  language,
+  activeView,
+  setActiveView,
+  setLanguage,
+  onRequestLogout,
+}) => {
   const isEs = language === 'ES';
   const {
     persona,
@@ -313,7 +323,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
   };
 
   const renderAthletesView = () => {
-    return <WlAthletesSection isEs={isEs} />;
+    return (
+      <WlAthletesSection
+        isEs={isEs}
+        onOpenCalendar={() => setActiveView('global-calendar')}
+      />
+    );
   };
 
   const renderBreadcrumbs = () => (
@@ -2380,6 +2395,15 @@ const CentralPanel: React.FC<CentralPanelProps> = ({ language, activeView, setAc
       {activeView === 'my-wl-plan' && <AthleteTrainingView language={language} />}
       {activeView === 'admin-users' && renderAdminUsersView()}
       {activeView === 'global-calendar' && renderCalendarView()}
+      {activeView === 'account' && (
+        <WlAccountView
+          isEs={isEs}
+          language={language}
+          setLanguage={setLanguage}
+          onLogout={onRequestLogout}
+          onNavigate={(view: AppViewId) => setActiveView(view)}
+        />
+      )}
       {activeView === 'aicoach' && renderPlaceholder(isEs ? 'Interactúa en el panel derecho' : 'Interact on the right panel', <Settings2 size={64} />)}
     </div>
   );

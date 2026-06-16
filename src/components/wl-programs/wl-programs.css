@@ -1232,18 +1232,21 @@
 .wl-program-assign-overlay {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .wl-program-assign-sheet {
   width: min(520px, 100%);
-  max-height: min(88vh, 640px);
+  max-height: min(88dvh, 640px);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1255,78 +1258,104 @@
   overflow: hidden;
 }
 
-.wl-program-assign-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 18px 12px;
-  border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
+.wl-program-assign-sheet-handle {
+  display: none;
   flex-shrink: 0;
 }
 
-.wl-program-assign-head > div:first-child {
+.wl-program-assign-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
+  flex: 0 0 auto;
+}
+
+.wl-program-assign-head__content {
   min-width: 0;
-  flex: 1;
 }
 
 .wl-program-assign-kicker {
-  margin: 0 0 4px;
-  font-size: 0.68rem;
+  margin: 0 0 6px;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-accent);
 }
 
 .wl-program-assign-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
+  overflow-wrap: anywhere;
 }
 
 .wl-program-assign-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
   margin: 6px 0 0;
   font-size: 0.78rem;
+  line-height: 1.35;
   color: var(--color-text-muted);
+}
+
+.wl-program-assign-meta__sep {
+  margin: 0 0.35em;
+  opacity: 0.65;
 }
 
 .wl-program-assign-close {
   flex-shrink: 0;
+  align-self: start;
 }
 
 .wl-program-assign-lead {
   margin: 0;
-  padding: 12px 18px;
+  padding: 12px 18px 0;
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--color-text-secondary);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   flex-shrink: 0;
+}
+
+.wl-program-assign-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .wl-program-assign-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   padding: 12px 18px 0;
   flex-shrink: 0;
 }
 
+.wl-program-assign-toolbar-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .wl-program-assign-search {
-  flex: 1;
-  min-width: 140px;
+  width: 100%;
+  min-width: 0;
 }
 
 .wl-program-assign-summary {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin: 10px 18px 0;
   padding: 8px 12px;
@@ -1339,14 +1368,37 @@
   flex-shrink: 0;
 }
 
+.wl-program-assign-summary-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.wl-program-assign-summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wl-program-assign-summary-stat {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
 .wl-program-assign-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
-  min-height: 120px;
-  max-height: min(42vh, 320px);
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 140px;
   margin: 12px 18px 0;
   padding: 2px 2px 4px;
 }
@@ -1487,14 +1539,18 @@
   flex-shrink: 0;
 }
 
+.wl-program-assign-warn:last-child {
+  margin-bottom: 12px;
+}
+
 .wl-program-assign-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 14px 18px 18px;
-  margin-top: 12px;
+  padding: 14px 18px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-bg-panel) 96%, transparent);
+  background: var(--color-bg-panel);
   flex-shrink: 0;
 }
 
@@ -1572,40 +1628,51 @@
     align-items: flex-end;
     justify-content: center;
     padding: 0;
-    padding-top: max(12px, env(safe-area-inset-top, 0px));
   }
 
   .wl-program-assign-sheet {
     width: 100%;
     max-width: 100%;
-    max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 12px));
-    border-radius: 16px 16px 0 0;
+    max-height: min(94dvh, 100dvh - env(safe-area-inset-top, 0px));
+    border-radius: 20px 20px 0 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.5);
+  }
+
+  .wl-program-assign-sheet-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
   }
 
   .wl-program-assign-sheet::before {
-    content: '';
-    display: block;
-    flex-shrink: 0;
-    width: 40px;
-    height: 4px;
-    margin: 10px auto 2px;
-    border-radius: 999px;
-    background: var(--color-border);
+    content: none;
+    display: none;
   }
 
   .wl-program-assign-head {
-    padding: 10px 14px 12px;
-    gap: 10px;
+    padding: 6px 14px 12px;
+    gap: 8px 10px;
+  }
+
+  .wl-program-assign-kicker {
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
+    margin-bottom: 4px;
   }
 
   .wl-program-assign-title {
     font-size: 1rem;
     line-height: 1.25;
-    word-break: break-word;
+  }
+
+  .wl-program-assign-meta {
+    font-size: 0.74rem;
   }
 
   .wl-program-assign-close {
@@ -1617,49 +1684,50 @@
   }
 
   .wl-program-assign-lead {
-    padding: 10px 14px;
+    padding: 10px 14px 0;
     font-size: 0.8rem;
   }
 
   .wl-program-assign-toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
     padding: 10px 14px 0;
   }
 
-  .wl-program-assign-search {
-    grid-column: 1 / -1;
-    min-width: 0;
-    width: 100%;
-  }
-
-  .wl-program-assign-toolbar .btn-outline {
+  .wl-program-assign-toolbar-actions .btn-outline {
     min-height: 44px;
     justify-content: center;
+    width: 100%;
   }
 
   .wl-program-assign-summary {
     margin: 10px 14px 0;
     font-size: 0.76rem;
     line-height: 1.35;
-    align-items: flex-start;
+  }
+
+  .wl-program-assign-summary-stats {
+    gap: 5px;
+  }
+
+  .wl-program-assign-summary-stat {
+    font-size: 0.68rem;
+    padding: 4px 7px;
   }
 
   .wl-program-assign-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+    min-height: 100px;
     margin: 10px 14px 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
   }
 
   .wl-program-assign-row {
     padding: 12px;
     gap: 10px;
     touch-action: manipulation;
+  }
+
+  .wl-program-assign-row-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
   .wl-program-assign-row input[type='checkbox'] {
@@ -1682,13 +1750,34 @@
     flex-direction: column-reverse;
     gap: 10px;
     padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
-    margin-top: 10px;
   }
 
   .wl-program-assign-footer .btn-primary,
   .wl-program-assign-footer .btn-outline {
     width: 100%;
     min-height: 48px;
+  }
+}
+
+@media (min-width: 521px) {
+  .wl-program-assign-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .wl-program-assign-search {
+    flex: 1 1 200px;
+  }
+
+  .wl-program-assign-toolbar-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+
+  .wl-program-assign-toolbar-actions .btn-outline {
+    min-width: 88px;
   }
 }
 

@@ -3,6 +3,7 @@ import {
   getMobileBottomNavCenterId,
   getMobileBottomNavIds,
   getMobileSecondaryNavItems,
+  isMobileBottomNavItemActive,
   MOBILE_MORE_ITEM,
   type AppNavItem,
   type AppViewId,
@@ -28,7 +29,7 @@ export function MobileBottomNav({
   onOpenMore,
 }: MobileBottomNavProps) {
   const isEs = language === 'ES';
-  const { persona, currentUser } = useWolfAssign();
+  const { persona, currentUser, programsView } = useWolfAssign();
   const role = currentUser?.role;
 
   const bottomNavIds = getMobileBottomNavIds(persona, role);
@@ -45,44 +46,53 @@ export function MobileBottomNav({
   return (
     <nav
       className={`mobile-bottom-nav${showMore ? '' : ' mobile-bottom-nav--no-more'}`}
-      style={{
-        gridTemplateColumns: `repeat(${bottomItems.length + (showMore ? 1 : 0)}, minmax(0, 1fr))`,
-      }}
       aria-label={isEs ? 'Navegación principal' : 'Main navigation'}
     >
-      {bottomItems.map((item) => {
-        const Icon = item.icon;
-        const active = activeView === item.id;
-        const isCenter = item.id === centerId;
-        return (
+      <div
+        className="mobile-bottom-nav__dock"
+        style={{
+          gridTemplateColumns: `repeat(${bottomItems.length + (showMore ? 1 : 0)}, minmax(0, 1fr))`,
+        }}
+      >
+        {bottomItems.map((item) => {
+          const Icon = item.icon;
+          const active = isMobileBottomNavItemActive(item.id, activeView, { programsView });
+          const isCenter = item.id === centerId;
+          const label = isEs ? item.labelEs : item.labelEn;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`mobile-bottom-nav__item${active ? ' is-active' : ''}${isCenter ? ' mobile-bottom-nav__item--center' : ''}`}
+              aria-current={active ? 'page' : undefined}
+              aria-label={label}
+              onClick={() => onNavigate(item.id)}
+            >
+              <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
+                <Icon size={isCenter ? 24 : 19} strokeWidth={active ? 2.35 : 2} />
+              </span>
+              <span className="mobile-bottom-nav__label">{label}</span>
+            </button>
+          );
+        })}
+        {showMore ? (
           <button
-            key={item.id}
             type="button"
-            className={`mobile-bottom-nav__item${active ? ' is-active' : ''}${isCenter ? ' mobile-bottom-nav__item--center' : ''}`}
-            aria-current={active ? 'page' : undefined}
-            onClick={() => onNavigate(item.id)}
+            className={`mobile-bottom-nav__item${moreActive ? ' is-active' : ''}`}
+            aria-current={moreActive ? 'page' : undefined}
+            aria-expanded={menuOpen}
+            aria-label={isEs ? MOBILE_MORE_ITEM.labelEs : MOBILE_MORE_ITEM.labelEn}
+            onClick={onOpenMore}
           >
             <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
-              <Icon size={isCenter ? 22 : 20} strokeWidth={active ? 2.25 : 2} />
+              <MOBILE_MORE_ITEM.icon size={19} strokeWidth={moreActive ? 2.35 : 2} />
             </span>
-            <span>{isEs ? item.labelEs : item.labelEn}</span>
+            <span className="mobile-bottom-nav__label">
+              {isEs ? MOBILE_MORE_ITEM.labelEs : MOBILE_MORE_ITEM.labelEn}
+            </span>
           </button>
-        );
-      })}
-      {showMore ? (
-        <button
-          type="button"
-          className={`mobile-bottom-nav__item${moreActive ? ' is-active' : ''}`}
-          aria-current={moreActive ? 'page' : undefined}
-          aria-expanded={menuOpen}
-          onClick={onOpenMore}
-        >
-          <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
-            <MOBILE_MORE_ITEM.icon size={20} strokeWidth={moreActive ? 2.25 : 2} />
-          </span>
-          <span>{isEs ? MOBILE_MORE_ITEM.labelEs : MOBILE_MORE_ITEM.labelEn}</span>
-        </button>
-      ) : null}
+        ) : null}
+      </div>
     </nav>
   );
 }

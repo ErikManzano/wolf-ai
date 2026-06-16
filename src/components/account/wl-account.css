@@ -1,0 +1,365 @@
+.wl-account-view {
+  --wl-account-surface: #111318;
+  --wl-account-border: #27272a;
+  --wl-account-text: #fafafa;
+  --wl-account-muted: #a1a1aa;
+  --wl-account-accent: #ff6b1a;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.wl-account-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--wl-account-border);
+  background: var(--wl-account-surface);
+}
+
+.wl-account-hero__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--wl-account-accent);
+  background: color-mix(in srgb, var(--wl-account-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wl-account-accent) 28%, transparent);
+}
+
+.wl-account-hero__body {
+  min-width: 0;
+}
+
+.wl-account-hero__name {
+  margin: 0;
+  font-size: clamp(1.05rem, 4vw, 1.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--wl-account-text);
+  word-break: break-word;
+}
+
+.wl-account-hero__role {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--wl-account-accent);
+}
+
+.wl-account-hero__login {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--wl-account-muted);
+  word-break: break-all;
+}
+
+.wl-account-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wl-account-section__title {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wl-account-muted);
+}
+
+.wl-account-section__card {
+  border-radius: 14px;
+  border: 1px solid var(--wl-account-border);
+  background: var(--wl-account-surface);
+  overflow: hidden;
+}
+
+.wl-account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--wl-account-border) 70%, transparent);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.wl-account-row:last-child {
+  border-bottom: none;
+}
+
+.wl-account-row:hover:not(:disabled):not(.wl-account-row--disabled) {
+  background: color-mix(in srgb, var(--wl-account-accent) 6%, transparent);
+}
+
+.wl-account-row--with-control {
+  cursor: default;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: center;
+}
+
+.wl-account-row--with-control .wl-account-row__icon {
+  grid-row: 1 / -1;
+  align-self: start;
+  margin-top: 2px;
+}
+
+.wl-account-row--with-control .wl-account-row__body {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.wl-account-row--with-control .wl-account-row__control {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  width: 100%;
+  max-width: 140px;
+}
+
+.wl-account-row--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.wl-account-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  color: var(--wl-account-muted);
+  background: color-mix(in srgb, var(--wl-account-border) 40%, transparent);
+}
+
+.wl-account-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wl-account-row__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--wl-account-text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.wl-account-row__hint {
+  font-size: 0.76rem;
+  color: var(--wl-account-muted);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.wl-account-row__chevron {
+  flex-shrink: 0;
+  color: var(--wl-account-muted);
+}
+
+.wl-account-row__control {
+  flex-shrink: 0;
+}
+
+.wl-account-lang {
+  display: inline-flex;
+  width: 100%;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-account-border);
+  background: color-mix(in srgb, var(--wl-account-border) 30%, transparent);
+}
+
+.wl-account-lang__btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--wl-account-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wl-account-lang__btn.is-active {
+  color: #fff;
+  background: var(--wl-account-accent);
+}
+
+.wl-account-footer {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.wl-account-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #ef4444 35%, var(--wl-account-border));
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  color: #f87171;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.wl-account-logout:hover {
+  background: color-mix(in srgb, #ef4444 16%, transparent);
+  border-color: color-mix(in srgb, #ef4444 50%, var(--wl-account-border));
+}
+
+.wl-account-version {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--wl-account-muted);
+}
+
+@media (max-width: 768px) {
+  .wl-account-view {
+    max-width: none;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .wl-account-hero {
+    padding: 14px;
+    margin-bottom: 14px;
+    gap: 12px;
+    border-radius: 14px;
+  }
+
+  .wl-account-hero__avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 0.9rem;
+  }
+
+  .wl-account-hero__login {
+    font-size: 0.74rem;
+    overflow-wrap: anywhere;
+  }
+
+  .wl-account-sections {
+    gap: 12px;
+  }
+
+  .wl-account-section__title {
+    font-size: 0.68rem;
+    margin-bottom: 6px;
+  }
+
+  .wl-account-section__card {
+    border-radius: 12px;
+  }
+
+  .wl-account-row {
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 14px;
+    touch-action: manipulation;
+  }
+
+  .wl-account-row__icon {
+    width: 34px;
+    height: 34px;
+    margin-top: 1px;
+  }
+
+  .wl-account-row__label {
+    font-size: 0.86rem;
+  }
+
+  .wl-account-row__hint {
+    font-size: 0.72rem;
+  }
+
+  .wl-account-row__chevron {
+    margin-top: 4px;
+  }
+
+  .wl-account-row--with-control {
+    min-height: 0;
+    padding: 12px 14px;
+  }
+
+  .wl-account-row--with-control .wl-account-row__hint {
+    display: none;
+  }
+
+  .wl-account-row--with-control .wl-account-row__control {
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .wl-account-lang__btn {
+    min-height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .wl-account-footer {
+    margin-top: 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .wl-account-logout {
+    min-height: 50px;
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .wl-account-row--with-control {
+    display: flex;
+    align-items: center;
+  }
+
+  .wl-account-row--with-control .wl-account-row__icon {
+    grid-row: auto;
+    margin-top: 0;
+  }
+
+  .wl-account-row--with-control .wl-account-row__control {
+    width: auto;
+    max-width: none;
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertCircle, CheckCircle2, RefreshCw, UserPlus, Users, X } from 'lucide-react';
 import type { CoachProgramRow, ProgramEnrollment } from '../../models/coach-architecture';
 import type { Athlete, AthleteLevel } from '../../models/training';
@@ -69,6 +70,14 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
 
   const rows = useMemo(() => {
     return roster.map((athlete) => {
@@ -142,7 +151,7 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="wl-program-assign-overlay" role="presentation" onClick={onClose}>
       <div
         className="wl-program-assign-sheet"
@@ -151,18 +160,19 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
         aria-labelledby="wl-program-assign-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="wl-program-assign-head">
-          <div>
+        <div className="wl-program-assign-sheet-handle" aria-hidden />
+        <div className="wl-program-assign-head">
+          <div className="wl-program-assign-head__content">
             <p className="wl-program-assign-kicker">{isEs ? 'Asignar programa' : 'Assign program'}</p>
             <h2 id="wl-program-assign-title" className="wl-program-assign-title">
               {program.name}
             </h2>
             <p className="wl-program-assign-meta">
-              <span>{structureLabel}</span>
-              <span aria-hidden>·</span>
-              <span>
-                {program.enrolledAthletes.length} {isEs ? 'inscritos' : 'enrolled'}
+              {structureLabel}
+              <span className="wl-program-assign-meta__sep" aria-hidden>
+                ·
               </span>
+              {program.enrolledAthletes.length} {isEs ? 'inscritos' : 'enrolled'}
             </p>
           </div>
           <button
@@ -173,92 +183,105 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
           >
             <X size={16} />
           </button>
-        </header>
-
-        <p className="wl-program-assign-lead">
-          {isEs
-            ? 'Cada atleta solo puede tener un plan WL activo. Al asignar aquí, sustituye cualquier otro programa que tuviera.'
-            : 'Each athlete can only have one active WL plan. Assigning here replaces any other program they had.'}
-        </p>
-
-        <div className="wl-program-assign-toolbar">
-          <input
-            type="search"
-            className="edit-input wl-program-assign-search"
-            placeholder={isEs ? 'Buscar atleta…' : 'Search athlete…'}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button type="button" className="btn-outline wl-mgmt-crud-btn" onClick={selectAllFiltered}>
-            {isEs ? 'Todos' : 'All'}
-          </button>
-          <button type="button" className="btn-outline wl-mgmt-crud-btn" onClick={clearSelection}>
-            {isEs ? 'Ninguno' : 'None'}
-          </button>
         </div>
 
-        <div className="wl-program-assign-summary" aria-live="polite">
-          <Users size={15} aria-hidden />
-          <span>
-            {selected.size === 0
-              ? isEs
-                ? 'Selecciona uno o más atletas'
-                : 'Select one or more athletes'
-              : isEs
-                ? `${selected.size} seleccionado(s) · ${newCount} nuevo(s) · ${transferCount} cambio(s) · ${alreadyOnProgramCount} ya en este programa`
-                : `${selected.size} selected · ${newCount} new · ${transferCount} transfer · ${alreadyOnProgramCount} already here`}
-          </span>
-        </div>
-
-        <div className="wl-program-assign-list">
-          {athletesLoading ? (
-            <p className="wl-mgmt-empty wl-program-assign-loading">
-              <RefreshCw size={16} className="wl-program-assign-spin" aria-hidden />
-              {isEs ? 'Cargando roster…' : 'Loading roster…'}
-            </p>
-          ) : filtered.length === 0 ? (
-            <p className="wl-mgmt-empty">
-              {roster.length === 0
-                ? isEs
-                  ? 'Sin atletas en tu roster.'
-                  : 'No athletes in your roster.'
-                : isEs
-                  ? 'Sin coincidencias.'
-                  : 'No matches.'}
-            </p>
-          ) : (
-            filtered.map(({ athlete, enrollment, onOtherProgram, otherProgramName }) => (
-              <AthleteAssignRow
-                key={athlete.id}
-                athlete={athlete}
-                isEs={isEs}
-                checked={selected.has(athlete.id)}
-                enrollment={enrollment}
-                onOtherProgram={onOtherProgram}
-                otherProgramName={otherProgramName}
-                onToggle={() => toggle(athlete.id)}
-              />
-            ))
-          )}
-        </div>
-
-        {transferCount > 0 ? (
-          <p className="wl-program-assign-warn">
-            <AlertCircle size={14} aria-hidden />
+        <div className="wl-program-assign-body">
+          <p className="wl-program-assign-lead">
             {isEs
-              ? `${transferCount} atleta(s) cambiarán de otro programa a este.`
-              : `${transferCount} athlete(s) will move from another program to this one.`}
+              ? 'Cada atleta solo puede tener un plan WL activo. Al asignar aquí, sustituye cualquier otro programa que tuviera.'
+              : 'Each athlete can only have one active WL plan. Assigning here replaces any other program they had.'}
           </p>
-        ) : null}
 
-        {alreadyOnProgramCount > 0 ? (
-          <p className="wl-program-assign-warn wl-program-assign-warn--muted">
-            <CheckCircle2 size={14} aria-hidden />
-            {isEs
-              ? `${alreadyOnProgramCount} ya están en este programa y se omitirán al asignar.`
-              : `${alreadyOnProgramCount} are already on this program and will be skipped.`}
-          </p>
-        ) : null}
+          <div className="wl-program-assign-toolbar">
+            <input
+              type="search"
+              className="edit-input wl-program-assign-search"
+              placeholder={isEs ? 'Buscar atleta…' : 'Search athlete…'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <div className="wl-program-assign-toolbar-actions">
+              <button type="button" className="btn-outline wl-mgmt-crud-btn" onClick={selectAllFiltered}>
+                {isEs ? 'Todos' : 'All'}
+              </button>
+              <button type="button" className="btn-outline wl-mgmt-crud-btn" onClick={clearSelection}>
+                {isEs ? 'Ninguno' : 'None'}
+              </button>
+            </div>
+          </div>
+
+          <div className="wl-program-assign-summary" aria-live="polite">
+            <Users size={15} aria-hidden className="wl-program-assign-summary-icon" />
+            {selected.size === 0 ? (
+              <span>{isEs ? 'Selecciona uno o más atletas' : 'Select one or more athletes'}</span>
+            ) : (
+              <div className="wl-program-assign-summary-stats">
+                <span className="wl-program-assign-summary-stat">
+                  {selected.size} {isEs ? 'seleccionados' : 'selected'}
+                </span>
+                <span className="wl-program-assign-summary-stat">
+                  {newCount} {isEs ? 'nuevos' : 'new'}
+                </span>
+                <span className="wl-program-assign-summary-stat">
+                  {transferCount} {isEs ? 'cambios' : 'transfers'}
+                </span>
+                <span className="wl-program-assign-summary-stat">
+                  {alreadyOnProgramCount} {isEs ? 'ya aquí' : 'already here'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="wl-program-assign-list">
+            {athletesLoading ? (
+              <p className="wl-mgmt-empty wl-program-assign-loading">
+                <RefreshCw size={16} className="wl-program-assign-spin" aria-hidden />
+                {isEs ? 'Cargando roster…' : 'Loading roster…'}
+              </p>
+            ) : filtered.length === 0 ? (
+              <p className="wl-mgmt-empty">
+                {roster.length === 0
+                  ? isEs
+                    ? 'Sin atletas en tu roster.'
+                    : 'No athletes in your roster.'
+                  : isEs
+                    ? 'Sin coincidencias.'
+                    : 'No matches.'}
+              </p>
+            ) : (
+              filtered.map(({ athlete, enrollment, onOtherProgram, otherProgramName }) => (
+                <AthleteAssignRow
+                  key={athlete.id}
+                  athlete={athlete}
+                  isEs={isEs}
+                  checked={selected.has(athlete.id)}
+                  enrollment={enrollment}
+                  onOtherProgram={onOtherProgram}
+                  otherProgramName={otherProgramName}
+                  onToggle={() => toggle(athlete.id)}
+                />
+              ))
+            )}
+          </div>
+
+          {transferCount > 0 ? (
+            <p className="wl-program-assign-warn">
+              <AlertCircle size={14} aria-hidden />
+              {isEs
+                ? `${transferCount} atleta(s) cambiarán de otro programa a este.`
+                : `${transferCount} athlete(s) will move from another program to this one.`}
+            </p>
+          ) : null}
+
+          {alreadyOnProgramCount > 0 ? (
+            <p className="wl-program-assign-warn wl-program-assign-warn--muted">
+              <CheckCircle2 size={14} aria-hidden />
+              {isEs
+                ? `${alreadyOnProgramCount} ya están en este programa y se omitirán al asignar.`
+                : `${alreadyOnProgramCount} are already on this program and will be skipped.`}
+            </p>
+          ) : null}
+        </div>
 
         <footer className="wl-program-assign-footer">
           <button type="button" className="btn-outline" disabled={saving} onClick={onClose}>
@@ -281,7 +304,8 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

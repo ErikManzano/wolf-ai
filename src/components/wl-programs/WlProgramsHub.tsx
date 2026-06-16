@@ -1,5 +1,5 @@
 import { Filter, Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useWolfAssign } from '../../context/WolfAssignContext';
@@ -12,7 +12,6 @@ import { ProgramCard } from './ProgramCard';
 import { ProgramMobileDetail } from './ProgramMobileDetail';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
-import { setProgramsMobileCreateVisible } from './programsMobileChrome';
 
 export const WL_PROGRAMS_FOCUS_KEY = 'wolf_programs_focus_id';
 
@@ -35,7 +34,6 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ProgramFilterId>('all');
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
   const [assignProgram, setAssignProgram] = useState<CoachProgramRow | null>(null);
   const [assignAthleteId, setAssignAthleteId] = useState<string | undefined>();
@@ -76,15 +74,6 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const mobileDetailProgram = mobileDetailId
     ? filtered.find((program) => program.id === mobileDetailId) ?? null
     : null;
-
-  useEffect(() => {
-    if (!isMobile) {
-      setProgramsMobileCreateVisible(false);
-      return;
-    }
-    setProgramsMobileCreateVisible(!mobileDetailId);
-    return () => setProgramsMobileCreateVisible(false);
-  }, [isMobile, mobileDetailId]);
 
   const runProgramAction = (
     program: CoachProgramRow,
@@ -165,59 +154,53 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             ariaLabel={isEs ? 'Buscar programa' : 'Search program'}
           />
           {isMobile ? (
-            <WlToolbarIconButton
-              active={filter !== 'all' || mobileFiltersOpen}
-              ariaLabel={isEs ? 'Filtros' : 'Filters'}
-              ariaExpanded={mobileFiltersOpen}
-              onClick={() => setMobileFiltersOpen((open) => !open)}
-            >
-              <Filter size={16} />
-            </WlToolbarIconButton>
+            <div className="wl-list-toolbar__actions">
+              <WlToolbarIconButton
+                active={filter !== 'all'}
+                ariaLabel={isEs ? 'Limpiar filtros' : 'Clear filters'}
+                onClick={() => {
+                  if (filter !== 'all') setFilter('all');
+                }}
+              >
+                <Filter size={16} />
+              </WlToolbarIconButton>
+              <WlToolbarIconButton
+                variant="accent"
+                ariaLabel={isEs ? 'Nuevo programa' : 'New program'}
+                onClick={() => void handleCreate()}
+              >
+                <Plus size={20} strokeWidth={2.5} />
+              </WlToolbarIconButton>
+            </div>
           ) : null}
         </div>
       </div>
-      <div
-        className={`wl-list-filter-chips${isMobile ? ' wl-list-filter-chips--collapsible' : ''}${
-          isMobile && mobileFiltersOpen ? ' is-open' : ''
-        }`}
-      >
+      <div className={`wl-list-filter-chips${isMobile ? ' wl-list-filter-chips--mobile' : ''}`}>
         <button
           type="button"
           className={`wl-list-filter-chip${filter === 'all' ? ' is-active' : ''}`}
-          onClick={() => {
-            setFilter('all');
-            if (isMobile) setMobileFiltersOpen(false);
-          }}
+          onClick={() => setFilter('all')}
         >
           {isEs ? 'Todos' : 'All'}
         </button>
         <button
           type="button"
           className={`wl-list-filter-chip${filter === 'published' ? ' is-active' : ''}`}
-          onClick={() => {
-            setFilter('published');
-            if (isMobile) setMobileFiltersOpen(false);
-          }}
+          onClick={() => setFilter('published')}
         >
           {isEs ? 'Publicados' : 'Published'}
         </button>
         <button
           type="button"
           className={`wl-list-filter-chip${filter === 'draft' ? ' is-active' : ''}`}
-          onClick={() => {
-            setFilter('draft');
-            if (isMobile) setMobileFiltersOpen(false);
-          }}
+          onClick={() => setFilter('draft')}
         >
           {isEs ? 'Borradores' : 'Drafts'}
         </button>
         <button
           type="button"
           className={`wl-list-filter-chip${filter === 'without_athletes' ? ' is-active' : ''}`}
-          onClick={() => {
-            setFilter('without_athletes');
-            if (isMobile) setMobileFiltersOpen(false);
-          }}
+          onClick={() => setFilter('without_athletes')}
         >
           {isEs ? 'Sin atletas' : 'No athletes'}
         </button>
