@@ -9,6 +9,7 @@ import {
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../../models/coach-architecture';
 import type { ProgramAssignment, SessionCompletion } from '../../models/training';
 import { useWolfAlert } from '../../context/WolfAlertContext';
+import { filterAthletesForProgramAssign, getEnrollmentsForCoachProgram } from '../../utils/wlAssignmentRules';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, wlProgramsApiFetch } from './apiClient';
 import {
@@ -55,22 +56,12 @@ function enrichProgramsWithAssignments(
   nameByProfileId: Record<string, string>,
 ): CoachProgramRow[] {
   return programs.map((program) => {
-    const linked = assignments.filter((a) => a.coachProgramId === program.id);
-    const enrolledAthletes = linked.map((a) => {
-      const slotCompletions = completions.filter((c) => c.assignmentId === a.id);
-      const totalDays = a.program.weeks.reduce((s, w) => s + w.days.length, 0);
-      const completedDays = new Set(
-        slotCompletions.filter((c) => c.exerciseIndex == null).map((c) => `${c.weekNumber}-${c.dayNumber}`),
-      ).size;
-      const completionPct = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : undefined;
-      return {
-        athleteProfileId: a.athleteProfileId,
-        athleteName: nameByProfileId[a.athleteProfileId] ?? a.athleteProfileId,
-        assignmentId: a.id,
-        assignedAt: a.assignedAt,
-        completionPct,
-      };
-    });
+    const enrolledAthletes = getEnrollmentsForCoachProgram(
+      program.id,
+      assignments,
+      completions,
+      nameByProfileId,
+    );
     const adherenceValues = enrolledAthletes
       .map((e) => e.completionPct)
       .filter((v): v is number => v != null);
@@ -276,18 +267,41 @@ export function WlProgramsProvider({
       const source = rawPrograms.find((p) => p.id === programId);
       if (!source) return [];
 
+      const { toAssign, skippedAlreadyOnProgram } = filterAthletesForProgramAssign(
+        programId,
+        athleteProfileIds,
+        assignments,
+      );
+
+      if (toAssign.length === 0) {
+        if (skippedAlreadyOnProgram.length > 0) {
+          pushAlert({
+            tone: 'info',
+            title: 'Sin cambios',
+            message: 'Los atletas seleccionados ya tienen este programa asignado.',
+          });
+        }
+        return [];
+      }
+
       if (!apiMode && assignProgramToAthlete) {
         const ids: string[] = [];
-        for (const athleteProfileId of athleteProfileIds) {
+        for (const athleteProfileId of toAssign) {
           ids.push(await assignProgramToAthlete(source.program, athleteProfileId, programId));
         }
         if (source.status === 'draft') {
           await updateProgram(programId, { status: 'published' });
         }
+        const replaced = toAssign.filter((id) =>
+          assignments.some((a) => a.athleteProfileId === id && a.coachProgramId && a.coachProgramId !== programId),
+        ).length;
         pushAlert({
           tone: 'success',
           title: 'Programa asignado',
-          message: `${ids.length} instancia(s) creada(s). El atleta la verá en «Mi plan WL».`,
+          message:
+            replaced > 0
+              ? `${ids.length} atleta(s) con este plan activo. ${replaced} cambiaron de otro programa.`
+              : `${ids.length} atleta(s) con este plan activo.`,
         });
         await reloadAssignmentsFromApi?.();
         return ids;
@@ -305,23 +319,29 @@ export function WlProgramsProvider({
       const res = await wlProgramsApiFetch(`/coach-programs/${programId}/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ athleteProfileIds }),
+        body: JSON.stringify({ athleteProfileIds: toAssign }),
       });
       if (!res.ok) {
         pushAlert({ tone: 'error', title: 'No se pudo asignar', message: await readApiError(res) });
         return [];
       }
       const saved = (await res.json()) as { id: string }[];
+      const replaced = toAssign.filter((id) =>
+        assignments.some((a) => a.athleteProfileId === id && a.coachProgramId && a.coachProgramId !== programId),
+      ).length;
       pushAlert({
         tone: 'success',
         title: 'Programa asignado',
-        message: `${saved.length} instancia(s) creada(s). El atleta la verá en «Mi plan WL» al instante.`,
+        message:
+          replaced > 0
+            ? `${saved.length} atleta(s) con este plan activo. ${replaced} cambiaron de otro programa.`
+            : `${saved.length} atleta(s) con este plan activo.`,
       });
       await loadProgramsFromApi();
       await reloadAssignmentsFromApi?.();
       return saved.map((a) => a.id);
     },
-    [apiMode, apiToken, rawPrograms, assignProgramToAthlete, updateProgram, pushAlert, loadProgramsFromApi, reloadAssignmentsFromApi],
+    [apiMode, apiToken, rawPrograms, assignments, assignProgramToAthlete, updateProgram, pushAlert, loadProgramsFromApi, reloadAssignmentsFromApi],
   );
 
   const getProgramById = useCallback(

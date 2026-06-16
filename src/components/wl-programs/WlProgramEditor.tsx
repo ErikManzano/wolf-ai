@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   CalendarRange,
   ChevronDown,
-  ChevronRight,
   Dumbbell,
   Scale,
   SlidersHorizontal,
@@ -19,6 +18,8 @@ import { useDebouncedCallback } from '../../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
+import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
+import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import '../wl-management/wl-management.css';
 import './wl-programs.css';
@@ -247,14 +248,13 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   return (
     <div className="wl-programs-panel wl-programs-editor">
       <header className="wl-programs-editor-hero">
-        <nav className="wl-programs-breadcrumb" aria-label={isEs ? 'Navegación' : 'Breadcrumb'}>
-          <button type="button" className="wl-programs-back-btn" onClick={onBack}>
-            <ArrowLeft size={16} aria-hidden />
-            {isEs ? 'Programas' : 'Programs'}
-          </button>
-          <ChevronRight size={14} className="wl-programs-breadcrumb-sep" aria-hidden />
-          <span className="wl-programs-breadcrumb-current">{coachProgram.name}</span>
-        </nav>
+        <AppBreadcrumb
+          isEs={isEs}
+          items={[
+            { label: isEs ? 'Programas' : 'Programs', onClick: onBack },
+            { label: coachProgram.name },
+          ]}
+        />
 
         <div className="wl-programs-editor-hero-meta">
           <span className={`wl-programs-status-pill wl-programs-status-pill--${coachProgram.status}`}>

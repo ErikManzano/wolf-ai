@@ -1,5 +1,6 @@
 import type { Athlete, ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
-import { buildWlAssignmentRows } from './dashboardStats';
+import { buildWlAssignmentRows, wlLastCompletionDate } from './dashboardStats';
+import { getActiveAssignmentForProfile } from './wlAssignmentRules';
 
 export type WlAthleteRosterRow = {
   profileId: string;
@@ -14,6 +15,9 @@ export type WlAthleteRosterRow = {
   programName: string | null;
   completionPct: number | null;
   assignedAt: string | null;
+  lastActivityAt: string | null;
+  sessionsDone: number;
+  sessionSlots: number;
 };
 
 export function buildWlAthleteRosterRows(
@@ -41,6 +45,8 @@ export function buildWlAthleteRosterRows(
   return athletes.map((a) => {
     const linked = userByProfileId.get(a.id);
     const asg = assignmentByProfile.get(a.id);
+    const assignment = getActiveAssignmentForProfile(assignments, a.id);
+    const lastActivityAt = assignment ? wlLastCompletionDate(assignment.id, completions) : null;
     return {
       profileId: a.id,
       name: a.name,
@@ -54,6 +60,9 @@ export function buildWlAthleteRosterRows(
       programName: asg?.programName ?? null,
       completionPct: asg?.completionPct ?? null,
       assignedAt: asg?.assignedAt ?? null,
+      lastActivityAt,
+      sessionsDone: asg?.sessionsDone ?? 0,
+      sessionSlots: asg?.sessionSlots ?? 0,
     };
   });
 }

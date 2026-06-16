@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, ProgramAssignmentVersion, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
 import type {
   AthleteLoadCalibration,
   CoachExerciseOverride,
@@ -32,6 +32,7 @@ import { PostgresStore } from './postgresStore';
 import { CoachService, CoachServiceError } from './coach-service';
 import { cloneProgramForAthlete, TEMPLATE_PROGRAM_ATHLETE_ID } from '../models/coach-architecture';
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../models/coach-architecture';
+import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
@@ -141,18 +142,13 @@ function resolveAthleteUserId(profileId: string, users: WolfUser[]): string | un
 
 function buildMockCoachProgramRows(coachId: string, state: MockApiState): CoachProgramRow[] {
   const nameById = Object.fromEntries(state.athletes.map((a) => [a.id, a.name] as const));
+  const coachAssignments = state.assignments.filter((a) => a.coachId === coachId);
   return state.coachPrograms
     .filter((p) => p.coachId === coachId && p.status !== 'archived')
-    .map((program) => {
-      const linked = state.assignments.filter((a) => a.coachProgramId === program.id);
-      const enrolledAthletes = linked.map((a) => ({
-        athleteProfileId: a.athleteProfileId,
-        athleteName: nameById[a.athleteProfileId] ?? a.athleteProfileId,
-        assignmentId: a.id,
-        assignedAt: a.assignedAt,
-      }));
-      return { ...program, enrolledAthletes };
-    })
+    .map((program) => ({
+      ...program,
+      enrolledAthletes: getEnrollmentsForCoachProgram(program.id, coachAssignments, [], nameById),
+    }))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
@@ -2200,6 +2196,20 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       updatedAt: new Date().toISOString(),
     };
     state.coachPrograms[idx] = updated;
+    if (patch.program) {
+      for (const asg of state.assignments.filter((a) => a.coachProgramId === id)) {
+        const cloned = cloneProgramForAthlete(patch.program, asg.athleteProfileId, { name: updated.name });
+        const hist: ProgramAssignmentVersion = {
+          version: asg.version,
+          editedAt: new Date().toISOString(),
+          program: asg.program,
+        };
+        asg.version += 1;
+        asg.program = cloned;
+        asg.versionHistory = [...(asg.versionHistory ?? []), hist];
+      }
+      notify?.('assignments:changed', { coachId });
+    }
     notify?.('coach-programs:changed', { coachId });
     res.json(updated);
   });

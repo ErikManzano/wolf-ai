@@ -8,12 +8,21 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { MessageSquare, Menu, X } from 'lucide-react';
+import { MessageSquare, Plus } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
+import { MobileBottomNav } from './components/navigation/MobileBottomNav';
+import { getNavLabel } from './navigation/appNavigation';
+import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
+import { WL_PROGRAMS_MOBILE_CREATE_CHROME } from './components/wl-programs/programsMobileChrome';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
+const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className="mobile-header-logo" aria-hidden>
+    <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
+  </svg>
+);
 
 function AppShell() {
   const [activeView, setActiveView] = useState('programs');
@@ -28,6 +37,7 @@ function AppShell() {
   const [isNarrowLayout, setIsNarrowLayout] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 1024px)').matches : false,
   );
+  const [programsMobileCreateVisible, setProgramsMobileCreateVisible] = useState(false);
   const gestureRef = useRef<{ startX: number; startY: number; tracking: boolean }>({
     startX: 0,
     startY: 0,
@@ -36,8 +46,31 @@ function AppShell() {
   /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
   const initialViewUserIdRef = useRef<string | null>(null);
 
-  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
+  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, createCoachProgram, openProgramEditor, programsView } = useWolfAssign();
   const { setUserRole } = useAppContext();
+
+  useEffect(() => {
+    const onProgramsChrome = (event: Event) => {
+      const detail = (event as CustomEvent<{ visible: boolean }>).detail;
+      setProgramsMobileCreateVisible(Boolean(detail?.visible));
+    };
+    window.addEventListener(WL_PROGRAMS_MOBILE_CREATE_CHROME, onProgramsChrome);
+    return () => window.removeEventListener(WL_PROGRAMS_MOBILE_CREATE_CHROME, onProgramsChrome);
+  }, []);
+
+  const handleMobileCreateProgram = async () => {
+    const isEs = language === 'ES';
+    const name = window.prompt(
+      isEs ? 'Nombre del programa:' : 'Program name:',
+      isEs ? 'Nuevo mesociclo' : 'New mesocycle',
+    );
+    if (!name?.trim()) return;
+    const created = await createCoachProgram(name.trim());
+    if (created) openProgramEditor(created.id);
+  };
+
+  const showProgramsMobileCreate =
+    isNarrowLayout && activeView === 'programs' && programsView === 'hub' && programsMobileCreateVisible;
 
   const appRoleFromWolf = (role: WolfAppRole) => {
     if (role === 'super_admin') return 'admin' as const;
@@ -151,40 +184,36 @@ function AppShell() {
           gestureRef.current.tracking = false;
         }}
       >
-        {/* Mobile Header Overlays */}
+        {/* Mobile Header */}
         <div className="mobile-header">
-          <button
-            type="button"
-            className="mobile-header-btn mobile-header-btn--menu"
-            aria-expanded={mobileMenuOpen}
-            aria-label={
-              mobileMenuOpen
-                ? language === 'ES'
-                  ? 'Cerrar menú'
-                  : 'Close menu'
-                : language === 'ES'
-                  ? 'Abrir menú'
-                  : 'Open menu'
-            }
-            onClick={() => {
-              setMobileChatOpen(false);
-              setMobileMenuOpen((v) => !v);
-            }}
-          >
-            {mobileMenuOpen ? <X size={22} strokeWidth={2} /> : <Menu size={22} strokeWidth={2} />}
-          </button>
-          <button
-            type="button"
-            className="mobile-header-btn mobile-header-btn--chat"
+          <div className="mobile-header-brand" aria-live="polite">
+            <WolfHeaderIcon />
+            <div className="mobile-header-title">{getNavLabel(activeView, language === 'ES')}</div>
+          </div>
+          <div className="mobile-header-actions">
+            {showProgramsMobileCreate ? (
+              <button
+                type="button"
+                className="mobile-header-btn mobile-header-btn--fab"
+                aria-label={language === 'ES' ? 'Nuevo programa' : 'New program'}
+                onClick={() => void handleMobileCreateProgram()}
+              >
+                <Plus size={22} strokeWidth={2.5} />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="mobile-header-btn mobile-header-btn--chat"
             aria-expanded={mobileChatOpen}
-            aria-label={mobileChatOpen ? 'Cerrar chat' : 'Abrir chat'}
+            aria-label={mobileChatOpen ? (language === 'ES' ? 'Cerrar chat' : 'Close chat') : (language === 'ES' ? 'Abrir chat' : 'Open chat')}
             onClick={() => {
               setMobileMenuOpen(false);
               setMobileChatOpen((v) => !v);
             }}
           >
-            {mobileChatOpen ? <X size={22} strokeWidth={2} /> : <MessageSquare size={22} strokeWidth={2} />}
+            <MessageSquare size={22} strokeWidth={2} />
           </button>
+          </div>
         </div>
 
         {(mobileMenuOpen || mobileChatOpen) && (
@@ -210,6 +239,7 @@ function AppShell() {
             setLanguage={setLanguage}
             collapsed={effectiveSidebarCollapsed}
             showRailToggle={!isNarrowLayout}
+            mobileDrawer={isNarrowLayout}
             onToggleCollapsed={() => {
               if (isNarrowLayout) {
                 setMobileMenuOpen((v) => !v);
@@ -236,6 +266,23 @@ function AppShell() {
             onToggleDesktopCollapse={() => setChatDesktopCollapsed((c) => !c)}
           />
         </div>
+
+        {isNarrowLayout ? (
+          <MobileBottomNav
+            activeView={activeView}
+            language={language}
+            menuOpen={mobileMenuOpen}
+            onNavigate={(view: AppViewId) => {
+              setActiveView(view);
+              setMobileMenuOpen(false);
+              setMobileChatOpen(false);
+            }}
+            onOpenMore={() => {
+              setMobileChatOpen(false);
+              setMobileMenuOpen((open) => !open);
+            }}
+          />
+        ) : null}
 
         <ConfirmationModal
           open={logoutConfirmOpen}

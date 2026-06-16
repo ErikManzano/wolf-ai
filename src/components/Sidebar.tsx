@@ -1,14 +1,16 @@
 import React from 'react';
-import { LayoutDashboard, Users, CalendarRange, BotMessageSquare as IntakeIcon, ShieldCheck, BookMarked, ClipboardCheck, ListTree, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
+import {
+  getMobileSecondaryNavItems,
+  getVisibleNavItems,
+} from '../navigation/appNavigation';
 
-const WolfIcon = ({ size = 28, className = "" }) => (
+const WolfIcon = ({ size = 28, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2L10 7L4 9L8 12L6 19L12 16L18 19L16 12L20 9L14 7L12 2Z" style={{ display: 'none' }} /> {/* Refined geometric wolf head below */}
-    <path d="M12 2L9 8L3 11L7 14L5 22L12 18L19 22L17 14L21 11L15 8L12 2Z" style={{ display: 'none' }} />
     <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
   </svg>
 );
@@ -21,14 +23,10 @@ interface SidebarProps {
   onLogout: () => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  /** When false (e.g. mobile drawer), rail collapse lives in the app header instead. */
   showRailToggle?: boolean;
+  /** Mobile drawer: only secondary items + account controls. */
+  mobileDrawer?: boolean;
 }
-
-const COACH_ONLY_NAV = new Set(['programs', 'wolf-engine', 'wl-exercises', 'exercise-intelligence', 'athletes']);
-/** Formulario de Stats/PRs — solo sentido en primera persona como atleta. */
-const ATHLETE_ONLY_NAV = new Set(['my-wl-plan', 'onboarding']);
-const SUPER_ADMIN_ONLY_NAV = new Set(['admin-users']);
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeView,
@@ -39,39 +37,23 @@ const Sidebar: React.FC<SidebarProps> = ({
   collapsed,
   onToggleCollapsed,
   showRailToggle = true,
+  mobileDrawer = false,
 }) => {
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
   const { persona, currentUser } = useWolfAssign();
 
-  const menuItems = [
-    { id: 'dashboard', label: isEs ? 'Dashboard' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'my-wl-plan', label: isEs ? 'Mi plan WL' : 'My WL plan', icon: ClipboardCheck },
-    { id: 'athletes', label: isEs ? 'Atletas' : 'Athletes', icon: Users },
-    { id: 'programs', label: isEs ? 'Programas' : 'Programs', icon: BookMarked },
-    { id: 'exercise-intelligence', label: isEs ? 'Ejercicios' : 'Exercises', icon: ListTree },
-    { id: 'global-calendar', label: isEs ? 'Calendario' : 'Calendar', icon: CalendarRange },
-    { id: 'admin-users', label: isEs ? 'Panel maestro' : 'Master panel', icon: ShieldCheck },
-    { id: 'onboarding', label: isEs ? 'Stats y PRs' : 'Stats & PRs', icon: IntakeIcon },
-  ];
-
-  const visibleMenuItems = menuItems.filter((item) => {
-    if (SUPER_ADMIN_ONLY_NAV.has(item.id)) return currentUser?.role === 'super_admin';
-    if (ATHLETE_ONLY_NAV.has(item.id)) return persona === 'athlete';
-    if (currentUser?.role === 'super_admin') {
-      // Super admin stays focused on account governance by default.
-      return !ATHLETE_ONLY_NAV.has(item.id);
-    }
-    if (persona === 'athlete' && COACH_ONLY_NAV.has(item.id)) return false;
-    return true;
-  });
+  const visibleMenuItems = getVisibleNavItems(persona, currentUser?.role);
+  const navItems = mobileDrawer
+    ? getMobileSecondaryNavItems(persona, currentUser?.role)
+    : visibleMenuItems;
 
   return (
-    <div className={`sidebar${collapsed ? ' compact' : ''}`}>
+    <div className={`sidebar${collapsed ? ' compact' : ''}${mobileDrawer ? ' sidebar--mobile-drawer' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
           <WolfIcon size={28} className="logo-icon" />
-          <h2>Wolf AI</h2>
+          <h2>{mobileDrawer ? (isEs ? 'Más opciones' : 'More options') : 'Wolf AI'}</h2>
         </div>
         {showRailToggle ? (
           <button
@@ -85,40 +67,43 @@ const Sidebar: React.FC<SidebarProps> = ({
         ) : null}
       </div>
 
-      <nav className="sidebar-nav">
-        {visibleMenuItems.map(item => (
-          <button
-            key={item.id}
-            className={`nav-item ${activeView === item.id ? 'active' : ''}`}
-            onClick={() => setActiveView(item.id)}
-            title={item.label}
-            aria-label={item.label}
-          >
-            <item.icon size={20} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
-            <span
-              style={{
-                fontWeight: item.id === 'programs' ? 'bold' : 'normal',
-                color: item.id === 'programs' && activeView !== 'programs' ? 'var(--color-accent)' : 'inherit',
-              }}
+      <nav className="sidebar-nav" aria-label={mobileDrawer ? (isEs ? 'Más secciones' : 'More sections') : undefined}>
+        {navItems.length === 0 && mobileDrawer ? (
+          <p className="sidebar-mobile-empty">
+            {isEs ? 'Las secciones principales están en la barra inferior.' : 'Main sections are in the bottom bar.'}
+          </p>
+        ) : null}
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const label = isEs ? item.labelEs : item.labelEn;
+          return (
+            <button
+              key={item.id}
+              className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+              onClick={() => setActiveView(item.id)}
+              title={label}
+              aria-label={label}
             >
-              {item.label}
-            </span>
-          </button>
-        ))}
+              <Icon size={20} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
+              <span
+                style={{
+                  fontWeight: item.id === 'programs' ? 'bold' : 'normal',
+                  color: item.id === 'programs' && activeView !== 'programs' ? 'var(--color-accent)' : 'inherit',
+                }}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">
         <div className="lang-toggle">
-          <button
-            className={language === 'ES' ? 'active' : ''}
-            onClick={() => setLanguage('ES')}
-          >
+          <button className={language === 'ES' ? 'active' : ''} onClick={() => setLanguage('ES')}>
             ES
           </button>
-          <button
-            className={language === 'EN' ? 'active' : ''}
-            onClick={() => setLanguage('EN')}
-          >
+          <button className={language === 'EN' ? 'active' : ''} onClick={() => setLanguage('EN')}>
             EN
           </button>
         </div>

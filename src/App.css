@@ -107,11 +107,63 @@
     z-index: 60;
     height: calc(56px + var(--safe-top));
     padding: var(--safe-top) max(12px, var(--safe-right)) 0 max(12px, var(--safe-left));
-    background: var(--color-bg-panel);
-    background: color-mix(in srgb, var(--color-bg-panel) 94%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-main);
+    border-bottom: none;
+  }
+
+  .mobile-header-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding-left: 4px;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-header-logo {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .mobile-header-btn--fab {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 999px;
+    background: #ff6b1a;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255, 107, 26, 0.38);
+  }
+
+  .mobile-header-btn--fab:hover {
+    background: #ff8a3d;
+    color: #fff;
+  }
+
+  .mobile-header-btn--fab:active {
+    background: #e85f12;
+    color: #fff;
   }
 
   .mobile-backdrop {
@@ -120,7 +172,7 @@
     top: calc(56px + var(--safe-top));
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
     z-index: 45;
     background: rgba(0, 0, 0, 0.5);
     border: none;
@@ -131,11 +183,11 @@
   .sidebar-area {
     position: fixed;
     top: calc(56px + var(--safe-top));
-    bottom: 0;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
     left: 0;
     width: min(300px, calc(100vw - 24px));
     max-width: 320px;
-    height: calc(100dvh - (56px + var(--safe-top)));
+    height: auto;
     z-index: 55;
     overflow-x: hidden;
     overflow-y: auto;
@@ -162,13 +214,13 @@
     padding: 14px;
     padding-left: max(14px, var(--safe-left));
     padding-right: max(14px, var(--safe-right));
-    padding-bottom: max(96px, var(--safe-bottom));
+    padding-bottom: max(80px, calc(68px + var(--safe-bottom)));
   }
 
   .chat-area {
     position: fixed;
     top: calc(56px + var(--safe-top));
-    bottom: 0;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
     right: 0;
     width: 100%;
     max-width: min(460px, 100%);
@@ -188,6 +240,6 @@
     padding: 12px;
     padding-left: max(12px, var(--safe-left));
     padding-right: max(12px, var(--safe-right));
-    padding-bottom: max(96px, var(--safe-bottom));
+    padding-bottom: max(80px, calc(68px + var(--safe-bottom)));
   }
 }

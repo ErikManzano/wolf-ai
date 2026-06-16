@@ -3,6 +3,601 @@
   padding: 0 4px 24px;
 }
 
+.wl-programs-hub {
+  --wl-prog-bg: #09090b;
+  --wl-prog-card: #111318;
+  --wl-prog-border: #27272a;
+  --wl-prog-text: #fafafa;
+  --wl-prog-muted: #a1a1aa;
+  --wl-prog-accent: #ff6b1a;
+  --wl-list-surface: #111318;
+  --wl-list-border: #27272a;
+  --wl-list-text: #fafafa;
+  --wl-list-muted: #a1a1aa;
+  --wl-list-accent: #ff6b1a;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.wl-programs-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.wl-programs-head__text h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.65rem);
+  color: var(--wl-prog-text);
+}
+
+.wl-programs-head__text p {
+  margin: 8px 0 0;
+  color: var(--wl-prog-muted);
+  font-size: 0.88rem;
+}
+
+.wl-programs-head__cta {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.wl-programs-table-wrap {
+  border: 1px solid var(--wl-prog-border);
+  border-radius: 14px;
+  background: var(--wl-prog-card);
+  overflow-x: auto;
+}
+
+.wl-programs-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.wl-programs-table th,
+.wl-programs-table td {
+  padding: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--wl-prog-border) 80%, transparent);
+}
+
+.wl-programs-table thead th {
+  border-top: none;
+  color: var(--wl-prog-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wl-programs-athletes-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wl-programs-athletes-cell p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--wl-prog-muted);
+}
+
+.wl-programs-athletes-empty {
+  color: var(--wl-prog-muted);
+  font-size: 0.8rem;
+}
+
+.wl-programs-adherence-cell span {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 5px;
+}
+
+.wl-programs-adherence-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--wl-prog-border);
+  overflow: hidden;
+}
+
+.wl-programs-adherence-bar i {
+  display: block;
+  height: 100%;
+  background: var(--wl-prog-accent);
+}
+
+.wl-programs-status-badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.wl-programs-status-badge--published {
+  color: #ff8a3d;
+  border: 1px solid rgba(255, 107, 26, 0.3);
+  background: rgba(255, 107, 26, 0.12);
+}
+
+.wl-programs-status-badge--draft {
+  color: var(--wl-prog-muted);
+  border: 1px solid var(--wl-prog-border);
+  background: transparent;
+}
+
+.wl-programs-status-badge--archived {
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.3);
+  background: rgba(147, 197, 253, 0.12);
+}
+
+.wl-programs-actions-menu {
+  position: relative;
+}
+
+.wl-programs-actions-menu__trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-prog-border);
+  background: transparent;
+  color: var(--wl-prog-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wl-programs-actions-menu--card .wl-programs-actions-menu__trigger {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--wl-prog-muted);
+  border-radius: 8px;
+}
+
+.wl-programs-actions-menu__list {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  min-width: 160px;
+  z-index: 4;
+  border: 1px solid var(--wl-prog-border);
+  background: var(--wl-prog-card);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wl-programs-actions-menu__list button {
+  border: none;
+  background: transparent;
+  color: var(--wl-prog-text);
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.wl-programs-actions-menu__list button:hover {
+  background: color-mix(in srgb, var(--wl-prog-accent) 12%, transparent);
+}
+
+.wl-programs-actions-menu__list .is-danger {
+  color: #f87171;
+}
+
+.wl-programs-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wl-program-card {
+  border: 1px solid var(--wl-prog-border);
+  background: var(--wl-prog-card);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.wl-program-card:active {
+  background: color-mix(in srgb, var(--wl-prog-card) 92%, #fff);
+}
+
+.wl-program-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wl-program-card__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wl-program-card__title-row h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--wl-prog-text);
+  letter-spacing: -0.01em;
+}
+
+.wl-program-card__menu {
+  flex-shrink: 0;
+  margin: -4px -6px 0 0;
+}
+
+.wl-program-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: var(--wl-prog-muted);
+  font-size: 0.82rem;
+}
+
+.wl-program-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wl-program-card__meta svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.wl-program-card__divider {
+  height: 1px;
+  margin: 14px 0;
+  background: var(--wl-prog-border);
+}
+
+.wl-program-card__section {
+  margin: 0;
+}
+
+.wl-program-card__label {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: var(--wl-prog-muted);
+  letter-spacing: 0.01em;
+}
+
+.wl-program-card__athletes-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wl-program-card__athlete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wl-program-card__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--wl-prog-accent) 22%, transparent);
+  color: var(--wl-prog-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.wl-program-card__athlete-text {
+  min-width: 0;
+}
+
+.wl-program-card__athlete-text strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--wl-prog-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wl-program-card__athlete-text p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-card__adherence {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wl-program-card__adherence--low {
+  color: #f87171;
+}
+
+.wl-program-card__adherence--good {
+  color: #4ade80;
+}
+
+.wl-program-card__adherence--empty {
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-card__empty-athletes {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-card__updated {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--wl-prog-text);
+}
+
+.wl-program-card__updated svg {
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-mobile-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.wl-program-mobile-detail__section {
+  margin-bottom: 12px;
+}
+
+.wl-program-mobile-detail__section-title {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--wl-prog-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wl-program-mobile-detail__back {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-prog-border);
+  background: var(--wl-prog-card);
+  color: var(--wl-prog-text);
+}
+
+.wl-program-mobile-detail__title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.wl-program-mobile-detail__title-wrap h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.wl-program-mobile-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wl-program-mobile-detail__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wl-program-mobile-detail__summary-card {
+  border: 1px solid var(--wl-prog-border);
+  background: var(--wl-prog-card);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wl-program-mobile-detail__summary-card strong {
+  display: block;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.wl-program-mobile-detail__summary-card p {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-mobile-detail__summary-card svg {
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-mobile-detail__panel {
+  border: 1px solid var(--wl-prog-border);
+  background: var(--wl-prog-card);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.wl-program-mobile-detail__panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.74rem;
+  color: var(--wl-prog-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wl-program-mobile-detail__panel p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.wl-program-mobile-detail__muted {
+  margin-top: 8px !important;
+  color: var(--wl-prog-muted);
+  font-size: 0.76rem !important;
+}
+
+.wl-program-mobile-detail__athlete-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wl-program-mobile-detail__athlete-row + .wl-program-mobile-detail__athlete-row {
+  margin-top: 8px;
+}
+
+.wl-program-mobile-detail__athlete-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--wl-prog-accent) 18%, transparent);
+  color: var(--wl-prog-accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--wl-prog-accent) 35%, transparent);
+}
+
+.wl-program-mobile-detail__athlete-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.wl-program-mobile-detail__athlete-text strong {
+  font-size: 0.88rem;
+}
+
+.wl-program-mobile-detail__athlete-text p {
+  margin-top: 3px;
+  font-size: 0.74rem;
+  color: #f97316;
+}
+
+.wl-program-mobile-detail__athlete-chevron {
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-mobile-detail__adherence-bar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--wl-prog-border);
+  overflow: hidden;
+}
+
+.wl-program-mobile-detail__adherence-bar i {
+  display: block;
+  height: 100%;
+  background: var(--wl-prog-accent);
+}
+
+.wl-program-mobile-detail__actions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.wl-program-mobile-detail__danger {
+  color: #f87171;
+}
+
+.wl-program-mobile-detail__footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: 14px;
+  padding-top: 10px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--wl-prog-bg) 75%, transparent);
+}
+
+.wl-program-mobile-detail__cta {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.wl-programs-empty {
+  color: var(--wl-prog-muted);
+  margin: 16px 0;
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  .wl-programs-col-status,
+  .wl-programs-table th:nth-child(3),
+  .wl-programs-table td:nth-child(3),
+  .wl-programs-table th:nth-child(6),
+  .wl-programs-table td:nth-child(6) {
+    display: none;
+  }
+
+  .wl-programs-table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .wl-programs-head {
+    display: none;
+  }
+
+  .wl-programs-hub {
+    padding-bottom: 12px;
+  }
+
+  .wl-program-mobile-detail__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wl-program-mobile-detail__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .wl-program-mobile-detail__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .wl-programs-panel.wl-programs-editor {
   padding: 0;
 }
@@ -668,6 +1263,12 @@
   padding: 18px 18px 12px;
   border-bottom: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
+  flex-shrink: 0;
+}
+
+.wl-program-assign-head > div:first-child {
+  min-width: 0;
+  flex: 1;
 }
 
 .wl-program-assign-kicker {
@@ -707,6 +1308,7 @@
   line-height: 1.45;
   color: var(--color-text-secondary);
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  flex-shrink: 0;
 }
 
 .wl-program-assign-toolbar {
@@ -714,6 +1316,7 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px 18px 0;
+  flex-shrink: 0;
 }
 
 .wl-program-assign-search {
@@ -733,6 +1336,7 @@
   color: var(--color-text-secondary);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .wl-program-assign-list {
@@ -880,6 +1484,7 @@
   color: var(--color-warning);
   background: color-mix(in srgb, var(--color-warning) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  flex-shrink: 0;
 }
 
 .wl-program-assign-footer {
@@ -890,6 +1495,16 @@
   margin-top: 12px;
   border-top: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-bg-panel) 96%, transparent);
+  flex-shrink: 0;
+}
+
+.wl-program-assign-footer .btn-primary,
+.wl-program-assign-footer .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
 }
 
 .wl-program-enrollments-cell {
@@ -950,6 +1565,130 @@
 
   .wl-programs-action-dock__actions .btn-primary {
     flex: 1 1 100%;
+  }
+
+  /* Assign sheet — bottom sheet on mobile */
+  .wl-program-assign-overlay {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+
+  .wl-program-assign-sheet {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 12px));
+    border-radius: 16px 16px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .wl-program-assign-sheet::before {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 2px;
+    border-radius: 999px;
+    background: var(--color-border);
+  }
+
+  .wl-program-assign-head {
+    padding: 10px 14px 12px;
+    gap: 10px;
+  }
+
+  .wl-program-assign-title {
+    font-size: 1rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .wl-program-assign-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wl-program-assign-lead {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+
+  .wl-program-assign-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 14px 0;
+  }
+
+  .wl-program-assign-search {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .wl-program-assign-toolbar .btn-outline {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .wl-program-assign-summary {
+    margin: 10px 14px 0;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    align-items: flex-start;
+  }
+
+  .wl-program-assign-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin: 10px 14px 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .wl-program-assign-row {
+    padding: 12px;
+    gap: 10px;
+    touch-action: manipulation;
+  }
+
+  .wl-program-assign-row input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+    margin-top: 8px;
+  }
+
+  .wl-program-assign-badge {
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .wl-program-assign-warn {
+    margin: 10px 14px 0;
+    font-size: 0.76rem;
+  }
+
+  .wl-program-assign-footer {
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    margin-top: 10px;
+  }
+
+  .wl-program-assign-footer .btn-primary,
+  .wl-program-assign-footer .btn-outline {
+    width: 100%;
+    min-height: 48px;
   }
 }
 

@@ -221,7 +221,20 @@
 @media (max-width: 768px) {
   .sidebar {
     padding: 10px 8px;
-    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar--mobile-drawer .sidebar-header {
+    padding-bottom: 10px;
+  }
+
+  .sidebar-mobile-empty {
+    margin: 8px 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px dashed var(--color-border);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
   }
 
   .nav-item {

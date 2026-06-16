@@ -2,6 +2,7 @@ import React from 'react';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import WlProgramsHub from './WlProgramsHub';
 import WlProgramEditor from './WlProgramEditor';
+import '../wl-shared/wl-list-toolbar.css';
 import './wl-programs.css';
 
 interface WlProgramsPanelProps {

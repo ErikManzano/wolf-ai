@@ -22,6 +22,7 @@ import {
   TEMPLATE_PROGRAM_ATHLETE_ID,
 } from '../models/coach-architecture';
 import type { GeneratedProgram, ProgramAssignment, ProgramAssignmentVersion, WolfUser } from '../models/training';
+import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
 
 type CoachServiceDeps = {
   store: PostgresStore;
@@ -79,16 +80,16 @@ export class CoachService {
     const programs = await this.store.listCoachPrograms(coachId);
     const profiles = await this.store.listAthleteProfiles(coachId);
     const nameById = Object.fromEntries(profiles.map((p) => [p.id, p.name] as const));
+    const coachAssignments = (await this.store.getAssignments()).filter((a) => a.coachId === coachId);
     const rows: CoachProgramRow[] = [];
 
     for (const program of programs) {
-      const assignments = await this.store.getAssignmentsByCoachProgramId(program.id);
-      const enrolledAthletes: ProgramEnrollment[] = assignments.map((a) => ({
-        athleteProfileId: a.athleteProfileId,
-        athleteName: nameById[a.athleteProfileId] ?? a.athleteProfileId,
-        assignmentId: a.id,
-        assignedAt: a.assignedAt,
-      }));
+      const enrolledAthletes = getEnrollmentsForCoachProgram(
+        program.id,
+        coachAssignments,
+        [],
+        nameById,
+      );
       const adherenceValues = enrolledAthletes
         .map((e) => e.completionPct)
         .filter((v): v is number => v != null);
@@ -137,6 +138,18 @@ export class CoachService {
     const updated = await this.store.updateCoachProgram(coachId, programId, patch);
     if (!updated) {
       throw new CoachServiceError('UPDATE_FAILED', 'Could not update coach program.');
+    }
+    if (patch.program) {
+      const linked = await this.store.getAssignmentsByCoachProgramId(programId);
+      for (const asg of linked) {
+        const cloned = cloneProgramForAthlete(patch.program, asg.athleteProfileId, {
+          name: updated.name,
+        });
+        await this.store.updateAssignmentProgram(asg.id, cloned);
+      }
+      if (linked.length > 0) {
+        this.onAssignmentsChanged?.(coachId);
+      }
     }
     this.onProgramsChanged?.(coachId);
     return updated;
@@ -187,6 +200,7 @@ export class CoachService {
     input: AssignCoachProgramInput,
     resolveAthleteUserId: (profileId: string) => string | undefined,
   ): Promise<ActiveAssignment[]> {
+    // One active WL plan per athlete; assigning here replaces any previous assignment.
     const coachProgram = await this.store.getCoachProgramById(coachId, programId);
     if (!coachProgram) {
       throw new CoachServiceError('PROGRAM_NOT_FOUND', 'Coach program not found.');

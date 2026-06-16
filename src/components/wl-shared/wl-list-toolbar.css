@@ -1,0 +1,211 @@
+/* Shared list toolbar — athletes, programs, and future WL hubs */
+
+.wl-list-toolbar-scope {
+  --wl-list-surface: #111318;
+  --wl-list-border: #27272a;
+  --wl-list-text: #fafafa;
+  --wl-list-muted: #a1a1aa;
+  --wl-list-accent: #ff6b1a;
+}
+
+.wl-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.wl-list-toolbar__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.wl-list-search {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
+}
+
+.wl-list-search__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--wl-list-muted);
+  pointer-events: none;
+}
+
+.wl-list-search__input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px 0 38px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--wl-list-border) !important;
+  background: var(--wl-list-surface) !important;
+  color: var(--wl-list-text) !important;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wl-list-search__input::placeholder {
+  color: color-mix(in srgb, var(--wl-list-muted) 88%, transparent);
+}
+
+.wl-list-search__input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--wl-list-accent) 45%, var(--wl-list-border)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wl-list-accent) 14%, transparent);
+}
+
+.wl-list-field {
+  position: relative;
+  flex: 0 1 220px;
+  min-width: 0;
+  height: 44px;
+}
+
+.wl-list-field__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--wl-list-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wl-list-field__select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 28px 0 34px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--wl-list-border) !important;
+  background: var(--wl-list-surface) !important;
+  color: var(--wl-list-text) !important;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wl-list-field__select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--wl-list-accent) 45%, var(--wl-list-border)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wl-list-accent) 14%, transparent);
+}
+
+.wl-list-toolbar__icon-btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--wl-list-border);
+  background: var(--wl-list-surface);
+  color: var(--wl-list-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.wl-list-toolbar__icon-btn.is-active {
+  color: var(--wl-list-accent);
+  border-color: color-mix(in srgb, var(--wl-list-accent) 45%, var(--wl-list-border));
+  background: color-mix(in srgb, var(--wl-list-accent) 10%, var(--wl-list-surface));
+}
+
+.wl-list-filter-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.wl-list-filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.wl-list-filter-chip {
+  flex-shrink: 0;
+  border: 1px solid var(--wl-list-border);
+  background: var(--wl-list-surface);
+  color: var(--wl-list-muted);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.wl-list-filter-chip:hover {
+  color: var(--wl-list-text);
+  border-color: color-mix(in srgb, var(--wl-list-accent) 30%, var(--wl-list-border));
+}
+
+.wl-list-filter-chip.is-active {
+  color: #fff;
+  background: var(--wl-list-accent);
+  border-color: color-mix(in srgb, var(--wl-list-accent) 75%, #fff);
+}
+
+.wl-list-filter-chips__reset {
+  flex-shrink: 0;
+  border: 1px solid var(--wl-list-border);
+  background: transparent;
+  color: var(--wl-list-muted);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .wl-list-toolbar__main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wl-list-toolbar--inline-mobile .wl-list-toolbar__main {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .wl-list-field {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .wl-list-filter-chips--collapsible {
+    display: none;
+    margin-bottom: 0;
+  }
+
+  .wl-list-filter-chips--collapsible.is-open {
+    display: flex;
+    margin-bottom: 12px;
+  }
+}

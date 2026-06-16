@@ -1,12 +1,28 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Users } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Athlete, AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { buildWlAthleteRosterRows } from '../../utils/wlAthleteRoster';
+import {
+  type AthleteSortId,
+  filterAthleteRows,
+  sortAthleteRows,
+} from '../wl-athletes/athleteListUtils';
+import { WlAthleteDetail } from '../wl-athletes/WlAthleteDetail';
+import { WlAthletesMobileList } from '../wl-athletes/WlAthletesMobileList';
+import { WlAthletesTable } from '../wl-athletes/WlAthletesTable';
+import { WlAthletesToolbar } from '../wl-athletes/WlAthletesToolbar';
+import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
+import '../wl-shared/app-breadcrumb.css';
+import '../wl-shared/wl-list-toolbar.css';
+import '../wl-athletes/wl-athletes.css';
 
 interface WlAthletesSectionProps {
   isEs: boolean;
 }
+
+type AthletesSectionView = 'list' | 'detail';
 
 const LEVELS: AthleteLevel[] = ['beginner', 'intermediate', 'advanced'];
 
@@ -24,14 +40,20 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
     reloadWlAthletesFromApi,
   } = useWolfAssign();
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
   const roster = useMemo(() => rosterForCoach(currentUser), [rosterForCoach, currentUser]);
   const rows = useMemo(
     () => buildWlAthleteRosterRows(roster, users, assignments, completions, currentUser?.id),
     [roster, users, assignments, completions, currentUser?.id],
   );
 
+  const [sectionView, setSectionView] = useState<AthletesSectionView>('list');
+  const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<AthleteSortId>('name_asc');
   const [draft, setDraft] = useState({
     name: '',
     level: 'intermediate' as AthleteLevel,
@@ -42,7 +64,14 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
     frontSquat: 85,
   });
 
+  const filteredRows = useMemo(
+    () => sortAthleteRows(filterAthleteRows(rows, search, 'all'), sort),
+    [rows, search, sort],
+  );
+
+  const selectedRow = selectedAthleteId ? rows.find((r) => r.profileId === selectedAthleteId) ?? null : null;
   const editing = roster.find((a) => a.id === editId);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
 
   const resetDraft = () => {
     setDraft({
@@ -56,29 +85,87 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
     });
   };
 
-  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const openAthleteDetail = (profileId: string) => {
+    setSelectedAthleteId(profileId);
+    setSectionView('detail');
+    setEditId(null);
+  };
+
+  const closeAthleteDetail = () => {
+    setSectionView('list');
+    setSelectedAthleteId(null);
+    setEditId(null);
+  };
+
+  const openEdit = (profileId: string) => {
+    setEditId(profileId);
+    if (sectionView === 'list') {
+      setSelectedAthleteId(profileId);
+      setSectionView('detail');
+    }
+  };
+
+  if (sectionView === 'detail' && selectedRow) {
+    return (
+      <div className="athletes-view wl-athletes-section wl-list-toolbar-scope">
+        <AppBreadcrumb
+          isEs={isEs}
+          items={[
+            { label: isEs ? 'Atletas' : 'Athletes', onClick: closeAthleteDetail },
+            { label: selectedRow.name },
+          ]}
+        />
+
+        {editId === selectedRow.profileId && editing && canEditWlRoster ? (
+          <AthletePrEditForm
+            athlete={editing}
+            isEs={isEs}
+            onCancel={() => setEditId(null)}
+            onSave={(patch) => {
+              void updateWlAthlete(editing.id, patch).then((saved) => {
+                if (saved) {
+                  setEditId(null);
+                  void reloadWlAthletesFromApi();
+                }
+              });
+            }}
+          />
+        ) : (
+          <WlAthleteDetail
+            row={selectedRow}
+            isEs={isEs}
+            canEdit={canEditWlRoster}
+            layout={isMobile ? 'mobile' : 'desktop'}
+            showNav={false}
+            onEdit={() => openEdit(selectedRow.profileId)}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="athletes-view wl-athletes-section">
-      <header className="panel-header">
-        <div className="header-left">
-          <h1 className="view-title">
-            <Users size={22} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} aria-hidden />
-            {isEs ? 'Atletas' : 'Athletes'}
-          </h1>
-          <p style={{ color: 'var(--color-text-muted)', marginTop: '8px', maxWidth: '640px', lineHeight: 1.5 }}>
+    <div className="athletes-view wl-athletes-section wl-list-toolbar-scope">
+      <header className="wl-athletes-header">
+        <div className="wl-athletes-header__text">
+          <h1 className="wl-athletes-header__title">{isEs ? 'Atletas' : 'Athletes'}</h1>
+          <p className="wl-athletes-header__desc">
             {isEs
               ? canEditWlRoster
-                ? 'Tu roster WL: PRs, nivel y rutina activa. Las cuentas de login (usuario/contraseña) las crea el administrador hasta activar correo.'
-                : 'Vista del roster WL.'
+                ? 'Tu roster WL: PRs, nivel y rutina activa. Gestiona el rendimiento de cada atleta.'
+                : 'Vista del roster WL con PRs, nivel y adherencia.'
               : canEditWlRoster
-                ? 'Your WL roster: PRs, level, and active program. Login accounts are created by the administrator until email auth is enabled.'
-                : 'WL roster view.'}
+                ? 'Your WL roster: PRs, level, and active program. Manage each athlete’s performance.'
+                : 'WL roster view with PRs, level, and adherence.'}
           </p>
         </div>
         {canEditWlRoster ? (
-          <button type="button" className="btn-primary" onClick={() => setShowAdd((v) => !v)}>
-            <Plus size={16} aria-hidden />
+          <button
+            type="button"
+            className="btn-primary wl-athletes-header__cta"
+            onClick={() => setShowAdd((v) => !v)}
+          >
+            <Plus size={18} aria-hidden />
             {isEs ? 'Añadir atleta' : 'Add athlete'}
           </button>
         ) : null}
@@ -141,119 +228,42 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs }) => {
         </div>
       ) : null}
 
-      <div className="athletes-kpis">
-        <div className="athletes-kpi-card">
-          <span>{isEs ? 'En roster' : 'On roster'}</span>
-          <strong>{rows.length}</strong>
-        </div>
-        <div className="athletes-kpi-card">
-          <span>{isEs ? 'Con rutina WL' : 'With WL program'}</span>
-          <strong>{rows.filter((r) => r.assignmentStatus === 'active').length}</strong>
-        </div>
-        <div className="athletes-kpi-card">
-          <span>{isEs ? 'Con cuenta app' : 'With app account'}</span>
-          <strong>{rows.filter((r) => r.hasPlatformAccount).length}</strong>
-        </div>
-      </div>
+      <WlAthletesToolbar
+        isEs={isEs}
+        search={search}
+        onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
+      />
 
-      <div className="wl-mgmt-table-wrap" style={{ marginTop: '16px' }}>
-        {athletesLoading ? (
-          <p className="wl-mgmt-empty">{isEs ? 'Cargando atletas…' : 'Loading athletes…'}</p>
-        ) : (
-          <table className="wl-mgmt-crud-table">
-            <thead>
-              <tr>
-                <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                <th>PRs</th>
-                <th>{isEs ? 'Cuenta' : 'Account'}</th>
-                <th>{isEs ? 'Rutina' : 'Program'}</th>
-                <th>{isEs ? 'Adherencia' : 'Adherence'}</th>
-                {canEditWlRoster ? <th>{isEs ? 'Acciones' : 'Actions'}</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.profileId}>
-                  <td>
-                    <strong>{row.name}</strong>
-                    <span className="wl-mgmt-row-sub">{row.level}</span>
-                  </td>
-                  <td>
-                    SN {row.snatch} · CJ {row.cleanJerk} · SQ {row.backSquat}
-                  </td>
-                  <td>
-                    {row.hasPlatformAccount ? (
-                      <span className="wl-mgmt-status-badge wl-mgmt-status-badge--active">{row.loginLabel}</span>
-                    ) : (
-                      <span className="wl-mgmt-status-badge wl-mgmt-status-badge--idle">
-                        {isEs ? 'Sin acceso' : 'No account'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {row.assignmentStatus === 'active' ? (
-                      <>
-                        <span className="wl-mgmt-table-plan">{row.programName}</span>
-                        {row.assignedAt ? (
-                          <span className="wl-mgmt-row-sub">
-                            {isEs ? 'Desde' : 'Since'} {row.assignedAt.slice(0, 10)}
-                          </span>
-                        ) : null}
-                      </>
-                    ) : (
-                      <span className="wl-mgmt-status-badge wl-mgmt-status-badge--idle">
-                        {isEs ? 'Sin asignar' : 'Unassigned'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {row.completionPct != null ? (
-                      <div className="wl-mgmt-table-progress">
-                        <div className="wl-mgmt-progress-bar" aria-hidden>
-                          <div className="wl-mgmt-progress-fill" style={{ width: `${row.completionPct}%` }} />
-                        </div>
-                        <span>{row.completionPct}%</span>
-                      </div>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  {canEditWlRoster ? (
-                    <td>
-                      <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => setEditId(row.profileId)}>
-                        {isEs ? 'Editar PRs' : 'Edit PRs'}
-                      </button>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={canEditWlRoster ? 6 : 5} className="wl-mgmt-empty">
-                    {isEs ? 'Sin atletas en tu roster.' : 'No athletes in your roster.'}
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {editing && canEditWlRoster ? (
-        <AthletePrEditForm
-          athlete={editing}
-          isEs={isEs}
-          onCancel={() => setEditId(null)}
-          onSave={(patch) => {
-            void updateWlAthlete(editing.id, patch).then((saved) => {
-              if (saved) {
-                setEditId(null);
-                void reloadWlAthletesFromApi();
-              }
-            });
-          }}
-        />
-      ) : null}
+      {athletesLoading ? (
+        <p className="wl-athletes-empty">{isEs ? 'Cargando atletas…' : 'Loading athletes…'}</p>
+      ) : filteredRows.length === 0 ? (
+        <p className="wl-athletes-empty">
+          {rows.length === 0
+            ? isEs
+              ? 'Sin atletas en tu roster.'
+              : 'No athletes in your roster.'
+            : isEs
+              ? 'Ningún atleta coincide con la búsqueda o filtros.'
+              : 'No athletes match your search or filters.'}
+        </p>
+      ) : (
+        <>
+          <div className="wl-athletes-desktop-only">
+            <WlAthletesTable
+              rows={filteredRows}
+              isEs={isEs}
+              canEdit={canEditWlRoster}
+              onSelect={openAthleteDetail}
+              onEdit={openEdit}
+            />
+          </div>
+          <div className="wl-athletes-mobile-only">
+            <WlAthletesMobileList rows={filteredRows} isEs={isEs} onSelect={openAthleteDetail} />
+          </div>
+        </>
+      )}
 
       {isSuperAdmin ? (
         <p style={{ marginTop: '16px', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
@@ -283,7 +293,7 @@ function AthletePrEditForm({
   const [oneRM, setOneRM] = useState(athlete.oneRM);
 
   return (
-    <div className="wl-mgmt-inline-form" style={{ marginTop: '16px' }}>
+    <div className="wl-mgmt-inline-form">
       <h4 className="wl-mgmt-inline-form-title">{athlete.name}</h4>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
         <label className="wolf-engine-field">

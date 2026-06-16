@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, RefreshCw, UserPlus, Users, X } from 'lucide
 import type { CoachProgramRow, ProgramEnrollment } from '../../models/coach-architecture';
 import type { Athlete, AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import { athleteHasOtherActiveProgram, getActiveAssignmentForProfile } from '../../utils/wlAssignmentRules';
 
 interface WlProgramAssignSheetProps {
   isEs: boolean;
@@ -72,12 +73,15 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
   const rows = useMemo(() => {
     return roster.map((athlete) => {
       const enrollment = enrolledByProfileId.get(athlete.id);
-      const activeAssignment = assignments.find((a) => a.athleteProfileId === athlete.id);
-      const onOtherProgram =
-        activeAssignment &&
-        activeAssignment.coachProgramId &&
-        activeAssignment.coachProgramId !== program.id;
-      return { athlete, enrollment, activeAssignment, onOtherProgram };
+      const activeAssignment = getActiveAssignmentForProfile(assignments, athlete.id);
+      const otherActive = athleteHasOtherActiveProgram(program.id, athlete.id, assignments);
+      return {
+        athlete,
+        enrollment,
+        activeAssignment,
+        onOtherProgram: Boolean(otherActive),
+        otherProgramName: otherActive?.program?.name,
+      };
     });
   }, [roster, enrolledByProfileId, assignments, program.id]);
 
@@ -97,8 +101,9 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
     [rows, selected],
   );
 
-  const newCount = selectedRows.filter((r) => !r.enrollment).length;
-  const replaceCount = selectedRows.filter((r) => r.enrollment || r.onOtherProgram).length;
+  const newCount = selectedRows.filter((r) => !r.activeAssignment).length;
+  const transferCount = selectedRows.filter((r) => r.onOtherProgram).length;
+  const alreadyOnProgramCount = selectedRows.filter((r) => r.enrollment).length;
 
   const structureLabel = program.program.weeks?.length
     ? `${program.program.totalWeeks ?? program.program.weeks.length} ${isEs ? 'sem' : 'wk'} × ${program.program.daysPerWeek ?? program.program.weeks[0]?.days?.length ?? 0} ${isEs ? 'días' : 'days'}`
@@ -172,8 +177,8 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
 
         <p className="wl-program-assign-lead">
           {isEs
-            ? 'Cada atleta recibe una copia independiente del mesociclo. Solo puede tener un plan activo; asignar de nuevo lo sustituye.'
-            : 'Each athlete gets an independent copy of the mesocycle. Only one active plan per athlete; re-assigning replaces it.'}
+            ? 'Cada atleta solo puede tener un plan WL activo. Al asignar aquí, sustituye cualquier otro programa que tuviera.'
+            : 'Each athlete can only have one active WL plan. Assigning here replaces any other program they had.'}
         </p>
 
         <div className="wl-program-assign-toolbar">
@@ -200,8 +205,8 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
                 ? 'Selecciona uno o más atletas'
                 : 'Select one or more athletes'
               : isEs
-                ? `${selected.size} seleccionado(s) · ${newCount} nuevo(s) · ${replaceCount} reemplazo(s)`
-                : `${selected.size} selected · ${newCount} new · ${replaceCount} replace`}
+                ? `${selected.size} seleccionado(s) · ${newCount} nuevo(s) · ${transferCount} cambio(s) · ${alreadyOnProgramCount} ya en este programa`
+                : `${selected.size} selected · ${newCount} new · ${transferCount} transfer · ${alreadyOnProgramCount} already here`}
           </span>
         </div>
 
@@ -222,29 +227,36 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
                   : 'No matches.'}
             </p>
           ) : (
-            filtered.map(({ athlete, enrollment, onOtherProgram, activeAssignment }) => (
+            filtered.map(({ athlete, enrollment, onOtherProgram, otherProgramName }) => (
               <AthleteAssignRow
                 key={athlete.id}
                 athlete={athlete}
                 isEs={isEs}
                 checked={selected.has(athlete.id)}
                 enrollment={enrollment}
-                onOtherProgram={Boolean(onOtherProgram)}
-                otherProgramName={
-                  onOtherProgram && activeAssignment?.program?.name ? activeAssignment.program.name : undefined
-                }
+                onOtherProgram={onOtherProgram}
+                otherProgramName={otherProgramName}
                 onToggle={() => toggle(athlete.id)}
               />
             ))
           )}
         </div>
 
-        {replaceCount > 0 ? (
+        {transferCount > 0 ? (
           <p className="wl-program-assign-warn">
             <AlertCircle size={14} aria-hidden />
             {isEs
-              ? `${replaceCount} atleta(s) ya tienen plan activo; se sustituirá por este programa.`
-              : `${replaceCount} athlete(s) already have an active plan; it will be replaced by this program.`}
+              ? `${transferCount} atleta(s) cambiarán de otro programa a este.`
+              : `${transferCount} athlete(s) will move from another program to this one.`}
+          </p>
+        ) : null}
+
+        {alreadyOnProgramCount > 0 ? (
+          <p className="wl-program-assign-warn wl-program-assign-warn--muted">
+            <CheckCircle2 size={14} aria-hidden />
+            {isEs
+              ? `${alreadyOnProgramCount} ya están en este programa y se omitirán al asignar.`
+              : `${alreadyOnProgramCount} are already on this program and will be skipped.`}
           </p>
         ) : null}
 
