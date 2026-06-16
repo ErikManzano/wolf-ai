@@ -1,13 +1,13 @@
 /* WL Athletes dashboard — premium coach roster */
 
 .wl-athletes-section {
-  --wl-dash-bg: #09090b;
-  --wl-dash-surface: #111318;
-  --wl-dash-surface-2: #111318;
-  --wl-dash-border: #27272a;
-  --wl-dash-text: #fafafa;
-  --wl-dash-muted: #a1a1aa;
-  --wl-dash-accent: #ff6b1a;
+  --wl-dash-bg: var(--wl-surface-main, #09090b);
+  --wl-dash-surface: var(--wl-surface-board, #111318);
+  --wl-dash-surface-2: var(--wl-surface-board, #111318);
+  --wl-dash-border: var(--wl-border-subtle, #27272a);
+  --wl-dash-text: var(--wl-text-primary, #fafafa);
+  --wl-dash-muted: var(--wl-text-muted, #71717a);
+  --wl-dash-accent: var(--wl-text-accent, #ff6b1a);
   --wl-dash-accent-hover: #ff8a3d;
   --wl-dash-accent-glow: rgba(255, 107, 26, 0.18);
   --wl-list-surface: #111318;
@@ -23,7 +23,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .wl-athletes-section .wl-athletes-header__text {
@@ -31,20 +31,19 @@
   flex: 1 1 240px;
 }
 
-.wl-athletes-section .wl-athletes-header__title {
-  margin: 0;
-  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--wl-dash-text);
+.wl-athletes-section .wl-athletes-header__text .app-breadcrumb {
+  margin-bottom: 8px;
 }
 
 .wl-athletes-section .wl-athletes-header__desc {
-  margin: 8px 0 0;
-  max-width: 52ch;
-  font-size: 0.88rem;
-  line-height: 1.5;
+  margin: 0;
+  max-width: none;
+  font-size: 0.84rem;
+  line-height: 1.25;
   color: var(--wl-dash-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wl-athletes-section .wl-athletes-header__cta {
@@ -413,6 +412,44 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+
+.wl-athletes-program-cell--multi {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wl-athletes-program-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.wl-athletes-program-chip--static {
+  cursor: default;
+}
+
+.wl-athletes-program-chip:hover:not(.wl-athletes-program-chip--static) {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+}
+
+.wl-athletes-active-programs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wl-athletes-active-programs__item {
+  width: 100%;
 }
 
 .wl-athletes-program-name {

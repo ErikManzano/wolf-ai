@@ -1,6 +1,13 @@
 import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../models/training';
 import { kgForExercise } from '../components/session-editor/blockMetrics';
-import { normalizeBlockType, parseRepTokens } from '../services/trainingEngine';
+import { formatSetSchemeRow } from '../components/session-editor/schemeFormat';
+import {
+  effectiveSegmentRepStrings,
+  normalizeBlockType,
+  parseRepTokens,
+  repsPerRoundForScheme,
+  syncBlockSetSchemes,
+} from '../services/trainingEngine';
 
 export interface FlatSetRow {
   schemeIndex: number;
@@ -9,10 +16,13 @@ export interface FlatSetRow {
   percentage: number;
   prescribedKg: number;
   prescribedReps: number;
+  /** Rx tal como la ve el coach, p. ej. (70%/2)3 o (85%/1+1)2 */
+  prescribedRepsLabel: string;
   schemeSetCount: number;
   isComplex: boolean;
   /** Solo complejos */
   prescribedSegmentReps?: number[];
+  prescribedSegmentRepLabels?: string[];
   segmentLabels?: string[];
   movementName?: string;
 }
@@ -43,29 +53,37 @@ export function flattenBlockSets(
   exercises: Exercise[],
   exName: (id: string) => string,
 ): FlatSetRow[] {
+  syncBlockSetSchemes(block);
   const rows: FlatSetRow[] = [];
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
 
   for (let schemeIndex = 0; schemeIndex < block.sets.length; schemeIndex++) {
     const scheme = block.sets[schemeIndex]!;
+    const segmentRepStrings = isComplex ? effectiveSegmentRepStrings(block, scheme) : [];
+    const schemeForLabel: typeof scheme =
+      isComplex && segmentRepStrings.length
+        ? { ...scheme, segmentReps: segmentRepStrings }
+        : scheme;
+    const prescribedRepsLabel = formatSetSchemeRow(schemeForLabel, isComplex);
+
     for (let setInstance = 1; setInstance <= scheme.sets; setInstance++) {
       if (isComplex && block.segments?.length) {
         const firstSeg = block.segments[0]!;
         const ex = exercises.find((e) => e.id === firstSeg.exerciseId);
         const kg = athlete && ex ? kgForExercise(athlete, ex, scheme.percentage) : 0;
-        const prescribedSegmentReps = block.segments.map((_, si) =>
-          parseRepTokens(scheme.segmentReps?.[si] ?? '0'),
-        );
+        const prescribedSegmentReps = segmentRepStrings.map((token) => parseRepTokens(token));
         rows.push({
           schemeIndex,
           setInstance,
           label: `S${setInstance}`,
           percentage: scheme.percentage,
           prescribedKg: kg,
-          prescribedReps: prescribedSegmentReps.reduce((a, b) => a + b, 0),
+          prescribedReps: repsPerRoundForScheme(block, scheme),
+          prescribedRepsLabel,
           schemeSetCount: scheme.sets,
           isComplex: true,
           prescribedSegmentReps,
+          prescribedSegmentRepLabels: segmentRepStrings,
           segmentLabels: block.segments.map((s) => exName(s.exerciseId)),
           movementName: block.segments.map((s) => exName(s.exerciseId)).join(' → '),
         });
@@ -78,7 +96,8 @@ export function flattenBlockSets(
           label: `S${setInstance}`,
           percentage: scheme.percentage,
           prescribedKg: kg,
-          prescribedReps: scheme.reps,
+          prescribedReps: repsPerRoundForScheme(block, scheme),
+          prescribedRepsLabel,
           schemeSetCount: scheme.sets,
           isComplex: false,
         });

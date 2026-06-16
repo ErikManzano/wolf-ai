@@ -7,6 +7,8 @@ interface CompactNumberFieldProps {
   max?: number;
   step?: number;
   suffix?: string;
+  /** When false, renders a keyboard-friendly plain numeric input (no ± buttons). */
+  showSteppers?: boolean;
   'aria-label'?: string;
 }
 
@@ -17,6 +19,7 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
   max = 999,
   step = 1,
   suffix,
+  showSteppers = false,
   'aria-label': ariaLabel,
 }) => {
   const holdRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -51,6 +54,44 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
   const atMin = value <= min;
   const atMax = value >= max;
 
+  const inputEl = (
+    <input
+      type="number"
+      inputMode="numeric"
+      className="wolf-se-num-compact-input"
+      aria-label={ariaLabel}
+      value={value}
+      min={min}
+      max={max}
+      step={step > 1 ? 1 : step}
+      onChange={(e) => onChange(clamp(Number(e.target.value) || min))}
+      onBlur={(e) => onChange(clamp(Number(e.target.value) || min))}
+      onWheel={
+        showSteppers
+          ? (e) => {
+              e.preventDefault();
+              bump(e.deltaY < 0 ? step : -step);
+            }
+          : undefined
+      }
+    />
+  );
+
+  if (!showSteppers) {
+    return (
+      <div
+        className="wolf-se-num-compact wolf-se-num-compact--plain"
+        role="group"
+        aria-label={ariaLabel}
+      >
+        <div className="wolf-se-num-compact-value">
+          {inputEl}
+          {suffix ? <span className="wolf-se-num-compact-suffix" aria-hidden>{suffix}</span> : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="wolf-se-num-compact"
@@ -78,22 +119,7 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
         −
       </button>
       <div className="wolf-se-num-compact-value">
-        <input
-          type="number"
-          inputMode="numeric"
-          className="wolf-se-num-compact-input"
-          aria-label={ariaLabel}
-          value={value}
-          min={min}
-          max={max}
-          step={step > 1 ? 1 : step}
-          onChange={(e) => onChange(clamp(Number(e.target.value) || min))}
-          onBlur={(e) => onChange(clamp(Number(e.target.value) || min))}
-          onWheel={(e) => {
-            e.preventDefault();
-            bump(e.deltaY < 0 ? step : -step);
-          }}
-        />
+        {inputEl}
         {suffix ? <span className="wolf-se-num-compact-suffix" aria-hidden>{suffix}</span> : null}
       </div>
       <button

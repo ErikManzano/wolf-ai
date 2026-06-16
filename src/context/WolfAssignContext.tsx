@@ -257,6 +257,7 @@ interface WolfAssignContextValue {
   ) => SetCompletionLog | undefined;
   /** AsignaciÃ³n activa del atleta vinculado (user-athlete) */
   myAssignment: ProgramAssignment | undefined;
+  myAssignments: ProgramAssignment[];
   assignmentsLoading: boolean;
   isTrackingPending: (key: string) => boolean;
   isTrackingFailed: (key: string) => boolean;
@@ -1490,6 +1491,7 @@ function WlTemplatesBridge({
     | 'isSetComplete'
     | 'getSetLog'
     | 'myAssignment'
+    | 'myAssignments'
     | 'assignmentsLoading'
     | 'isTrackingPending'
     | 'isTrackingFailed'
@@ -1599,6 +1601,7 @@ function WolfAssignMergedProvider({
     | 'isSetComplete'
     | 'getSetLog'
     | 'myAssignment'
+    | 'myAssignments'
     | 'assignmentsLoading'
     | 'isTrackingPending'
     | 'isTrackingFailed'
@@ -1656,6 +1659,7 @@ function WolfAssignMergedProvider({
     isSetComplete: wl.isSetComplete,
     getSetLog: wl.getSetLog,
     myAssignment: wl.myAssignment,
+    myAssignments: wl.myAssignments,
     assignmentsLoading: wl.assignmentsLoading,
     isTrackingPending: wl.isTrackingPending,
     isTrackingFailed: wl.isTrackingFailed,

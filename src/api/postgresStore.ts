@@ -240,6 +240,19 @@ export class PostgresStore {
       CREATE INDEX IF NOT EXISTS coach_programs_coach_id_idx ON coach_programs (coach_id);
     `);
     await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS coach_program_id TEXT;`);
+    await this.pool.query(`
+      ALTER TABLE assignments DROP CONSTRAINT IF EXISTS assignments_athlete_profile_id_key;
+    `);
+    await this.pool.query(`DROP INDEX IF EXISTS assignments_active_athlete_idx;`);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS assignments_athlete_coach_program_active_idx
+      ON assignments (athlete_profile_id, coach_program_id)
+      WHERE coach_program_id IS NOT NULL AND status = 'active';
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS assignments_athlete_profile_id_idx
+      ON assignments (athlete_profile_id);
+    `);
     await this.seedCoachProgramsFromTemplates();
     await this.seedWlAthleteProfilesIfEmpty();
     await this.seedSystemExercises();
@@ -479,22 +492,42 @@ export class PostgresStore {
     return this.mapAssignmentRow(result.rows[0]);
   }
 
-  async getAssignmentByAthlete(athleteProfileId: string): Promise<ProgramAssignment | null> {
+  async getAssignmentsByAthleteProfileId(athleteProfileId: string): Promise<ProgramAssignment[]> {
     const result = await this.pool.query(
       `
       SELECT ${this.assignmentSelectColumns}
       FROM assignments
       WHERE athlete_profile_id = $1
-      LIMIT 1;
+      ORDER BY assigned_at DESC;
       `,
       [athleteProfileId],
     );
-    if (result.rows.length === 0) return null;
-    return this.mapAssignmentRow(result.rows[0]);
+    return result.rows.map((row) => this.mapAssignmentRow(row));
+  }
+
+  async getAssignmentByAthlete(athleteProfileId: string): Promise<ProgramAssignment | null> {
+    const rows = await this.getAssignmentsByAthleteProfileId(athleteProfileId);
+    return rows[0] ?? null;
   }
 
   async createOrReplaceAssignment(input: AssignmentCreateInput): Promise<ProgramAssignment> {
-    await this.pool.query('DELETE FROM assignments WHERE athlete_profile_id = $1;', [input.athleteProfileId]);
+    if (input.coachProgramId) {
+      await this.pool.query(
+        'DELETE FROM assignments WHERE athlete_profile_id = $1 AND coach_program_id = $2;',
+        [input.athleteProfileId, input.coachProgramId],
+      );
+    } else if (input.sourceTemplateId) {
+      await this.pool.query(
+        `DELETE FROM assignments
+         WHERE athlete_profile_id = $1 AND source_template_id = $2 AND coach_program_id IS NULL;`,
+        [input.athleteProfileId, input.sourceTemplateId],
+      );
+    } else {
+      await this.pool.query(
+        'DELETE FROM assignments WHERE athlete_profile_id = $1 AND coach_program_id IS NULL;',
+        [input.athleteProfileId],
+      );
+    }
     const assignedAt = new Date().toISOString();
     const result = await this.pool.query(
       `
@@ -1346,8 +1379,8 @@ export class PostgresStore {
       [id, coachId],
     );
     if (owned.rows.length === 0) return { ok: false, error: 'Not found.' };
-    const active = await this.getAssignmentByAthlete(id);
-    if (active) return { ok: false, error: 'Cannot delete athlete with an active assignment.' };
+    const active = await this.getAssignmentsByAthleteProfileId(id);
+    if (active.length > 0) return { ok: false, error: 'Cannot delete athlete with an active assignment.' };
     await this.pool.query('DELETE FROM wl_athlete_profiles WHERE id = $1 AND coach_id = $2;', [id, coachId]);
     return { ok: true };
   }

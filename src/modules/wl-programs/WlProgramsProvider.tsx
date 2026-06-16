@@ -293,14 +293,19 @@ export function WlProgramsProvider({
           await updateProgram(programId, { status: 'published' });
         }
         const replaced = toAssign.filter((id) =>
-          assignments.some((a) => a.athleteProfileId === id && a.coachProgramId && a.coachProgramId !== programId),
+          assignments.some(
+            (a) =>
+              a.athleteProfileId === id &&
+              a.coachProgramId &&
+              a.coachProgramId !== programId,
+          ),
         ).length;
         pushAlert({
           tone: 'success',
           title: 'Programa asignado',
           message:
             replaced > 0
-              ? `${ids.length} atleta(s) con este plan activo. ${replaced} cambiaron de otro programa.`
+              ? `${ids.length} atleta(s) con este plan. ${replaced} ya tenían otros planes activos en paralelo.`
               : `${ids.length} atleta(s) con este plan activo.`,
         });
         await reloadAssignmentsFromApi?.();
@@ -326,15 +331,20 @@ export function WlProgramsProvider({
         return [];
       }
       const saved = (await res.json()) as { id: string }[];
-      const replaced = toAssign.filter((id) =>
-        assignments.some((a) => a.athleteProfileId === id && a.coachProgramId && a.coachProgramId !== programId),
+      const parallel = toAssign.filter((id) =>
+        assignments.some(
+          (a) =>
+            a.athleteProfileId === id &&
+            a.coachProgramId &&
+            a.coachProgramId !== programId,
+        ),
       ).length;
       pushAlert({
         tone: 'success',
         title: 'Programa asignado',
         message:
-          replaced > 0
-            ? `${saved.length} atleta(s) con este plan activo. ${replaced} cambiaron de otro programa.`
+          parallel > 0
+            ? `${saved.length} atleta(s) con este plan. ${parallel} ya tenían otros planes activos en paralelo.`
             : `${saved.length} atleta(s) con este plan activo.`,
       });
       await loadProgramsFromApi();

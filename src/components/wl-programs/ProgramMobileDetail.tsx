@@ -1,6 +1,5 @@
-import { ArrowLeft, CalendarDays, ChevronRight, Clock3 } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, Clock3, Copy, Pencil, Trash2, UserPlus } from 'lucide-react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
-import { ProgramActionsMenu } from './ProgramActionsMenu';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 
 export function ProgramMobileDetail({
@@ -37,14 +36,38 @@ export function ProgramMobileDetail({
           <h2>{row.name}</h2>
           <ProgramStatusBadge status={row.status} isEs={isEs} />
         </div>
-        <ProgramActionsMenu
-          isEs={isEs}
-          onEdit={onEdit}
-          onAssign={onAssign}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-        />
       </header>
+
+      <div
+        className="wl-program-mobile-detail__action-bar"
+        role="toolbar"
+        aria-label={isEs ? 'Acciones del programa' : 'Program actions'}
+      >
+        <button
+          type="button"
+          className="wl-program-mobile-detail__action-chip wl-program-mobile-detail__action-chip--primary"
+          onClick={onEdit}
+        >
+          <Pencil size={18} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Editar' : 'Edit'}</span>
+        </button>
+        <button type="button" className="wl-program-mobile-detail__action-chip" onClick={onAssign}>
+          <UserPlus size={18} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Asignar' : 'Assign'}</span>
+        </button>
+        <button type="button" className="wl-program-mobile-detail__action-chip" onClick={onDuplicate}>
+          <Copy size={18} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Duplicar' : 'Duplicate'}</span>
+        </button>
+        <button
+          type="button"
+          className="wl-program-mobile-detail__action-chip wl-program-mobile-detail__action-chip--danger"
+          onClick={onDelete}
+        >
+          <Trash2 size={18} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Eliminar' : 'Delete'}</span>
+        </button>
+      </div>
 
       <section className="wl-program-mobile-detail__section">
         <h3 className="wl-program-mobile-detail__section-title">{isEs ? 'Resumen' : 'Summary'}</h3>
@@ -121,24 +144,6 @@ export function ProgramMobileDetail({
           </p>
         </div>
       </section>
-
-      <div className="wl-program-mobile-detail__actions">
-        <button type="button" className="btn-outline" onClick={onAssign}>
-          {isEs ? 'Asignar atleta' : 'Assign athlete'}
-        </button>
-        <button type="button" className="btn-outline" onClick={onDuplicate}>
-          {isEs ? 'Duplicar' : 'Duplicate'}
-        </button>
-        <button type="button" className="btn-outline wl-program-mobile-detail__danger" onClick={onDelete}>
-          {isEs ? 'Eliminar' : 'Delete'}
-        </button>
-      </div>
-
-      <footer className="wl-program-mobile-detail__footer">
-        <button type="button" className="btn-primary wl-program-mobile-detail__cta" onClick={onEdit}>
-          {isEs ? 'Editar programa' : 'Edit program'}
-        </button>
-      </footer>
     </section>
   );
 }

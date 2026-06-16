@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarRange, Plus } from 'lucide-react';
+import { CalendarRange } from 'lucide-react';
 import type { Athlete, AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -39,6 +39,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
     createWlAthlete,
     updateWlAthlete,
     reloadWlAthletesFromApi,
+    openProgramEditor,
   } = useWolfAssign();
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -111,8 +112,11 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
       <div className="athletes-view wl-athletes-section wl-list-toolbar-scope">
         <AppBreadcrumb
           isEs={isEs}
+          className="app-breadcrumb--icon-back"
+          onBack={closeAthleteDetail}
+          backLabel={isEs ? 'Atletas' : 'Athletes'}
           items={[
-            { label: isEs ? 'Atletas' : 'Athletes', onClick: closeAthleteDetail },
+            { label: isEs ? 'Atletas' : 'Athletes' },
             { label: selectedRow.name },
           ]}
         />
@@ -139,6 +143,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
             layout={isMobile ? 'mobile' : 'desktop'}
             showNav={false}
             onEdit={() => openEdit(selectedRow.profileId)}
+            onOpenProgram={(coachProgramId) => openProgramEditor(coachProgramId)}
           />
         )}
       </div>
@@ -149,27 +154,17 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
     <div className="athletes-view wl-athletes-section wl-list-toolbar-scope">
       <header className="wl-athletes-header">
         <div className="wl-athletes-header__text">
-          <h1 className="wl-athletes-header__title">{isEs ? 'Atletas' : 'Athletes'}</h1>
+          <AppBreadcrumb isEs={isEs} items={[{ label: isEs ? 'Atletas' : 'Athletes' }]} />
           <p className="wl-athletes-header__desc">
             {isEs
               ? canEditWlRoster
-                ? 'Tu roster WL: PRs, nivel y rutina activa. Gestiona el rendimiento de cada atleta.'
-                : 'Vista del roster WL con PRs, nivel y adherencia.'
+                ? 'Tu roster WL: PRs, nivel, rutina activa y rendimiento por atleta.'
+                : 'Roster WL con PRs, nivel y adherencia de tus atletas.'
               : canEditWlRoster
-                ? 'Your WL roster: PRs, level, and active program. Manage each athlete’s performance.'
-                : 'WL roster view with PRs, level, and adherence.'}
+                ? 'Your WL roster: PRs, level, active program and per-athlete performance.'
+                : 'WL roster with PRs, level and adherence for your athletes.'}
           </p>
         </div>
-        {canEditWlRoster ? (
-          <button
-            type="button"
-            className="btn-primary wl-athletes-header__cta wl-athletes-header__cta--desktop"
-            onClick={() => setShowAdd((v) => !v)}
-          >
-            <Plus size={18} aria-hidden />
-            {isEs ? 'Añadir atleta' : 'Add athlete'}
-          </button>
-        ) : null}
       </header>
 
       {showAdd && canEditWlRoster ? (
@@ -231,7 +226,6 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
 
       <WlAthletesToolbar
         isEs={isEs}
-        isMobile={isMobile}
         search={search}
         onSearchChange={setSearch}
         sort={sort}
@@ -277,6 +271,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
               canEdit={canEditWlRoster}
               onSelect={openAthleteDetail}
               onEdit={openEdit}
+              onOpenProgram={(coachProgramId) => openProgramEditor(coachProgramId)}
             />
           </div>
           <div className="wl-athletes-mobile-only">

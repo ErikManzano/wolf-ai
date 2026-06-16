@@ -59,10 +59,14 @@ CREATE TABLE IF NOT EXISTS assignments (
   assigned_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- One active plan per athlete (current product rule).
-CREATE UNIQUE INDEX IF NOT EXISTS assignments_active_athlete_idx
-  ON assignments (athlete_profile_id)
-  WHERE status = 'active';
+-- Athletes may carry multiple active coach programs in parallel.
+-- Unique per (athlete_profile_id, coach_program_id) when coach_program_id is set.
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_athlete_coach_program_active_idx
+  ON assignments (athlete_profile_id, coach_program_id)
+  WHERE coach_program_id IS NOT NULL AND status = 'active';
+
+CREATE INDEX IF NOT EXISTS assignments_athlete_profile_id_idx
+  ON assignments (athlete_profile_id);
 
 CREATE INDEX IF NOT EXISTS assignments_coach_id_idx
   ON assignments (coach_id);

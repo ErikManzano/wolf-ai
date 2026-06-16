@@ -36,6 +36,7 @@ import {
   persistCompletionsLocal,
   persistSetLogsLocal,
 } from './assignmentStore';
+import { upsertAssignmentInList } from '../../utils/wlAssignmentRules';
 import type { SetLogInput, WlAssignmentsContextValue, WlAssignmentsProviderProps } from './types';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import {
@@ -221,7 +222,7 @@ export function WlAssignmentsProvider({
           versionHistory: [],
           assignedAt: new Date().toISOString(),
         };
-        setAssignments((prev) => [...prev.filter((x) => x.athleteProfileId !== athleteProfileId), next]);
+        setAssignments((prev) => upsertAssignmentInList(prev, next));
         return id;
       }
 
@@ -248,10 +249,7 @@ export function WlAssignmentsProvider({
       }
 
       const saved = normalizeAssignment((await res.json()) as ProgramAssignment);
-      setAssignments((prev) => [
-        ...prev.filter((x) => x.athleteProfileId !== saved.athleteProfileId),
-        saved,
-      ]);
+      setAssignments((prev) => upsertAssignmentInList(prev, saved));
       pushAlert({
         tone: 'success',
         title: 'Rutina asignada',
@@ -556,18 +554,20 @@ export function WlAssignmentsProvider({
     [runTrackingMutation],
   );
 
-  const myAssignment = useMemo(() => {
+  const myAssignments = useMemo(() => {
     const linked = athleteUser?.linkedAthleteId;
     const userId = athleteUser?.id;
-    if (!linked && !userId) return undefined;
-    const mine = assignments.filter(
-      (a) =>
-        (linked != null && a.athleteProfileId === linked) ||
-        (userId != null && a.athleteUserId === userId),
-    );
-    if (mine.length === 0) return undefined;
-    return [...mine].sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
+    if (!linked && !userId) return [];
+    return assignments
+      .filter(
+        (a) =>
+          (linked != null && a.athleteProfileId === linked) ||
+          (userId != null && a.athleteUserId === userId),
+      )
+      .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
   }, [assignments, athleteUser?.linkedAthleteId, athleteUser?.id]);
+
+  const myAssignment = useMemo(() => myAssignments[0], [myAssignments]);
 
   const value: WlAssignmentsContextValue = {
     assignments,
@@ -587,6 +587,7 @@ export function WlAssignmentsProvider({
     isSetComplete: isSetCompleteFn,
     getSetLog: getSetLogFn,
     myAssignment,
+    myAssignments,
     assignmentsLoading,
     isTrackingPending,
     isTrackingFailed,

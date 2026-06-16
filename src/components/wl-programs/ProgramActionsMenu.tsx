@@ -1,16 +1,22 @@
-import { MoreHorizontal, MoreVertical } from 'lucide-react';
+import { Copy, MoreVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+
+type ProgramActionsVariant = 'inline' | 'card';
+
+function stopRowClick(event: React.MouseEvent) {
+  event.stopPropagation();
+}
 
 export function ProgramActionsMenu({
   isEs,
-  variant = 'table',
+  variant = 'inline',
   onEdit,
   onAssign,
   onDuplicate,
   onDelete,
 }: {
   isEs: boolean;
-  variant?: 'table' | 'card';
+  variant?: ProgramActionsVariant;
   onEdit: () => void;
   onAssign: () => void;
   onDuplicate: () => void;
@@ -28,13 +34,63 @@ export function ProgramActionsMenu({
     return () => window.removeEventListener('mousedown', onClickAway);
   }, [open]);
 
-  const MenuIcon = variant === 'card' ? MoreVertical : MoreHorizontal;
+  if (variant === 'inline') {
+    return (
+      <div
+        className="wl-programs-actions-bar"
+        role="toolbar"
+        aria-label={isEs ? 'Acciones del programa' : 'Program actions'}
+      >
+        <button
+          type="button"
+          className="wl-programs-action-chip wl-programs-action-chip--primary"
+          onClick={(event) => {
+            stopRowClick(event);
+            onEdit();
+          }}
+        >
+          <Pencil size={16} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Editar' : 'Edit'}</span>
+        </button>
+        <button
+          type="button"
+          className="wl-programs-action-chip"
+          onClick={(event) => {
+            stopRowClick(event);
+            onAssign();
+          }}
+        >
+          <UserPlus size={16} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Asignar' : 'Assign'}</span>
+        </button>
+        <button
+          type="button"
+          className="wl-programs-action-chip"
+          onClick={(event) => {
+            stopRowClick(event);
+            onDuplicate();
+          }}
+        >
+          <Copy size={16} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Duplicar' : 'Duplicate'}</span>
+        </button>
+        <button
+          type="button"
+          className="wl-programs-action-chip wl-programs-action-chip--danger"
+          onClick={(event) => {
+            stopRowClick(event);
+            onDelete();
+          }}
+        >
+          <Trash2 size={16} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Eliminar' : 'Delete'}</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`wl-programs-actions-menu${variant === 'card' ? ' wl-programs-actions-menu--card' : ''}`}
-      ref={ref}
-    >
+    <div className="wl-programs-actions-menu wl-programs-actions-menu--card" ref={ref}>
       <button
         type="button"
         className="wl-programs-actions-menu__trigger"
@@ -45,7 +101,7 @@ export function ProgramActionsMenu({
           setOpen((value) => !value);
         }}
       >
-        <MenuIcon size={variant === 'card' ? 18 : 16} />
+        <MoreVertical size={18} />
       </button>
       {open ? (
         <div className="wl-programs-actions-menu__list">

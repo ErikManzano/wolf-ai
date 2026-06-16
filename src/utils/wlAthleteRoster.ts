@@ -1,6 +1,13 @@
 import type { Athlete, ProgramAssignment, SessionCompletion, WolfUser } from '../models/training';
 import { buildWlAssignmentRows, wlLastCompletionDate } from './dashboardStats';
-import { getActiveAssignmentForProfile } from './wlAssignmentRules';
+
+export type AthleteActiveProgram = {
+  assignmentId: string;
+  coachProgramId?: string;
+  programName: string;
+  completionPct: number;
+  assignedAt: string;
+};
 
 export type WlAthleteRosterRow = {
   profileId: string;
@@ -12,6 +19,7 @@ export type WlAthleteRosterRow = {
   hasPlatformAccount: boolean;
   loginLabel: string | null;
   assignmentStatus: 'none' | 'active';
+  activePrograms: AthleteActiveProgram[];
   programName: string | null;
   completionPct: number | null;
   assignedAt: string | null;
@@ -38,15 +46,35 @@ export function buildWlAthleteRosterRows(
 
   const nameByProfileId = Object.fromEntries(athletes.map((a) => [a.id, a.name] as const));
   const assignmentRows = buildWlAssignmentRows(assignments, completions, nameByProfileId);
-  const assignmentByProfile = new Map(
-    assignmentRows.map((r) => [r.athleteProfileId, r] as const),
-  );
+  const assignmentByProfile = new Map<string, typeof assignmentRows>();
+  for (const row of assignmentRows) {
+    const list = assignmentByProfile.get(row.athleteProfileId) ?? [];
+    list.push(row);
+    assignmentByProfile.set(row.athleteProfileId, list);
+  }
 
   return athletes.map((a) => {
     const linked = userByProfileId.get(a.id);
-    const asg = assignmentByProfile.get(a.id);
-    const assignment = getActiveAssignmentForProfile(assignments, a.id);
-    const lastActivityAt = assignment ? wlLastCompletionDate(assignment.id, completions) : null;
+    const athleteRows = assignmentByProfile.get(a.id) ?? [];
+    const assignment = athleteRows[0];
+    const programName =
+      athleteRows.length === 0
+        ? null
+        : athleteRows.length === 1
+          ? athleteRows[0].programName
+          : athleteRows.map((r) => r.programName).join(' · ');
+    const activePrograms: AthleteActiveProgram[] = athleteRows.map((r) => ({
+      assignmentId: r.assignmentId,
+      coachProgramId: r.coachProgramId,
+      programName: r.programName,
+      completionPct: r.completionPct,
+      assignedAt: r.assignedAt,
+    }));
+    const lastActivityDates = athleteRows
+      .map((r) => wlLastCompletionDate(r.assignmentId, completions))
+      .filter((d): d is string => Boolean(d));
+    const lastActivityAt =
+      lastActivityDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
     return {
       profileId: a.id,
       name: a.name,
@@ -56,13 +84,14 @@ export function buildWlAthleteRosterRows(
       backSquat: a.oneRM.backSquat,
       hasPlatformAccount: Boolean(linked),
       loginLabel: linked ? (linked.username ?? linked.email ?? linked.id) : null,
-      assignmentStatus: asg ? 'active' : 'none',
-      programName: asg?.programName ?? null,
-      completionPct: asg?.completionPct ?? null,
-      assignedAt: asg?.assignedAt ?? null,
+      assignmentStatus: athleteRows.length > 0 ? 'active' : 'none',
+      activePrograms,
+      programName,
+      completionPct: assignment?.completionPct ?? null,
+      assignedAt: assignment?.assignedAt ?? null,
       lastActivityAt,
-      sessionsDone: asg?.sessionsDone ?? 0,
-      sessionSlots: asg?.sessionSlots ?? 0,
+      sessionsDone: athleteRows.reduce((sum, r) => sum + r.sessionsDone, 0),
+      sessionSlots: athleteRows.reduce((sum, r) => sum + r.sessionSlots, 0),
     };
   });
 }

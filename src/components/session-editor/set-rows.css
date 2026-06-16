@@ -112,6 +112,31 @@
   padding-right: 4px;
 }
 
+/* Plain variant — keyboard-first, no ± steppers */
+.wolf-se-num-compact--plain {
+  min-height: 40px;
+  width: 100%;
+}
+
+.wolf-se-num-compact--plain .wolf-se-num-compact-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.wolf-se-num-compact--plain .wolf-se-num-compact-input {
+  width: 100%;
+  min-width: 2.5ch;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Field chip (label group) ── */
 .wolf-se-field-chip {
   display: flex;

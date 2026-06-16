@@ -321,9 +321,20 @@ export function moveExerciseBlock(
   return finalize(s, athlete, catalog);
 }
 
+export function setExerciseBlockOrder(
+  session: Session,
+  orderedBlocks: Session['exercises'],
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  s.exercises = orderedBlocks;
+  return finalize(s, athlete, catalog);
+}
+
 export function removeExerciseBlock(session: Session, blockIndex: number, athlete: Athlete, catalog: Exercise[]): Session {
   const s = cloneSession(session);
-  if (s.exercises.length <= 1) return session;
+  if (blockIndex < 0 || blockIndex >= s.exercises.length) return session;
   s.exercises = s.exercises.filter((_, i) => i !== blockIndex);
   return finalize(s, athlete, catalog);
 }

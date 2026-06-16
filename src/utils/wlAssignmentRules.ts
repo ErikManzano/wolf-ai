@@ -1,15 +1,22 @@
 import type { ProgramEnrollment } from '../models/coach-architecture';
 import type { ProgramAssignment, SessionCompletion } from '../models/training';
 
-/** Each athlete may have at most one active WL assignment. Re-assigning moves them to the new program. */
+/** Assignments for one athlete, newest first. */
+export function getAssignmentsForProfile(
+  assignments: ProgramAssignment[],
+  athleteProfileId: string,
+): ProgramAssignment[] {
+  return assignments
+    .filter((a) => a.athleteProfileId === athleteProfileId)
+    .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
+}
+
+/** Most recent assignment (legacy helper for single-plan surfaces). */
 export function getActiveAssignmentForProfile(
   assignments: ProgramAssignment[],
   athleteProfileId: string,
 ): ProgramAssignment | undefined {
-  const matches = assignments.filter((a) => a.athleteProfileId === athleteProfileId);
-  if (matches.length === 0) return undefined;
-  if (matches.length === 1) return matches[0];
-  return matches.sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())[0];
+  return getAssignmentsForProfile(assignments, athleteProfileId)[0];
 }
 
 export function buildActiveAssignmentMap(
@@ -25,19 +32,37 @@ export function buildActiveAssignmentMap(
   return map;
 }
 
+/** True when replacing the same athlete + coach program slot (or legacy slot without coachProgramId). */
+export function assignmentSameSlot(
+  assignment: ProgramAssignment,
+  athleteProfileId: string,
+  coachProgramId?: string,
+): boolean {
+  if (assignment.athleteProfileId !== athleteProfileId) return false;
+  if (coachProgramId) return assignment.coachProgramId === coachProgramId;
+  return !assignment.coachProgramId;
+}
+
+export function upsertAssignmentInList(
+  assignments: ProgramAssignment[],
+  next: ProgramAssignment,
+): ProgramAssignment[] {
+  const filtered = assignments.filter(
+    (a) => !assignmentSameSlot(a, next.athleteProfileId, next.coachProgramId),
+  );
+  return [...filtered, next];
+}
+
 export function getEnrollmentsForCoachProgram(
   programId: string,
   assignments: ProgramAssignment[],
   completions: SessionCompletion[],
   nameByProfileId: Record<string, string>,
 ): ProgramEnrollment[] {
-  const activeByProfile = buildActiveAssignmentMap(assignments);
   const enrolled: ProgramEnrollment[] = [];
 
   for (const assignment of assignments) {
     if (assignment.coachProgramId !== programId) continue;
-    const active = activeByProfile.get(assignment.athleteProfileId);
-    if (!active || active.id !== assignment.id) continue;
 
     const slotCompletions = completions.filter((c) => c.assignmentId === assignment.id);
     const totalDays = assignment.program.weeks.reduce((s, w) => s + w.days.length, 0);
@@ -66,13 +91,14 @@ export function filterAthletesForProgramAssign(
   toAssign: string[];
   skippedAlreadyOnProgram: string[];
 } {
-  const activeByProfile = buildActiveAssignmentMap(assignments);
   const toAssign: string[] = [];
   const skippedAlreadyOnProgram: string[] = [];
 
   for (const athleteProfileId of [...new Set(athleteProfileIds)]) {
-    const active = activeByProfile.get(athleteProfileId);
-    if (active?.coachProgramId === programId) {
+    const alreadyOnProgram = assignments.some(
+      (a) => a.athleteProfileId === athleteProfileId && a.coachProgramId === programId,
+    );
+    if (alreadyOnProgram) {
       skippedAlreadyOnProgram.push(athleteProfileId);
       continue;
     }
@@ -82,12 +108,22 @@ export function filterAthletesForProgramAssign(
   return { toAssign, skippedAlreadyOnProgram };
 }
 
+/** Other active coach programs for this athlete (parallel training blocks). */
+export function getOtherActivePrograms(
+  programId: string,
+  athleteProfileId: string,
+  assignments: ProgramAssignment[],
+): ProgramAssignment[] {
+  return getAssignmentsForProfile(assignments, athleteProfileId).filter(
+    (a) => a.coachProgramId && a.coachProgramId !== programId,
+  );
+}
+
+/** @deprecated Use getOtherActivePrograms — kept for gradual migration. */
 export function athleteHasOtherActiveProgram(
   programId: string,
   athleteProfileId: string,
   assignments: ProgramAssignment[],
 ): ProgramAssignment | undefined {
-  const active = getActiveAssignmentForProfile(assignments, athleteProfileId);
-  if (!active?.coachProgramId || active.coachProgramId === programId) return undefined;
-  return active;
+  return getOtherActivePrograms(programId, athleteProfileId, assignments)[0];
 }

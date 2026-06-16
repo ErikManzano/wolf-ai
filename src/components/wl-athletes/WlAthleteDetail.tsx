@@ -20,6 +20,7 @@ export function WlAthleteDetail({
   showNav = true,
   onBack,
   onEdit,
+  onOpenProgram,
 }: {
   row: WlAthleteRosterRow;
   isEs: boolean;
@@ -28,6 +29,7 @@ export function WlAthleteDetail({
   showNav?: boolean;
   onBack?: () => void;
   onEdit: () => void;
+  onOpenProgram?: (coachProgramId: string) => void;
 }) {
   const prCards = [
     { key: 'snatch', label: isEs ? 'Snatch' : 'Snatch', value: row.snatch },
@@ -98,16 +100,46 @@ export function WlAthleteDetail({
       </section>
 
       <section className="wl-athlete-detail__section">
-        <h3 className="wl-athlete-detail__section-title">{isEs ? 'Rutina actual' : 'Current program'}</h3>
+        <h3 className="wl-athlete-detail__section-title">
+          {row.activePrograms.length > 1
+            ? isEs
+              ? 'Planes activos'
+              : 'Active programs'
+            : isEs
+              ? 'Rutina actual'
+              : 'Current program'}
+        </h3>
         {row.assignmentStatus === 'active' ? (
-          <div className="wl-athletes-detail-panel wl-athletes-detail-panel--nav">
-            <p className="wl-athletes-detail-panel__title">{row.programName}</p>
-            {row.assignedAt ? (
-              <p className="wl-athletes-detail-panel__meta">
-                {isEs ? 'Asignada desde' : 'Assigned since'} {row.assignedAt.slice(0, 10)}
-              </p>
-            ) : null}
-            <ChevronRight size={16} className="wl-athletes-detail-panel__chevron" aria-hidden />
+          <div className="wl-athletes-active-programs">
+            {row.activePrograms.map((plan) => {
+              const canOpen = Boolean(plan.coachProgramId && onOpenProgram);
+              const content = (
+                <>
+                  <p className="wl-athletes-detail-panel__title">{plan.programName}</p>
+                  <p className="wl-athletes-detail-panel__meta">
+                    {plan.completionPct}% · {isEs ? 'Desde' : 'Since'} {plan.assignedAt}
+                  </p>
+                </>
+              );
+              if (canOpen) {
+                return (
+                  <button
+                    key={plan.assignmentId}
+                    type="button"
+                    className="wl-athletes-detail-panel wl-athletes-detail-panel--nav wl-athletes-active-programs__item"
+                    onClick={() => onOpenProgram!(plan.coachProgramId!)}
+                  >
+                    {content}
+                    <ChevronRight size={16} className="wl-athletes-detail-panel__chevron" aria-hidden />
+                  </button>
+                );
+              }
+              return (
+                <div key={plan.assignmentId} className="wl-athletes-detail-panel wl-athletes-active-programs__item">
+                  {content}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <StatusBadge variant="none">{isEs ? 'Sin rutina WL' : 'No WL program'}</StatusBadge>

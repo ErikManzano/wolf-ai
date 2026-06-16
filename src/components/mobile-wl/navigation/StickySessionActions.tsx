@@ -13,7 +13,7 @@ interface StickySessionActionsProps {
 }
 
 export const StickySessionActions: React.FC<StickySessionActionsProps> = (props) => {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 1024px)');
   if (!isMobile) return null;
   return <StickySessionBar {...props} />;
 };

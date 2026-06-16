@@ -22,6 +22,7 @@ import type {
   SessionExerciseBlock,
   WolfUser,
 } from './training';
+import { syncBlockSetSchemes } from '../services/trainingEngine';
 
 /** Coach account that owns templates, athlete profiles, and assignments. */
 export interface Coach {
@@ -222,7 +223,10 @@ export function normalizeGeneratedProgram(program: GeneratedProgram): GeneratedP
             session: {
               ...legacyDay.session,
               athleteId: legacyDay.session.athleteId || athleteId,
-              exercises: legacyDay.session.exercises,
+              exercises: legacyDay.session.exercises.map((block) => {
+                syncBlockSetSchemes(block);
+                return block;
+              }),
             },
           };
         }
@@ -234,7 +238,10 @@ export function normalizeGeneratedProgram(program: GeneratedProgram): GeneratedP
           session: {
             ...session,
             athleteId: session.athleteId || athleteId,
-            exercises: legacyExercises,
+            exercises: legacyExercises.map((block) => {
+              syncBlockSetSchemes(block);
+              return block;
+            }),
           },
         };
       }),

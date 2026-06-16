@@ -835,3 +835,154 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
     transition: none;
   }
 }
+
+/* ── Embedded program editor (compact, edit-first) ── */
+article.wolf-se-block.wolf-se-block-card--embedded {
+  border-radius: 14px;
+  scroll-margin-top: 72px;
+  overflow: visible;
+  height: auto;
+  min-height: 0;
+  flex-shrink: 0;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 4%, transparent) inset,
+    0 8px 24px color-mix(in srgb, #000 18%, transparent);
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded::before {
+  width: 3px;
+  border-radius: 14px 0 0 14px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-head {
+  padding: 10px 12px 10px 14px;
+  align-items: center;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-expand {
+  align-items: center;
+  gap: 10px;
+  cursor: default;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-chevron--hidden {
+  display: none;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  box-shadow: none;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-badges {
+  margin-bottom: 4px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-name {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-compact-meta strong {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-compact-rx {
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--wolf-block-rx);
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar {
+  gap: 4px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-toolbar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone {
+  padding: 10px 12px 12px 14px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-zone-header {
+  margin-bottom: 8px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-zone-header-title {
+  font-size: 0.68rem;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel {
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-option-pill {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 0.74rem;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-pct-chip {
+  min-height: 32px;
+  font-size: 0.74rem;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-footer {
+  padding: 10px 14px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-footer strong {
+  font-size: 1.05rem;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone--config {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone--sets {
+  min-height: 0;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-layout__sets .wolf-se-table-shell {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+@media (min-width: 900px) {
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band {
+    grid-template-columns: minmax(180px, auto) minmax(0, 1fr);
+    gap: 10px;
+  }
+}

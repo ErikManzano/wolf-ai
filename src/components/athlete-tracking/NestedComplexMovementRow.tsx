@@ -4,6 +4,7 @@ import { RepStepper } from './primitives/RepStepper';
 interface NestedComplexMovementRowProps {
   movementName: string;
   prescribedReps: number;
+  prescribedRepsLabel?: string;
   actualReps: number;
   onActualRepsChange: (v: number) => void;
 }
@@ -11,6 +12,7 @@ interface NestedComplexMovementRowProps {
 export const NestedComplexMovementRow: React.FC<NestedComplexMovementRowProps> = ({
   movementName,
   prescribedReps,
+  prescribedRepsLabel,
   actualReps,
   onActualRepsChange,
 }) => {
@@ -26,7 +28,7 @@ export const NestedComplexMovementRow: React.FC<NestedComplexMovementRowProps> =
         {movementName}
       </span>
       <span className="text-xs tabular-nums text-zinc-600 shrink-0">
-        Rx <span className="text-zinc-400 font-semibold">{prescribedReps}</span>
+        Rx <span className="text-zinc-400 font-semibold">{prescribedRepsLabel ?? prescribedReps}</span>
       </span>
       <div className="w-[6.5rem] shrink-0">
         <RepStepper compact value={actualReps} onChange={onActualRepsChange} />

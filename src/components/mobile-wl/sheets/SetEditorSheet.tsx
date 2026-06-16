@@ -3,8 +3,8 @@ import { Check, Copy } from 'lucide-react';
 import type { SetScheme } from '../../../models/training';
 import { CompactNumberField } from '../../session-editor/CompactNumberField';
 import { BottomSheet } from './BottomSheet';
-import { CoachNumpad } from '../inputs/CoachNumpad';
 import { IntensityPresetBar } from '../inputs/IntensityPresetBar';
+import '../../session-editor/set-rows.css';
 import '../mobile-wl.css';
 
 const PCT_STEP = 5;
@@ -97,7 +97,7 @@ export const SetEditorSheet: React.FC<SetEditorSheetProps> = ({
   );
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={title} snap={0.88} footer={footer}>
+    <BottomSheet open={open} onClose={onClose} title={title} snap={0.72} footer={footer}>
       <div className="mwl-set-editor-kg">
         <div className="mwl-set-editor-kg-value">{kg}</div>
         <div className="mwl-set-editor-kg-label">{isEs ? 'Carga calculada (kg)' : 'Computed load (kg)'}</div>
@@ -115,21 +115,27 @@ export const SetEditorSheet: React.FC<SetEditorSheetProps> = ({
         aria-label={isEs ? 'Porcentaje 1RM' : '1RM percent'}
       />
 
-      <div className="mwl-dual-numpad" style={{ marginTop: 20 }}>
-        <CoachNumpad
-          label={isEs ? 'Series' : 'Sets'}
-          value={localSets}
-          min={setsMin}
-          max={setsMax}
-          onChange={setLocalSets}
-        />
-        <CoachNumpad
-          label={isEs ? 'Reps' : 'Reps'}
-          value={localReps}
-          min={repsMin}
-          max={repsMax}
-          onChange={setLocalReps}
-        />
+      <div className="mwl-set-editor-fields">
+        <div className="wolf-se-field-chip">
+          <span className="mwl-field-label">{isEs ? 'Series' : 'Sets'}</span>
+          <CompactNumberField
+            value={localSets}
+            min={setsMin}
+            max={setsMax}
+            onChange={setLocalSets}
+            aria-label={isEs ? 'Series' : 'Sets'}
+          />
+        </div>
+        <div className="wolf-se-field-chip">
+          <span className="mwl-field-label">{isEs ? 'Reps' : 'Reps'}</span>
+          <CompactNumberField
+            value={localReps}
+            min={repsMin}
+            max={repsMax}
+            onChange={setLocalReps}
+            aria-label={isEs ? 'Repeticiones' : 'Reps'}
+          />
+        </div>
       </div>
     </BottomSheet>
   );

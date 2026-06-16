@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <div className={`sidebar${collapsed ? ' compact' : ''}${mobileDrawer ? ' sidebar--mobile-drawer' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
-          <WolfIcon size={28} className="logo-icon" />
+          <WolfIcon size={20} className="logo-icon" />
           <h2>{mobileDrawer ? (isEs ? 'Más opciones' : 'More options') : 'Wolf AI'}</h2>
         </div>
         {showRailToggle ? (
@@ -85,20 +85,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              className={`nav-item ${activeView === item.id ? 'active' : ''}`}
+              className={`nav-item ${activeView === item.id ? 'active' : ''}${item.id === 'programs' ? ' nav-item--programs' : ''}`}
               onClick={() => setActiveView(item.id)}
               title={label}
               aria-label={label}
             >
-              <Icon size={20} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
-              <span
-                style={{
-                  fontWeight: item.id === 'programs' ? 'bold' : 'normal',
-                  color: item.id === 'programs' && activeView !== 'programs' ? 'var(--color-accent)' : 'inherit',
-                }}
-              >
-                {label}
-              </span>
+              <Icon size={16} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
+              <span>{label}</span>
             </button>
           );
         })}
@@ -110,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           style={{ transition: 'all 0.2s', border: userRole === 'admin' ? '1px solid var(--color-accent)' : '1px solid transparent' }}
         >
           <div className="avatar" style={{ background: userRole === 'admin' ? 'var(--color-accent-gradient)' : 'var(--color-bg-secondary)' }}>
-            {userRole === 'admin' ? <ShieldCheck size={16} /> : currentUser?.name?.[0]?.toUpperCase() ?? (persona === 'athlete' ? 'E' : 'I')}
+            {userRole === 'admin' ? <ShieldCheck size={14} /> : currentUser?.name?.[0]?.toUpperCase() ?? (persona === 'athlete' ? 'E' : 'I')}
           </div>
           <div className="user-info">
             <span className="name">
@@ -137,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             aria-label={isEs ? accountItem.labelEs : accountItem.labelEn}
             title={isEs ? accountItem.labelEs : accountItem.labelEn}
           >
-            <AccountIcon size={15} aria-hidden />
+            <AccountIcon size={collapsed ? 13 : 14} aria-hidden />
             <span>{isEs ? accountItem.labelEs : accountItem.labelEn}</span>
           </button>
         ) : null}
@@ -148,8 +141,16 @@ const Sidebar: React.FC<SidebarProps> = ({
           aria-label={isEs ? 'Cerrar sesión' : 'Log out'}
           title={isEs ? 'Cerrar sesión' : 'Log out'}
         >
-          <LogOut size={15} />
-          <span>{isEs ? 'Cerrar sesión' : 'Log out'}</span>
+          <LogOut size={collapsed ? 13 : 14} />
+          <span>
+            {collapsed
+              ? isEs
+                ? 'Salir'
+                : 'Out'
+              : isEs
+                ? 'Cerrar sesión'
+                : 'Log out'}
+          </span>
         </button>
       </div>
     </div>

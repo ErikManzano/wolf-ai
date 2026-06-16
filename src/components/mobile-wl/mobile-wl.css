@@ -269,8 +269,8 @@
 }
 
 /* Sticky session actions */
-@media (max-width: 768px) {
-  .wolf-session-editor--mobile-sticky {
+@media (max-width: 1024px) {
+  .wolf-session-editor--mobile-sticky:not(.wolf-session-editor--embedded) {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -293,95 +293,109 @@
 }
 
 .mwl-set-card-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-.mwl-set-card-actions {
-  position: absolute;
-  inset: 0;
   display: flex;
-  justify-content: flex-end;
   align-items: stretch;
-}
-
-.mwl-set-card-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  min-height: 44px;
-  border: none;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.mwl-set-card-action--dup {
-  background: color-mix(in srgb, var(--color-accent) 25%, var(--color-bg-panel));
-  color: var(--color-accent);
-}
-
-.mwl-set-card-action--del {
-  background: color-mix(in srgb, #f43f5e 30%, var(--color-bg-panel));
-  color: #f43f5e;
+  gap: 6px;
 }
 
 .mwl-set-card {
-  position: relative;
-  display: flex;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 8px 10px;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 64px;
-  padding: 12px 14px;
+  min-height: 56px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
   border-radius: 12px;
   background: var(--color-bg-secondary);
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.15s ease;
 }
 
 .mwl-set-card-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   background: var(--color-bg-panel);
   font-weight: 700;
-  font-size: 0.9rem;
-  flex-shrink: 0;
+  font-size: 0.82rem;
+  line-height: 1;
 }
 
 .mwl-set-card-body {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
 .mwl-set-card-rx {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mwl-set-card-sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
   color: var(--color-text-muted);
-  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mwl-set-card-kg {
-  flex-shrink: 0;
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--color-accent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mwl-set-card-inline-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.mwl-set-card-inline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mwl-set-card-inline-btn--dup:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
+}
+
+.mwl-set-card-inline-btn--del:hover {
+  border-color: #f43f5e;
+  color: #f43f5e;
+  background: color-mix(in srgb, #f43f5e 12%, var(--color-bg-panel));
 }
 
 .mwl-set-card-kg span {
@@ -410,6 +424,21 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
   margin-top: 4px;
+}
+
+.mwl-set-editor-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.mwl-set-editor-fields .mwl-field-label {
+  margin-bottom: 4px;
+}
+
+.mwl-set-editor-fields .wolf-se-field-chip {
+  margin: 0;
 }
 
 .mwl-intensity-bar {
@@ -446,55 +475,6 @@
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.mwl-numpad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.mwl-numpad-key {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-bg-panel);
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  touch-action: manipulation;
-  user-select: none;
-}
-
-.mwl-numpad-key:active {
-  background: var(--color-bg-hover);
-}
-
-.mwl-numpad-key--wide {
-  grid-column: span 2;
-}
-
-.mwl-numpad-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 52px;
-  margin-bottom: 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-bg-secondary);
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.mwl-dual-numpad {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
 }
 
 /* Exercise picker */

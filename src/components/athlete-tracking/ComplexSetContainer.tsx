@@ -16,6 +16,7 @@ export interface ComplexSetContainerProps {
   percentage: number;
   prescribedKg: number;
   prescribedSegmentReps: number[];
+  prescribedSegmentRepLabels?: string[];
   segmentLabels: string[];
   actualKg?: number;
   actualSegmentReps?: number[];
@@ -32,6 +33,7 @@ export const ComplexSetContainer: React.FC<ComplexSetContainerProps> = ({
   percentage,
   prescribedKg,
   prescribedSegmentReps,
+  prescribedSegmentRepLabels,
   segmentLabels,
   actualKg,
   actualSegmentReps,
@@ -58,7 +60,9 @@ export const ComplexSetContainer: React.FC<ComplexSetContainerProps> = ({
   const displayKg = done ? (actualKg ?? prescribedKg) : pendingKg;
   const displaySegReps = done ? (actualSegmentReps ?? prescribedSegmentReps) : pendingSegReps;
 
-  const repsSummary = formatSegmentRepsSummary(prescribedSegmentReps, displaySegReps);
+  const repsSummary = prescribedSegmentRepLabels?.length
+    ? prescribedSegmentRepLabels.join(' + ')
+    : formatSegmentRepsSummary(prescribedSegmentReps, displaySegReps);
 
   const doneStatus = deriveComplexSetStatus({
     done,
@@ -187,6 +191,7 @@ export const ComplexSetContainer: React.FC<ComplexSetContainerProps> = ({
                 key={`${name}-${i}`}
                 movementName={name}
                 prescribedReps={prescribedSegmentReps[i]!}
+                prescribedRepsLabel={prescribedSegmentRepLabels?.[i]}
                 actualReps={displaySegReps[i] ?? prescribedSegmentReps[i]!}
                 onActualRepsChange={(v) => updateSeg(i, v)}
               />

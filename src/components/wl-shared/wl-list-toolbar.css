@@ -1,11 +1,11 @@
 /* Shared list toolbar — athletes, programs, and future WL hubs */
 
 .wl-list-toolbar-scope {
-  --wl-list-surface: #111318;
-  --wl-list-border: #27272a;
-  --wl-list-text: #fafafa;
-  --wl-list-muted: #a1a1aa;
-  --wl-list-accent: #ff6b1a;
+  --wl-list-surface: var(--wl-surface-board, #111318);
+  --wl-list-border: var(--wl-border-subtle, #27272a);
+  --wl-list-text: var(--wl-text-primary, #fafafa);
+  --wl-list-muted: var(--wl-text-muted, #71717a);
+  --wl-list-accent: var(--wl-text-accent, #ff6b1a);
 }
 
 .wl-list-toolbar {
@@ -14,6 +14,52 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.wl-list-toolbar--action-bar {
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wl-list-toolbar--action-bar .wl-list-search {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
+}
+
+.wl-list-toolbar--action-bar .wl-list-field {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 118px;
+  max-width: min(176px, 38vw);
+  height: 44px;
+}
+
+.wl-list-field--active .wl-list-field__select {
+  border-color: color-mix(in srgb, var(--wl-list-accent) 45%, var(--wl-list-border)) !important;
+  color: var(--wl-list-text);
+  background-color: color-mix(in srgb, var(--wl-list-accent) 8%, var(--wl-list-surface)) !important;
+}
+
+.wl-list-toolbar__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.wl-list-toolbar__cta-label {
+  line-height: 1;
 }
 
 .wl-list-toolbar__main {
@@ -98,13 +144,21 @@
   box-sizing: border-box;
   height: 44px;
   min-height: 44px;
-  padding: 0 28px 0 34px !important;
+  padding: 0 30px 0 34px !important;
   border-radius: 12px !important;
   border: 1px solid var(--wl-list-border) !important;
-  background: var(--wl-list-surface) !important;
+  background-color: var(--wl-list-surface) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
   color: var(--wl-list-text) !important;
   font-size: 0.82rem;
+  font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
@@ -210,6 +264,48 @@
 }
 
 @media (max-width: 768px) {
+  .wl-list-toolbar--action-bar {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .wl-list-toolbar--action-bar .wl-list-search,
+  .wl-list-toolbar--action-bar .wl-list-search__input {
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .wl-list-toolbar--action-bar .wl-list-field {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 108px;
+    max-width: min(148px, 42vw);
+    height: 42px;
+  }
+
+  .wl-list-toolbar--action-bar .wl-list-field__select {
+    height: 42px;
+    min-height: 42px;
+    font-size: 0.78rem;
+    padding: 0 28px 0 30px !important;
+    background-position: right 8px center;
+  }
+
+  .wl-list-toolbar--action-bar .wl-list-field__icon {
+    left: 10px;
+  }
+
+  .wl-list-toolbar__cta {
+    min-height: 42px;
+    height: 42px;
+    width: 42px;
+    padding: 0;
+  }
+
+  .wl-list-toolbar__cta-label {
+    display: none;
+  }
+
   .wl-list-toolbar__main {
     flex-direction: column;
     align-items: stretch;

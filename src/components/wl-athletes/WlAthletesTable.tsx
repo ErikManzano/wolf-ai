@@ -18,12 +18,14 @@ export function WlAthletesTable({
   canEdit,
   onSelect,
   onEdit,
+  onOpenProgram,
 }: {
   rows: WlAthleteRosterRow[];
   isEs: boolean;
   canEdit: boolean;
   onSelect: (profileId: string) => void;
   onEdit: (profileId: string) => void;
+  onOpenProgram?: (coachProgramId: string) => void;
 }) {
   return (
     <div className="wl-athletes-table-wrap">
@@ -65,13 +67,28 @@ export function WlAthletesTable({
               </td>
               <td className="wl-athletes-col-program">
                 {row.assignmentStatus === 'active' ? (
-                  <div className="wl-athletes-program-cell">
-                    <span className="wl-athletes-program-name">{row.programName}</span>
-                    {row.assignedAt ? (
-                      <span className="wl-athletes-program-meta">
-                        {isEs ? 'Desde' : 'Since'} {row.assignedAt.slice(0, 10)}
-                      </span>
-                    ) : null}
+                  <div className="wl-athletes-program-cell wl-athletes-program-cell--multi">
+                    {row.activePrograms.map((plan) =>
+                      plan.coachProgramId && onOpenProgram ? (
+                        <button
+                          key={plan.assignmentId}
+                          type="button"
+                          className="wl-athletes-program-chip"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenProgram(plan.coachProgramId!);
+                          }}
+                        >
+                          <span className="wl-athletes-program-name">{plan.programName}</span>
+                          <span className="wl-athletes-program-meta">{plan.completionPct}%</span>
+                        </button>
+                      ) : (
+                        <span key={plan.assignmentId} className="wl-athletes-program-chip wl-athletes-program-chip--static">
+                          <span className="wl-athletes-program-name">{plan.programName}</span>
+                          <span className="wl-athletes-program-meta">{plan.completionPct}%</span>
+                        </span>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <StatusBadge variant="none">{isEs ? 'Sin rutina' : 'No program'}</StatusBadge>

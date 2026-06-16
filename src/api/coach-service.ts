@@ -200,7 +200,7 @@ export class CoachService {
     input: AssignCoachProgramInput,
     resolveAthleteUserId: (profileId: string) => string | undefined,
   ): Promise<ActiveAssignment[]> {
-    // One active WL plan per athlete; assigning here replaces any previous assignment.
+    // Athletes may carry multiple coach programs in parallel; re-assigning updates the same program slot.
     const coachProgram = await this.store.getCoachProgramById(coachId, programId);
     if (!coachProgram) {
       throw new CoachServiceError('PROGRAM_NOT_FOUND', 'Coach program not found.');

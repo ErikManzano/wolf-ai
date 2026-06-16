@@ -250,6 +250,36 @@
   line-height: 1.4;
 }
 
+.wolf-athlete-plan-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.wolf-athlete-plan-switcher__btn {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-athlete-plan-switcher__btn--active {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
+  color: var(--color-text-primary);
+}
+
 .wolf-athlete-athlete-name {
   margin: 0.65rem 0 0;
   font-size: 0.88rem;

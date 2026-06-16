@@ -1,15 +1,8 @@
 import { Calendar, LayoutGrid } from 'lucide-react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import { ProgramActionsMenu } from './ProgramActionsMenu';
+import { ProgramEnrolledAvatars } from './ProgramEnrolledAvatars';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
-
-function athleteInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
 
 export function ProgramCard({
   row,
@@ -30,7 +23,6 @@ export function ProgramCard({
 }) {
   const weeks = row.program.totalWeeks ?? row.program.weeks?.length ?? 0;
   const daysPerWeek = row.program.daysPerWeek ?? row.program.weeks?.[0]?.days?.length ?? 0;
-  const primaryAthlete = row.enrolledAthletes[0] ?? null;
   const adherence = row.avgAdherencePct;
   const adherenceClass =
     adherence == null
@@ -90,30 +82,22 @@ export function ProgramCard({
       <section className="wl-program-card__section">
         <p className="wl-program-card__label">{isEs ? 'Atletas asignados' : 'Assigned athletes'}</p>
         <div className="wl-program-card__athletes-row">
-          {primaryAthlete ? (
-            <>
-              <div className="wl-program-card__athlete">
-                <span className="wl-program-card__avatar" aria-hidden>
-                  {athleteInitials(primaryAthlete.athleteName)}
-                </span>
-                <div className="wl-program-card__athlete-text">
-                  <strong>{primaryAthlete.athleteName}</strong>
-                  <p>
-                    {isEs
-                      ? `${row.enrolledAthletes.length} atleta${row.enrolledAthletes.length === 1 ? '' : 's'}`
-                      : `${row.enrolledAthletes.length} athlete${row.enrolledAthletes.length === 1 ? '' : 's'}`}
-                  </p>
-                </div>
-              </div>
-              <span className={`wl-program-card__adherence ${adherenceClass}`}>
-                {adherence != null ? `${adherence}%` : '—'}
-              </span>
-            </>
-          ) : (
-            <p className="wl-program-card__empty-athletes">
-              {isEs ? 'Sin atletas asignados' : 'No athletes assigned'}
-            </p>
-          )}
+          <div
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+            role="presentation"
+          >
+            <ProgramEnrolledAvatars
+              enrolledAthletes={row.enrolledAthletes}
+              isEs={isEs}
+              onClick={row.enrolledAthletes.length > 0 ? onAssign : undefined}
+            />
+          </div>
+          {row.enrolledAthletes.length > 0 ? (
+            <span className={`wl-program-card__adherence ${adherenceClass}`}>
+              {adherence != null ? `${adherence}%` : '—'}
+            </span>
+          ) : null}
         </div>
       </section>
 

@@ -8,7 +8,7 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
@@ -16,8 +16,8 @@ import { getNavLabel } from './navigation/appNavigation';
 import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
 import {
+  SIDEBAR_COMPACT_WIDTH,
   SIDEBAR_WIDTH_MAX,
-  SIDEBAR_WIDTH_MIN,
   useSidebarResize,
 } from './hooks/useSidebarResize';
 
@@ -106,18 +106,25 @@ function AppShell() {
   }, []);
 
   const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
-  const sidebarResizeEnabled = !isNarrowLayout && !effectiveSidebarCollapsed;
+  const sidebarResizeEnabled = !isNarrowLayout;
   const {
     width: sidebarWidth,
     isResizing: sidebarResizing,
+    nearCollapse: sidebarNearCollapse,
     onPointerDown: onSidebarResizeDown,
-    onPointerMove: onSidebarResizeMove,
-    onPointerUp: onSidebarResizeUp,
-    onPointerCancel: onSidebarResizeCancel,
     onDoubleClick: onSidebarResizeReset,
-  } = useSidebarResize(sidebarResizeEnabled);
+    consumeToggleClick: consumeSidebarToggleClick,
+  } = useSidebarResize({
+    enabled: sidebarResizeEnabled,
+    collapsed: effectiveSidebarCollapsed,
+    onCollapse: () => setSidebarCollapsed(true),
+    onExpand: () => setSidebarCollapsed(false),
+  });
 
-  const appContainerStyle = sidebarResizeEnabled
+  const showSidebarCollapsed = effectiveSidebarCollapsed && !sidebarResizing;
+
+  const sidebarUsesCustomWidth = sidebarResizeEnabled && (!showSidebarCollapsed || sidebarResizing);
+  const appContainerStyle = sidebarUsesCustomWidth
     ? ({ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties)
     : undefined;
 
@@ -156,7 +163,7 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${effectiveSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}`}
+        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}`}
         style={appContainerStyle}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse') return;
@@ -221,8 +228,8 @@ function AppShell() {
             activeView={activeView} 
             setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); }} 
             language={language}
-            collapsed={effectiveSidebarCollapsed}
-            showRailToggle={!isNarrowLayout}
+            collapsed={showSidebarCollapsed}
+            showRailToggle={false}
             mobileDrawer={isNarrowLayout}
             onToggleCollapsed={() => {
               if (isNarrowLayout) {
@@ -237,19 +244,50 @@ function AppShell() {
           />
           {sidebarResizeEnabled ? (
             <div
-              className="sidebar-resize-handle"
+              className={`sidebar-resize-handle${sidebarNearCollapse ? ' sidebar-resize-handle--collapse-zone' : ''}${showSidebarCollapsed ? ' sidebar-resize-handle--compact' : ''}${sidebarResizing ? ' sidebar-resize-handle--active' : ''}`}
               role="separator"
               aria-orientation="vertical"
-              aria-label={language === 'ES' ? 'Redimensionar sidebar' : 'Resize sidebar'}
-              aria-valuemin={SIDEBAR_WIDTH_MIN}
+              aria-label={
+                language === 'ES'
+                  ? 'Redimensionar sidebar; arrastra a la izquierda para plegar a iconos'
+                  : 'Resize sidebar; drag left to collapse to icons'
+              }
+              aria-valuemin={SIDEBAR_COMPACT_WIDTH}
               aria-valuemax={SIDEBAR_WIDTH_MAX}
-              aria-valuenow={sidebarWidth}
+              aria-valuenow={showSidebarCollapsed && !sidebarResizing ? SIDEBAR_COMPACT_WIDTH : sidebarWidth}
+              title={
+                language === 'ES'
+                  ? 'Arrastra para redimensionar. Suelta estrecho para modo iconos. Doble clic: ancho predeterminado.'
+                  : 'Drag to resize. Release narrow for icon mode. Double-click: default width.'
+              }
               onPointerDown={onSidebarResizeDown}
-              onPointerMove={onSidebarResizeMove}
-              onPointerUp={onSidebarResizeUp}
-              onPointerCancel={onSidebarResizeCancel}
               onDoubleClick={onSidebarResizeReset}
-            />
+            >
+              <button
+                type="button"
+                className="sidebar-resize-toggle"
+                aria-label={
+                  showSidebarCollapsed
+                    ? language === 'ES'
+                      ? 'Expandir sidebar'
+                      : 'Expand sidebar'
+                    : language === 'ES'
+                      ? 'Colapsar sidebar'
+                      : 'Collapse sidebar'
+                }
+                onDoubleClick={(event) => event.stopPropagation()}
+                onClick={() => {
+                  if (consumeSidebarToggleClick()) return;
+                  setSidebarCollapsed((collapsed) => !collapsed);
+                }}
+              >
+                {showSidebarCollapsed ? (
+                  <PanelLeftOpen size={13} strokeWidth={2.25} />
+                ) : (
+                  <PanelLeftClose size={13} strokeWidth={2.25} />
+                )}
+              </button>
+            </div>
           ) : null}
         </div>
         

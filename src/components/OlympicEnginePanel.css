@@ -1079,6 +1079,1154 @@
   container-name: wolf-program-nav;
 }
 
+/* Compact week/day tabs — inspo Excel microcycle nav */
+.wolf-program-nav--compact {
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid #27272a;
+  background: #09090b;
+  box-shadow: none;
+  container-type: inline-size;
+  container-name: wolf-program-nav;
+}
+
+.wolf-program-nav-compact {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wolf-week-tabs-strip {
+  display: none;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  border-bottom: 1px solid #27272a;
+  background: color-mix(in srgb, var(--wl-surface-board, #111318) 92%, #000);
+}
+
+/* Mobile: week <select> */
+.wolf-week-select-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #27272a;
+  background: color-mix(in srgb, var(--wl-surface-board, #111318) 92%, #000);
+}
+
+.wolf-week-select-mobile__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wolf-week-select-mobile__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wolf-week-select-mobile__label {
+  font-size: var(--wl-type-overline-size, 0.6875rem);
+  font-weight: var(--wl-type-overline-weight, 600);
+  text-transform: uppercase;
+  letter-spacing: var(--wl-type-overline-tracking, 0.05em);
+  color: var(--wl-text-muted, #71717a);
+}
+
+.wolf-week-select-mobile .wolf-select-wrap {
+  width: 100%;
+}
+
+.wolf-week-select-mobile .wolf-select-wrap select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 36px 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #27272a;
+  background: #18181b;
+  color: #fafafa;
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.wolf-week-tab-add--mobile {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 0;
+  border-radius: 10px;
+  border: 1px dashed #3f3f46;
+  background: transparent;
+}
+
+/* Desktop: week pill tabs (Editor / Tabla style) */
+.wolf-week-tabs-pills {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  border-bottom: 1px solid #27272a;
+  background: color-mix(in srgb, var(--wl-surface-board, #111318) 92%, #000);
+}
+
+.wolf-week-tabs-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  min-height: 44px;
+  min-width: 88px;
+  max-width: 120px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #71717a;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-week-tabs-pill:hover:not(.is-active):not(:disabled) {
+  color: #d4d4d8;
+  background: color-mix(in srgb, #fafafa 4%, transparent);
+}
+
+.wolf-week-tabs-pill.is-active {
+  color: #fafafa;
+  background: #18181b;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 6%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ff6b1a 22%, #27272a);
+}
+
+.wolf-week-tabs-pill__title {
+  font-size: var(--wl-type-tab-size, 0.8125rem);
+  font-weight: var(--wl-type-tab-weight, 500);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.wolf-week-tabs-pill.is-active .wolf-week-tabs-pill__title {
+  font-weight: var(--wl-type-tab-weight-active, 600);
+  color: #fafafa;
+}
+
+.wolf-week-tabs-pill__load {
+  font-family: var(--font-mono);
+  font-size: var(--wl-type-data-sm-size, 0.6875rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.wolf-week-tabs-pill.is-active .wolf-week-tabs-pill__load {
+  color: #a1a1aa;
+}
+
+.wolf-week-tabs-pill--add {
+  flex: 0 0 40px;
+  min-width: 40px;
+  max-width: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #71717a;
+  border: 1px dashed #3f3f46;
+  background: transparent;
+}
+
+.wolf-week-tabs-pill--add:hover:not(:disabled) {
+  color: #ff6b1a;
+  border-color: color-mix(in srgb, #ff6b1a 40%, #3f3f46);
+  background: color-mix(in srgb, #ff6b1a 8%, transparent);
+}
+
+.wolf-week-tabs-pill--add:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .wolf-program-nav--compact .wolf-week-select-mobile {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-strip {
+    display: flex;
+    width: 100%;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-pills {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .wolf-program-nav--compact .wolf-week-tabs-pills {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-strip {
+    display: none !important;
+  }
+
+  .wolf-program-nav--compact .wolf-week-select-mobile {
+    display: flex;
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--wl-border-subtle, #27272a);
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile__row {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile__field {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile__label {
+    flex: 0 0 auto;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile .wolf-select-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .wolf-program-day-board .wolf-week-select-mobile .wolf-select-wrap select {
+    min-height: 36px;
+    height: 36px;
+    padding: 0 30px 0 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .wolf-program-day-board .wolf-week-tab-add--mobile {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    align-self: center;
+  }
+
+  .wolf-program-day-board .wolf-day-tabs-strip {
+    gap: 2px;
+    padding: 4px 6px 6px;
+    overflow-x: hidden;
+  }
+
+  .wolf-program-day-board .wolf-day-tab,
+  .wolf-program-day-board .wolf-day-tab.active {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    min-height: 30px;
+    padding: 4px 2px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 8px;
+  }
+
+  .wolf-program-day-board .wolf-day-tab.active {
+    gap: 0;
+    padding: 4px 2px;
+  }
+
+  .wolf-program-day-board .wolf-day-tab__remove {
+    display: none;
+  }
+
+  .wolf-program-day-board .wolf-day-tab-add {
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+  }
+}
+
+.wolf-week-tab-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  min-width: 92px;
+  max-width: 120px;
+  padding: 8px 12px;
+  margin: 0;
+  border: none;
+  border-top: 2px solid transparent;
+  border-right: 1px solid color-mix(in srgb, #27272a 80%, transparent);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.wolf-week-tab-card:hover:not(.active) {
+  background: color-mix(in srgb, #111318 70%, transparent);
+}
+
+.wolf-week-tab-card.active {
+  background: #111318;
+  border-top-color: #ff6b1a;
+}
+
+.wolf-week-tab-card__title {
+  font-size: var(--wl-type-tab-size, 0.8125rem);
+  font-weight: var(--wl-type-tab-weight, 500);
+  line-height: 1.2;
+  color: var(--wl-text-muted, #71717a);
+  white-space: nowrap;
+}
+
+.wolf-week-tab-card.active .wolf-week-tab-card__title {
+  font-weight: var(--wl-type-tab-weight-active, 600);
+  color: var(--wl-text-primary, #fafafa);
+}
+
+.wolf-week-tab-card__load {
+  font-family: var(--font-mono);
+  font-size: var(--wl-type-data-sm-size, 0.6875rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--wl-text-muted, #71717a);
+  white-space: nowrap;
+}
+
+.wolf-week-tab-card.active .wolf-week-tab-card__load {
+  color: var(--wl-text-secondary, #a1a1aa);
+}
+
+.wolf-week-tab-add {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  margin: 0;
+  border: none;
+  border-left: 1px solid #27272a;
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.wolf-week-tab-add:hover:not(:disabled) {
+  color: #ff6b1a;
+  background: color-mix(in srgb, #ff6b1a 6%, transparent);
+}
+
+.wolf-week-tab-add:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-day-tabs-section {
+  min-width: 0;
+}
+
+.wolf-day-tabs-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.wolf-day-tabs-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.wolf-day-tab {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--wl-text-muted, #71717a);
+  font-size: var(--wl-type-tab-size, 0.8125rem);
+  font-weight: var(--wl-type-tab-weight, 500);
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.wolf-day-tab:hover:not(.active) {
+  color: #a1a1aa;
+}
+
+.wolf-day-tab.active {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 12px;
+  font-weight: var(--wl-type-tab-weight-active, 600);
+  color: var(--wl-text-accent, #ff6b1a);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 45%, transparent);
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 10%, transparent);
+  cursor: default;
+}
+
+.wolf-day-tab__select {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.wolf-day-tab__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.wolf-day-tab__remove:hover {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.wolf-day-tab:focus-visible,
+.wolf-week-tab-card:focus-visible,
+.wolf-week-tab-add:focus-visible,
+.wolf-day-tab-add:focus-visible,
+.wolf-day-tab__select:focus-visible,
+.wolf-day-tab__remove:focus-visible {
+  outline: 2px solid #ff6b1a;
+  outline-offset: 1px;
+}
+
+.wolf-day-tab-add {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, #27272a 90%, #71717a);
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+}
+
+.wolf-day-tab-add:hover:not(:disabled) {
+  color: #ff6b1a;
+  border-color: color-mix(in srgb, #ff6b1a 40%, #27272a);
+}
+
+.wolf-day-tab-add:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Customize layout: overview matrix + week/day nav + session editor */
+.wolf-program-customize-layout,
+.wolf-program-matrix-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.wolf-program-customize-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-program-customize-toolbar-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.wolf-program-customize-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  align-self: auto;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #27272a;
+  background: #0c0c0e;
+}
+
+.wolf-program-customize-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #71717a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-program-customize-tab:hover:not(.is-active) {
+  color: #d4d4d8;
+  background: color-mix(in srgb, #fafafa 4%, transparent);
+}
+
+.wolf-program-customize-tab.is-active {
+  color: #fafafa;
+  background: #18181b;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 6%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ff6b1a 22%, #27272a);
+}
+
+.wolf-program-customize-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.wolf-program-customize-panel--table {
+  gap: 0;
+}
+
+.wolf-program-customize-layout--table .wolf-program-matrix--expanded {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  border-radius: 12px;
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-cell-hit {
+  min-height: 64px;
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-exercise-name {
+  font-size: 0.72rem;
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-exercise-rx {
+  font-size: 0.64rem;
+}
+
+.wolf-program-matrix {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 0;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.wolf-program-matrix--overview {
+  max-height: min(36vh, 280px);
+}
+
+.wolf-program-matrix-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.wolf-program-matrix-export-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.wolf-program-matrix--in-fullscreen .wolf-program-matrix-export-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.wolf-program-matrix-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.wolf-program-matrix-corner,
+.wolf-program-matrix-week-row,
+.wolf-program-matrix-day-col,
+.wolf-program-matrix-cell {
+  border-bottom: 1px solid #27272a;
+  border-right: 1px solid #27272a;
+  vertical-align: top;
+}
+
+.wolf-program-matrix-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: 88px;
+  min-width: 88px;
+  padding: 8px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717a;
+  background: #0c0c0e;
+}
+
+.wolf-program-matrix-day-col {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  min-width: 100px;
+  max-width: 128px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #a1a1aa;
+  text-align: center;
+  background: #0c0c0e;
+  white-space: nowrap;
+}
+
+.wolf-program-matrix-day-col.is-active-day {
+  color: #fafafa;
+  box-shadow: inset 0 -2px 0 #ff6b1a;
+}
+
+.wolf-program-matrix-week-row {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 88px;
+  min-width: 88px;
+  padding: 0;
+  background: #09090b;
+}
+
+tr.is-active-week .wolf-program-matrix-week-row {
+  background: #111318;
+}
+
+.wolf-program-matrix-week-row-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 10px;
+  margin: 0;
+  border: none;
+  border-left: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+tr.is-active-week .wolf-program-matrix-week-row-btn {
+  border-left-color: #ff6b1a;
+}
+
+.wolf-program-matrix-week-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #a1a1aa;
+  white-space: nowrap;
+}
+
+tr.is-active-week .wolf-program-matrix-week-title {
+  color: #fafafa;
+}
+
+.wolf-program-matrix-week-load {
+  font-size: 0.62rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #52525b;
+  white-space: nowrap;
+}
+
+tr.is-active-week .wolf-program-matrix-week-load {
+  color: #71717a;
+}
+
+.wolf-program-matrix-cell {
+  min-width: 100px;
+  max-width: 128px;
+  padding: 0;
+  background: #09090b;
+  vertical-align: top;
+}
+
+.wolf-program-matrix-cell.is-empty {
+  background: color-mix(in srgb, #09090b 92%, #111318);
+}
+
+.wolf-program-matrix-cell.is-selected {
+  background: #111318;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #ff6b1a 35%, transparent);
+}
+
+.wolf-program-matrix-cell-hit {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 5px 7px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.wolf-program-matrix-cell-empty,
+.wolf-program-matrix-cell-placeholder {
+  display: block;
+  padding: 8px 4px;
+  font-size: 0.72rem;
+  color: #52525b;
+  text-align: center;
+}
+
+.wolf-program-matrix-exercises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wolf-program-matrix-exercise {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: color-mix(in srgb, #18181b 80%, transparent);
+}
+
+.wolf-program-matrix-exercise-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #e4e4e7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wolf-program-matrix-exercise-rx {
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.wolf-program-matrix-hint {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 5px 12px;
+  font-size: 0.66rem;
+  color: #52525b;
+  border-top: 1px solid #27272a;
+  background: #0c0c0e;
+}
+
+.wolf-program-matrix-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #27272a;
+  background: #0c0c0e;
+}
+
+.wolf-program-matrix-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  background: #18181b;
+  color: #d4d4d8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.wolf-program-matrix-tool-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #ff6b1a 45%, #27272a);
+  color: #fafafa;
+  background: color-mix(in srgb, #ff6b1a 10%, #18181b);
+}
+
+.wolf-program-matrix-tool-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wolf-program-matrix-tool-btn--icon {
+  min-width: 34px;
+  padding-inline: 8px;
+}
+
+.wolf-program-matrix--in-fullscreen {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+}
+
+.wolf-program-matrix-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  background: #09090b;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.wolf-program-matrix-fullscreen__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #27272a;
+  background: #0c0c0e;
+}
+
+.wolf-program-matrix-fullscreen__head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: #fafafa;
+}
+
+.wolf-program-matrix-fullscreen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.wolf-program-matrix-fullscreen__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wolf-program-matrix-fullscreen__body .wolf-program-matrix-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.wolf-program-customize-panel--editor {
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Unified day board: week/day nav header + exercise sheet body */
+.wolf-program-day-board {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--wl-border-subtle, #27272a);
+  border-radius: 12px;
+  background: var(--wl-surface-board, #111318);
+  box-shadow: none;
+}
+
+.wolf-program-day-board > .wolf-program-nav--compact {
+  flex-shrink: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--wl-border-subtle, #27272a);
+  background: var(--wl-surface-board, #111318);
+}
+
+.wolf-program-day-board > .wolf-program-nav--compact .wolf-week-tabs-strip,
+.wolf-program-day-board > .wolf-program-nav--compact .wolf-week-select-mobile {
+  background: color-mix(in srgb, var(--wl-surface-board, #111318) 92%, #000);
+}
+
+.wolf-program-day-board > .wolf-program-nav--compact .wolf-day-tabs-strip {
+  background: var(--wl-surface-board, #111318);
+  border-top: none;
+}
+
+.wolf-program-day-board > .wolf-session-editor--flow {
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+  overflow: hidden;
+  background: var(--wl-surface-board, #111318);
+}
+
+.wolf-program-day-board--exercise-focus > .wolf-session-editor--flow {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  gap: 0;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-head {
+  display: flex;
+  align-items: center;
+  gap: 8px 10px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--wl-border-subtle, #27272a);
+  background: var(--wl-surface-board, #111318);
+  position: relative;
+  z-index: 4;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-head--embedded .wolf-se-back-to-sheet {
+  min-width: 44px;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-head .wolf-se-flow-crumb {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-head .app-breadcrumb {
+  margin-bottom: 0;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-head .app-breadcrumb__list {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.wolf-program-day-board--exercise-focus .wolf-se-exercise-view > article.wolf-se-block-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.wolf-program-day-board .wolf-se-sheet--dense {
+  flex: 0 1 auto;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-head {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--wl-border-subtle, #27272a);
+  background: var(--wl-surface-board, #111318);
+}
+
+.wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-head-main {
+  align-items: center;
+}
+
+.wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-count {
+  flex-shrink: 0;
+}
+
+.wolf-program-day-board .wolf-se-sheet--sortable {
+  flex: 0 1 auto;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.wolf-program-day-board .wolf-se-sheet-rows,
+.wolf-program-day-board .wolf-se-sheet-rows--sortable,
+.wolf-program-day-board .wolf-se-sheet--sortable .wolf-se-sheet-rows--sortable {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
+.wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-footer {
+  border-top: 1px solid var(--wl-border-subtle, #27272a);
+  background: color-mix(in srgb, var(--wl-surface-board, #111318) 96%, #000);
+}
+
+.wolf-program-customize-layout > .wolf-program-nav--compact,
+.wolf-program-day-board > .wolf-program-nav--compact {
+  flex-shrink: 0;
+}
+
+.wolf-program-customize-layout > .wolf-session-editor--flow,
+.wolf-program-customize-panel--editor > .wolf-session-editor--flow,
+.wolf-program-day-board > .wolf-session-editor--flow {
+  flex: 0 1 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
 .wolf-program-nav-top {
   display: flex;
   flex-direction: column;
@@ -1145,6 +2293,17 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+}
+
+.wolf-program-nav-tonnage {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .wolf-program-nav-grid {
@@ -1419,17 +2578,88 @@
 }
 
 .wolf-day-pill--editing.active {
-  background: var(--wolf-motor-accent, #ff6600);
-  color: #fff;
-  border-color: transparent;
+  background: var(--color-bg-secondary);
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  box-shadow: inset 0 -2px 0 var(--color-accent);
 }
 
 .wolf-day-pill--editing.active .wolf-day-pill-input {
-  color: #fff;
+  color: var(--color-accent);
 }
 
 .wolf-day-pill--editing.active .wolf-day-pill-input::placeholder {
-  color: color-mix(in srgb, #fff 65%, transparent);
+  color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+/* Week tabs — desktop Excel-style */
+.wolf-week-tabs-desktop {
+  display: none;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wolf-week-tab {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.wolf-week-tab:hover:not(.active) {
+  color: var(--color-text-primary);
+}
+
+.wolf-week-tab.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.wolf-week-tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.wolf-week-select-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wolf-week-select-mobile > .wolf-program-nav-row-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.wolf-week-select-mobile .wolf-select-wrap select {
+  width: 100%;
+}
+
+.wolf-program-nav-row-label--desktop {
+  display: none;
+}
+
+.wolf-program-nav-section--weeks .wolf-program-nav-section-head {
+  margin-bottom: 8px;
 }
 
 .wolf-week-strip,
@@ -1454,14 +2684,22 @@
 
 .wolf-week-pill:hover,
 .wolf-day-pill:hover {
-  border-color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
 }
 
-.wolf-week-pill.active,
+.wolf-week-pill.active {
+  background: var(--color-bg-secondary);
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
 .wolf-day-pill.active {
-  background: var(--color-accent-gradient);
-  color: white;
-  border-color: transparent;
+  background: var(--color-bg-secondary);
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  box-shadow: inset 0 -2px 0 var(--color-accent);
 }
 
 .wolf-week-pill:focus-visible,
@@ -2569,9 +3807,40 @@
 }
 
 .wolf-program-inline-hint {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.wolf-program-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.wolf-program-status-bar .wolf-se-draft-banner {
+  flex: 1 1 280px;
+  min-width: 0;
+  margin: 0;
+}
+
+.wolf-program-status-bar .wolf-program-inline-hint {
+  flex: 0 1 auto;
+  margin: 0;
+  margin-left: auto;
+  text-align: right;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.wolf-program-status-bar:not(:has(.wolf-se-draft-banner)) .wolf-program-inline-hint {
+  margin-left: 0;
+  text-align: left;
+  width: 100%;
 }
 
 /* Step 3 (customization): flujo vertical; en desktop ver bloque @media (min-width: 1025px) */
@@ -2607,11 +3876,23 @@
 
 .wolf-engine--customize .wolf-program-nav--editable {
   position: sticky;
-  top: 56px;
-  z-index: 5;
-  padding: 8px 10px;
-  gap: 8px;
-  box-shadow: 0 4px 16px color-mix(in srgb, #000 10%, transparent);
+  top: 0;
+  z-index: 12;
+  box-shadow: 0 4px 20px color-mix(in srgb, #000 28%, transparent);
+}
+
+.wolf-engine--customize .wolf-program-nav--compact {
+  margin-left: -12px;
+  margin-right: -12px;
+  width: calc(100% + 24px);
+  max-width: none;
+}
+
+.wolf-engine--customize .wolf-program-day-board > .wolf-program-nav--compact {
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .wolf-engine--customize .wolf-session-editor {
@@ -2777,22 +4058,63 @@
 
 @container wolf-program-nav (min-width: 720px) {
   .wolf-program-nav-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
     align-items: start;
   }
 
   .wolf-program-nav-section + .wolf-program-nav-section {
-    padding-top: 0;
-    border-top: none;
-    padding-left: 16px;
-    border-left: 1px solid var(--color-border);
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .wolf-week-tabs-desktop {
+    display: flex;
+  }
+
+  .wolf-week-select-mobile {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-strip {
+    display: flex;
+    width: 100%;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-pills {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-select-mobile {
+    display: none;
+  }
+
+  .wolf-program-nav-row-label--desktop {
+    display: block;
+  }
+
+  .wolf-week-select-mobile .wolf-program-nav-row-label {
+    display: none;
   }
 }
 
 @container wolf-program-nav (max-width: 719px) {
   .wolf-program-nav-top .wolf-program-structure-hint {
     display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-strip {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-pills {
+    display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-select-mobile {
+    display: flex;
   }
 }
 
@@ -2836,6 +4158,50 @@
     min-width: 44px;
     padding: 8px 10px;
     justify-content: center;
+  }
+
+  .wolf-program-matrix-corner,
+  .wolf-program-matrix-week-row {
+    width: 76px;
+    min-width: 76px;
+  }
+
+  .wolf-program-matrix-day-col,
+  .wolf-program-matrix-cell {
+    min-width: 92px;
+    max-width: 108px;
+  }
+
+  .wolf-program-matrix--overview {
+    max-height: min(40vh, 240px);
+  }
+
+  .wolf-program-matrix-week-row-btn {
+    min-height: 48px;
+    padding: 6px 8px;
+  }
+
+  .wolf-program-matrix-cell-hit {
+    min-height: 48px;
+  }
+
+  .wolf-program-matrix-toolbar {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wolf-program-matrix-tool-btn span {
+    display: none;
+  }
+
+  .wolf-program-matrix-tool-btn {
+    min-width: 40px;
+    padding-inline: 8px;
+  }
+
+  .wolf-program-matrix-fullscreen__head strong {
+    font-size: 0.82rem;
   }
 }
 
@@ -2958,6 +4324,53 @@
   margin-bottom: 0;
 }
 
+.wolf-program-title-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.wolf-program-title-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-title-input {
+  width: 100%;
+  margin: 0;
+  padding: 6px 2px 8px;
+  border: none;
+  border-bottom: 2px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.wolf-program-title-input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.wolf-program-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--color-accent);
+}
+
+.wolf-program-title-input[aria-invalid='true'] {
+  border-bottom-color: var(--color-danger);
+}
+
 .wolf-program-live-card {
   padding: 14px 16px;
   border-radius: 14px;
@@ -3061,15 +4474,70 @@
 
 .wolf-se-draft-banner {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #facc15 35%, transparent);
+  background: color-mix(in srgb, #facc15 8%, var(--color-bg-panel));
+}
+
+.wolf-se-draft-banner__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wolf-se-draft-banner__icon {
+  flex-shrink: 0;
+  color: #facc15;
+}
+
+.wolf-se-draft-banner__copy {
+  min-width: 0;
+}
+
+.wolf-se-draft-banner__copy strong {
+  display: block;
+  color: #fde68a;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.wolf-se-draft-banner__copy span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-se-draft-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.wolf-se-draft-banner__restore {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  min-height: 32px;
 }
 
 @media (max-width: 1023px) {
-  .wolf-engine--customize .wolf-session-editor {
+  .wolf-engine--customize:not(.wl-programs-embedded-plan) .wolf-session-editor {
     padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  }
+
+  .wl-programs-embedded-plan .wolf-session-editor--embedded {
+    padding-bottom: 0;
   }
 
   .wolf-se-sticky-bar {

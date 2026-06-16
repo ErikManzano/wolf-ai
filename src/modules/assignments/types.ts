@@ -60,6 +60,7 @@ export interface WlAssignmentsContextValue {
     setInstance: number,
   ) => SetCompletionLog | undefined;
   myAssignment: ProgramAssignment | undefined;
+  myAssignments: ProgramAssignment[];
   assignmentsLoading: boolean;
   isTrackingPending: (key: string) => boolean;
   isTrackingFailed: (key: string) => boolean;

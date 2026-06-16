@@ -19,26 +19,26 @@ export const DraftRecoveryBanner: React.FC<DraftRecoveryBannerProps> = ({
     : null;
 
   return (
-    <div className="wolf-program-edit-banner wolf-se-draft-banner" role="alert">
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1, minWidth: 0 }}>
-        <AlertTriangle size={20} style={{ flexShrink: 0, color: '#facc15' }} aria-hidden />
-        <div>
-          <strong style={{ display: 'block', color: '#fde68a', fontSize: '0.88rem' }}>
+    <div className="wolf-se-draft-banner" role="alert">
+      <div className="wolf-se-draft-banner__main">
+        <AlertTriangle size={18} className="wolf-se-draft-banner__icon" aria-hidden />
+        <div className="wolf-se-draft-banner__copy">
+          <strong>
             {isEs ? 'Hay un borrador más reciente en este dispositivo' : 'A more recent draft exists on this device'}
           </strong>
-          {when && (
-            <span style={{ display: 'block', marginTop: 4, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+          {when ? (
+            <span>
               {isEs ? `Guardado: ${when}` : `Saved: ${when}`}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        <button type="button" className="btn-secondary" style={{ fontSize: '0.8rem' }} onClick={onRestore}>
-          <RotateCcw size={14} /> {isEs ? 'Restaurar' : 'Restore'}
+      <div className="wolf-se-draft-banner__actions">
+        <button type="button" className="btn-secondary wolf-se-draft-banner__restore" onClick={onRestore}>
+          <RotateCcw size={14} aria-hidden /> {isEs ? 'Restaurar' : 'Restore'}
         </button>
         <button type="button" className="wolf-se-icon" onClick={onDismiss} aria-label={isEs ? 'Descartar' : 'Dismiss'}>
-          <X size={14} />
+          <X size={14} aria-hidden />
         </button>
       </div>
     </div>

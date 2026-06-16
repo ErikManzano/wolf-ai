@@ -19,7 +19,7 @@ interface AthleteTrainingViewProps {
 const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) => {
   const isEs = language === 'ES';
   const {
-    myAssignment,
+    myAssignments,
     assignmentsLoading,
     completions,
     setLogs,
@@ -45,24 +45,40 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   );
 
   const [week, setWeek] = useState(1);
+  const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
 
-  const athleteProfile = useMemo(
-    () => wlAthletes.find((a) => a.id === myAssignment?.athleteProfileId),
-    [wlAthletes, myAssignment?.athleteProfileId],
+  useEffect(() => {
+    if (myAssignments.length === 0) {
+      setActiveAssignmentId(null);
+      return;
+    }
+    setActiveAssignmentId((prev) =>
+      prev && myAssignments.some((a) => a.id === prev) ? prev : myAssignments[0].id,
+    );
+  }, [myAssignments]);
+
+  const activeAssignment = useMemo(
+    () => myAssignments.find((a) => a.id === activeAssignmentId) ?? myAssignments[0],
+    [myAssignments, activeAssignmentId],
   );
 
-  const program = myAssignment?.program;
+  const athleteProfile = useMemo(
+    () => wlAthletes.find((a) => a.id === activeAssignment?.athleteProfileId),
+    [wlAthletes, activeAssignment?.athleteProfileId],
+  );
+
+  const program = activeAssignment?.program;
   const weekData = program?.weeks.find((w) => w.weekNumber === week);
 
   const totalExercises = useMemo(() => (program ? countProgramExercises(program) : 0), [program]);
 
   const isDayDone = useCallback(
     (w: number, d: number, sessionExercises: SessionExerciseBlock[]) => {
-      if (!myAssignment) return false;
+      if (!activeAssignment) return false;
       return isDayCompleteWithSets(
         completions,
         setLogs,
-        myAssignment.id,
+        activeAssignment.id,
         w,
         d,
         sessionExercises,
@@ -71,21 +87,21 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         exName,
       );
     },
-    [completions, setLogs, myAssignment, athleteProfile, motorExercises, exName],
+    [completions, setLogs, activeAssignment, athleteProfile, motorExercises, exName],
   );
 
   const completedExercises = useMemo(() => {
-    if (!myAssignment || !program) return 0;
+    if (!activeAssignment || !program) return 0;
     return countCompletedExercisesWithSets(
       completions,
       setLogs,
-      myAssignment.id,
+      activeAssignment.id,
       program,
       athleteProfile,
       motorExercises,
       exName,
     );
-  }, [completions, setLogs, myAssignment, program, athleteProfile, motorExercises, exName]);
+  }, [completions, setLogs, activeAssignment, program, athleteProfile, motorExercises, exName]);
 
   const disciplinePct =
     totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
@@ -109,14 +125,14 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       reps: isEs ? 'reps' : 'reps',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
-        ? 'Cuando tu coach te asigne un programa desde «Programas», aparecerá aquí al instante. Si acabas de recibirla, espera unos segundos o recarga.'
-        : 'When your coach assigns a program from “Programs”, it will show here right away. If you were just assigned, wait a few seconds or refresh.',
+        ? 'Cuando tu coach te asigne programas desde «Programas», aparecerán aquí. Puedes llevar varios planes a la vez.'
+        : 'When your coach assigns programs from “Programs”, they will show here. You can follow multiple plans at once.',
     }),
     [isEs],
   );
 
   useEffect(() => {
-    if (!program || !myAssignment) return;
+    if (!program || !activeAssignment) return;
     for (const w of program.weeks) {
       for (const d of w.days) {
         if (!isDayDone(w.weekNumber, d.dayNumber, d.session.exercises)) {
@@ -125,7 +141,11 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         }
       }
     }
-  }, [program, myAssignment, isDayDone]);
+  }, [program, activeAssignment, isDayDone]);
+
+  useEffect(() => {
+    setWeek(1);
+  }, [activeAssignment?.id]);
 
   if (assignmentsLoading) {
     return (
@@ -138,7 +158,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
   }
 
-  if (!myAssignment || !program || !weekData) {
+  if (!activeAssignment || !program || !weekData) {
     return (
       <div className="wolf-athlete-plan wolf-athlete-plan--empty">
         <div className="wolf-athlete-empty-visual">
@@ -161,7 +181,26 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               {t.kicker}
             </p>
             <h1 className="wolf-athlete-title">{t.title}</h1>
-            <p className="wolf-athlete-program-name">{program.name}</p>
+            {myAssignments.length > 1 ? (
+              <div className="wolf-athlete-plan-switcher" role="tablist" aria-label={isEs ? 'Planes activos' : 'Active plans'}>
+                {myAssignments.map((asg) => (
+                  <button
+                    key={asg.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={asg.id === activeAssignment.id}
+                    className={`wolf-athlete-plan-switcher__btn${
+                      asg.id === activeAssignment.id ? ' wolf-athlete-plan-switcher__btn--active' : ''
+                    }`}
+                    onClick={() => setActiveAssignmentId(asg.id)}
+                  >
+                    {asg.program.name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="wolf-athlete-program-name">{program.name}</p>
+            )}
             {athleteProfile ? (
               <p className="wolf-athlete-athlete-name">
                 <span className="wolf-athlete-athlete-label">{isEs ? 'Atleta' : 'Athlete'}</span>
@@ -212,7 +251,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         {weekData.days.map((day, dayIndex) => {
           const exerciseCount = day.session.exercises.length;
           const sessionDone = isSessionComplete(
-            myAssignment.id,
+            activeAssignment.id,
             weekData.weekNumber,
             day.dayNumber,
             exerciseCount,
@@ -225,7 +264,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               day={day}
               dayIndex={dayIndex}
               weekNumber={weekData.weekNumber}
-              assignmentId={myAssignment.id}
+              assignmentId={activeAssignment.id}
               athlete={athleteProfile}
               exercises={motorExercises}
               exName={exName}
@@ -240,7 +279,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               repsLabel={t.reps}
               isSetComplete={(exerciseIndex, schemeIndex, setInstance) =>
                 isSetComplete(
-                  myAssignment.id,
+                  activeAssignment.id,
                   weekData.weekNumber,
                   day.dayNumber,
                   exerciseIndex,
@@ -250,7 +289,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               }
               getSetLog={(exerciseIndex, schemeIndex, setInstance) =>
                 getSetLog(
-                  myAssignment.id,
+                  activeAssignment.id,
                   weekData.weekNumber,
                   day.dayNumber,
                   exerciseIndex,
@@ -261,7 +300,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               isSetSyncPending={(exerciseIndex, schemeIndex, setInstance) =>
                 isTrackingPending(
                   setLogTrackingKey({
-                    assignmentId: myAssignment.id,
+                    assignmentId: activeAssignment.id,
                     weekNumber: weekData.weekNumber,
                     dayNumber: day.dayNumber,
                     exerciseIndex,
@@ -273,7 +312,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               isSetSyncFailed={(exerciseIndex, schemeIndex, setInstance) =>
                 isTrackingFailed(
                   setLogTrackingKey({
-                    assignmentId: myAssignment.id,
+                    assignmentId: activeAssignment.id,
                     weekNumber: weekData.weekNumber,
                     dayNumber: day.dayNumber,
                     exerciseIndex,
@@ -285,7 +324,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               isExerciseSyncPending={(exerciseIndex) =>
                 isTrackingPending(
                   exerciseTrackingKey(
-                    myAssignment.id,
+                    activeAssignment.id,
                     weekData.weekNumber,
                     day.dayNumber,
                     exerciseIndex,
@@ -295,7 +334,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               isExerciseSyncFailed={(exerciseIndex) =>
                 isTrackingFailed(
                   exerciseTrackingKey(
-                    myAssignment.id,
+                    activeAssignment.id,
                     weekData.weekNumber,
                     day.dayNumber,
                     exerciseIndex,
@@ -303,14 +342,14 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
                 )
               }
               isSessionSyncPending={isTrackingPending(
-                sessionTrackingKey(myAssignment.id, weekData.weekNumber, day.dayNumber),
+                sessionTrackingKey(activeAssignment.id, weekData.weekNumber, day.dayNumber),
               )}
               isSessionSyncFailed={isTrackingFailed(
-                sessionTrackingKey(myAssignment.id, weekData.weekNumber, day.dayNumber),
+                sessionTrackingKey(activeAssignment.id, weekData.weekNumber, day.dayNumber),
               )}
               onToggleSet={(exerciseIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
                 toggleSetComplete({
-                  assignmentId: myAssignment.id,
+                  assignmentId: activeAssignment.id,
                   weekNumber: weekData.weekNumber,
                   dayNumber: day.dayNumber,
                   exerciseIndex,
@@ -323,7 +362,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               }
               onUpdateSet={(exerciseIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
                 updateSetLog({
-                  assignmentId: myAssignment.id,
+                  assignmentId: activeAssignment.id,
                   weekNumber: weekData.weekNumber,
                   dayNumber: day.dayNumber,
                   exerciseIndex,
@@ -336,7 +375,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               }
               onMarkExercise={(exerciseIndex) =>
                 toggleExerciseComplete(
-                  myAssignment.id,
+                  activeAssignment.id,
                   weekData.weekNumber,
                   day.dayNumber,
                   exerciseIndex,
@@ -344,7 +383,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               }
               onToggleSession={() =>
                 toggleSessionComplete(
-                  myAssignment.id,
+                  activeAssignment.id,
                   weekData.weekNumber,
                   day.dayNumber,
                   exerciseCount,

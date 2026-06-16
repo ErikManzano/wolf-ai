@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ChevronDown,
   ChevronRight,
-  ChevronUp,
   Dumbbell,
   Flame,
   Gauge,
@@ -20,7 +18,6 @@ import {
   addSetToBlock,
   applyBlockPercentagePreset,
   duplicateSetAt,
-  moveExerciseBlock,
   removeComplexSegment,
   removeExerciseBlock,
   removeSetFromBlock,
@@ -80,6 +77,7 @@ export interface ExerciseBlockCardProps {
   catalog: SessionCatalogProps;
   defaultComplexSecondId: string;
   defaultExtraSegmentId: string;
+  layout?: 'default' | 'embedded';
 }
 
 function blockTitle(
@@ -109,8 +107,10 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   catalog,
   defaultComplexSecondId,
   defaultExtraSegmentId,
+  layout = 'default',
 }) => {
   const apply = onApply;
+  const isEmbedded = layout === 'embedded';
   const filteredPicker = catalog.pickerOptions;
   const filteredPickerSingles = catalog.pickerSingles;
 
@@ -125,6 +125,8 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   }, [session.exercises, catalog.recentIds]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const showMovementZone = !isMobile || isEmbedded;
+  const showMobileMovementInConfig = isMobile && !isEmbedded;
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
@@ -146,7 +148,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   return (
     <article
       ref={blockRef}
-      className={`wolf-se-block wolf-se-block-card wolf-se-block--${blockKind}${expanded ? '' : ' wolf-se-block--collapsed'}`}
+      className={`wolf-se-block wolf-se-block-card wolf-se-block--${blockKind}${isEmbedded ? ' wolf-se-block-card--embedded' : ''}${expanded ? '' : ' wolf-se-block--collapsed'}`}
       data-block-index={bi + 1}
     >
       <header className="wolf-se-block-head">
@@ -165,7 +167,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
         >
           <ChevronRight
             size={20}
-            className={`wolf-se-block-chevron${expanded ? ' is-open' : ''}`}
+            className={`wolf-se-block-chevron${expanded ? ' is-open' : ''}${isEmbedded ? ' wolf-se-block-chevron--hidden' : ''}`}
             aria-hidden
           />
           <span className="wolf-se-block-num" aria-hidden>
@@ -181,6 +183,28 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               )}
             </div>
             <h3 className="wolf-se-block-name">{title}</h3>
+            {isEmbedded ? (
+              <p className="wolf-se-block-compact-meta">
+                <span>
+                  <strong>{tonnage}</strong> kg
+                </span>
+                <span aria-hidden>·</span>
+                <span>
+                  <strong>{workSets}</strong> {isEs ? 'series' : 'sets'}
+                </span>
+                {avgPct > 0 ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span>
+                      <strong>{avgPct}</strong>% ∅
+                    </span>
+                  </>
+                ) : null}
+                <span aria-hidden>·</span>
+                <code className="wolf-se-block-compact-rx">{prescription}</code>
+              </p>
+            ) : (
+              <>
             <div className="wolf-se-block-stats-row">
               <span className="wolf-se-block-stat wolf-se-block-stat--load">
                 <span className="wolf-se-block-stat-label">{isEs ? 'Carga' : 'Load'}</span>
@@ -210,6 +234,8 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               <span className="wolf-se-block-rx-label">{isEs ? 'Rx' : 'Rx'}</span>
               {prescription}
             </code>
+              </>
+            )}
           </div>
         </div>
 
@@ -218,24 +244,6 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          <button
-            type="button"
-            className="wolf-se-toolbar-btn"
-            title={isEs ? 'Subir' : 'Move up'}
-            disabled={bi === 0}
-            onClick={() => apply(() => moveExerciseBlock(session, bi, bi - 1, athlete, exercises))}
-          >
-            <ChevronUp size={18} />
-          </button>
-          <button
-            type="button"
-            className="wolf-se-toolbar-btn"
-            title={isEs ? 'Bajar' : 'Move down'}
-            disabled={bi === totalBlocks - 1}
-            onClick={() => apply(() => moveExerciseBlock(session, bi, bi + 1, athlete, exercises))}
-          >
-            <ChevronDown size={18} />
-          </button>
           <button
             type="button"
             className="wolf-se-toolbar-btn wolf-se-toolbar-btn--danger"
@@ -250,7 +258,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
 
       {expanded && (
         <div className="wolf-se-block-body">
-          {!isMobile && isComplex && segments.length > 0 ? (
+          {showMovementZone && isComplex && segments.length > 0 ? (
             <div className="wolf-se-block-zone wolf-se-block-zone--movement">
               <BlockZoneHeader
                 icon={Dumbbell}
@@ -338,7 +346,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
           ) : null}
 
-          {!isMobile && !isComplex ? (
+          {showMovementZone && !isComplex ? (
             <div className="wolf-se-block-zone wolf-se-block-zone--movement">
               <BlockZoneHeader
                 icon={Dumbbell}
@@ -399,7 +407,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
             </div>
 
-            {isMobile && isComplex && segments.length > 0 ? (
+            {showMobileMovementInConfig && isComplex && segments.length > 0 ? (
               <ComplexSequence
                 segmentIds={segments.map((s) => s.exerciseId)}
                 exercises={exercises}
@@ -423,7 +431,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               />
             ) : null}
 
-            {isMobile && !isComplex ? (
+            {showMobileMovementInConfig && !isComplex ? (
               <>
                 <section className="wolf-se-config-section wolf-se-config-section--movement wolf-se-config-section--inline">
                   <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>

@@ -78,6 +78,29 @@ export function parseRepTokens(s: string): number {
     .reduce((acc, p) => acc + (parseInt(p.trim(), 10) || 0), 0);
 }
 
+/** Rep strings per complex segment — matches coach editor defaults (`'1'`, not `'0'`). */
+export function effectiveSegmentRepStrings(block: SessionExerciseBlock, scheme: SetScheme): string[] {
+  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  if (!isComplex || !block.segments?.length) return [];
+  return block.segments.map((_, si) => {
+    const raw = scheme.segmentReps?.[si]?.trim();
+    if (raw) return raw;
+    if (block.segments!.length === 1) return String(Math.max(1, scheme.reps));
+    return '1';
+  });
+}
+
+/** Fill missing segmentReps and derived `reps` on complex blocks (API / legacy data). */
+export function syncBlockSetSchemes(block: SessionExerciseBlock): void {
+  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  if (!isComplex || !block.segments?.length) return;
+  for (const scheme of block.sets) {
+    scheme.segmentReps = effectiveSegmentRepStrings(block, scheme);
+    scheme.reps = scheme.segmentReps.reduce((acc, token) => acc + parseRepTokens(token), 0);
+    scheme.reps = Math.max(1, scheme.reps);
+  }
+}
+
 export function normalizeBlockType(block: SessionExerciseBlock): 'single' | 'complex' {
   return block.blockType === 'complex' && block.segments && block.segments.length >= 2 ? 'complex' : 'single';
 }

@@ -4,66 +4,35 @@ import type { Session } from '../../models/training';
 interface SessionDayHeroProps {
   session: Session;
   isEs: boolean;
-  dayLabel?: string;
-  weekNumber?: number;
-  dayNumber?: number;
-  syncPending?: boolean;
-  draftSavedAt?: string | null;
 }
 
-export const SessionDayHero: React.FC<SessionDayHeroProps> = ({
-  session,
-  isEs,
-  dayLabel,
-  weekNumber,
-  dayNumber,
-  syncPending,
-  draftSavedAt,
-}) => {
-  const title =
-    dayLabel?.trim() ||
-    (weekNumber != null && dayNumber != null
-      ? isEs
-        ? `Semana ${weekNumber} · Día ${dayNumber}`
-        : `Week ${weekNumber} · Day ${dayNumber}`
-      : isEs
-        ? 'Sesión'
-        : 'Session');
-
-  const backup =
-    syncPending
-      ? isEs
-        ? 'Guardando…'
-        : 'Saving…'
-      : draftSavedAt
-        ? `${isEs ? 'Copia' : 'Backup'} ${new Date(draftSavedAt).toLocaleTimeString(isEs ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' })}`
-        : null;
+export const SessionDayHero: React.FC<SessionDayHeroProps> = ({ session, isEs }) => {
+  const metrics = [
+    { value: session.totalReps, label: isEs ? 'reps' : 'reps' },
+    { value: session.load, label: 'kg' },
+    { value: session.kValue.toFixed(1), label: 'K' },
+    { value: session.avgRelativeIntensity.toFixed(0), label: '%∅' },
+  ];
 
   return (
-    <header className="wolf-se-day-hero">
-      <div className="wolf-se-day-hero-main">
-        <p className="wolf-se-day-hero-kicker">{isEs ? 'Resumen' : 'Summary'}</p>
-        <h2 className="wolf-se-day-hero-title">{title}</h2>
-      </div>
+    <aside
+      className="wolf-se-day-hero wolf-se-day-hero--compact"
+      aria-label={isEs ? 'Resumen del día' : 'Day summary'}
+    >
+      <span className="wolf-se-day-hero-label">{isEs ? 'Resumen' : 'Summary'}</span>
       <div className="wolf-se-day-hero-stats" role="group" aria-label={isEs ? 'Métricas del día' : 'Day metrics'}>
-        <div className="wolf-se-hero-stat">
-          <span className="wolf-se-hero-stat-val">{session.totalReps}</span>
-          <span className="wolf-se-hero-stat-lbl">{isEs ? 'reps' : 'reps'}</span>
-        </div>
-        <div className="wolf-se-hero-stat">
-          <span className="wolf-se-hero-stat-val">{session.load}</span>
-          <span className="wolf-se-hero-stat-lbl">kg</span>
-        </div>
-        <div className="wolf-se-hero-stat">
-          <span className="wolf-se-hero-stat-val">{session.kValue.toFixed(1)}</span>
-          <span className="wolf-se-hero-stat-lbl">K</span>
-        </div>
-        <div className="wolf-se-hero-stat">
-          <span className="wolf-se-hero-stat-val">{session.avgRelativeIntensity.toFixed(0)}</span>
-          <span className="wolf-se-hero-stat-lbl">%∅</span>
-        </div>
+        {metrics.map(({ value, label }, index) => (
+          <span key={label} className="wolf-se-hero-stat">
+            <span className="wolf-se-hero-stat-val">{value}</span>
+            <span className="wolf-se-hero-stat-lbl">{label}</span>
+            {index < metrics.length - 1 ? (
+              <span className="wolf-se-hero-stat-sep" aria-hidden>
+                ·
+              </span>
+            ) : null}
+          </span>
+        ))}
       </div>
-      {backup && <p className="wolf-se-day-hero-backup">{backup}</p>}
-    </header>
+    </aside>
   );
 };

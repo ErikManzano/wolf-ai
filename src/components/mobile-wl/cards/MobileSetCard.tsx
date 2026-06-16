@@ -4,7 +4,6 @@ import type { Athlete, Exercise, SessionExerciseBlock } from '../../../models/tr
 import { WL_PCT_MAX, WL_PCT_MIN } from '../../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../../services/sessionMutations';
 import { kgForExercise } from '../../session-editor/blockMetrics';
-import { useSwipeActions } from '../hooks/useSwipeActions';
 import { SetEditorSheet } from '../sheets/SetEditorSheet';
 import '../mobile-wl.css';
 
@@ -41,48 +40,12 @@ export const MobileSetCard: React.FC<MobileSetCardProps> = ({
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const kg = exercise ? kgForExercise(athlete, exercise, row.percentage) : '—';
-  const swipe = useSwipeActions(canDuplicate ? onDuplicate : undefined, canRemove ? onRemove : undefined);
+  const showActions = canDuplicate || canRemove;
 
   return (
     <>
       <div className="mwl-set-card-wrap">
-        <div className="mwl-set-card-actions" aria-hidden={!swipe.revealed}>
-          {canDuplicate && (
-            <button
-              type="button"
-              className="mwl-set-card-action mwl-set-card-action--dup"
-              onClick={swipe.handleDuplicate}
-            >
-              <Copy size={16} />
-              {isEs ? 'Dup.' : 'Dup.'}
-            </button>
-          )}
-          {canRemove && (
-            <button
-              type="button"
-              className="mwl-set-card-action mwl-set-card-action--del"
-              onClick={swipe.handleRemove}
-            >
-              <Trash2 size={16} />
-              {isEs ? 'Borrar' : 'Del'}
-            </button>
-          )}
-        </div>
-        <button
-          type="button"
-          className="mwl-set-card"
-          style={{ transform: `translateX(${swipe.offset}px)` }}
-          onTouchStart={swipe.onTouchStart}
-          onTouchMove={swipe.onTouchMove}
-          onTouchEnd={swipe.onTouchEnd}
-          onClick={() => {
-            if (swipe.revealed) {
-              swipe.reset();
-              return;
-            }
-            setSheetOpen(true);
-          }}
-        >
+        <button type="button" className="mwl-set-card" onClick={() => setSheetOpen(true)}>
           <span className="mwl-set-card-badge">{setIndex + 1}</span>
           <span className="mwl-set-card-body">
             <span className="mwl-set-card-rx">
@@ -95,6 +58,32 @@ export const MobileSetCard: React.FC<MobileSetCardProps> = ({
             <span> kg</span>
           </span>
         </button>
+        {showActions ? (
+          <div className="mwl-set-card-inline-actions">
+            {canDuplicate ? (
+              <button
+                type="button"
+                className="mwl-set-card-inline-btn mwl-set-card-inline-btn--dup"
+                title={isEs ? 'Duplicar serie' : 'Duplicate set'}
+                aria-label={isEs ? 'Duplicar serie' : 'Duplicate set'}
+                onClick={onDuplicate}
+              >
+                <Copy size={16} aria-hidden />
+              </button>
+            ) : null}
+            {canRemove ? (
+              <button
+                type="button"
+                className="mwl-set-card-inline-btn mwl-set-card-inline-btn--del"
+                title={isEs ? 'Eliminar serie' : 'Remove set'}
+                aria-label={isEs ? 'Eliminar serie' : 'Remove set'}
+                onClick={onRemove}
+              >
+                <Trash2 size={16} aria-hidden />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <SetEditorSheet

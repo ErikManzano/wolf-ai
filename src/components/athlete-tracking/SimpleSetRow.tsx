@@ -10,6 +10,7 @@ export interface SimpleSetRowProps {
   percentage: number;
   prescribedKg: number;
   prescribedReps: number;
+  prescribedRepsLabel?: string;
   actualKg?: number;
   actualReps?: number;
   done: boolean;
@@ -25,6 +26,7 @@ export const SimpleSetRow: React.FC<SimpleSetRowProps> = ({
   percentage,
   prescribedKg,
   prescribedReps,
+  prescribedRepsLabel,
   actualKg,
   actualReps,
   done,
@@ -88,7 +90,9 @@ export const SimpleSetRow: React.FC<SimpleSetRowProps> = ({
         <div className="flex-1 flex items-end justify-center gap-3 min-w-0">
           <div className="flex flex-col items-center gap-0.5">
             <span className="text-[0.58rem] uppercase tracking-wider text-zinc-600 font-semibold">Rx</span>
-            <span className="text-sm font-bold tabular-nums text-zinc-500">{prescribedReps}</span>
+            <span className="text-sm font-bold tabular-nums text-zinc-500">
+              {prescribedRepsLabel ?? String(prescribedReps)}
+            </span>
           </div>
           <div className="flex flex-col items-center gap-0.5 min-w-[5.5rem]">
             <span className="text-[0.58rem] uppercase tracking-wider text-zinc-500 font-semibold">

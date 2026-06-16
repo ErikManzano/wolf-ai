@@ -32,7 +32,7 @@ import { PostgresStore } from './postgresStore';
 import { CoachService, CoachServiceError } from './coach-service';
 import { cloneProgramForAthlete, TEMPLATE_PROGRAM_ATHLETE_ID } from '../models/coach-architecture';
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../models/coach-architecture';
-import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
+import { getEnrollmentsForCoachProgram, upsertAssignmentInList } from '../utils/wlAssignmentRules';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
@@ -1295,7 +1295,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       program: clonedProgram,
       assignedAt: new Date().toISOString(),
     };
-    state.assignments = [...state.assignments.filter((x) => x.athleteProfileId !== body.athleteProfileId), next];
+    state.assignments = upsertAssignmentInList(state.assignments, next);
     notify?.('assignments:changed', { id: next.id, athleteProfileId: next.athleteProfileId });
     res.status(201).json(next);
   });
@@ -1992,7 +1992,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       program: clonedProgram,
       assignedAt: new Date().toISOString(),
     };
-    state.assignments = [...state.assignments.filter((x) => x.athleteProfileId !== next.athleteProfileId), next];
+    state.assignments = upsertAssignmentInList(state.assignments, next);
     notify?.('assignments:changed', { id: next.id, athleteProfileId: next.athleteProfileId });
     res.status(201).json(next);
   });
@@ -2386,7 +2386,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         program: clonedProgram,
         assignedAt: new Date().toISOString(),
       };
-      state.assignments = [...state.assignments.filter((x) => x.athleteProfileId !== athleteProfileId), next];
+      state.assignments = upsertAssignmentInList(state.assignments, next);
       created.push(next);
     }
     if (program.status === 'draft') {
