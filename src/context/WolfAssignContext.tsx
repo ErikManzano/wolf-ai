@@ -164,7 +164,7 @@ interface WolfAssignContextValue {
   ) => Promise<string>;
   /** Actualiza el JSON del programa en una asignaciÃ³n (coach editando plan ya enviado). */
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
-  removeAssignment: (assignmentId: string) => void;
+  removeAssignment: (assignmentId: string) => Promise<boolean>;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
   coachTemplates: CoachWlProgramTemplate[];

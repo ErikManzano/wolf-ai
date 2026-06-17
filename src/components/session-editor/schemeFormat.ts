@@ -14,6 +14,15 @@ export function formatSetSchemeRow(row: SetScheme, isComplex: boolean): string {
   return `${row.percentage}%/${reps}`;
 }
 
+/** Rx de una sola fila atleta (cada fila = una série) — % y reps, sin ×series. */
+export function formatAthleteSetRxLabel(row: SetScheme, isComplex: boolean): string {
+  const reps =
+    isComplex && row.segmentReps?.length
+      ? row.segmentReps.map((t) => t.trim() || '0').join('+')
+      : String(row.reps);
+  return `${row.percentage}%/${reps}`;
+}
+
 /** Prescripción completa del bloque, p. ej. 60%/2,70%/2,(85%/2)2 */
 export function formatBlockPrescription(block: SessionExerciseBlock): string {
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);

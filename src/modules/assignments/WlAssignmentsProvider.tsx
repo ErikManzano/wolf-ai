@@ -301,16 +301,51 @@ export function WlAssignmentsProvider({
     }
   }, []);
 
-  const removeAssignment = useCallback((assignmentId: string) => {
+  const removeAssignment = useCallback(async (assignmentId: string): Promise<boolean> => {
+    const prevAssignments = assignments;
+    const prevCompletions = completionsRef.current;
+    const prevSetLogs = setLogsRef.current;
+
     setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
     setCompletions((prev) => prev.filter((c) => c.assignmentId !== assignmentId));
     setSetLogs((prev) => prev.filter((l) => l.assignmentId !== assignmentId));
-    if (isApiEnabled()) {
-      void assignmentApiFetch(`/assignments/${assignmentId}`, { method: 'DELETE' }).catch(() => {
-        /* keep local */
-      });
+
+    if (!apiMode) {
+      return true;
     }
-  }, []);
+
+    try {
+      const res = await assignmentApiFetch(`/assignments/${assignmentId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        setAssignments(prevAssignments);
+        setCompletions(prevCompletions);
+        setSetLogs(prevSetLogs);
+        const detail = await readApiError(res);
+        pushAlert({
+          tone: 'error',
+          title: 'No se pudo quitar del plan',
+          message: detail,
+        });
+        return false;
+      }
+      pushAlert({
+        tone: 'success',
+        title: 'Atleta quitado del plan',
+        message: 'Ya no verá esta rutina en su cuenta.',
+      });
+      return true;
+    } catch {
+      setAssignments(prevAssignments);
+      setCompletions(prevCompletions);
+      setSetLogs(prevSetLogs);
+      pushAlert({
+        tone: 'error',
+        title: 'Sin conexión al API',
+        message: 'No se pudo quitar la asignación. Inténtalo de nuevo.',
+      });
+      return false;
+    }
+  }, [apiMode, assignments, pushAlert]);
 
   const restoreAssignmentVersion = useCallback(
     (assignmentId: string, version: number): boolean => {

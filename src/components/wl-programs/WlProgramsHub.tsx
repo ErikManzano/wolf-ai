@@ -72,6 +72,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     openProgramEditor,
     duplicateCoachProgram,
     deleteCoachProgram,
+    removeAssignment,
   } = useWolfAssign();
   const { pushAlert } = useWolfAlert();
 
@@ -113,6 +114,16 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const openAssign = (program: CoachProgramRow, athleteProfileId?: string) => {
     setAssignProgram(program);
     setAssignAthleteId(athleteProfileId);
+  };
+
+  const handleRemoveEnrollment = async (assignmentId: string, athleteName: string, programName: string) => {
+    const ok = window.confirm(
+      isEs
+        ? `¿Quitar a ${athleteName} de «${programName}»? El atleta dejará de ver este plan.`
+        : `Remove ${athleteName} from “${programName}”? They will no longer see this plan.`,
+    );
+    if (!ok) return;
+    await removeAssignment(assignmentId);
   };
 
   const mobileDetailProgram = mobileDetailId
@@ -303,6 +314,9 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             onAssign={() => runProgramAction(mobileDetailProgram, 'assign')}
             onDuplicate={() => runProgramAction(mobileDetailProgram, 'duplicate')}
             onDelete={() => runProgramAction(mobileDetailProgram, 'delete')}
+            onRemoveEnrollment={(assignmentId, athleteName) =>
+              void handleRemoveEnrollment(assignmentId, athleteName, mobileDetailProgram.name)
+            }
           />
           {assignSheet}
         </section>

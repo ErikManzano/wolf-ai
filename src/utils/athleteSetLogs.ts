@@ -1,6 +1,6 @@
 import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../models/training';
 import { kgForExercise } from '../components/session-editor/blockMetrics';
-import { formatSetSchemeRow } from '../components/session-editor/schemeFormat';
+import { formatAthleteSetRxLabel } from '../components/session-editor/schemeFormat';
 import {
   effectiveSegmentRepStrings,
   normalizeBlockType,
@@ -16,7 +16,7 @@ export interface FlatSetRow {
   percentage: number;
   prescribedKg: number;
   prescribedReps: number;
-  /** Rx tal como la ve el coach, p. ej. (70%/2)3 o (85%/1+1)2 */
+  /** Rx por série: p. ej. 70%/3 (sin multiplicador de series) */
   prescribedRepsLabel: string;
   schemeSetCount: number;
   isComplex: boolean;
@@ -64,7 +64,7 @@ export function flattenBlockSets(
       isComplex && segmentRepStrings.length
         ? { ...scheme, segmentReps: segmentRepStrings }
         : scheme;
-    const prescribedRepsLabel = formatSetSchemeRow(schemeForLabel, isComplex);
+    const prescribedRepsLabel = formatAthleteSetRxLabel(schemeForLabel, isComplex);
 
     for (let setInstance = 1; setInstance <= scheme.sets; setInstance++) {
       if (isComplex && block.segments?.length) {

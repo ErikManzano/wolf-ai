@@ -636,6 +636,24 @@
   color: var(--wl-prog-muted);
 }
 
+.wl-program-mobile-detail__athlete-remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #f87171 35%, var(--wl-prog-border));
+  background: transparent;
+  color: #f87171;
+  cursor: pointer;
+}
+
+.wl-program-mobile-detail__athlete-remove:hover {
+  background: color-mix(in srgb, #f87171 10%, transparent);
+}
+
 .wl-program-mobile-detail__adherence-bar {
   margin-top: 8px;
   height: 6px;
@@ -2592,7 +2610,7 @@
 
 .wl-program-assign-sheet .wl-program-enrollments-row--sheet {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   padding: 14px 4px;
@@ -2675,6 +2693,27 @@
   border: none;
   padding-inline: 0;
   font-weight: 600;
+}
+
+.wl-program-assign-sheet .wl-program-enrollments-row__remove--sheet {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: #f87171;
+  border-color: color-mix(in srgb, #f87171 35%, var(--wl-assign-border));
+}
+
+.wl-program-assign-sheet .wl-program-enrollments-row__remove--sheet:hover:not(:disabled) {
+  background: color-mix(in srgb, #f87171 12%, transparent);
+}
+
+.wl-program-assign-sheet .wl-program-enrollments-row__remove-spacer {
+  width: 36px;
+  flex-shrink: 0;
 }
 
 .wl-program-assign-sheet .wl-mgmt-empty,

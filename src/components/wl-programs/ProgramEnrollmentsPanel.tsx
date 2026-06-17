@@ -163,7 +163,7 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
     handleAssign,
   ]);
 
-  const handleRemove = async (assignmentId: string, athleteName: string) => {
+  const handleRemove = async (assignmentId: string, athleteName: string, athleteProfileId: string) => {
     const ok = window.confirm(
       isEs
         ? `¿Quitar a ${athleteName} de «${program.name}»? El atleta dejará de ver este plan.`
@@ -172,7 +172,15 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
     if (!ok) return;
     setRemovingId(assignmentId);
     try {
-      removeAssignment(assignmentId);
+      const removed = await removeAssignment(assignmentId);
+      if (removed) {
+        setSelected((prev) => {
+          if (!prev.has(athleteProfileId)) return prev;
+          const next = new Set(prev);
+          next.delete(athleteProfileId);
+          return next;
+        });
+      }
     } finally {
       setRemovingId(null);
     }
@@ -190,8 +198,8 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
           <Info size={14} aria-hidden />
           <span>
             {isEs
-              ? 'Un atleta puede llevar varios programas simultáneamente. Las nuevas asignaciones no borran las anteriores.'
-              : 'Athletes can follow multiple programs at once. New assignments do not remove existing ones.'}
+              ? 'Marca atletas para añadirlos. Los inscritos se quitan con el botón − a la derecha.'
+              : 'Check athletes to add them. Remove enrolled athletes with the − button on the right.'}
           </span>
         </p>
       )}
@@ -276,7 +284,7 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
               onToggle={() => toggle(athlete.id)}
               onRemove={
                 enrollment
-                  ? () => void handleRemove(enrollment.assignmentId, athlete.name)
+                  ? () => void handleRemove(enrollment.assignmentId, athlete.name, athlete.id)
                   : undefined
               }
             />
@@ -388,6 +396,19 @@ function EnrollmentRow({
           <span className="wl-program-enrollments-row__level">{levelLabel(athlete.level, isEs)}</span>
         </div>
         <div className="wl-program-enrollments-row__status">{statusBadge}</div>
+        {enrollment && onRemove ? (
+          <button
+            type="button"
+            className="btn-outline wl-program-enrollments-row__remove wl-program-enrollments-row__remove--sheet"
+            disabled={removing}
+            aria-label={isEs ? `Quitar a ${athlete.name}` : `Remove ${athlete.name}`}
+            onClick={onRemove}
+          >
+            <UserMinus size={14} aria-hidden />
+          </button>
+        ) : (
+          <span className="wl-program-enrollments-row__remove-spacer" aria-hidden />
+        )}
       </div>
     );
   }

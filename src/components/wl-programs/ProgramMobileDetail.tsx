@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, ChevronRight, Clock3, Copy, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, Clock3, Copy, Pencil, Trash2, UserMinus, UserPlus } from 'lucide-react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 
@@ -11,6 +11,7 @@ export function ProgramMobileDetail({
   onAssign,
   onDuplicate,
   onDelete,
+  onRemoveEnrollment,
 }: {
   row: CoachProgramRow;
   isEs: boolean;
@@ -20,6 +21,7 @@ export function ProgramMobileDetail({
   onAssign: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onRemoveEnrollment?: (assignmentId: string, athleteName: string) => void;
 }) {
   const weeks = row.program.totalWeeks ?? row.program.weeks?.length ?? 0;
   const daysPerWeek = row.program.daysPerWeek ?? row.program.weeks?.[0]?.days?.length ?? 0;
@@ -114,7 +116,18 @@ export function ProgramMobileDetail({
                         : 'No adherence'}
                   </p>
                 </div>
-                <ChevronRight size={16} className="wl-program-mobile-detail__athlete-chevron" aria-hidden />
+                {onRemoveEnrollment ? (
+                  <button
+                    type="button"
+                    className="wl-program-mobile-detail__athlete-remove"
+                    aria-label={isEs ? `Quitar a ${athlete.athleteName}` : `Remove ${athlete.athleteName}`}
+                    onClick={() => onRemoveEnrollment(athlete.assignmentId, athlete.athleteName)}
+                  >
+                    <UserMinus size={16} aria-hidden />
+                  </button>
+                ) : (
+                  <ChevronRight size={16} className="wl-program-mobile-detail__athlete-chevron" aria-hidden />
+                )}
               </div>
             ))
           )}

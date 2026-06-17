@@ -91,7 +91,7 @@ export const SimpleSetRow: React.FC<SimpleSetRowProps> = ({
           <div className="flex flex-col items-center gap-0.5">
             <span className="text-[0.58rem] uppercase tracking-wider text-zinc-600 font-semibold">Rx</span>
             <span className="text-sm font-bold tabular-nums text-zinc-500">
-              {prescribedRepsLabel ?? String(prescribedReps)}
+              {prescribedRepsLabel ?? `${percentage}%/${prescribedReps}`}
             </span>
           </div>
           <div className="flex flex-col items-center gap-0.5 min-w-[5.5rem]">

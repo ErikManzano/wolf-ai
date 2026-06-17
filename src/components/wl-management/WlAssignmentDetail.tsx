@@ -284,7 +284,7 @@ const WlAssignmentDetail: React.FC<WlAssignmentDetailProps> = ({
         danger
         onCancel={() => setDeleteOpen(false)}
         onConfirm={() => {
-          removeAssignment(assignment.id);
+          void removeAssignment(assignment.id);
           setDeleteOpen(false);
           onDeleted();
         }}

@@ -14,7 +14,7 @@ export interface WlAssignmentsContextValue {
     athleteProfileId: string,
   ) => Promise<string>;
   updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
-  removeAssignment: (assignmentId: string) => void;
+  removeAssignment: (assignmentId: string) => Promise<boolean>;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
   toggleSessionComplete: (
