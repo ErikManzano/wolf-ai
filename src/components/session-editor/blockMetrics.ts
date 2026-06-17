@@ -1,6 +1,5 @@
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
-import { normalizeBlockType, parseRepTokens, resolveBaseOneRm } from '../../services/trainingEngine';
-
+import { normalizeBlockType, parseRepTokens, repsPerRoundForScheme, resolveBaseOneRm } from '../../services/trainingEngine';
 export function exerciseName(exercises: Exercise[], id: string): string {
   return exercises.find((e) => e.id === id)?.name ?? id;
 }
@@ -71,6 +70,19 @@ export function blockAvgIntensity(block: SessionExerciseBlock): number {
 
 export function blockTotalSets(block: SessionExerciseBlock): number {
   return block.sets.reduce((a, r) => a + r.sets, 0);
+}
+
+/** Total de repeticiones prescritas en el bloque (todas las filas × series). */
+export function blockTotalReps(block: SessionExerciseBlock): number {
+  let total = 0;
+  for (const scheme of block.sets) {
+    total += repsPerRoundForScheme(block, scheme) * scheme.sets;
+  }
+  return Math.round(total);
+}
+
+export function sessionTotalReps(blocks: SessionExerciseBlock[]): number {
+  return blocks.reduce((sum, block) => sum + blockTotalReps(block), 0);
 }
 
 export function estimateBlockMinutes(block: SessionExerciseBlock): number {

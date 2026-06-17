@@ -45,19 +45,53 @@ const PCT_PRESETS = [70, 75, 80, 85, 90] as const;
 
 function BlockZoneHeader({
   icon: Icon,
+  leadingIndex,
   title,
   tone,
+  className,
 }: {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  leadingIndex?: number;
   title: string;
   tone: 'movement' | 'config' | 'sets';
+  className?: string;
 }) {
   return (
-    <div className={`wolf-se-zone-header wolf-se-zone-header--${tone}`}>
-      <span className="wolf-se-zone-header-icon" aria-hidden>
-        <Icon size={14} strokeWidth={2.25} />
+    <div className={`wolf-se-zone-header wolf-se-zone-header--${tone}${className ? ` ${className}` : ''}`}>
+      <span
+        className={`wolf-se-zone-header-icon${leadingIndex != null ? ' wolf-se-zone-header-icon--index' : ''}`}
+        aria-hidden
+      >
+        {leadingIndex != null ? (
+          <span className="wolf-se-zone-header-index">{leadingIndex}</span>
+        ) : Icon ? (
+          <Icon size={14} strokeWidth={2.25} />
+        ) : null}
       </span>
       <span className="wolf-se-zone-header-title">{title}</span>
+    </div>
+  );
+}
+
+export function BlockKindBadges({
+  blockKind,
+  isComplex,
+  isWarmup,
+  isEs,
+}: {
+  blockKind: 'warmup' | 'complex' | 'single';
+  isComplex: boolean;
+  isWarmup: boolean;
+  isEs: boolean;
+}) {
+  return (
+    <div className="wolf-se-block-badges">
+      <span className={`wolf-se-badge wolf-se-badge--${blockKind}`}>
+        {isComplex ? (isEs ? 'Complejo' : 'Complex') : isEs ? 'Simple' : 'Single'}
+      </span>
+      {isWarmup ? (
+        <span className="wolf-se-badge wolf-se-badge--warmup">{isEs ? 'Calent.' : 'Warm-up'}</span>
+      ) : null}
     </div>
   );
 }
@@ -90,6 +124,44 @@ function blockTitle(
     return segments.map((s) => exerciseName(exercises, s.exerciseId)).join(' → ');
   }
   return exerciseName(exercises, block.exerciseId);
+}
+
+function BlockCompactMeta({
+  tonnage,
+  workSets,
+  avgPct,
+  prescription,
+  isEs,
+  className,
+}: {
+  tonnage: number;
+  workSets: number;
+  avgPct: number;
+  prescription: string;
+  isEs: boolean;
+  className?: string;
+}) {
+  return (
+    <p className={className ?? 'wolf-se-block-compact-meta'}>
+      <span>
+        <strong>{tonnage}</strong> kg
+      </span>
+      <span aria-hidden>·</span>
+      <span>
+        <strong>{workSets}</strong> {isEs ? 'series' : 'sets'}
+      </span>
+      {avgPct > 0 ? (
+        <>
+          <span aria-hidden>·</span>
+          <span>
+            <strong>{avgPct}</strong>% ∅
+          </span>
+        </>
+      ) : null}
+      <span aria-hidden>·</span>
+      <code className="wolf-se-block-compact-rx">{prescription}</code>
+    </p>
+  );
 }
 
 export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
@@ -145,12 +217,28 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
       ? Math.round(block.sets.reduce((s, r) => s + r.percentage, 0) / block.sets.length)
       : 0;
 
+  const integratedMovementHeader = isEmbedded && expanded && showMovementZone;
+  const movementHeaderTitle = isEmbedded
+    ? isEs
+      ? '¿Qué movimiento?'
+      : 'Which movement?'
+    : isComplex
+      ? isEs
+        ? 'Movimiento · cadena del complejo'
+        : 'Movement · complex chain'
+      : isEs
+        ? 'Movimiento'
+        : 'Movement';
+
+  const handleRemoveBlock = () => apply(() => removeExerciseBlock(session, bi, athlete, exercises));
+
   return (
     <article
       ref={blockRef}
-      className={`wolf-se-block wolf-se-block-card wolf-se-block--${blockKind}${isEmbedded ? ' wolf-se-block-card--embedded' : ''}${expanded ? '' : ' wolf-se-block--collapsed'}`}
+      className={`wolf-se-block wolf-se-block-card wolf-se-block--${blockKind}${isEmbedded ? ' wolf-se-block-card--embedded' : ''}${integratedMovementHeader ? ' wolf-se-block-card--movement-integrated' : ''}${expanded ? '' : ' wolf-se-block--collapsed'}`}
       data-block-index={bi + 1}
     >
+      {!integratedMovementHeader ? (
       <header className="wolf-se-block-head">
         <div
           className="wolf-se-block-expand"
@@ -173,37 +261,19 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
           <span className="wolf-se-block-num" aria-hidden>
             {bi + 1}
           </span>
-          <div className="wolf-se-block-summary">
-            <div className="wolf-se-block-badges">
-              <span className={`wolf-se-badge wolf-se-badge--${blockKind}`}>
-                {isComplex ? (isEs ? 'Complejo' : 'Complex') : isEs ? 'Simple' : 'Single'}
-              </span>
-              {isWarmup && (
-                <span className="wolf-se-badge wolf-se-badge--warmup">{isEs ? 'Calent.' : 'Warm-up'}</span>
-              )}
-            </div>
-            <h3 className="wolf-se-block-name">{title}</h3>
+          <div className={`wolf-se-block-summary${isEmbedded ? ' wolf-se-block-summary--embedded' : ''}`}>
+            <BlockKindBadges
+              blockKind={blockKind}
+              isComplex={isComplex}
+              isWarmup={isWarmup}
+              isEs={isEs}
+            />
             {isEmbedded ? (
-              <p className="wolf-se-block-compact-meta">
-                <span>
-                  <strong>{tonnage}</strong> kg
-                </span>
-                <span aria-hidden>·</span>
-                <span>
-                  <strong>{workSets}</strong> {isEs ? 'series' : 'sets'}
-                </span>
-                {avgPct > 0 ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span>
-                      <strong>{avgPct}</strong>% ∅
-                    </span>
-                  </>
-                ) : null}
-                <span aria-hidden>·</span>
-                <code className="wolf-se-block-compact-rx">{prescription}</code>
-              </p>
+              <h3 className="wolf-se-block-name wolf-se-block-name--sr">{title}</h3>
             ) : (
+              <h3 className="wolf-se-block-name">{title}</h3>
+            )}
+            {!isEmbedded ? (
               <>
             <div className="wolf-se-block-stats-row">
               <span className="wolf-se-block-stat wolf-se-block-stat--load">
@@ -235,7 +305,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
               {prescription}
             </code>
               </>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -249,22 +319,36 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             className="wolf-se-toolbar-btn wolf-se-toolbar-btn--danger"
             title={isEs ? 'Quitar bloque' : 'Remove block'}
             disabled={totalBlocks <= 1}
-            onClick={() => apply(() => removeExerciseBlock(session, bi, athlete, exercises))}
+            onClick={handleRemoveBlock}
           >
             <Trash2 size={18} />
           </button>
         </div>
       </header>
+      ) : (
+        <h3 className="wolf-se-block-name wolf-se-block-name--sr">{title}</h3>
+      )}
 
       {expanded && (
         <div className="wolf-se-block-body">
           {showMovementZone && isComplex && segments.length > 0 ? (
             <div className="wolf-se-block-zone wolf-se-block-zone--movement">
-              <BlockZoneHeader
-                icon={Dumbbell}
-                title={isEs ? 'Movimiento · cadena del complejo' : 'Movement · complex chain'}
-                tone="movement"
-              />
+              {integratedMovementHeader ? (
+                <div className="wolf-se-movement-zone-top">
+                  <BlockZoneHeader
+                    leadingIndex={bi + 1}
+                    title={movementHeaderTitle}
+                    tone="movement"
+                    className="wolf-se-zone-header--inline"
+                  />
+                </div>
+              ) : (
+                <BlockZoneHeader
+                  icon={Dumbbell}
+                  title={movementHeaderTitle}
+                  tone="movement"
+                />
+              )}
               <div className="wolf-se-block-movement-band">
               <section
                 className="wolf-se-config-section wolf-se-config-section--movement"
@@ -348,11 +432,22 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
 
           {showMovementZone && !isComplex ? (
             <div className="wolf-se-block-zone wolf-se-block-zone--movement">
-              <BlockZoneHeader
-                icon={Dumbbell}
-                title={isEs ? 'Movimiento' : 'Movement'}
-                tone="movement"
-              />
+              {integratedMovementHeader ? (
+                <div className="wolf-se-movement-zone-top">
+                  <BlockZoneHeader
+                    leadingIndex={bi + 1}
+                    title={movementHeaderTitle}
+                    tone="movement"
+                    className="wolf-se-zone-header--inline"
+                  />
+                </div>
+              ) : (
+                <BlockZoneHeader
+                  icon={Dumbbell}
+                  title={movementHeaderTitle}
+                  tone="movement"
+                />
+              )}
               <div className="wolf-se-block-movement-band">
               <section className="wolf-se-config-section wolf-se-config-section--movement">
                 <ExerciseAutocomplete
@@ -362,6 +457,8 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                   recentIds={recentExerciseIds}
                   panelMatchCard
                   keepOpenOnSelect
+                  prominent={isEmbedded}
+                  autoFocus={isEmbedded}
                   onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}
                 />
               </section>
@@ -487,6 +584,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 athlete={athlete}
                 exercises={exercises}
                 isEs={isEs}
+                layout={layout}
                 onPctChange={(si, v) =>
                   apply(() => updateSetSchemeField(session, bi, si, 'percentage', v, athlete, exercises))
                 }
@@ -506,12 +604,25 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
           </div>
           </div>
 
-          <footer className="wolf-se-block-footer">
-            <span className="wolf-se-block-footer-label">
-              <Gauge size={15} aria-hidden />
-              {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
-            </span>
-            <strong>{tonnage} kg</strong>
+          <footer className={`wolf-se-block-footer${isEmbedded ? ' wolf-se-block-footer--embedded' : ''}`}>
+            {isEmbedded ? (
+              <BlockCompactMeta
+                tonnage={tonnage}
+                workSets={workSets}
+                avgPct={avgPct}
+                prescription={prescription}
+                isEs={isEs}
+                className="wolf-se-block-compact-meta wolf-se-block-compact-meta--footer"
+              />
+            ) : (
+              <>
+                <span className="wolf-se-block-footer-label">
+                  <Gauge size={15} aria-hidden />
+                  {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
+                </span>
+                <strong>{tonnage} kg</strong>
+              </>
+            )}
           </footer>
         </div>
       )}

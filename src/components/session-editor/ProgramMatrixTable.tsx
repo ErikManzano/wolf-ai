@@ -4,8 +4,10 @@ import { FileImage, FileText, Maximize2, Minimize2, X } from 'lucide-react';
 import type { Exercise, GeneratedProgram, Session } from '../../models/training';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { exportElementAsPdf, exportElementAsPng, slugExportFilename } from '../../utils/matrixExport';
+import { dayToneIndex, weekToneIndex } from '../../utils/matrixDayTones';
 import { formatBlockPrescription } from './schemeFormat';
 import { blockDisplayName, formatWeekTonnageLabel } from './sessionSheetUtils';
+import './program-matrix.css';
 
 export interface ProgramMatrixTableProps {
   program: GeneratedProgram;
@@ -80,11 +82,13 @@ function MatrixTableBody({
           </th>
           {dayNumbers.map((dayNumber) => {
             const isActiveDay = selectedDay === dayNumber;
+            const tone = dayToneIndex(dayNumber);
             return (
               <th
                 key={dayNumber}
                 scope="col"
-                className={`wolf-program-matrix-day-col${isActiveDay ? ' is-active-day' : ''}`}
+                data-day-tone={tone}
+                className={`wolf-program-matrix-day-col wolf-program-matrix-day-col--tone-${tone}${isActiveDay ? ' is-active-day' : ''}`}
               >
                 {dayColumnLabel(program, dayNumber, selectedWeek, isEs)}
               </th>
@@ -97,7 +101,11 @@ function MatrixTableBody({
           const isActiveWeek = selectedWeek === w.weekNumber;
           const tonnage = weekTonnages[w.weekNumber] ?? 0;
           return (
-            <tr key={w.weekNumber} className={isActiveWeek ? 'is-active-week' : undefined}>
+            <tr
+              key={w.weekNumber}
+              data-week-tone={weekToneIndex(w.weekNumber)}
+              className={isActiveWeek ? 'is-active-week' : undefined}
+            >
               <th scope="row" className="wolf-program-matrix-week-row">
                 <button
                   type="button"
@@ -114,10 +122,15 @@ function MatrixTableBody({
               {dayNumbers.map((dayNumber) => {
                 const session = sessionAt(program, w.weekNumber, dayNumber);
                 const isSelected = selectedWeek === w.weekNumber && selectedDay === dayNumber;
+                const tone = dayToneIndex(dayNumber);
 
                 if (!session) {
                   return (
-                    <td key={`${w.weekNumber}-${dayNumber}`} className="wolf-program-matrix-cell is-empty">
+                    <td
+                      key={`${w.weekNumber}-${dayNumber}`}
+                      data-day-tone={tone}
+                      className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone} is-empty`}
+                    >
                       <span className="wolf-program-matrix-cell-empty">—</span>
                     </td>
                   );
@@ -126,7 +139,8 @@ function MatrixTableBody({
                 return (
                   <td
                     key={`${w.weekNumber}-${dayNumber}`}
-                    className={`wolf-program-matrix-cell${isSelected ? ' is-selected' : ''}`}
+                    data-day-tone={tone}
+                    className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone}${isSelected ? ' is-selected' : ''}`}
                   >
                     <button
                       type="button"
@@ -246,6 +260,28 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
     }
   };
 
+  const exportChrome = (
+    <>
+      <div className="wolf-program-matrix-brand">
+        <div className="wolf-program-matrix-brand__mark" aria-hidden>
+          <span className="wolf-program-matrix-brand__wolf">Wolf</span>
+          <span className="wolf-program-matrix-brand__ai">AI</span>
+        </div>
+        <span className="wolf-program-matrix-brand__divider" aria-hidden />
+        <h2 className="wolf-program-matrix-brand__title">{title}</h2>
+      </div>
+    </>
+  );
+
+  const exportFooter = (
+    <div className="wolf-program-matrix-export-footer" aria-hidden>
+      <span className="wolf-program-matrix-export-footer__site">wolf.ai</span>
+      <span>
+        {isEs ? 'Inteligencia de entrenamiento olímpico' : 'Olympic weightlifting training intelligence'}
+      </span>
+    </div>
+  );
+
   const toolbar = enableViewportTools ? (
     <div className="wolf-program-matrix-toolbar" role="toolbar" aria-label={isEs ? 'Herramientas de tabla' : 'Table tools'}>
       <button
@@ -296,6 +332,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         data-matrix-export-root
         className="wolf-program-matrix-export-body"
       >
+        {exportChrome}
         <div className="wolf-program-matrix-scroll">
           <MatrixTableBody
             program={program}
@@ -310,6 +347,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
           />
         </div>
         <p className="wolf-program-matrix-hint">{labels.overviewHint}</p>
+        {exportFooter}
       </div>
     </div>
   );
@@ -366,6 +404,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
                     data-matrix-export-root
                     className="wolf-program-matrix-export-body"
                   >
+                    {exportChrome}
                     <div className="wolf-program-matrix-scroll">
                       <MatrixTableBody
                         program={program}
@@ -383,6 +422,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
                       />
                     </div>
                     <p className="wolf-program-matrix-hint">{labels.overviewHint}</p>
+                    {exportFooter}
                   </div>
                 </div>
               </div>

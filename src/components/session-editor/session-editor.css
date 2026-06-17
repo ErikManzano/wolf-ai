@@ -40,6 +40,40 @@
 .wolf-se-autocomplete--match-card{width:100%}
 .wolf-se-autocomplete-input-wrap{display:flex;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-bg-panel)}
 .wolf-se-autocomplete-input-wrap:focus-within{border-color:var(--color-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-accent) 25%,transparent)}
+.wolf-se-autocomplete-input-wrap--prominent {
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--wolf-zone-movement) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-bg-panel) 96%, var(--wolf-zone-movement-soft));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 5%, transparent) inset,
+    0 8px 28px color-mix(in srgb, var(--wolf-zone-movement) 10%, transparent);
+}
+
+.wolf-se-autocomplete-input-wrap--prominent:focus-within {
+  border-color: var(--wolf-zone-movement);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--wolf-zone-movement) 22%, transparent),
+    0 10px 32px color-mix(in srgb, var(--wolf-zone-movement) 14%, transparent);
+}
+
+.wolf-se-autocomplete--prominent .wolf-se-autocomplete-input {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.wolf-se-autocomplete--prominent .wolf-se-autocomplete-input::placeholder {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+}
+
+.wolf-se-autocomplete-input-wrap--prominent svg {
+  color: var(--wolf-zone-movement);
+  flex-shrink: 0;
+}
 .wolf-se-autocomplete-input-wrap--compact{padding:6px 8px}
 .wolf-se-autocomplete-input{flex:1;min-width:0;border:none;background:transparent;color:var(--color-text-primary);outline:none;font-size:.9rem}
 .wolf-se-autocomplete-panel{position:absolute;z-index:55;top:calc(100% + 6px);left:0;right:0;min-width:min(100%,320px);max-width:min(420px,92vw);padding:8px;border-radius:12px;border:1px solid var(--color-border);background:var(--color-bg-panel);box-shadow:0 12px 32px rgba(0,0,0,.35)}

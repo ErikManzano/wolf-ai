@@ -9,6 +9,19 @@
   min-width: 0;
 }
 
+.app-breadcrumb__row:has(.app-breadcrumb__trailing) .app-breadcrumb__list {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-breadcrumb__trailing {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .app-breadcrumb__back {
   display: inline-flex;
   align-items: center;

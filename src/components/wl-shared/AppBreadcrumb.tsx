@@ -1,4 +1,5 @@
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 export type AppBreadcrumbItem = {
   label: string;
@@ -11,12 +12,14 @@ export function AppBreadcrumb({
   onBack,
   backLabel,
   className,
+  trailing,
 }: {
   items: AppBreadcrumbItem[];
   isEs: boolean;
   onBack?: () => void;
   backLabel?: string;
   className?: string;
+  trailing?: ReactNode;
 }) {
   if (items.length === 0 && !onBack) return null;
 
@@ -67,6 +70,7 @@ export function AppBreadcrumb({
             ))}
           </ol>
         ) : null}
+        {trailing ? <div className="app-breadcrumb__trailing">{trailing}</div> : null}
       </div>
     </nav>
   );

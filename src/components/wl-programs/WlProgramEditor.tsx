@@ -159,6 +159,9 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     );
   }
 
+  const isPublished = coachProgram.status === 'published';
+  const showActionDock = !hasProgram || !isPublished;
+
   const editorProgramMeta = (
     <div className="wl-programs-editor-hero-meta wl-programs-editor-hero-meta--toolbar">
       <span className={`wl-programs-status-pill wl-programs-status-pill--${coachProgram.status}`}>
@@ -186,7 +189,9 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   );
 
   return (
-    <div className="wl-programs-panel wl-programs-editor">
+    <div
+      className={`wl-programs-panel wl-programs-editor${showActionDock ? '' : ' wl-programs-editor--no-dock'}`}
+    >
       <header className="wl-programs-editor-hero">
         <div className="wl-programs-editor-hero-top">
           <AppBreadcrumb
@@ -274,43 +279,48 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
         </div>
       </div>
 
-      <footer className="wl-programs-action-dock" aria-label={isEs ? 'Acciones del paso' : 'Step actions'}>
-        <p className="wl-programs-action-dock__hint">{actionDockHint}</p>
-        <div className="wl-programs-action-dock__actions">
-          {!hasProgram ? (
-            <>
-              {createActions?.canClear ? (
+      {showActionDock ? (
+        <footer
+          className={`wl-programs-action-dock${hasProgram ? ' wl-programs-action-dock--compact' : ''}`}
+          aria-label={isEs ? 'Acciones del paso' : 'Step actions'}
+        >
+          {!hasProgram ? <p className="wl-programs-action-dock__hint">{actionDockHint}</p> : null}
+          <div className="wl-programs-action-dock__actions">
+            {!hasProgram ? (
+              <>
+                {createActions?.canClear ? (
+                  <button
+                    type="button"
+                    className="btn-outline wl-programs-action-dock__ghost"
+                    onClick={() => createActions.clear()}
+                  >
+                    <Trash2 size={16} aria-hidden />
+                    {isEs ? 'Vaciar' : 'Clear'}
+                  </button>
+                ) : null}
                 <button
                   type="button"
-                  className="btn-outline wl-programs-action-dock__ghost"
-                  onClick={() => createActions.clear()}
+                  className="btn-primary"
+                  disabled={!createActions?.canGenerate}
+                  onClick={() => createActions?.generate()}
                 >
-                  <Trash2 size={16} aria-hidden />
-                  {isEs ? 'Vaciar' : 'Clear'}
+                  <CalendarRange size={16} aria-hidden />
+                  {isEs ? 'Generar programa' : 'Generate program'}
                 </button>
-              ) : null}
+              </>
+            ) : (
               <button
                 type="button"
-                className="btn-primary"
-                disabled={!createActions?.canGenerate}
-                onClick={() => createActions?.generate()}
+                className="btn-primary wl-programs-action-dock__publish"
+                disabled={saving || !hasProgram}
+                onClick={() => void handlePublish()}
               >
-                <CalendarRange size={16} aria-hidden />
-                {isEs ? 'Generar programa' : 'Generate program'}
+                {isEs ? 'Publicar' : 'Publish'}
               </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="btn-secondary"
-              disabled={saving || !hasProgram || coachProgram.status === 'published'}
-              onClick={() => void handlePublish()}
-            >
-              {coachProgram.status === 'published' ? (isEs ? 'Publicado' : 'Published') : isEs ? 'Publicar' : 'Publish'}
-            </button>
-          )}
-        </div>
-      </footer>
+            )}
+          </div>
+        </footer>
+      ) : null}
 
       {showEnrollmentsSheet ? (
         <WlProgramAssignSheet

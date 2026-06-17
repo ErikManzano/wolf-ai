@@ -1898,9 +1898,11 @@
   border-color: var(--wl-border-subtle, #27272a);
   display: flex;
   flex-direction: column;
-  flex: 0 1 auto;
-  min-height: auto;
-  overflow: visible;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-program-nav--compact {
@@ -2070,10 +2072,13 @@
   overflow: visible;
 }
 
-.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow {
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow,
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--embedded {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-sheet--dense {
@@ -2111,6 +2116,8 @@
 .wl-programs-embedded-plan .wolf-program-day-board--exercise-focus {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -2125,14 +2132,6 @@
   -webkit-overflow-scrolling: touch;
   padding: 0 0 calc(12px + env(safe-area-inset-bottom, 0px));
   gap: 0;
-}
-
-.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--embedded {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .wl-programs-embedded-plan .wolf-se-exercise-view > .wolf-se-exercise-head {
@@ -2310,6 +2309,23 @@
 
 .wl-programs-action-dock__ghost {
   color: var(--color-text-muted);
+}
+
+/* Borrador: solo botón Publicar, sin barra ancha */
+.wl-programs-action-dock--compact {
+  grid-template-columns: auto;
+  justify-content: flex-end;
+  width: auto;
+  min-height: 0;
+  margin-left: auto;
+}
+
+.wl-programs-action-dock--compact .wl-programs-action-dock__actions {
+  width: auto;
+}
+
+.wl-programs-action-dock__publish {
+  min-width: 0;
 }
 
 .wl-program-assign-overlay {
@@ -3394,8 +3410,13 @@
     overflow: hidden;
     padding: 0;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wl-programs-panel.wl-programs-editor.wl-programs-editor--no-dock,
+  .wl-programs-panel.wl-programs-editor:has(.wolf-program-day-board--exercise-focus) {
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .wl-programs-editor {
@@ -3420,9 +3441,14 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(48px + 6px);
+    padding-bottom: 8px;
     display: flex;
     flex-direction: column;
+  }
+
+  .wl-programs-editor--no-dock .wl-programs-editor-body,
+  .wl-programs-editor:has(.wolf-program-day-board--exercise-focus) .wl-programs-editor-body {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .wl-programs-editor-stage {
@@ -3471,6 +3497,14 @@
     flex-direction: column;
   }
 
+  .wl-programs-customize-wrap.wl-programs-embedded-plan:has(.wolf-program-day-board--exercise-focus) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
   .wl-programs-embedded-plan .wolf-program-plan--edit,
   .wl-programs-embedded-plan .wolf-program-customize-layout,
   .wl-programs-embedded-plan .wolf-program-customize-layout--editor,
@@ -3491,9 +3525,10 @@
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board {
-    flex: 0 1 auto;
-    min-height: auto;
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .wl-programs-embedded-plan .wolf-program-customize-tabs {
@@ -3503,14 +3538,16 @@
   }
 
   .wl-programs-panel.wl-programs-editor .wl-programs-action-dock {
-    margin-top: 0;
-    position: fixed;
-    left: max(8px, var(--safe-left, 8px));
-    right: max(8px, var(--safe-right, 8px));
-    bottom: var(--mobile-nav-float-clearance, calc(96px + env(safe-area-inset-bottom, 0px)));
-    width: auto;
+    grid-row: 3;
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
     max-width: none;
-    z-index: 64;
+    margin-top: 0;
+    z-index: 4;
+    flex-shrink: 0;
   }
 
   .wl-programs-panel.wl-programs-editor::after {
@@ -3526,30 +3563,61 @@
   }
 
   .wl-programs-action-dock {
-    position: fixed;
-    bottom: var(--mobile-nav-float-clearance, calc(96px + env(safe-area-inset-bottom, 0px)));
-    left: max(8px, var(--safe-left, 8px));
-    right: max(8px, var(--safe-right, 8px));
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
     flex-shrink: 0;
-    width: auto;
+    width: 100%;
     max-width: none;
     margin-top: 0;
-    z-index: 64;
+    z-index: 4;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 6px 8px;
     min-height: 0;
     padding:
-      7px 10px
-      calc(7px + env(safe-area-inset-bottom, 0px));
-    border: 1px solid var(--color-border);
+      8px max(10px, var(--safe-right))
+      calc(8px + env(safe-area-inset-bottom, 0px))
+      max(10px, var(--safe-left));
+    border: none;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-bg-panel);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.14);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  }
+
+  .wl-programs-action-dock--compact {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    justify-items: stretch;
+    width: 100%;
+    margin-left: 0;
+    padding:
+      8px max(10px, var(--safe-right))
+      calc(8px + env(safe-area-inset-bottom, 0px))
+      max(10px, var(--safe-left));
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .wl-programs-action-dock--compact .wl-programs-action-dock__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .wl-programs-action-dock--compact .wl-programs-action-dock__publish {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
     border-radius: 12px;
-    background: color-mix(in srgb, var(--color-bg-panel) 97%, transparent);
-    backdrop-filter: blur(14px) saturate(1.12);
-    -webkit-backdrop-filter: blur(14px) saturate(1.12);
-    box-shadow:
-      0 -1px 0 color-mix(in srgb, var(--color-border) 85%, transparent),
-      0 6px 20px rgba(0, 0, 0, 0.22);
+  }
+
+  .wl-programs-editor:has(.wolf-program-day-board--exercise-focus) .wl-programs-action-dock {
+    display: none;
   }
 
   .wl-programs-action-dock__hint-block {
@@ -3716,7 +3784,7 @@
 
   .wl-programs-editor-body {
     padding-inline: 0;
-    padding-bottom: calc(44px + 4px);
+    padding-bottom: 8px;
   }
 
   .wl-programs-context-bar {
@@ -4155,12 +4223,14 @@
   }
 
   .wl-programs-editor-body {
-    padding-bottom: calc(42px + 4px);
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .wl-programs-action-dock {
-    min-height: 0;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding:
+      8px max(8px, var(--safe-right))
+      calc(8px + env(safe-area-inset-bottom, 0px))
+      max(8px, var(--safe-left));
   }
 
   .wl-programs-context-bar {
@@ -4220,10 +4290,14 @@
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-row {
-    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-columns: 22px minmax(0, 1fr) 3rem 14px;
     gap: 8px;
     padding: 8px 0;
     min-height: 48px;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-reps {
+    font-size: 0.76rem;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-body {
@@ -4261,14 +4335,6 @@
     width: 22px;
     height: 22px;
     font-size: 0.72rem;
-  }
-
-  .wl-programs-action-dock {
-    left: max(6px, var(--safe-left, 6px));
-    right: max(6px, var(--safe-right, 6px));
-    padding:
-      6px 8px
-      calc(6px + env(safe-area-inset-bottom, 0px));
   }
 
   .wl-programs-action-dock__hint {

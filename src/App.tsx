@@ -8,7 +8,7 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronsLeft, MessageSquare } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
@@ -34,6 +34,8 @@ function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('wolf_sidebar_compact_v1') === '1');
+  const [sidebarToggleAnimating, setSidebarToggleAnimating] = useState(false);
+  const sidebarToggleAnimTimerRef = useRef<number | null>(null);
   /** Panel AI lateral colapsado solo en vista escritorio (≥1025px). */
   const [chatDesktopCollapsed, setChatDesktopCollapsed] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem(AUTH_STORAGE) === '1');
@@ -75,6 +77,14 @@ function AppShell() {
           : 'programs',
     );
   }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole]);
+
+  useEffect(() => {
+    return () => {
+      if (sidebarToggleAnimTimerRef.current != null) {
+        window.clearTimeout(sidebarToggleAnimTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('wolf_sidebar_compact_v1', sidebarCollapsed ? '1' : '0');
@@ -120,6 +130,17 @@ function AppShell() {
     onCollapse: () => setSidebarCollapsed(true),
     onExpand: () => setSidebarCollapsed(false),
   });
+
+  const triggerSidebarToggleAnimation = () => {
+    setSidebarToggleAnimating(true);
+    if (sidebarToggleAnimTimerRef.current != null) {
+      window.clearTimeout(sidebarToggleAnimTimerRef.current);
+    }
+    sidebarToggleAnimTimerRef.current = window.setTimeout(() => {
+      setSidebarToggleAnimating(false);
+      sidebarToggleAnimTimerRef.current = null;
+    }, 420);
+  };
 
   const showSidebarCollapsed = effectiveSidebarCollapsed && !sidebarResizing;
 
@@ -265,7 +286,7 @@ function AppShell() {
             >
               <button
                 type="button"
-                className="sidebar-resize-toggle"
+                className={`sidebar-resize-toggle${showSidebarCollapsed ? ' sidebar-resize-toggle--collapsed' : ''}${sidebarToggleAnimating ? ' sidebar-resize-toggle--animating' : ''}${sidebarResizing ? ' sidebar-resize-toggle--resizing' : ''}`}
                 aria-label={
                   showSidebarCollapsed
                     ? language === 'ES'
@@ -276,16 +297,16 @@ function AppShell() {
                       : 'Collapse sidebar'
                 }
                 onDoubleClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => {
                   if (consumeSidebarToggleClick()) return;
+                  triggerSidebarToggleAnimation();
                   setSidebarCollapsed((collapsed) => !collapsed);
                 }}
               >
-                {showSidebarCollapsed ? (
-                  <PanelLeftOpen size={13} strokeWidth={2.25} />
-                ) : (
-                  <PanelLeftClose size={13} strokeWidth={2.25} />
-                )}
+                <span className="sidebar-resize-toggle-icon" aria-hidden>
+                  <ChevronsLeft size={14} strokeWidth={2.35} />
+                </span>
               </button>
             </div>
           ) : null}

@@ -171,6 +171,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [selectedDay, setSelectedDay] = useState(1);
   const [sessionEditorView, setSessionEditorView] = useState<'sheet' | 'exercise'>('sheet');
   const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table'>('editor');
+
+  useEffect(() => {
+    setSessionEditorView('sheet');
+  }, [selectedWeek, selectedDay]);
   const [assignFlash, setAssignFlash] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);

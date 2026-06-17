@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
 import type { SessionCatalogProps } from './session-editor/types';
 import { addExerciseBlock, moveExerciseBlock, removeExerciseBlock, setExerciseBlockOrder, WL_SESSION_LIMITS } from '../services/sessionMutations';
-import { ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
+import { normalizeBlockType } from '../services/trainingEngine';
+import { BlockKindBadges, ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { SessionDayHero } from './session-editor/SessionDayHero';
 import { SessionSheetOverview } from './session-editor/SessionSheetOverview';
 import { blockDisplayName } from './session-editor/sessionSheetUtils';
@@ -66,20 +67,30 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (initialBlockIndex == null || initialBlockIndex < 0) {
-      setView('sheet');
-      setEditingBlockIndex(null);
-      return;
-    }
+    if (initialBlockIndex == null || initialBlockIndex < 0) return;
     if (initialBlockIndex < session.exercises.length) {
       setEditingBlockIndex(initialBlockIndex);
       setView('exercise');
     }
-  }, [initialBlockIndex, session.exercises.length, session]);
+  }, [initialBlockIndex, session.exercises.length]);
+
+  useEffect(() => {
+    if (editingBlockIndex == null) return;
+    if (editingBlockIndex >= session.exercises.length) {
+      setEditingBlockIndex(null);
+      setView('sheet');
+    }
+  }, [editingBlockIndex, session.exercises.length]);
 
   useEffect(() => {
     onViewChange?.(view);
   }, [view, onViewChange]);
+
+  useEffect(() => {
+    return () => {
+      onViewChange?.('sheet');
+    };
+  }, [onViewChange]);
 
   const isMobile = useMediaQuery('(max-width: 1024px)');
   const canAddExercise = session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION;
@@ -122,15 +133,21 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     [session, exercises, athlete],
   );
 
-  const openExercise = useCallback((index: number) => {
-    setEditingBlockIndex(index);
-    setView('exercise');
-  }, []);
+  const openExercise = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= session.exercises.length) return;
+      setEditingBlockIndex(index);
+      setView('exercise');
+      onViewChange?.('exercise');
+    },
+    [onViewChange, session.exercises.length],
+  );
 
   const backToSheet = useCallback(() => {
     setView('sheet');
     setEditingBlockIndex(null);
-  }, []);
+    onViewChange?.('sheet');
+  }, [onViewChange]);
 
   const weekCrumb =
     weekNumber != null ? (isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`) : isEs ? 'Semana' : 'Week';
@@ -140,6 +157,11 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const editingBlock =
     editingBlockIndex != null ? session.exercises[editingBlockIndex] : undefined;
   const exerciseCrumb = editingBlock ? blockDisplayName(editingBlock, exercises) : null;
+  const editingIsComplex = editingBlock
+    ? normalizeBlockType(editingBlock) === 'complex' && Boolean(editingBlock.segments?.length)
+    : false;
+  const editingIsWarmup = editingBlock?.countsTowardTechnicalNBL === false;
+  const editingBlockKind = editingIsWarmup ? 'warmup' : editingIsComplex ? 'complex' : 'single';
 
   const sheetBreadcrumbItems = [
     { label: weekCrumb },
@@ -221,7 +243,32 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
               {embedded && isMobile ? null : isEs ? 'Hoja del día' : 'Day sheet'}
             </button>
             <nav className="wolf-se-flow-crumb" aria-label={isEs ? 'Ruta del día' : 'Day path'}>
-              <AppBreadcrumb isEs={isEs} items={breadcrumbItems} />
+              <AppBreadcrumb
+                isEs={isEs}
+                items={breadcrumbItems}
+                trailing={
+                  embedded && editingBlock && editingBlockIndex != null ? (
+                    <div className="wolf-se-exercise-crumb-actions">
+                      <BlockKindBadges
+                        blockKind={editingBlockKind}
+                        isComplex={editingIsComplex}
+                        isWarmup={editingIsWarmup}
+                        isEs={isEs}
+                      />
+                      <button
+                        type="button"
+                        className="wolf-se-toolbar-btn wolf-se-toolbar-btn--danger wolf-se-exercise-crumb-remove"
+                        title={isEs ? 'Quitar bloque' : 'Remove block'}
+                        aria-label={isEs ? 'Quitar bloque' : 'Remove block'}
+                        disabled={session.exercises.length <= 1}
+                        onClick={() => handleRemoveBlock(editingBlockIndex)}
+                      >
+                        <Trash2 size={16} aria-hidden />
+                      </button>
+                    </div>
+                  ) : undefined
+                }
+              />
             </nav>
           </div>
           <ExerciseBlockCard

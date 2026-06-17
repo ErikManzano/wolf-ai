@@ -1,6 +1,7 @@
 .app-container {
   --chat-rail-width: 52px;
   --sidebar-compact-width: 84px;
+  --sidebar-motion: 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--chat-width);
   width: 100%;
@@ -9,6 +10,7 @@
   height: 100dvh;
   background: var(--color-bg-main);
   overflow: hidden;
+  transition: grid-template-columns var(--sidebar-motion);
 }
 
 .app-container.app-container--sidebar-collapsed {
@@ -30,9 +32,16 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   transition:
-    border-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    border-color var(--sidebar-motion),
+    box-shadow var(--sidebar-motion);
+}
+
+.sidebar-area:not(.sidebar-area--resizing) .sidebar {
+  transition:
+    padding var(--sidebar-motion),
+    opacity 0.28s ease;
 }
 
 .sidebar-area--resizing {
@@ -86,19 +95,56 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-bg-panel) 94%, var(--color-bg-main));
   color: var(--color-text-secondary);
-  cursor: col-resize;
+  cursor: pointer;
   transform: translate(-50%, -50%);
   box-shadow:
     0 1px 6px color-mix(in srgb, #000 12%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-bg-main) 70%, transparent);
   transition:
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transform var(--sidebar-motion),
+    border-color var(--sidebar-motion),
+    background var(--sidebar-motion),
+    color var(--sidebar-motion),
+    box-shadow var(--sidebar-motion),
+    width var(--sidebar-motion),
+    height var(--sidebar-motion);
+}
+
+.sidebar-resize-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--sidebar-motion);
+  transform-origin: center;
+}
+
+.sidebar-resize-toggle--collapsed .sidebar-resize-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar-resize-toggle--animating {
+  animation: sidebar-toggle-pulse 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-resize-toggle--resizing {
+  cursor: col-resize;
+  border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-border));
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-panel));
+}
+
+@keyframes sidebar-toggle-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  45% {
+    transform: translate(-50%, -50%) scale(1.12);
+    box-shadow:
+      0 6px 18px color-mix(in srgb, var(--color-accent) 28%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
 }
 
 .sidebar-resize-handle:hover::before,
@@ -156,13 +202,16 @@
   transition: none !important;
 }
 
-.app-container:not(.app-container--sidebar-resizing) {
-  transition: grid-template-columns 0.36s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .app-container:not(.app-container--sidebar-resizing) .workspace-area,
 .app-container:not(.app-container--sidebar-resizing) .chat-area {
-  transition: opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    opacity var(--sidebar-motion),
+    transform var(--sidebar-motion);
+}
+
+.app-container:not(.app-container--sidebar-resizing).app-container--sidebar-collapsed .workspace-area,
+.app-container:not(.app-container--sidebar-resizing):not(.app-container--sidebar-collapsed) .workspace-area {
+  transform: translateX(0);
 }
 
 @media (min-width: 1025px) {
@@ -190,6 +239,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  transition: border-color var(--sidebar-motion);
 }
 
 .mobile-header {

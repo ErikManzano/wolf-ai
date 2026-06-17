@@ -63,12 +63,12 @@
 }
 
 .wolf-se-num-compact-value {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 0;
+  min-width: 2.75rem;
   min-height: 48px;
   border-left: 1px solid var(--color-border);
   border-right: 1px solid var(--color-border);
@@ -76,7 +76,9 @@
 }
 
 .wolf-se-num-compact-input {
-  width: 100%;
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 1.25em;
   max-width: 3.5rem;
   min-height: 48px;
   border: none;
@@ -88,6 +90,9 @@
   font-variant-numeric: tabular-nums;
   -moz-appearance: textfield;
   appearance: textfield;
+  touch-action: manipulation;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .wolf-se-num-compact-input::-webkit-outer-spin-button,
@@ -135,6 +140,203 @@
   font-size: 0.95rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* Compact stepper — table cells and narrow panels */
+.wolf-se-num-compact--compact {
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.wolf-se-num-compact--compact .wolf-se-num-compact-btn {
+  flex: 0 0 30px;
+  width: 30px;
+  min-height: 36px;
+  font-size: 1rem;
+}
+
+.wolf-se-num-compact--compact .wolf-se-num-compact-value {
+  min-width: 2rem;
+  min-height: 36px;
+}
+
+.wolf-se-num-compact--compact .wolf-se-num-compact-input {
+  min-height: 36px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.wolf-se-num-compact--compact .wolf-se-num-compact-suffix {
+  font-size: 0.62rem;
+  padding-right: 2px;
+}
+
+.wolf-se-sets-mobile--visible {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wolf-se-sets-section--inline-cards .wolf-se-sets-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wolf-se-sets-section--inline-cards .wolf-se-set-card {
+  padding: 10px;
+  gap: 10px;
+}
+
+.wolf-se-sets-section--inline-cards .wolf-se-set-card-fields {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-field-chip {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 96px;
+  padding: 6px;
+  gap: 4px;
+}
+
+.wolf-se-sets-section--embedded .wolf-se-set-card {
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.wolf-se-sets-section--embedded .wolf-se-set-card-top {
+  gap: 8px;
+}
+
+.wolf-se-sets-section--embedded .wolf-se-set-card-kg strong {
+  font-size: 1rem;
+}
+
+/* Embedded program editor — campos legibles en móvil, tablet y desktop estrecho */
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-sets-mobile {
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-set-card {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  padding: 10px;
+  gap: 8px;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-set-card-top {
+  width: 100%;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-set-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-field-chip {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-field-chip-label {
+  margin: 0;
+  font-size: 0.6rem;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-num-compact {
+  width: 100%;
+  min-height: 42px;
+  max-width: none;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-num-compact--compact .wolf-se-num-compact-btn {
+  flex: 0 0 42px;
+  width: 42px;
+  min-height: 42px;
+  font-size: 1.15rem;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-num-compact-value {
+  flex: 1 1 auto;
+  min-width: 2.75rem;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-num-compact-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 2ch;
+  max-width: none;
+  font-size: 1rem;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-num-compact-suffix {
+  font-size: 0.72rem;
+  padding-right: 6px;
+}
+
+.wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-row-actions .wolf-se-btn {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Tablet ancho+ — tres columnas solo cuando hay espacio real */
+@media (min-width: 768px) {
+  .wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-set-card-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-field-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px;
+    width: 100%;
+    max-width: none;
+  }
+
+  .wolf-se-sets-section--embedded.wolf-se-sets-section--inline-cards .wolf-se-field-chip-label {
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-set-card-fields {
+    flex-direction: column;
+  }
+
+  .wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-field-chip {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
 }
 
 /* ── Field chip (label group) ── */
@@ -210,9 +412,9 @@
   gap: 8px;
 }
 
-/* Móvil ancho / phablet: tres columnas con scroll si hace falta */
+/* Móvil ancho / phablet (no embebido): tres columnas con scroll si hace falta */
 @media (min-width: 400px) and (max-width: 639px) {
-  .wolf-se-set-card-fields {
+  .wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-set-card-fields {
     flex-direction: row;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -222,11 +424,11 @@
     scrollbar-width: none;
   }
 
-  .wolf-se-set-card-fields::-webkit-scrollbar {
+  .wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-set-card-fields::-webkit-scrollbar {
     display: none;
   }
 
-  .wolf-se-field-chip {
+  .wolf-se-sets-section--inline-cards:not(.wolf-se-sets-section--embedded) .wolf-se-field-chip {
     flex: 1 1 0;
     min-width: 118px;
     max-width: 160px;
@@ -257,6 +459,32 @@
 .wolf-se-rep-input:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
+}
+
+.wolf-se-num-compact--segment {
+  min-height: 40px;
+  max-width: 148px;
+}
+
+.wolf-se-num-compact--segment .wolf-se-rep-input {
+  max-width: none;
+  min-height: 40px;
+  border: none;
+  background: transparent;
+  padding: 0 4px;
+  font-size: 0.95rem;
+  border-radius: 0;
+}
+
+.wolf-se-num-compact--segment .wolf-se-rep-input:focus {
+  outline: none;
+}
+
+.wolf-se-num-compact--segment .wolf-se-num-compact-btn {
+  flex: 0 0 34px;
+  width: 34px;
+  min-height: 40px;
+  font-size: 1.1rem;
 }
 
 .wolf-se-kg-display--sm strong {
@@ -325,8 +553,12 @@
 
 /* Tablet+: tabla en simple; chips más compactos en tabla */
 @media (min-width: 640px) {
-  .wolf-se-sets-mobile {
+  .wolf-se-sets-mobile:not(.wolf-se-sets-mobile--visible) {
     display: none;
+  }
+
+  .wolf-se-sets-section--inline-cards .wolf-se-sets-mobile {
+    display: flex;
   }
 
   .wolf-se-sets-desktop {
@@ -362,6 +594,15 @@
 /* Desktop — dentro del bloque, el ancho lo define la columna de series */
 article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact {
   max-width: none;
+}
+
+article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-value {
+  min-width: 2.5rem;
+}
+
+article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-input {
+  max-width: none;
+  min-width: 1.5em;
 }
 
 /* Desktop */

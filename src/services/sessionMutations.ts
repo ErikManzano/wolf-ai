@@ -2,7 +2,7 @@ import type { Athlete, Exercise, GeneratedProgram, Session, SessionExerciseBlock
 import { applySessionMetrics, normalizeBlockType, parseRepTokens, roundPercentagePrilepin } from './trainingEngine';
 
 const MIN_REPS_PER_SET = 1;
-const MAX_REPS_PER_SET = 8;
+const MAX_REPS_PER_SET = 25;
 const MIN_SETS_PER_SCHEME = 1;
 const MAX_SETS_PER_SCHEME = 10;
 const MAX_ROWS_PER_BLOCK = 8;

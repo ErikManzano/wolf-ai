@@ -63,6 +63,10 @@ interface ExerciseAutocompleteProps {
   panelMatchCard?: boolean;
   /** Enter selects but keeps panel open (coach multi-add). */
   keepOpenOnSelect?: boolean;
+  /** Larger input + focus ring (embedded program editor). */
+  prominent?: boolean;
+  /** Focus search on mount. */
+  autoFocus?: boolean;
 }
 
 interface PanelRect {
@@ -102,6 +106,8 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   pickerIdsInGroup,
   panelMatchCard = false,
   keepOpenOnSelect = false,
+  prominent = false,
+  autoFocus = false,
 }) => {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -112,6 +118,12 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelRect, setPanelRect] = useState<PanelRect | null>(null);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const id = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [autoFocus]);
 
   const selected = options.find((o) => o.id === value);
 
@@ -316,9 +328,14 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   ) : null;
 
   return (
-    <div ref={rootRef} className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}`}>
-      <div className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}`}>
-        <Search size={16} aria-hidden />
+    <div
+      ref={rootRef}
+      className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
+    >
+      <div
+        className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}`}
+      >
+        <Search size={prominent ? 20 : 16} aria-hidden />
         <input
           ref={inputRef}
           type="text"
