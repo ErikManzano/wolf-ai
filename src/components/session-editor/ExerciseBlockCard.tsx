@@ -456,7 +456,6 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                   isEs={isEs}
                   recentIds={recentExerciseIds}
                   panelMatchCard
-                  keepOpenOnSelect
                   prominent={isEmbedded}
                   autoFocus={isEmbedded}
                   onChange={(id) => apply(() => setBlockExercise(session, bi, id, athlete, exercises))}

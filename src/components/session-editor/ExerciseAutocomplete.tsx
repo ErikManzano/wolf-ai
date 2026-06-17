@@ -115,6 +115,9 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [pickedLabel, setPickedLabel] = useState<string | null>(null);
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelRect, setPanelRect] = useState<PanelRect | null>(null);
@@ -168,8 +171,27 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   }, [groupedSections, displayList]);
 
   useEffect(() => {
-    if (!open) setQuery(selected?.name ?? '');
-  }, [value, selected?.name, open]);
+    if (!open && pickedLabel == null) setQuery(selected?.name ?? '');
+  }, [value, selected?.name, open, pickedLabel]);
+
+  useEffect(() => {
+    setPickedLabel(null);
+  }, [value]);
+
+  useEffect(() => {
+    if (open) {
+      setPanelMounted(true);
+      const id = requestAnimationFrame(() => setPanelVisible(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setPanelVisible(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (!panelMounted || panelVisible) return;
+    const timer = window.setTimeout(() => setPanelMounted(false), 200);
+    return () => clearTimeout(timer);
+  }, [panelMounted, panelVisible]);
 
   useEffect(() => {
     if (!open) return;
@@ -187,13 +209,13 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   }, [open, activeIndex, flatList]);
 
   useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
+    const onDoc = (e: PointerEvent) => {
       const t = e.target as Node;
       if (rootRef.current?.contains(t) || panelRef.current?.contains(t)) return;
       setOpen(false);
     };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
+    document.addEventListener('pointerdown', onDoc);
+    return () => document.removeEventListener('pointerdown', onDoc);
   }, []);
 
   const updatePanelRect = useCallback(() => {
@@ -215,18 +237,24 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   const pick = useCallback(
     (id: string) => {
+      const opt = options.find((o) => o.id === id);
       onChange(id);
       if (keepOpenOnSelect) {
         setQuery('');
         requestAnimationFrame(() => inputRef.current?.focus());
         return;
       }
+      setPickedLabel(opt?.name ?? null);
+      setQuery(opt?.name ?? '');
       setOpen(false);
-      setQuery('');
       inputRef.current?.blur();
     },
-    [onChange, keepOpenOnSelect],
+    [onChange, keepOpenOnSelect, options],
   );
+
+  const closedLabel = pickedLabel ?? selected?.name ?? '';
+  const inputValue = open ? query : closedLabel;
+  const hasSettledValue = !open && Boolean(closedLabel.trim());
 
   const moveActive = (delta: number) => {
     if (flatList.length === 0) return;
@@ -238,9 +266,13 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       <button
         type="button"
         className={`wolf-se-autocomplete-option${opt.id === value ? ' is-selected' : ''}${idx === activeIndex ? ' is-active' : ''}`}
-        onMouseDown={(e) => e.preventDefault()}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          pick(opt.id);
+        }}
         onMouseEnter={() => setActiveIndex(idx)}
-        onClick={() => pick(opt.id)}
       >
         <span className="wolf-se-autocomplete-option-text">
           <span className="wolf-se-autocomplete-option-name">{opt.name}</span>
@@ -258,10 +290,10 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     </li>
   );
 
-  const panelContent = open ? (
+  const panelContent = panelMounted ? (
     <div
       ref={panelRef}
-      className={`wolf-se-autocomplete-panel${panelMatchCard ? ' wolf-se-autocomplete-panel--fixed' : ''}`}
+      className={`wolf-se-autocomplete-panel${panelMatchCard ? ' wolf-se-autocomplete-panel--fixed' : ''}${panelVisible ? ' is-visible' : ' is-closing'}`}
       style={
         panelMatchCard && panelRect
           ? {
@@ -280,8 +312,12 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             key={f.value ?? 'all'}
             type="button"
             className={`wolf-se-autocomplete-filter-chip${categoryFilter === f.value ? ' is-active' : ''}`}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setCategoryFilter(f.value)}
+            onPointerDown={(e) => {
+              if (e.button !== 0) return;
+              e.preventDefault();
+              e.stopPropagation();
+              setCategoryFilter(f.value);
+            }}
           >
             {isEs ? f.labelEs : f.labelEn}
           </button>
@@ -333,7 +369,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
     >
       <div
-        className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}`}
+        className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
       >
         <Search size={prominent ? 20 : 16} aria-hidden />
         <input
@@ -345,7 +381,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           aria-activedescendant={open && flatList[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined}
           className="wolf-se-autocomplete-input"
           placeholder={placeholder ?? (isEs ? 'Buscar: snatch, pull, G4…' : 'Search: snatch, pull, G4…')}
-          value={open ? query : (selected?.name ?? '')}
+          value={inputValue}
           onFocus={() => {
             setOpen(true);
             setQuery('');
