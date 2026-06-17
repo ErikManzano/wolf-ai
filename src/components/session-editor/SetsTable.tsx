@@ -148,6 +148,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.reps}
                         min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
                         max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                        step={1}
                         onChange={(v) => onRepsChange(si, v)}
                         aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
                       />
@@ -159,6 +160,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.sets}
                         min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
                         max={WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
+                        step={1}
                         onChange={(v) => onSetsChange(si, v)}
                         aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
                       />
@@ -217,6 +219,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.reps}
                         min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
                         max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                        step={1}
                         onChange={(v) => onRepsChange(si, v)}
                         aria-label={`Reps ${si + 1}`}
                       />
@@ -227,6 +230,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         value={row.sets}
                         min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
                         max={WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
+                        step={1}
                         onChange={(v) => onSetsChange(si, v)}
                         aria-label={`Sets ${si + 1}`}
                       />

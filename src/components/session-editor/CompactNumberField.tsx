@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { nextSmoothHoldDelayMs } from './smoothHold';
 
 interface CompactNumberFieldProps {
   value: number;
@@ -25,7 +26,8 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
   size = 'default',
   'aria-label': ariaLabel,
 }) => {
-  const holdRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTickRef = useRef(0);
   const steppedRef = useRef(false);
   const editingRef = useRef(false);
   const draftRef = useRef<string | null>(null);
@@ -39,10 +41,11 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
   const clamp = useCallback((n: number) => Math.min(max, Math.max(min, n)), [min, max]);
 
   const stopHold = useCallback(() => {
-    if (holdRef.current) {
-      clearInterval(holdRef.current);
-      holdRef.current = null;
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
     }
+    holdTickRef.current = 0;
     window.setTimeout(() => {
       steppedRef.current = false;
     }, 0);
@@ -103,13 +106,33 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
     [bump],
   );
 
+  const scheduleHoldRepeat = useCallback(
+    (delta: number, tick: number) => {
+      holdTimerRef.current = setTimeout(() => {
+        const raw = draftRef.current;
+        const base = raw != null && raw.trim() !== '' ? Number(raw) : valueRef.current;
+        const current = Number.isNaN(base) ? valueRef.current : base;
+        const next = clamp(current + delta);
+        if (next === current) {
+          stopHold();
+          return;
+        }
+        bump(delta);
+        holdTickRef.current = tick + 1;
+        scheduleHoldRepeat(delta, tick + 1);
+      }, nextSmoothHoldDelayMs(tick));
+    },
+    [bump, clamp, stopHold],
+  );
+
   const startHold = useCallback(
     (delta: number) => {
       stepOnce(delta);
       stopHold();
-      holdRef.current = setInterval(() => bump(delta), 120);
+      holdTickRef.current = 0;
+      scheduleHoldRepeat(delta, 0);
     },
-    [bump, stepOnce, stopHold],
+    [scheduleHoldRepeat, stepOnce, stopHold],
   );
 
   const displayValue = draft ?? String(value);
@@ -200,6 +223,7 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
         }}
         onPointerUp={stopHold}
         onPointerCancel={stopHold}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -225,6 +249,7 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
         }}
         onPointerUp={stopHold}
         onPointerCancel={stopHold}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

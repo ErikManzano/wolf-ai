@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { parseRepTokens } from '../../services/trainingEngine';
+import { nextSmoothHoldDelayMs } from './smoothHold';
 
 interface SegmentRepFieldProps {
   value: string;
@@ -17,7 +18,8 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
   max = 30,
   'aria-label': ariaLabel,
 }) => {
-  const holdRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTickRef = useRef(0);
   const steppedRef = useRef(false);
   const editingRef = useRef(false);
   const draftRef = useRef<string | null>(null);
@@ -29,10 +31,11 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
   onChangeRef.current = onChange;
 
   const stopHold = useCallback(() => {
-    if (holdRef.current) {
-      clearInterval(holdRef.current);
-      holdRef.current = null;
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
     }
+    holdTickRef.current = 0;
     window.setTimeout(() => {
       steppedRef.current = false;
     }, 0);
@@ -83,13 +86,31 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
     [bump],
   );
 
+  const scheduleHoldRepeat = useCallback(
+    (delta: number, tick: number) => {
+      holdTimerRef.current = setTimeout(() => {
+        const base = parseRepTokens(draftRef.current ?? valueRef.current);
+        const next = clampTotal(base + delta);
+        if (next === base) {
+          stopHold();
+          return;
+        }
+        bump(delta);
+        holdTickRef.current = tick + 1;
+        scheduleHoldRepeat(delta, tick + 1);
+      }, nextSmoothHoldDelayMs(tick));
+    },
+    [bump, clampTotal, stopHold],
+  );
+
   const startHold = useCallback(
     (delta: number) => {
       stepOnce(delta);
       stopHold();
-      holdRef.current = setInterval(() => bump(delta), 120);
+      holdTickRef.current = 0;
+      scheduleHoldRepeat(delta, 0);
     },
-    [bump, stepOnce, stopHold],
+    [scheduleHoldRepeat, stepOnce, stopHold],
   );
 
   const displayValue = draft ?? value;
@@ -118,6 +139,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
         }}
         onPointerUp={stopHold}
         onPointerCancel={stopHold}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -168,6 +190,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
         }}
         onPointerUp={stopHold}
         onPointerCancel={stopHold}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

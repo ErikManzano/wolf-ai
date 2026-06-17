@@ -1869,6 +1869,7 @@
 .wl-programs-embedded-plan .wolf-program-customize-toolbar {
   gap: 8px;
   margin-bottom: 2px;
+  flex-shrink: 0;
 }
 
 .wl-programs-embedded-plan .wolf-program-customize-tab {
@@ -1900,9 +1901,8 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-program-nav--compact {
@@ -2061,15 +2061,19 @@
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--dense,
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--sortable {
-  flex: 0 1 auto;
-  min-height: auto;
-  overflow: visible;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-session-editor--flow {
-  flex: 0 1 auto;
-  min-height: auto;
-  overflow: visible;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow,
@@ -2182,19 +2186,21 @@
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet--primary {
-  flex: 0 1 auto;
-  min-height: auto;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet-rows,
 .wl-programs-embedded-plan .wolf-se-sheet--sortable .wolf-se-sheet-rows--sortable {
-  flex: 0 0 auto;
-  min-height: auto;
-  overflow: visible;
-  overscroll-behavior: auto;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet-head,
@@ -3438,8 +3444,7 @@
     grid-row: 2;
     flex: 1;
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 8px;
     display: flex;
@@ -3452,9 +3457,9 @@
   }
 
   .wl-programs-editor-stage {
-    flex: 0 1 auto;
-    min-height: auto;
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     gap: 2px;
     display: flex;
     flex-direction: column;
@@ -3490,9 +3495,9 @@
   }
 
   .wl-programs-customize-wrap.wl-programs-embedded-plan {
-    flex: 0 1 auto;
-    min-height: auto;
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
   }
@@ -3509,9 +3514,11 @@
   .wl-programs-embedded-plan .wolf-program-customize-layout,
   .wl-programs-embedded-plan .wolf-program-customize-layout--editor,
   .wl-programs-embedded-plan .wolf-program-customize-panel--editor {
-    flex: 0 1 auto;
-    min-height: auto;
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board--exercise-focus,
@@ -3527,8 +3534,8 @@
   .wl-programs-embedded-plan .wolf-program-day-board {
     flex: 1;
     min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    max-height: 100%;
+    overflow: hidden;
   }
 
   .wl-programs-embedded-plan .wolf-program-customize-tabs {
