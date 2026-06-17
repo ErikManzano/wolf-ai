@@ -1,5 +1,14 @@
 const STORAGE_API_TOKEN = 'wolf_api_token_v1';
 
+function productionApiBaseFallback(): string {
+  if (!import.meta.env.PROD || typeof window === 'undefined') return '';
+  const host = window.location.hostname;
+  if (host.includes('netlify.app') || host.includes('onrender.com') || host.endsWith('.wolf-ai.app')) {
+    return '/api';
+  }
+  return '';
+}
+
 export function getApiBase(): string {
   if (typeof window !== 'undefined') {
     const injected = (window as Window & { __WOLF_API_URL__?: string }).__WOLF_API_URL__;
@@ -7,11 +16,18 @@ export function getApiBase(): string {
       return injected.trim().replace(/\/+$/, '');
     }
   }
-  return ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
+  const fromEnv = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '');
+  if (fromEnv) return fromEnv;
+  return productionApiBaseFallback();
 }
 
 export function isApiEnabled(): boolean {
   return Boolean(getApiBase());
+}
+
+/** En producción con API activa, no usar localStorage como fuente de verdad. */
+export function preferLocalDataFallback(): boolean {
+  return !isApiEnabled() || !import.meta.env.PROD;
 }
 
 export function readApiToken(): string | null {

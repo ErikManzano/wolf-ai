@@ -23,6 +23,7 @@ import { findSetLog } from '../../utils/athleteSetLogs';
 import {
   assignmentApiFetch,
   isApiEnabled,
+  preferLocalDataFallback,
 } from './apiClient';
 import { subscribeAssignmentsRealtime } from './realtimeClient';
 import {
@@ -72,6 +73,7 @@ export function WlAssignmentsProvider({
 }: WlAssignmentsProviderProps) {
   const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
+  const allowLocalFallback = preferLocalDataFallback();
   const trackingQueueRef = useRef(createTrackingQueue());
   const failedTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const setLogsRef = useRef<SetCompletionLog[]>([]);
@@ -81,8 +83,12 @@ export function WlAssignmentsProvider({
     apiMode ? [] : initialAssignmentsState(),
   );
   const [assignmentsLoading, setAssignmentsLoading] = useState(() => apiMode && Boolean(apiToken));
-  const [completions, setCompletions] = useState<SessionCompletion[]>(() => loadCompletionsFromLocal());
-  const [setLogs, setSetLogs] = useState<SetCompletionLog[]>(() => loadSetLogsFromLocal());
+  const [completions, setCompletions] = useState<SessionCompletion[]>(() =>
+    apiMode ? [] : loadCompletionsFromLocal(),
+  );
+  const [setLogs, setSetLogs] = useState<SetCompletionLog[]>(() =>
+    apiMode ? [] : loadSetLogsFromLocal(),
+  );
   const [pendingTrackingKeys, setPendingTrackingKeys] = useState<Set<string>>(() => new Set());
   const [failedTrackingKeys, setFailedTrackingKeys] = useState<Set<string>>(() => new Set());
 
@@ -117,14 +123,14 @@ export function WlAssignmentsProvider({
             message: detail,
           });
         }
-        const cached = loadAssignmentsFromLocal();
+        const cached = allowLocalFallback ? loadAssignmentsFromLocal() : null;
         if (cached?.length) setAssignments(cached.map(normalizeAssignment));
         return;
       }
       const list = (await res.json()) as ProgramAssignment[];
       if (Array.isArray(list)) setAssignments(list.map(normalizeAssignment));
     } catch {
-      const cached = loadAssignmentsFromLocal();
+      const cached = allowLocalFallback ? loadAssignmentsFromLocal() : null;
       if (cached?.length) setAssignments(cached.map(normalizeAssignment));
       pushAlert({
         tone: 'error',
@@ -134,7 +140,7 @@ export function WlAssignmentsProvider({
     } finally {
       setAssignmentsLoading(false);
     }
-  }, [apiMode, apiToken, pushAlert]);
+  }, [apiMode, apiToken, pushAlert, allowLocalFallback]);
 
   const loadCompletionsFromApi = useCallback(async () => {
     if (!apiMode || !apiToken) return;
@@ -180,12 +186,14 @@ export function WlAssignmentsProvider({
   }, [apiMode, assignments]);
 
   useEffect(() => {
+    if (apiMode) return;
     persistCompletionsLocal(completions);
-  }, [completions]);
+  }, [apiMode, completions]);
 
   useEffect(() => {
+    if (apiMode) return;
     persistSetLogsLocal(setLogs);
-  }, [setLogs]);
+  }, [apiMode, setLogs]);
 
   const assignProgramToAthlete = useCallback(
     async (

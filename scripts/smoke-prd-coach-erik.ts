@@ -59,14 +59,20 @@ async function main() {
 
   const athlete = await login(ATHLETE_LOGIN);
   assert(athlete.user.role === 'athlete', `athlete role expected, got ${athlete.user.role}`);
-  const athleteProfileId = athlete.user.linkedAthleteId ?? PREFERRED_ATHLETE_PROFILE_ID;
-  assert(Boolean(athleteProfileId), 'athlete linkedAthleteId missing');
   assert(athlete.user.coachId === coach.user.id, `athlete coachId ${athlete.user.coachId} !== coach ${coach.user.id}`);
-  console.log(`✓ athlete login: ${athlete.user.id} → ${athleteProfileId}`);
+  console.log(`✓ athlete login: ${athlete.user.id} → linked ${athlete.user.linkedAthleteId ?? '(none)'}`);
 
   const roster = await api<Array<{ id: string; name: string }>>('/wl-athletes', {}, coach.token);
-  const erikProfile = roster.find((a) => a.id === athleteProfileId);
-  assert(Boolean(erikProfile), `Erik (${athleteProfileId}) not in coach roster: ${JSON.stringify(roster.map((a) => a.id))}`);
+  const erikProfile =
+    roster.find((a) => a.id === athlete.user.linkedAthleteId) ??
+    roster.find((a) => /erik/i.test(a.name));
+  assert(Boolean(erikProfile), `No Erik profile in coach roster: ${JSON.stringify(roster.map((a) => a.id))}`);
+  const athleteProfileId = erikProfile!.id;
+  if (athlete.user.linkedAthleteId !== athleteProfileId) {
+    console.log(
+      `⚠ linkedAthleteId (${athlete.user.linkedAthleteId}) ≠ roster (${athleteProfileId}) — API reconcile should fix on login after deploy`,
+    );
+  }
   console.log(`✓ coach roster includes ${erikProfile!.name} (${athleteProfileId})`);
 
   const programName = `PRD smoke ${new Date().toISOString().slice(0, 16)}`;
@@ -124,7 +130,7 @@ async function main() {
     athlete.token,
   );
   const athletePlan = athleteAssignments.find((a) => a.id === assignmentId);
-  assert(Boolean(athletePlan), `athlete does not see assignment ${assignmentId}`);
+  assert(Boolean(athletePlan), `athlete does not see assignment ${assignmentId} (linked=${athlete.user.linkedAthleteId}, roster=${athleteProfileId})`);
   assert(athletePlan!.program.name.includes('PRD smoke') || athletePlan!.program.name === programName, 'program name mismatch');
   console.log(`✓ athlete sees assignment: "${athletePlan!.program.name}"`);
 

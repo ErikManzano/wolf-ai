@@ -1,1 +1,1 @@
-export { assignmentApiFetch as wlProgramsApiFetch, isApiEnabled, getApiBase } from '../assignments/apiClient';
+export { assignmentApiFetch as wlProgramsApiFetch, isApiEnabled, getApiBase, preferLocalDataFallback } from '../assignments/apiClient';

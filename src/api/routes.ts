@@ -163,17 +163,31 @@ async function findAssignmentById(
   return state.assignments.find((a) => a.id === id) ?? null;
 }
 
+async function resolveActorUser(
+  actor: WolfUser,
+  _state: MockApiState,
+  store?: PostgresStore,
+): Promise<WolfUser> {
+  if (!store || actor.role !== 'athlete') return actor;
+  const reconciled = await store.reconcileAthleteUserLink(actor.id);
+  return reconciled ?? actor;
+}
+
 async function listAssignmentsForActor(
   actor: WolfUser,
   state: MockApiState,
   store?: PostgresStore,
 ): Promise<ProgramAssignment[]> {
+  const resolved = await resolveActorUser(actor, state, store);
+  if (store && resolved.role === 'athlete') {
+    return store.getAssignmentsForAthleteUser(resolved);
+  }
   const all = store ? await store.getAssignments() : state.assignments;
-  if (actor.role === 'super_admin') return all;
-  if (actor.role === 'coach') return all.filter((a) => a.coachId === actor.id);
-  if (actor.role === 'athlete') {
+  if (resolved.role === 'super_admin') return all;
+  if (resolved.role === 'coach') return all.filter((a) => a.coachId === resolved.id);
+  if (resolved.role === 'athlete') {
     return all.filter(
-      (a) => a.athleteUserId === actor.id || a.athleteProfileId === actor.linkedAthleteId,
+      (a) => a.athleteUserId === resolved.id || a.athleteProfileId === resolved.linkedAthleteId,
     );
   }
   return [];
@@ -221,7 +235,8 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
-    res.json({ user: sanitizeUser(user) });
+    const resolved = store && user.role === 'athlete' ? await store.reconcileAthleteUserLink(user.id) : user;
+    res.json({ user: sanitizeUser(resolved ?? user) });
   });
 
   router.post('/auth/login', async (req, res) => {
@@ -239,12 +254,14 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(401).json({ error: 'Invalid credentials.' });
       return;
     }
-    const { token, expiresIn } = await signAccessToken(user.id, {
-      role: user.role,
+    const resolved =
+      store && user.role === 'athlete' ? (await store.reconcileAthleteUserLink(user.id)) ?? user : user;
+    const { token, expiresIn } = await signAccessToken(resolved.id, {
+      role: resolved.role,
       verified: true,
-      email: user.email ?? '',
+      email: resolved.email ?? '',
     });
-    res.json({ user: sanitizeUser(user), token, expiresIn });
+    res.json({ user: sanitizeUser(resolved), token, expiresIn });
   });
 
   router.post('/auth/register', async (req, res) => {
@@ -1225,10 +1242,14 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
+    const resolved = await resolveActorUser(actor, state, store);
     const { athleteProfileId } = req.params as { athleteProfileId: string };
-    if (actor.role === 'athlete' && actor.linkedAthleteId !== athleteProfileId) {
-      res.status(403).json({ error: 'Forbidden.' });
-      return;
+    if (resolved.role === 'athlete' && resolved.linkedAthleteId !== athleteProfileId) {
+      const allowed = await listAssignmentsForActor(resolved, state, store);
+      if (!allowed.some((a) => a.athleteProfileId === athleteProfileId)) {
+        res.status(403).json({ error: 'Forbidden.' });
+        return;
+      }
     }
     const match = store
       ? await store.getAssignmentByAthlete(athleteProfileId)

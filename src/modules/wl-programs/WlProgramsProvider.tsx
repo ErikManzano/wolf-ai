@@ -11,7 +11,7 @@ import type { ProgramAssignment, SessionCompletion } from '../../models/training
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { filterAthletesForProgramAssign, getEnrollmentsForCoachProgram } from '../../utils/wlAssignmentRules';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
-import { isApiEnabled, wlProgramsApiFetch } from './apiClient';
+import { isApiEnabled, preferLocalDataFallback, wlProgramsApiFetch } from './apiClient';
 import {
   createCoachProgramLocal,
   loadCoachProgramsLocal,
@@ -92,6 +92,7 @@ export function WlProgramsProvider({
 }) {
   const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
+  const allowLocalFallback = preferLocalDataFallback();
   const scopedCoachId = coachScopeId(currentUser);
 
   const [rawPrograms, setRawPrograms] = useState<CoachProgramRow[]>(() => {
@@ -119,18 +120,18 @@ export function WlProgramsProvider({
       if (!res.ok) {
         const detail = await readApiError(res);
         pushAlert({ tone: 'warning', title: 'No se pudieron cargar los programas', message: detail });
-        if (scopedCoachId) setRawPrograms(loadCoachProgramsLocal(scopedCoachId));
+        if (allowLocalFallback && scopedCoachId) setRawPrograms(loadCoachProgramsLocal(scopedCoachId));
         return;
       }
       const list = (await res.json()) as CoachProgramRow[];
       if (Array.isArray(list)) setRawPrograms(list);
     } catch {
       pushAlert({ tone: 'warning', title: 'Sin conexión', message: 'No se pudieron cargar los programas.' });
-      if (scopedCoachId) setRawPrograms(loadCoachProgramsLocal(scopedCoachId));
+      if (allowLocalFallback && scopedCoachId) setRawPrograms(loadCoachProgramsLocal(scopedCoachId));
     } finally {
       setProgramsLoading(false);
     }
-  }, [apiMode, apiToken, scopedCoachId, pushAlert]);
+  }, [apiMode, apiToken, scopedCoachId, pushAlert, allowLocalFallback]);
 
   useEffect(() => {
     if (apiMode) void loadProgramsFromApi();

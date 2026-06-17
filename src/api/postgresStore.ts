@@ -401,6 +401,102 @@ export class PostgresStore {
     return this.mapUserRow(result.rows[0]);
   }
 
+  /** Align athlete login `linkedAthleteId` with the coach roster profile used for assignments. */
+  async reconcileAthleteUserLink(userId: string): Promise<WolfUser | null> {
+    const result = await this.pool.query(
+      'SELECT id, name, role, email, username, coach_id, linked_athlete_id FROM users WHERE id = $1 LIMIT 1;',
+      [userId],
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    if ((row.role as string) !== 'athlete') return this.mapUserRow(row);
+
+    let coachId = (row.coach_id as string | null) ?? undefined;
+    const linkedId = (row.linked_athlete_id as string | null) ?? undefined;
+    const name = (row.name as string).trim();
+    const username = ((row.username as string | null) ?? '').trim().toLowerCase();
+    const emailLocal = ((row.email as string | null) ?? '').split('@')[0]?.trim().toLowerCase() ?? '';
+    const userKey = username || emailLocal;
+
+    if (!coachId) {
+      const fromAssignment = await this.pool.query(
+        'SELECT coach_id FROM assignments WHERE athlete_user_id = $1 ORDER BY assigned_at DESC LIMIT 1;',
+        [userId],
+      );
+      coachId = (fromAssignment.rows[0]?.coach_id as string | undefined) ?? undefined;
+    }
+    if (!coachId) return this.mapUserRow(row);
+
+    const roster = await this.listAthleteProfiles(coachId);
+    const linkedInRoster = linkedId ? roster.some((p) => p.id === linkedId) : false;
+
+    let targetProfileId = linkedInRoster ? linkedId : undefined;
+    if (!targetProfileId) {
+      const nameKey = name.toLowerCase();
+      const byName = roster.find((p) => p.name.trim().toLowerCase() === nameKey);
+      const byKey =
+        userKey.length > 0
+          ? roster.find((p) => p.name.trim().toLowerCase().includes(userKey))
+          : undefined;
+      targetProfileId = byName?.id ?? byKey?.id;
+    }
+    if (!targetProfileId) {
+      const fromAssignment = await this.pool.query(
+        'SELECT athlete_profile_id FROM assignments WHERE athlete_user_id = $1 ORDER BY assigned_at DESC LIMIT 1;',
+        [userId],
+      );
+      const profileFromAssignment = fromAssignment.rows[0]?.athlete_profile_id as string | undefined;
+      if (profileFromAssignment && roster.some((p) => p.id === profileFromAssignment)) {
+        targetProfileId = profileFromAssignment;
+      }
+    }
+
+    if (targetProfileId && (targetProfileId !== linkedId || coachId !== (row.coach_id as string | null))) {
+      await this.pool.query(
+        'UPDATE assignments SET athlete_user_id = $1 WHERE athlete_profile_id = $2 AND (athlete_user_id IS NULL OR athlete_user_id = \'\');',
+        [userId, targetProfileId],
+      );
+      return this.updateUser(userId, { linkedAthleteId: targetProfileId, coachId });
+    }
+
+    if (targetProfileId) {
+      await this.pool.query(
+        'UPDATE assignments SET athlete_user_id = $1 WHERE athlete_profile_id = $2 AND (athlete_user_id IS NULL OR athlete_user_id = \'\');',
+        [userId, targetProfileId],
+      );
+    }
+
+    return this.mapUserRow(row);
+  }
+
+  async getAssignmentsForAthleteUser(user: WolfUser): Promise<ProgramAssignment[]> {
+    const all = await this.getAssignments();
+    const profileIds = new Set<string>();
+    if (user.linkedAthleteId) profileIds.add(user.linkedAthleteId);
+
+    for (const assignment of all) {
+      if (assignment.athleteUserId === user.id) profileIds.add(assignment.athleteProfileId);
+    }
+
+    if (user.coachId) {
+      const roster = await this.listAthleteProfiles(user.coachId);
+      const nameKey = user.name.trim().toLowerCase();
+      const username = (user.username ?? '').trim().toLowerCase();
+      const emailLocal = (user.email ?? '').split('@')[0]?.trim().toLowerCase() ?? '';
+      const userKey = username || emailLocal;
+      for (const profile of roster) {
+        const profileName = profile.name.trim().toLowerCase();
+        if (profileName === nameKey || (userKey && profileName.includes(userKey))) {
+          profileIds.add(profile.id);
+        }
+      }
+    }
+
+    return all.filter(
+      (a) => a.athleteUserId === user.id || profileIds.has(a.athleteProfileId),
+    );
+  }
+
   async updateUser(
     id: string,
     input: Partial<Pick<UserCreateInput, 'name' | 'role' | 'email' | 'coachId' | 'linkedAthleteId'>>,

@@ -9,7 +9,7 @@ import {
 import type { Athlete } from '../../models/training';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
-import { isApiEnabled, wlAthletesApiFetch } from './apiClient';
+import { isApiEnabled, preferLocalDataFallback, wlAthletesApiFetch } from './apiClient';
 import {
   coachIdForAthleteLocal,
   loadCoachAthletesFromLocal,
@@ -46,6 +46,7 @@ export function WlAthletesProvider({
 }: WlAthletesProviderProps) {
   const { pushAlert } = useWolfAlert();
   const apiMode = isApiEnabled();
+  const allowLocalFallback = preferLocalDataFallback();
   const scopedCoachId = coachScopeId(currentUser);
   const canManageWlAthletes = currentUser?.role === 'super_admin';
   const canEditWlRoster = currentUser?.role === 'coach' || canManageWlAthletes;
@@ -75,7 +76,7 @@ export function WlAthletesProvider({
           title: 'No se pudieron cargar los atletas',
           message: detail,
         });
-        if (scopedCoachId) setAthletes(loadCoachAthletesFromLocal(scopedCoachId));
+        if (allowLocalFallback && scopedCoachId) setAthletes(loadCoachAthletesFromLocal(scopedCoachId));
         return;
       }
       const list = (await res.json()) as unknown[];
@@ -86,11 +87,11 @@ export function WlAthletesProvider({
         title: 'Sin conexión',
         message: 'No se pudieron cargar los atletas WL.',
       });
-      if (scopedCoachId) setAthletes(loadCoachAthletesFromLocal(scopedCoachId));
+      if (allowLocalFallback && scopedCoachId) setAthletes(loadCoachAthletesFromLocal(scopedCoachId));
     } finally {
       setAthletesLoading(false);
     }
-  }, [apiMode, apiToken, scopedCoachId, pushAlert]);
+  }, [apiMode, apiToken, scopedCoachId, pushAlert, allowLocalFallback]);
 
   useEffect(() => {
     if (apiMode) {
