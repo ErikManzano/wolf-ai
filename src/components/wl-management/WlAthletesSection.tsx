@@ -13,6 +13,7 @@ import { WlAthleteDetail } from '../wl-athletes/WlAthleteDetail';
 import { WlAthletesMobileList } from '../wl-athletes/WlAthletesMobileList';
 import { WlAthletesTable } from '../wl-athletes/WlAthletesTable';
 import { WlAthletesToolbar } from '../wl-athletes/WlAthletesToolbar';
+import WlAthleteCreateSheet from '../wl-athletes/WlAthleteCreateSheet';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import '../wl-shared/app-breadcrumb.css';
 import '../wl-shared/wl-list-toolbar.css';
@@ -56,15 +57,6 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<AthleteSortId>('name_asc');
-  const [draft, setDraft] = useState({
-    name: '',
-    level: 'intermediate' as AthleteLevel,
-    bodyweight: 75,
-    snatch: 60,
-    cleanJerk: 80,
-    backSquat: 100,
-    frontSquat: 85,
-  });
 
   const filteredRows = useMemo(
     () => sortAthleteRows(filterAthleteRows(rows, search, 'all'), sort),
@@ -74,18 +66,6 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
   const selectedRow = selectedAthleteId ? rows.find((r) => r.profileId === selectedAthleteId) ?? null : null;
   const editing = roster.find((a) => a.id === editId);
   const isSuperAdmin = currentUser?.role === 'super_admin';
-
-  const resetDraft = () => {
-    setDraft({
-      name: '',
-      level: 'intermediate',
-      bodyweight: 75,
-      snatch: 60,
-      cleanJerk: 80,
-      backSquat: 100,
-      frontSquat: 85,
-    });
-  };
 
   const openAthleteDetail = (profileId: string) => {
     setSelectedAthleteId(profileId);
@@ -168,60 +148,14 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
       </header>
 
       {showAdd && canEditWlRoster ? (
-        <div className="wl-mgmt-inline-form" style={{ marginBottom: '16px' }}>
-          <h3 className="wl-mgmt-inline-form-title">{isEs ? 'Nuevo atleta en roster' : 'New roster athlete'}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-            <label className="wolf-engine-field">
-              <span className="wolf-engine-field-label">{isEs ? 'Nombre' : 'Name'}</span>
-              <input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
-            </label>
-            <label className="wolf-engine-field">
-              <span className="wolf-engine-field-label">{isEs ? 'Nivel' : 'Level'}</span>
-              <select value={draft.level} onChange={(e) => setDraft((d) => ({ ...d, level: e.target.value as AthleteLevel }))}>
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="wolf-engine-field">
-              <span className="wolf-engine-field-label">PC (kg)</span>
-              <input type="number" value={draft.bodyweight} onChange={(e) => setDraft((d) => ({ ...d, bodyweight: Number(e.target.value) }))} />
-            </label>
-          </div>
-          <div className="wl-mgmt-inline-form-btns">
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={!draft.name.trim()}
-              onClick={() => {
-                void createWlAthlete({
-                  id: `ath-${Date.now()}`,
-                  name: draft.name.trim(),
-                  level: draft.level,
-                  bodyweight: draft.bodyweight,
-                  oneRM: {
-                    snatch: draft.snatch,
-                    cleanJerk: draft.cleanJerk,
-                    backSquat: draft.backSquat,
-                    frontSquat: draft.frontSquat,
-                  },
-                }).then((created) => {
-                  if (created) {
-                    resetDraft();
-                    setShowAdd(false);
-                  }
-                });
-              }}
-            >
-              {isEs ? 'Guardar' : 'Save'}
-            </button>
-            <button type="button" className="btn-outline" onClick={() => setShowAdd(false)}>
-              {isEs ? 'Cancelar' : 'Cancel'}
-            </button>
-          </div>
-        </div>
+        <WlAthleteCreateSheet
+          isEs={isEs}
+          onClose={() => setShowAdd(false)}
+          onCreate={async (input) => {
+            const created = await createWlAthlete(input);
+            if (created) void reloadWlAthletesFromApi();
+          }}
+        />
       ) : null}
 
       <WlAthletesToolbar
@@ -231,7 +165,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
         sort={sort}
         onSortChange={setSort}
         canAdd={canEditWlRoster}
-        onAdd={() => setShowAdd((v) => !v)}
+        onAdd={() => setShowAdd(true)}
       />
 
       {onOpenCalendar ? (

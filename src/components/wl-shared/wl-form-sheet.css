@@ -1,0 +1,412 @@
+.wl-form-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.wl-form-sheet {
+  --wl-sheet-bg: #141416;
+  --wl-sheet-surface: #1c1c1f;
+  --wl-sheet-border: #2a2a2e;
+  --wl-sheet-muted: #a1a1aa;
+  --wl-sheet-text: #fafafa;
+  --wl-sheet-accent: #ff6b1a;
+  width: min(520px, 100%);
+  max-height: min(88dvh, 640px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid var(--wl-sheet-border);
+  background: var(--wl-sheet-bg);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  color: var(--wl-sheet-text);
+}
+
+.wl-form-sheet-handle {
+  display: none;
+}
+
+.wl-form-sheet-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--wl-sheet-border);
+  flex-shrink: 0;
+}
+
+.wl-form-sheet-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wl-sheet-accent);
+}
+
+.wl-form-sheet-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.wl-form-sheet-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--wl-sheet-muted);
+}
+
+.wl-form-sheet-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--wl-sheet-border);
+  border-radius: 10px;
+  background: var(--wl-sheet-surface);
+  color: var(--wl-sheet-muted);
+  cursor: pointer;
+}
+
+.wl-form-sheet-close:hover {
+  color: var(--wl-sheet-text);
+  border-color: #3f3f46;
+}
+
+.wl-form-sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wl-form-sheet-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--wl-sheet-border);
+  background: var(--wl-sheet-bg);
+}
+
+.wl-form-sheet-footer__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--wl-sheet-muted);
+}
+
+.wl-form-sheet-footer__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.wl-form-sheet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.wl-form-sheet-btn--ghost {
+  background: transparent;
+  border-color: var(--wl-sheet-border);
+  color: var(--wl-sheet-muted);
+}
+
+.wl-form-sheet-btn--ghost:hover {
+  color: var(--wl-sheet-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wl-form-sheet-btn--primary {
+  background: var(--wl-sheet-accent);
+  color: #0d0d0f;
+  border-color: transparent;
+}
+
+.wl-form-sheet-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.wl-form-sheet-btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wl-form-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.wl-form-sheet-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.wl-form-sheet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wl-form-sheet-field--full {
+  grid-column: 1 / -1;
+}
+
+.wl-form-sheet-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wl-sheet-muted);
+}
+
+.wl-form-sheet-input,
+.wl-form-sheet-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-sheet-border);
+  background: var(--wl-sheet-surface);
+  color: var(--wl-sheet-text);
+  font-size: 0.9rem;
+}
+
+.wl-form-sheet-input:focus,
+.wl-form-sheet-select:focus {
+  outline: none;
+  border-color: rgba(255, 107, 26, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.15);
+}
+
+.wl-form-sheet-input--readonly {
+  color: var(--wl-sheet-muted);
+  cursor: default;
+}
+
+.wl-form-sheet-stepper {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: stretch;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-sheet-border);
+  background: var(--wl-sheet-surface);
+  overflow: hidden;
+}
+
+.wl-form-sheet-stepper:focus-within {
+  border-color: rgba(255, 107, 26, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.15);
+}
+
+.wl-form-sheet-stepper__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--wl-sheet-muted);
+  cursor: pointer;
+}
+
+.wl-form-sheet-stepper__btn:hover:not(:disabled) {
+  background: rgba(255, 107, 26, 0.12);
+  color: var(--wl-sheet-text);
+}
+
+.wl-form-sheet-stepper__btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+.wl-form-sheet-stepper__btn:focus-visible {
+  outline: 2px solid var(--wl-sheet-accent);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.wl-form-sheet-stepper__input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  border: none;
+  border-inline: 1px solid var(--wl-sheet-border);
+  background: transparent;
+  color: var(--wl-sheet-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.wl-form-sheet-stepper__input::-webkit-inner-spin-button,
+.wl-form-sheet-stepper__input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wl-form-sheet-stepper__input:focus {
+  outline: none;
+}
+
+.wl-form-sheet-hint {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--wl-sheet-border);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.8rem;
+  color: var(--wl-sheet-muted);
+  line-height: 1.45;
+}
+
+.wl-form-sheet-summary {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--wl-sheet-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wl-form-sheet-summary__eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wl-sheet-accent);
+}
+
+.wl-form-sheet-summary__lead {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--wl-sheet-text);
+}
+
+.wl-form-sheet-summary__list {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--wl-sheet-muted);
+  line-height: 1.45;
+}
+
+.wl-form-sheet-summary__list li {
+  padding-left: 2px;
+}
+
+.wl-form-sheet-summary--note {
+  margin-top: 14px;
+}
+
+.wl-form-sheet-summary--note .wl-form-sheet-summary__lead {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--wl-sheet-muted);
+}
+
+@media (max-width: 520px) {
+  .wl-form-sheet-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .wl-form-sheet {
+    width: 100%;
+    max-height: min(92dvh, 720px);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .wl-form-sheet-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: #3f3f46;
+  }
+
+  .wl-form-sheet-head {
+    padding: 16px 16px 12px;
+  }
+
+  .wl-form-sheet-body {
+    padding: 14px 16px;
+  }
+
+  .wl-form-sheet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wl-form-sheet-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 12px 16px max(16px, env(safe-area-inset-bottom, 16px));
+  }
+
+  .wl-form-sheet-footer__hint {
+    display: none;
+  }
+
+  .wl-form-sheet-footer__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    gap: 8px;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .wl-form-sheet-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+    font-size: 0.84rem;
+  }
+
+  .wl-form-sheet-summary {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .wl-form-sheet-summary__lead {
+    font-size: 0.84rem;
+  }
+
+  .wl-form-sheet-summary__list {
+    font-size: 0.78rem;
+  }
+}

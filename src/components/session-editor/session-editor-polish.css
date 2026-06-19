@@ -1692,12 +1692,22 @@
   }
 
   .wolf-program-nav--compact .wolf-week-tab-card {
-    min-width: 84px;
-    padding: 8px 10px;
+    min-width: 75px;
+    min-height: 48px;
+    padding: 6px 8px;
+  }
+
+  .wolf-program-nav--compact .wolf-week-carousel__arrow,
+  .wolf-program-nav--compact .wolf-week-tab-add--pinned {
+    min-height: 48px;
   }
 
   .wolf-program-nav--compact .wolf-week-tab-card__title {
-    font-size: 0.74rem;
+    font-size: 0.75rem;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tab-card__load {
+    font-size: 0.65rem;
   }
 
   .wolf-program-nav--compact .wolf-day-tab {

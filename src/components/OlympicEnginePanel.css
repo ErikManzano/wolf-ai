@@ -1098,6 +1098,88 @@
   min-width: 0;
 }
 
+.wolf-week-carousel {
+  display: none;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-bottom: 1px solid #27272a;
+  background: #09090b;
+}
+
+.wolf-week-carousel__arrow {
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-height: 48px;
+  padding: 0;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  background: #18181b;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.wolf-week-carousel__arrow:hover:not(:disabled) {
+  color: #fafafa;
+  border-color: #3f3f46;
+  background: #1f1f23;
+}
+
+.wolf-week-carousel__arrow:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+.wolf-week-carousel__arrow:focus-visible {
+  outline: 2px solid #ff6b1a;
+  outline-offset: 2px;
+}
+
+.wolf-week-carousel__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wolf-week-carousel__track {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.wolf-week-carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.wolf-week-carousel__ellipsis {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 2px;
+  color: #52525b;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  user-select: none;
+}
+
 .wolf-week-tabs-strip {
   display: none;
   align-items: stretch;
@@ -1277,9 +1359,13 @@
     display: none;
   }
 
-  .wolf-program-nav--compact .wolf-week-tabs-strip {
+  .wolf-program-nav--compact .wolf-week-carousel {
     display: flex;
     width: 100%;
+  }
+
+  .wolf-program-nav--compact .wolf-week-tabs-strip {
+    display: none;
   }
 
   .wolf-program-nav--compact .wolf-week-tabs-pills {
@@ -1290,6 +1376,10 @@
 @media (max-width: 767px) {
   .wolf-program-nav--compact .wolf-week-tabs-pills {
     display: none;
+  }
+
+  .wolf-program-nav--compact .wolf-week-carousel {
+    display: none !important;
   }
 
   .wolf-program-nav--compact .wolf-week-tabs-strip {
@@ -1383,77 +1473,90 @@
 }
 
 .wolf-week-tab-card {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
+  flex: 1 1 75px;
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 1px;
-  min-width: 92px;
-  max-width: 120px;
-  padding: 8px 12px;
+  gap: 3px;
+  min-width: 75px;
+  min-height: 48px;
+  padding: 6px 8px;
   margin: 0;
-  border: none;
-  border-top: 2px solid transparent;
-  border-right: 1px solid color-mix(in srgb, #27272a 80%, transparent);
-  background: transparent;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  background: #18181b;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .wolf-week-tab-card:hover:not(.active) {
-  background: color-mix(in srgb, #111318 70%, transparent);
+  border-color: #3f3f46;
+  background: #1f1f23;
 }
 
 .wolf-week-tab-card.active {
-  background: #111318;
-  border-top-color: #ff6b1a;
+  border-color: #ff6b1a;
+  background: color-mix(in srgb, #ff6b1a 8%, #18181b);
+  box-shadow: 0 0 0 1px color-mix(in srgb, #ff6b1a 35%, transparent);
 }
 
 .wolf-week-tab-card__title {
-  font-size: var(--wl-type-tab-size, 0.8125rem);
+  font-size: 0.75rem;
   font-weight: var(--wl-type-tab-weight, 500);
   line-height: 1.2;
-  color: var(--wl-text-muted, #71717a);
+  color: #a1a1aa;
   white-space: nowrap;
 }
 
 .wolf-week-tab-card.active .wolf-week-tab-card__title {
   font-weight: var(--wl-type-tab-weight-active, 600);
-  color: var(--wl-text-primary, #fafafa);
+  color: #ff6b1a;
 }
 
 .wolf-week-tab-card__load {
   font-family: var(--font-mono);
-  font-size: var(--wl-type-data-sm-size, 0.6875rem);
+  font-size: 0.65rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--wl-text-muted, #71717a);
+  color: #71717a;
   white-space: nowrap;
+  line-height: 1.15;
 }
 
 .wolf-week-tab-card.active .wolf-week-tab-card__load {
-  color: var(--wl-text-secondary, #a1a1aa);
+  color: #ff6b1a;
 }
 
 .wolf-week-tab-add {
-  flex: 0 0 44px;
+  flex: 0 0 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   align-self: stretch;
+  width: 34px;
+  min-width: 34px;
+  min-height: 48px;
   margin: 0;
-  border: none;
-  border-left: 1px solid #27272a;
-  background: transparent;
+  border: 1px dashed #3f3f46;
+  border-radius: 6px;
+  background: #18181b;
   color: #71717a;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.wolf-week-tab-add--pinned {
+  flex-shrink: 0;
 }
 
 .wolf-week-tab-add:hover:not(:disabled) {
@@ -1476,7 +1579,7 @@
   flex-wrap: nowrap;
   gap: 4px;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 6px 8px;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;

@@ -1,19 +1,15 @@
 import type { CoachProgram, CoachProgramRow } from '../../models/coach-architecture';
-import { TEMPLATE_PROGRAM_ATHLETE_ID } from '../../models/coach-architecture';
+import { buildProgramDraft } from '../../utils/programSchedule';
 
 const STORAGE_KEY = 'wolf_coach_programs_v1';
 
 function emptyProgram(name: string): CoachProgram['program'] {
-  return {
-    id: `prog-${Date.now()}`,
-    name,
-    athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
-    createdAt: new Date().toISOString(),
+  return buildProgramDraft({
+    name: name.trim(),
+    startDate: new Date().toISOString().slice(0, 10),
     totalWeeks: 4,
     daysPerWeek: 3,
-    primaryGoal: 'strength',
-    weeks: [],
-  };
+  });
 }
 
 function readAll(): CoachProgram[] {

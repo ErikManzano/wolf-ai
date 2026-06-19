@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ChevronDown, Plus, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import { formatWeekTonnageLabel } from './sessionSheetUtils';
 
@@ -54,6 +54,21 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 }) => {
   const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStripRef = useRef<HTMLDivElement>(null);
+
+  const weekNumbers = program.weeks.map((w) => w.weekNumber);
+  const selectedWeekIndex = weekNumbers.indexOf(selectedWeek);
+  const canGoPrevWeek = selectedWeekIndex > 0;
+  const canGoNextWeek = selectedWeekIndex >= 0 && selectedWeekIndex < weekNumbers.length - 1;
+
+  const goPrevWeek = () => {
+    if (!canGoPrevWeek) return;
+    onSelectWeek(weekNumbers[selectedWeekIndex - 1]!);
+  };
+
+  const goNextWeek = () => {
+    if (!canGoNextWeek) return;
+    onSelectWeek(weekNumbers[selectedWeekIndex + 1]!);
+  };
 
   useEffect(() => {
     scrollActiveIntoView(weekStripRef.current, '.wolf-week-tab-card.active');
@@ -115,41 +130,69 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
           </div>
         </div>
 
-        {/* Desktop: week underline tabs */}
-        <div
-          className="wolf-week-tabs-strip"
-          role="tablist"
-          aria-label={labels.weeksRow}
-          ref={weekStripRef}
-        >
-          {program.weeks.map((w) => {
-            const isActive = selectedWeek === w.weekNumber;
-            const tonnage = weekTonnages[w.weekNumber] ?? 0;
-            return (
-              <button
-                key={w.weekNumber}
-                type="button"
-                role="tab"
-                id={`wolf-week-tab-${w.weekNumber}`}
-                aria-selected={isActive}
-                aria-controls={`wolf-week-panel-${w.weekNumber}`}
-                className={`wolf-week-tab-card${isActive ? ' active' : ''}`}
-                onClick={() => onSelectWeek(w.weekNumber)}
-              >
-                <span className="wolf-week-tab-card__title">{weekLabel(w.weekNumber)}</span>
-                <span className="wolf-week-tab-card__load">{formatWeekTonnageLabel(tonnage, isEs)}</span>
-              </button>
-            );
-          })}
+        {/* Desktop: week carousel cards */}
+        <div className="wolf-week-carousel">
           <button
             type="button"
-            className="wolf-week-tab-add"
+            className="wolf-week-carousel__arrow"
+            disabled={!canGoPrevWeek}
+            onClick={goPrevWeek}
+            aria-label={isEs ? 'Semana anterior' : 'Previous week'}
+          >
+            <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
+          </button>
+
+          <div className="wolf-week-carousel__viewport">
+            <div
+              className="wolf-week-carousel__track"
+              role="tablist"
+              aria-label={labels.weeksRow}
+              ref={weekStripRef}
+            >
+              {program.weeks.map((w) => {
+                const isActive = selectedWeek === w.weekNumber;
+                const tonnage = weekTonnages[w.weekNumber] ?? 0;
+
+                return (
+                  <button
+                    key={w.weekNumber}
+                    type="button"
+                    role="tab"
+                    id={`wolf-week-tab-${w.weekNumber}`}
+                    aria-selected={isActive}
+                    aria-controls={`wolf-week-panel-${w.weekNumber}`}
+                    className={`wolf-week-tab-card${isActive ? ' active' : ''}`}
+                    onClick={() => onSelectWeek(w.weekNumber)}
+                  >
+                    <span className="wolf-week-tab-card__title">{weekLabel(w.weekNumber)}</span>
+                    <span className="wolf-week-tab-card__load">
+                      {formatWeekTonnageLabel(tonnage, isEs)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="wolf-week-tab-add wolf-week-tab-add--pinned"
             onClick={onAddWeek}
             disabled={!canAddWeek}
             title={canAddWeek ? labels.addWeek : labels.maxWeeks}
             aria-label={labels.addWeek}
           >
-            <Plus size={18} strokeWidth={2.25} aria-hidden />
+            <Plus size={16} strokeWidth={2.25} aria-hidden />
+          </button>
+
+          <button
+            type="button"
+            className="wolf-week-carousel__arrow"
+            disabled={!canGoNextWeek}
+            onClick={goNextWeek}
+            aria-label={isEs ? 'Semana siguiente' : 'Next week'}
+          >
+            <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
           </button>
         </div>
 

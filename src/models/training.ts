@@ -260,5 +260,9 @@ export interface GeneratedProgram {
   totalWeeks: number;
   daysPerWeek: number;
   primaryGoal: ExerciseGoal;
+  /** Calendar start (YYYY-MM-DD) */
+  startDate?: string;
+  /** Calendar end inclusive (YYYY-MM-DD) */
+  endDate?: string;
   weeks: ProgramWeek[];
 }

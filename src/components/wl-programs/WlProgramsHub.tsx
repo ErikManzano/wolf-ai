@@ -14,6 +14,7 @@ import { ProgramMobileDetail } from './ProgramMobileDetail';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 import { ProgramEnrolledAvatars } from './ProgramEnrolledAvatars';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
+import WlProgramCreateSheet from './WlProgramCreateSheet';
 
 export const WL_PROGRAMS_FOCUS_KEY = 'wolf_programs_focus_id';
 
@@ -82,6 +83,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
   const [assignProgram, setAssignProgram] = useState<CoachProgramRow | null>(null);
   const [assignAthleteId, setAssignAthleteId] = useState<string | undefined>();
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     program: CoachProgramRow;
     action: ProgramConfirmAction;
@@ -104,10 +106,11 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     });
   }, [coachPrograms, search, filter]);
 
-  const handleCreate = async () => {
-    const name = window.prompt(isEs ? 'Nombre del programa:' : 'Program name:', isEs ? 'Nuevo mesociclo' : 'New mesocycle');
-    if (!name?.trim()) return;
-    const created = await createCoachProgram(name.trim());
+  const handleCreate = async (input: {
+    name: string;
+    program: import('../../models/training').GeneratedProgram;
+  }) => {
+    const created = await createCoachProgram(input.name, input.program);
     if (created) openProgramEditor(created.id);
   };
 
@@ -264,6 +267,14 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     ? programConfirmCopy(confirmAction.program, confirmAction.action, isEs)
     : null;
 
+  const createSheet = showCreateSheet ? (
+    <WlProgramCreateSheet
+      isEs={isEs}
+      onClose={() => setShowCreateSheet(false)}
+      onCreate={handleCreate}
+    />
+  ) : null;
+
   const assignSheet = assignProgram ? (
     <WlProgramAssignSheet
       isEs={isEs}
@@ -319,6 +330,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             }
           />
           {assignSheet}
+          {createSheet}
         </section>
         {confirmModal}
       </>
@@ -355,7 +367,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
           filterActive={filter !== 'all'}
           primaryLabel={isEs ? 'Nuevo programa' : 'New program'}
           primaryAriaLabel={isEs ? 'Nuevo programa' : 'New program'}
-          onPrimaryClick={() => void handleCreate()}
+          onPrimaryClick={() => setShowCreateSheet(true)}
         />
 
         {programsLoading ? <p className="wl-programs-empty">{isEs ? 'Cargando programas…' : 'Loading programs…'}</p> : null}
@@ -385,6 +397,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
         {!programsLoading && filtered.length > 0 && !isMobile ? programsTable : null}
 
         {assignSheet}
+        {createSheet}
       </div>
       {confirmModal}
     </>
