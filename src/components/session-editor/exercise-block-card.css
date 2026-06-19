@@ -1083,6 +1083,39 @@ article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone--config {
 
 article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone--sets {
   min-height: 0;
+  padding-top: 8px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-zone--config {
+  padding-bottom: 10px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 10px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel .wolf-se-panel-label {
+  flex-shrink: 0;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-options,
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-pct-chip-row {
+  flex: 1;
+  justify-content: flex-end;
+}
+
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-intensity-section {
+  flex: 1;
+  min-width: 0;
 }
 
 article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-layout__sets {

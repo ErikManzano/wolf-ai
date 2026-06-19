@@ -79,6 +79,10 @@ export interface SetScheme {
   reps: number;
   /** Number of work sets at this scheme */
   sets: number;
+  /** Target reps in reserve (optional coach note). */
+  targetRir?: number;
+  /** Prescribed rest between sets, in seconds. */
+  restSec?: number;
   /**
    * Solo bloques complejos: reps por movimiento en el mismo orden que `segments`.
    * Ej: ["1","1","3"] = clean 1 + jerk 1 + front squat 3 en esa entrada de tabla.

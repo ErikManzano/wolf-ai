@@ -57,6 +57,12 @@ export function updateSetSchemeField(
   if (field === 'percentage') {
     next.percentage = roundPercentagePrilepin(value);
   }
+  if (field === 'targetRir') {
+    next.targetRir = Math.min(5, Math.max(0, Math.round(value)));
+  }
+  if (field === 'restSec') {
+    next.restSec = Math.min(600, Math.max(0, Math.round(value)));
+  }
   block.sets[setIndex] = next;
   return finalize(s, athlete, catalog);
 }
@@ -205,6 +211,8 @@ export function duplicateSetAt(
     percentage: src.percentage,
     reps: src.reps,
     sets: src.sets,
+    targetRir: src.targetRir,
+    restSec: src.restSec,
     ...(src.segmentReps ? { segmentReps: [...src.segmentReps] } : {}),
   };
   block.sets.splice(setIndex + 1, 0, copy);
@@ -231,11 +239,19 @@ export function addSetToBlock(session: Session, blockIndex: number, athlete: Ath
   const block = s.exercises[blockIndex];
   if (!block) return session;
   if (block.sets.length >= MAX_ROWS_PER_BLOCK) return session;
-  const last = block.sets[block.sets.length - 1] ?? { percentage: 75, reps: 2, sets: 3 };
+  const last = block.sets[block.sets.length - 1] ?? {
+    percentage: 75,
+    reps: 2,
+    sets: 1,
+    targetRir: 2,
+    restSec: 150,
+  };
   const copy: SetScheme = {
     percentage: last.percentage,
     reps: last.reps,
-    sets: last.sets,
+    sets: 1,
+    targetRir: last.targetRir ?? 2,
+    restSec: last.restSec ?? 150,
     ...(last.segmentReps ? { segmentReps: [...last.segmentReps] } : {}),
   };
   block.sets.push(copy);
@@ -299,7 +315,7 @@ export function addExerciseBlock(
   const nb: SessionExerciseBlock = {
     exerciseId,
     blockType: 'single',
-    sets: [{ percentage: 75, reps: 2, sets: 3 }],
+    sets: [{ percentage: 75, reps: 3, sets: 1, targetRir: 2, restSec: 150 }],
   };
   s.exercises.push(nb);
   return finalize(s, athlete, catalog);

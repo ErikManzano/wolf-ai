@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, ListOrdered, Plus, Trash2 } from 'lucide-react';
+import { Clock, Copy, GripVertical, Info, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType, WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
@@ -7,12 +7,26 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { MobileSetList } from '../mobile-wl/cards/MobileSetList';
 import { CompactNumberField } from './CompactNumberField';
 import { SegmentRepField } from './SegmentRepField';
-import { exerciseName, kgForExercise } from './blockMetrics';
+import {
+  blockAvgIntensity,
+  blockTotalReps,
+  blockTotalSets,
+  blockTonnage,
+  exerciseName,
+  kgForExercise,
+} from './blockMetrics';
 import { SectionHeader } from './SectionHeader';
+import {
+  DEFAULT_REST_SEC,
+  DEFAULT_TARGET_RIR,
+  formatRestSec,
+} from './setSchemeUtils';
 import './set-rows.css';
 
 /** Incremento de %1RM con botones −/+ (entrada manual: enteros 40–120). */
 const PCT_BUTTON_STEP = 5;
+const RIR_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
+const REST_PRESETS_SEC = [90, 120, 150, 180, 210, 240] as const;
 
 interface SetsTableProps {
   block: SessionExerciseBlock;
@@ -23,10 +37,50 @@ interface SetsTableProps {
   onPctChange: (setIndex: number, pct: number) => void;
   onRepsChange: (setIndex: number, reps: number) => void;
   onSetsChange: (setIndex: number, sets: number) => void;
+  onRirChange: (setIndex: number, rir: number) => void;
+  onRestChange: (setIndex: number, restSec: number) => void;
   onSegmentRepChange: (setIndex: number, segIndex: number, value: string) => void;
   onAddSet: () => void;
   onDuplicateSet: (setIndex: number) => void;
   onRemoveSet: (setIndex: number) => void;
+}
+
+function PremiumSetsSummary({
+  block,
+  athlete,
+  exercises,
+  isEs,
+}: {
+  block: SessionExerciseBlock;
+  athlete: Athlete;
+  exercises: Exercise[];
+  isEs: boolean;
+}) {
+  const tonnage = blockTonnage(block, athlete, exercises);
+  const totalSets = blockTotalSets(block);
+  const totalReps = blockTotalReps(block);
+  const avgPct = blockAvgIntensity(block);
+
+  return (
+    <div className="wolf-se-sets-premium__summary">
+      <div className="wolf-se-sets-premium__stat">
+        <span className="wolf-se-sets-premium__stat-label">{isEs ? 'Volumen total' : 'Total volume'}</span>
+        <strong className="wolf-se-sets-premium__stat-value">{tonnage} kg</strong>
+      </div>
+      <div className="wolf-se-sets-premium__stat">
+        <span className="wolf-se-sets-premium__stat-label">{isEs ? 'Series totales' : 'Total sets'}</span>
+        <strong className="wolf-se-sets-premium__stat-value">{totalSets}</strong>
+      </div>
+      <div className="wolf-se-sets-premium__stat">
+        <span className="wolf-se-sets-premium__stat-label">{isEs ? 'Reps totales' : 'Total reps'}</span>
+        <strong className="wolf-se-sets-premium__stat-value">{totalReps}</strong>
+      </div>
+      <div className="wolf-se-sets-premium__stat wolf-se-sets-premium__stat--accent">
+        <span className="wolf-se-sets-premium__stat-label">{isEs ? 'Intensidad prom.' : 'Avg intensity'}</span>
+        <strong className="wolf-se-sets-premium__stat-value">{avgPct}% 1RM</strong>
+      </div>
+    </div>
+  );
 }
 
 export const SetsTable: React.FC<SetsTableProps> = ({
@@ -38,6 +92,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onPctChange,
   onRepsChange,
   onSetsChange,
+  onRirChange,
+  onRestChange,
   onSegmentRepChange,
   onAddSet,
   onDuplicateSet,
@@ -45,7 +101,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
 }) => {
   const isPhone = useMediaQuery('(max-width: 767px)');
   const isTightViewport = useMediaQuery('(max-width: 1100px)');
-  const useInlineCards = layout === 'embedded' || isTightViewport;
+  const useInlineCards = layout !== 'embedded' && isTightViewport;
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
 
@@ -58,6 +114,18 @@ export const SetsTable: React.FC<SetsTableProps> = ({
     >
       <Plus size={14} aria-hidden />
       {isEs ? 'Serie' : 'Set'}
+    </button>
+  );
+
+  const premiumAddBtn = (
+    <button
+      type="button"
+      className="wolf-se-sets-premium__add"
+      disabled={block.sets.length >= WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK}
+      onClick={onAddSet}
+    >
+      <Plus size={15} strokeWidth={2.25} aria-hidden />
+      {isEs ? 'Agregar serie' : 'Add set'}
     </button>
   );
 
@@ -94,7 +162,132 @@ export const SetsTable: React.FC<SetsTableProps> = ({
     const ex = exercises.find((e) => e.id === block.exerciseId);
     const sectionClass = `wolf-se-sets-section${layout === 'embedded' ? ' wolf-se-sets-section--embedded' : ''}${useInlineCards ? ' wolf-se-sets-section--inline-cards' : ''}`;
 
-    if (isPhone && layout !== 'embedded') {
+    if (layout === 'embedded') {
+      return (
+        <section className={`${sectionClass} wolf-se-sets-section--premium`} onKeyDown={onEnter}>
+          <div className="wolf-se-sets-premium__head">
+            <h4 className="wolf-se-sets-premium__title">
+              <ListOrdered size={16} strokeWidth={2.25} aria-hidden />
+              {isEs ? 'Esquema de series' : 'Set scheme'}
+            </h4>
+            {premiumAddBtn}
+          </div>
+
+          <div className="wolf-se-sets-premium__table-wrap">
+            <table className="wolf-se-sets-premium__table">
+              <thead>
+                <tr>
+                  <th className="wolf-se-sets-premium__col-grip" aria-hidden />
+                  <th>{isEs ? 'Serie' : 'Set'}</th>
+                  <th>% 1RM</th>
+                  <th>{isEs ? 'Carga' : 'Load'}</th>
+                  <th>{isEs ? 'Reps' : 'Reps'}</th>
+                  <th>
+                    <span className="wolf-se-sets-premium__th-label">
+                      {isEs ? 'RIR obj.' : 'Target RIR'}
+                      <Info size={12} aria-hidden />
+                    </span>
+                  </th>
+                  <th>{isEs ? 'Descanso' : 'Rest'}</th>
+                  <th className="wolf-se-sets-premium__col-actions" aria-hidden />
+                </tr>
+              </thead>
+              <tbody>
+                {block.sets.map((row, si) => {
+                  const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
+                  const rir = row.targetRir ?? DEFAULT_TARGET_RIR;
+                  const restSec = row.restSec ?? DEFAULT_REST_SEC;
+                  return (
+                    <tr key={si}>
+                      <td className="wolf-se-sets-premium__col-grip">
+                        <span className="wolf-se-sets-premium__grip" aria-hidden>
+                          <GripVertical size={14} />
+                        </span>
+                      </td>
+                      <td>
+                        <span className="wolf-se-sets-premium__serie-badge">{si + 1}</span>
+                      </td>
+                      <td>
+                        <CompactNumberField
+                          size="compact"
+                          value={row.percentage}
+                          min={WL_PCT_MIN}
+                          max={WL_PCT_MAX}
+                          step={PCT_BUTTON_STEP}
+                          suffix="%"
+                          onChange={(v) => onPctChange(si, v)}
+                          aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
+                        />
+                      </td>
+                      <td>
+                        <span className="wolf-se-sets-premium__load">{kg} kg</span>
+                      </td>
+                      <td>
+                        <CompactNumberField
+                          size="compact"
+                          value={row.reps}
+                          min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+                          max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                          step={1}
+                          onChange={(v) => onRepsChange(si, v)}
+                          aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          className="wolf-se-sets-premium__select"
+                          value={rir}
+                          aria-label={isEs ? `RIR serie ${si + 1}` : `RIR set ${si + 1}`}
+                          onChange={(e) => onRirChange(si, Number(e.target.value))}
+                        >
+                          {RIR_OPTIONS.map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <label className="wolf-se-sets-premium__rest">
+                          <Clock size={14} aria-hidden />
+                          <select
+                            className="wolf-se-sets-premium__select wolf-se-sets-premium__select--rest"
+                            value={restSec}
+                            aria-label={isEs ? `Descanso serie ${si + 1}` : `Rest set ${si + 1}`}
+                            onChange={(e) => onRestChange(si, Number(e.target.value))}
+                          >
+                            {REST_PRESETS_SEC.map((sec) => (
+                              <option key={sec} value={sec}>
+                                {formatRestSec(sec)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </td>
+                      <td className="wolf-se-sets-premium__col-actions">
+                        <button
+                          type="button"
+                          className="wolf-se-sets-premium__delete"
+                          disabled={block.sets.length <= 1}
+                          aria-label={isEs ? `Eliminar serie ${si + 1}` : `Remove set ${si + 1}`}
+                          onClick={() => onRemoveSet(si)}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <PremiumSetsSummary block={block} athlete={athlete} exercises={exercises} isEs={isEs} />
+        </section>
+      );
+    }
+
+    if (isPhone) {
       return (
         <MobileSetList
           block={block}

@@ -126,44 +126,6 @@ function blockTitle(
   return exerciseName(exercises, block.exerciseId);
 }
 
-function BlockCompactMeta({
-  tonnage,
-  workSets,
-  avgPct,
-  prescription,
-  isEs,
-  className,
-}: {
-  tonnage: number;
-  workSets: number;
-  avgPct: number;
-  prescription: string;
-  isEs: boolean;
-  className?: string;
-}) {
-  return (
-    <p className={className ?? 'wolf-se-block-compact-meta'}>
-      <span>
-        <strong>{tonnage}</strong> kg
-      </span>
-      <span aria-hidden>·</span>
-      <span>
-        <strong>{workSets}</strong> {isEs ? 'series' : 'sets'}
-      </span>
-      {avgPct > 0 ? (
-        <>
-          <span aria-hidden>·</span>
-          <span>
-            <strong>{avgPct}</strong>% ∅
-          </span>
-        </>
-      ) : null}
-      <span aria-hidden>·</span>
-      <code className="wolf-se-block-compact-rx">{prescription}</code>
-    </p>
-  );
-}
-
 export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   block,
   blockIndex: bi,
@@ -593,6 +555,12 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 onSetsChange={(si, v) =>
                   apply(() => updateSetSchemeField(session, bi, si, 'sets', v, athlete, exercises))
                 }
+                onRirChange={(si, v) =>
+                  apply(() => updateSetSchemeField(session, bi, si, 'targetRir', v, athlete, exercises))
+                }
+                onRestChange={(si, v) =>
+                  apply(() => updateSetSchemeField(session, bi, si, 'restSec', v, athlete, exercises))
+                }
                 onSegmentRepChange={(si, segIdx, val) =>
                   apply(() => updateSegmentRepAt(session, bi, si, segIdx, val, athlete, exercises))
                 }
@@ -603,26 +571,15 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
           </div>
           </div>
 
-          <footer className={`wolf-se-block-footer${isEmbedded ? ' wolf-se-block-footer--embedded' : ''}`}>
-            {isEmbedded ? (
-              <BlockCompactMeta
-                tonnage={tonnage}
-                workSets={workSets}
-                avgPct={avgPct}
-                prescription={prescription}
-                isEs={isEs}
-                className="wolf-se-block-compact-meta wolf-se-block-compact-meta--footer"
-              />
-            ) : (
-              <>
-                <span className="wolf-se-block-footer-label">
-                  <Gauge size={15} aria-hidden />
-                  {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
-                </span>
-                <strong>{tonnage} kg</strong>
-              </>
-            )}
-          </footer>
+          {!isEmbedded ? (
+            <footer className="wolf-se-block-footer">
+              <span className="wolf-se-block-footer-label">
+                <Gauge size={15} aria-hidden />
+                {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
+              </span>
+              <strong>{tonnage} kg</strong>
+            </footer>
+          ) : null}
         </div>
       )}
     </article>
