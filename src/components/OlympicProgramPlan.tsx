@@ -17,6 +17,12 @@ import {
   addWeekToGeneratedProgram,
   PROGRAM_STRUCTURE_LIMITS,
   removeDayFromGeneratedWeek,
+  reorderDaysInGeneratedWeek,
+  reorderWeeksInGeneratedProgram,
+  resolveDayNumberAfterDayReorder,
+  resolveWeekNumberAfterWeekReorder,
+  swapProgramDaySlots,
+  type ProgramDaySlot,
 } from '../services/programStructureMutations';
 import { replaceProgramSession } from '../services/sessionMutations';
 import { calcularCargaTotal } from '../services/trainingEngine';
@@ -477,6 +483,53 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [selectedWeek, selectedDay, canRemoveDay, applyProgramUpdate],
   );
 
+  const handleReorderWeek = useCallback(
+    (fromWeekNumber: number, toWeekNumber: number) => {
+      const current = programRef.current;
+      if (!current || fromWeekNumber === toWeekNumber || current.weeks.length <= 1) return;
+      const next = reorderWeeksInGeneratedProgram(current, fromWeekNumber, toWeekNumber);
+      if (next === current) return;
+      const newWeek = resolveWeekNumberAfterWeekReorder(
+        current.weeks,
+        selectedWeek,
+        fromWeekNumber,
+        toWeekNumber,
+      );
+      applyProgramUpdate(next, { week: newWeek, day: selectedDay });
+    },
+    [selectedWeek, selectedDay, applyProgramUpdate],
+  );
+
+  const handleReorderDay = useCallback(
+    (fromDayNumber: number, toDayNumber: number) => {
+      const current = programRef.current;
+      if (!current || fromDayNumber === toDayNumber) return;
+      const weekBefore = current.weeks.find((w) => w.weekNumber === selectedWeek);
+      if (!weekBefore || weekBefore.days.length <= 1) return;
+      const next = reorderDaysInGeneratedWeek(current, selectedWeek, fromDayNumber, toDayNumber);
+      if (next === current) return;
+      const newDay = resolveDayNumberAfterDayReorder(
+        weekBefore.days,
+        selectedDay,
+        fromDayNumber,
+        toDayNumber,
+      );
+      applyProgramUpdate(next, { day: newDay });
+    },
+    [selectedWeek, selectedDay, applyProgramUpdate],
+  );
+
+  const handleSwapCells = useCallback(
+    (from: ProgramDaySlot, to: ProgramDaySlot) => {
+      const current = programRef.current;
+      if (!current) return;
+      const next = swapProgramDaySlots(current, from, to);
+      if (next === current) return;
+      applyProgramUpdate(next);
+    },
+    [applyProgramUpdate],
+  );
+
   const handleAssignAthlete = useCallback(async () => {
     if (!program) return;
     try {
@@ -725,6 +778,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   setSelectedDay(dayNumber);
                   setCustomizeSubview('editor');
                 }}
+                onSwapCells={handleSwapCells}
               />
             </div>
           ) : (
@@ -765,6 +819,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     onAddWeek={handleAddWeek}
                     onAddDay={handleAddDay}
                     onRemoveDay={handleRemoveDay}
+                    onReorderWeek={handleReorderWeek}
+                    onReorderDay={handleReorderDay}
                   />
                 ) : null}
                 {daySession ? (

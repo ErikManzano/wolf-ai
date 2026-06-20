@@ -1,13 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { FileImage, FileText, Maximize2, Minimize2, X } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import type { Exercise, GeneratedProgram, Session } from '../../models/training';
+import type { ProgramDaySlot } from '../../services/programStructureMutations';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { exportElementAsPdf, exportElementAsPng, slugExportFilename } from '../../utils/matrixExport';
 import { dayToneIndex, weekToneIndex } from '../../utils/matrixDayTones';
 import { formatBlockPrescription } from './schemeFormat';
 import { blockDisplayName, formatWeekTonnageLabel } from './sessionSheetUtils';
+import { matrixGridTemplate } from './programTabReorderUtils';
 import './program-matrix.css';
+
+const DRAG_THRESHOLD_PX = 10;
+const TAB_SPRING = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.82 };
 
 export interface ProgramMatrixTableProps {
   program: GeneratedProgram;
@@ -25,6 +32,7 @@ export interface ProgramMatrixTableProps {
   exportTitle?: string;
   enableViewportTools?: boolean;
   onSelectCell: (weekNumber: number, dayNumber: number) => void;
+  onSwapCells?: (from: ProgramDaySlot, to: ProgramDaySlot) => void;
 }
 
 function maxDaysInProgram(program: GeneratedProgram): number {
@@ -35,6 +43,11 @@ function sessionAt(program: GeneratedProgram, weekNumber: number, dayNumber: num
   const week = program.weeks.find((w) => w.weekNumber === weekNumber);
   const day = week?.days.find((d) => d.dayNumber === dayNumber);
   return day?.session ?? null;
+}
+
+function dayExists(program: GeneratedProgram, weekNumber: number, dayNumber: number): boolean {
+  const week = program.weeks.find((w) => w.weekNumber === weekNumber);
+  return Boolean(week?.days.some((d) => d.dayNumber === dayNumber));
 }
 
 function dayColumnLabel(
@@ -50,6 +63,97 @@ function dayColumnLabel(
   return isEs ? `Día ${dayNumber}` : `Day ${dayNumber}`;
 }
 
+function slotKey(slot: ProgramDaySlot) {
+  return `${slot.weekNumber}-${slot.dayNumber}`;
+}
+
+interface MatrixCellProps {
+  weekNumber: number;
+  dayNumber: number;
+  session: Session | null;
+  exists: boolean;
+  exercises: Exercise[];
+  isSelected: boolean;
+  tone: number;
+  emptyLabel: string;
+  canSwap: boolean;
+  isDragSource: boolean;
+  isDropTarget: boolean;
+  reduceMotion: boolean | null;
+  onSelect: () => void;
+  onPointerDown: (event: React.PointerEvent) => void;
+  onPointerEnter: () => void;
+}
+
+const MatrixCell: React.FC<MatrixCellProps> = ({
+  session,
+  exists,
+  exercises,
+  isSelected,
+  tone,
+  emptyLabel,
+  canSwap,
+  isDragSource,
+  isDropTarget,
+  reduceMotion,
+  onSelect,
+  onPointerDown,
+  onPointerEnter,
+}) => {
+  if (!exists) {
+    return (
+      <div
+        role="cell"
+        data-day-tone={tone}
+        className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone} is-empty is-missing`}
+      >
+        <span className="wolf-program-matrix-cell-empty">—</span>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      role="cell"
+      layout
+      transition={TAB_SPRING}
+      data-day-tone={tone}
+      className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone}${isSelected ? ' is-selected' : ''}${canSwap ? ' wolf-program-matrix-cell--swappable' : ''}${isDragSource ? ' is-drag-source' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
+      onPointerEnter={canSwap ? onPointerEnter : undefined}
+    >
+      <button
+        type="button"
+        className="wolf-program-matrix-cell-hit"
+        aria-current={isSelected ? 'true' : undefined}
+        onPointerDown={canSwap ? onPointerDown : undefined}
+        onClick={onSelect}
+      >
+        {session && session.exercises.length > 0 ? (
+          <ol className="wolf-program-matrix-exercises">
+            {session.exercises.map((block, i) => {
+              const name = blockDisplayName(block, exercises);
+              const rx = formatBlockPrescription(block);
+              return (
+                <li key={`${block.exerciseId}-${i}`}>
+                  <span className="wolf-program-matrix-exercise">
+                    <span className="wolf-program-matrix-exercise-name">{name}</span>
+                    <code className="wolf-program-matrix-exercise-rx">{rx}</code>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <span className="wolf-program-matrix-cell-placeholder">{emptyLabel}</span>
+        )}
+      </button>
+      {canSwap && isDragSource && !reduceMotion ? (
+        <span className="wolf-program-matrix-cell-float" aria-hidden />
+      ) : null}
+    </motion.div>
+  );
+};
+
 function MatrixTableBody({
   program,
   exercises,
@@ -58,55 +162,131 @@ function MatrixTableBody({
   isEs,
   weekTonnages,
   labels,
-  dayNumbers,
   onSelectCell,
-}: {
-  program: GeneratedProgram;
-  exercises: Exercise[];
-  selectedWeek: number;
-  selectedDay: number;
-  isEs: boolean;
-  weekTonnages: Record<number, number>;
-  labels: ProgramMatrixTableProps['labels'];
-  dayNumbers: number[];
-  onSelectCell: (weekNumber: number, dayNumber: number) => void;
-}) {
+  onSwapCells,
+}: Omit<ProgramMatrixTableProps, 'expanded' | 'exportTitle' | 'enableViewportTools'>) {
+  const reduceMotion = useReducedMotion();
+  const canSwap = Boolean(onSwapCells);
+  const dayCount = useMemo(() => maxDaysInProgram(program), [program]);
+  const dayNumbers = useMemo(
+    () => Array.from({ length: dayCount }, (_, i) => i + 1),
+    [dayCount],
+  );
+
+  const [dragSource, setDragSource] = useState<ProgramDaySlot | null>(null);
+  const [dropTarget, setDropTarget] = useState<ProgramDaySlot | null>(null);
+  const pendingPointer = useRef<{ slot: ProgramDaySlot; x: number; y: number } | null>(null);
+  const suppressClick = useRef(false);
+
+  const gridStyle = {
+    '--matrix-grid-template': matrixGridTemplate(dayNumbers.length),
+    '--matrix-day-count': dayNumbers.length,
+  } as CSSProperties;
+
+  const clearDrag = useCallback(() => {
+    pendingPointer.current = null;
+    setDragSource(null);
+    setDropTarget(null);
+  }, []);
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      if (!pendingPointer.current) return;
+      const dx = event.clientX - pendingPointer.current.x;
+      const dy = event.clientY - pendingPointer.current.y;
+      if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+        setDragSource(pendingPointer.current.slot);
+        pendingPointer.current = null;
+        suppressClick.current = true;
+      }
+    };
+
+    const onPointerUp = () => {
+      if (
+        dragSource &&
+        dropTarget &&
+        slotKey(dragSource) !== slotKey(dropTarget)
+      ) {
+        onSwapCells?.(dragSource, dropTarget);
+      }
+      if (dragSource) suppressClick.current = true;
+      clearDrag();
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, [dragSource, dropTarget, onSwapCells, clearDrag]);
+
+  const handleCellPointerDown = useCallback(
+    (slot: ProgramDaySlot, event: React.PointerEvent) => {
+      if (!canSwap || event.button !== 0) return;
+      pendingPointer.current = { slot, x: event.clientX, y: event.clientY };
+    },
+    [canSwap],
+  );
+
+  const handleCellSelect = useCallback(
+    (weekNumber: number, dayNumber: number) => {
+      if (suppressClick.current) {
+        suppressClick.current = false;
+        return;
+      }
+      onSelectCell(weekNumber, dayNumber);
+    },
+    [onSelectCell],
+  );
+
   const weekLabel = (n: number) => (isEs ? `Semana ${n}` : `Week ${n}`);
 
   return (
-    <table className="wolf-program-matrix-table">
-      <thead>
-        <tr>
-          <th scope="col" className="wolf-program-matrix-corner">
-            {labels.weekCol}
-          </th>
+    <div
+      className={`wolf-program-matrix-table wolf-program-matrix-table--grid${canSwap ? ' wolf-program-matrix-table--swappable' : ''}`}
+      style={gridStyle}
+      role="table"
+      aria-label={isEs ? 'Matriz del programa' : 'Program matrix'}
+    >
+      <div className="wolf-program-matrix-grid-head" role="row">
+        <div className="wolf-program-matrix-corner" role="columnheader">
+          {labels.weekCol}
+        </div>
+        <div className="wolf-program-matrix-day-header-track" role="presentation">
           {dayNumbers.map((dayNumber) => {
             const isActiveDay = selectedDay === dayNumber;
             const tone = dayToneIndex(dayNumber);
             return (
-              <th
+              <div
                 key={dayNumber}
-                scope="col"
+                role="columnheader"
                 data-day-tone={tone}
                 className={`wolf-program-matrix-day-col wolf-program-matrix-day-col--tone-${tone}${isActiveDay ? ' is-active-day' : ''}`}
               >
                 {dayColumnLabel(program, dayNumber, selectedWeek, isEs)}
-              </th>
+              </div>
             );
           })}
-        </tr>
-      </thead>
-      <tbody>
-        {program.weeks.map((w) => {
+        </div>
+      </div>
+
+      <div className="wolf-program-matrix-week-body">
+        {program.weeks.map((w, rowIndex) => {
           const isActiveWeek = selectedWeek === w.weekNumber;
           const tonnage = weekTonnages[w.weekNumber] ?? 0;
+          const weekTone = weekToneIndex(w.weekNumber);
+
           return (
-            <tr
+            <div
               key={w.weekNumber}
-              data-week-tone={weekToneIndex(w.weekNumber)}
-              className={isActiveWeek ? 'is-active-week' : undefined}
+              role="row"
+              data-week-tone={weekTone}
+              className={`wolf-program-matrix-week-line${isActiveWeek ? ' is-active-week' : ''}${rowIndex % 2 === 1 ? ' is-alt-row' : ''}`}
             >
-              <th scope="row" className="wolf-program-matrix-week-row">
+              <div className="wolf-program-matrix-week-row" role="rowheader">
                 <button
                   type="button"
                   className="wolf-program-matrix-week-row-btn"
@@ -118,63 +298,45 @@ function MatrixTableBody({
                     {formatWeekTonnageLabel(tonnage, isEs)}
                   </span>
                 </button>
-              </th>
+              </div>
               {dayNumbers.map((dayNumber) => {
+                const slot = { weekNumber: w.weekNumber, dayNumber };
+                const exists = dayExists(program, w.weekNumber, dayNumber);
                 const session = sessionAt(program, w.weekNumber, dayNumber);
                 const isSelected = selectedWeek === w.weekNumber && selectedDay === dayNumber;
                 const tone = dayToneIndex(dayNumber);
-
-                if (!session) {
-                  return (
-                    <td
-                      key={`${w.weekNumber}-${dayNumber}`}
-                      data-day-tone={tone}
-                      className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone} is-empty`}
-                    >
-                      <span className="wolf-program-matrix-cell-empty">—</span>
-                    </td>
-                  );
-                }
+                const isDragSource = dragSource ? slotKey(dragSource) === slotKey(slot) : false;
+                const isDropTarget =
+                  dragSource && dropTarget ? slotKey(dropTarget) === slotKey(slot) && !isDragSource : false;
 
                 return (
-                  <td
+                  <MatrixCell
                     key={`${w.weekNumber}-${dayNumber}`}
-                    data-day-tone={tone}
-                    className={`wolf-program-matrix-cell wolf-program-matrix-cell--tone-${tone}${isSelected ? ' is-selected' : ''}`}
-                  >
-                    <button
-                      type="button"
-                      className="wolf-program-matrix-cell-hit"
-                      onClick={() => onSelectCell(w.weekNumber, dayNumber)}
-                      aria-current={isSelected ? 'true' : undefined}
-                    >
-                      {session.exercises.length > 0 ? (
-                        <ol className="wolf-program-matrix-exercises">
-                          {session.exercises.map((block, i) => {
-                            const name = blockDisplayName(block, exercises);
-                            const rx = formatBlockPrescription(block);
-                            return (
-                              <li key={`${block.exerciseId}-${i}`}>
-                                <span className="wolf-program-matrix-exercise">
-                                  <span className="wolf-program-matrix-exercise-name">{name}</span>
-                                  <code className="wolf-program-matrix-exercise-rx">{rx}</code>
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ol>
-                      ) : (
-                        <span className="wolf-program-matrix-cell-placeholder">{labels.emptyCell}</span>
-                      )}
-                    </button>
-                  </td>
+                    weekNumber={w.weekNumber}
+                    dayNumber={dayNumber}
+                    session={session}
+                    exists={exists}
+                    exercises={exercises}
+                    isSelected={isSelected}
+                    tone={tone}
+                    emptyLabel={labels.emptyCell}
+                    canSwap={canSwap && exists}
+                    isDragSource={isDragSource}
+                    isDropTarget={Boolean(isDropTarget)}
+                    reduceMotion={reduceMotion}
+                    onSelect={() => handleCellSelect(w.weekNumber, dayNumber)}
+                    onPointerDown={(event) => handleCellPointerDown(slot, event)}
+                    onPointerEnter={() => {
+                      if (dragSource) setDropTarget(slot);
+                    }}
+                  />
                 );
               })}
-            </tr>
+            </div>
           );
         })}
-      </tbody>
-    </table>
+      </div>
+    </div>
   );
 }
 
@@ -190,17 +352,12 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
   exportTitle,
   enableViewportTools = true,
   onSelectCell,
+  onSwapCells,
 }) => {
   const { pushAlert } = useWolfAlert();
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const matrixRef = useRef<HTMLDivElement>(null);
-
-  const dayCount = useMemo(() => maxDaysInProgram(program), [program]);
-  const dayNumbers = useMemo(
-    () => Array.from({ length: dayCount }, (_, i) => i + 1),
-    [dayCount],
-  );
 
   const title =
     exportTitle?.trim() || program.name?.trim() || (isEs ? 'programa' : 'program');
@@ -320,6 +477,18 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
     </div>
   ) : null;
 
+  const matrixBodyProps = {
+    program,
+    exercises,
+    selectedWeek,
+    selectedDay,
+    isEs,
+    weekTonnages,
+    labels,
+    onSelectCell,
+    onSwapCells,
+  };
+
   const matrixPanel = (
     <div
       className={`wolf-program-matrix${expanded ? ' wolf-program-matrix--expanded' : ' wolf-program-matrix--overview'}`}
@@ -334,17 +503,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
       >
         {exportChrome}
         <div className="wolf-program-matrix-scroll">
-          <MatrixTableBody
-            program={program}
-            exercises={exercises}
-            selectedWeek={selectedWeek}
-            selectedDay={selectedDay}
-            isEs={isEs}
-            weekTonnages={weekTonnages}
-            labels={labels}
-            dayNumbers={dayNumbers}
-            onSelectCell={onSelectCell}
-          />
+          <MatrixTableBody {...matrixBodyProps} />
         </div>
         <p className="wolf-program-matrix-hint">{labels.overviewHint}</p>
         {exportFooter}
@@ -361,60 +520,29 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
               <header className="wolf-program-matrix-fullscreen__head">
                 <strong>{title}</strong>
                 <div className="wolf-program-matrix-fullscreen__actions">
-                  <button
-                    type="button"
-                    className="wolf-program-matrix-tool-btn"
-                    onClick={() => void runExport('png')}
-                    disabled={exporting}
-                  >
+                  <button type="button" className="wolf-program-matrix-tool-btn" onClick={() => void runExport('png')} disabled={exporting}>
                     <FileImage size={16} aria-hidden />
                     <span>{isEs ? 'Imagen' : 'Image'}</span>
                   </button>
-                  <button
-                    type="button"
-                    className="wolf-program-matrix-tool-btn"
-                    onClick={() => void runExport('pdf')}
-                    disabled={exporting}
-                  >
+                  <button type="button" className="wolf-program-matrix-tool-btn" onClick={() => void runExport('pdf')} disabled={exporting}>
                     <FileText size={16} aria-hidden />
                     <span>PDF</span>
                   </button>
-                  <button
-                    type="button"
-                    className="wolf-program-matrix-tool-btn wolf-program-matrix-tool-btn--icon"
-                    onClick={closeFullscreen}
-                    aria-label={isEs ? 'Salir de pantalla completa' : 'Exit full screen'}
-                  >
+                  <button type="button" className="wolf-program-matrix-tool-btn wolf-program-matrix-tool-btn--icon" onClick={closeFullscreen} aria-label={isEs ? 'Salir de pantalla completa' : 'Exit full screen'}>
                     <Minimize2 size={16} aria-hidden />
                   </button>
-                  <button
-                    type="button"
-                    className="wolf-program-matrix-tool-btn wolf-program-matrix-tool-btn--icon"
-                    onClick={closeFullscreen}
-                    aria-label={isEs ? 'Cerrar' : 'Close'}
-                  >
+                  <button type="button" className="wolf-program-matrix-tool-btn wolf-program-matrix-tool-btn--icon" onClick={closeFullscreen} aria-label={isEs ? 'Cerrar' : 'Close'}>
                     <X size={16} aria-hidden />
                   </button>
                 </div>
               </header>
               <div className="wolf-program-matrix-fullscreen__body">
                 <div className="wolf-program-matrix wolf-program-matrix--expanded wolf-program-matrix--in-fullscreen">
-                  <div
-                    ref={matrixRef}
-                    data-matrix-export-root
-                    className="wolf-program-matrix-export-body"
-                  >
+                  <div ref={matrixRef} data-matrix-export-root className="wolf-program-matrix-export-body">
                     {exportChrome}
                     <div className="wolf-program-matrix-scroll">
                       <MatrixTableBody
-                        program={program}
-                        exercises={exercises}
-                        selectedWeek={selectedWeek}
-                        selectedDay={selectedDay}
-                        isEs={isEs}
-                        weekTonnages={weekTonnages}
-                        labels={labels}
-                        dayNumbers={dayNumbers}
+                        {...matrixBodyProps}
                         onSelectCell={(week, day) => {
                           onSelectCell(week, day);
                           closeFullscreen();

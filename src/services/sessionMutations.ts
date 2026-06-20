@@ -272,6 +272,25 @@ export function removeSetFromBlock(
   return finalize(s, athlete, catalog);
 }
 
+export function reorderSetsInBlock(
+  session: Session,
+  blockIndex: number,
+  fromIndex: number,
+  toIndex: number,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block || fromIndex === toIndex) return session;
+  const sets = [...block.sets];
+  if (fromIndex < 0 || fromIndex >= sets.length || toIndex < 0 || toIndex >= sets.length) return session;
+  const [moved] = sets.splice(fromIndex, 1);
+  sets.splice(toIndex, 0, moved!);
+  block.sets = sets;
+  return finalize(s, athlete, catalog);
+}
+
 /** `countsTowardTechnicalNBL === false` marca calentamiento (excluye NBL, carga de trabajo y K). */
 export function setBlockCountsTowardTechnicalNBL(
   session: Session,

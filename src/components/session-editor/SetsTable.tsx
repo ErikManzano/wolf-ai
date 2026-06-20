@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Clock, Copy, GripVertical, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
 import { normalizeBlockType, WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
@@ -44,6 +44,7 @@ interface SetsTableProps {
   onAddSet: () => void;
   onDuplicateSet: (setIndex: number) => void;
   onRemoveSet: (setIndex: number) => void;
+  onReorderSets?: (fromIndex: number, toIndex: number) => void;
 }
 
 function PremiumSetsSummary({
@@ -90,10 +91,18 @@ interface PremiumSetMobileCardProps {
   kg: string | number;
   isEs: boolean;
   canRemove: boolean;
+  canReorder: boolean;
+  isDragging: boolean;
+  isDropTarget: boolean;
   onPctChange: (value: number) => void;
   onRepsChange: (value: number) => void;
   onRestChange: (value: number) => void;
   onRemove: () => void;
+  onGripDragStart: (event: React.DragEvent) => void;
+  onGripDragEnd: () => void;
+  onDragOver: (event: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (event: React.DragEvent) => void;
 }
 
 function PremiumSetMobileCard({
@@ -102,17 +111,42 @@ function PremiumSetMobileCard({
   kg,
   isEs,
   canRemove,
+  canReorder,
+  isDragging,
+  isDropTarget,
   onPctChange,
   onRepsChange,
   onRestChange,
   onRemove,
+  onGripDragStart,
+  onGripDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: PremiumSetMobileCardProps) {
   const restSec = row.restSec ?? DEFAULT_REST_SEC;
   const si = setIndex;
 
   return (
-    <article className="wolf-se-premium-set-card">
+    <article
+      className={`wolf-se-premium-set-card${isDragging ? ' is-dragging' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
+      onDragOver={canReorder ? onDragOver : undefined}
+      onDragLeave={canReorder ? onDragLeave : undefined}
+      onDrop={canReorder ? (e) => { e.preventDefault(); onDrop(e); } : undefined}
+    >
       <div className="wolf-se-premium-set-card__head">
+        {canReorder ? (
+          <button
+            type="button"
+            className="wolf-se-sets-premium__grip wolf-se-sets-premium__grip--card"
+            draggable
+            aria-label={isEs ? 'Arrastrar para reordenar' : 'Drag to reorder'}
+            onDragStart={onGripDragStart}
+            onDragEnd={onGripDragEnd}
+          >
+            <GripVertical size={14} aria-hidden />
+          </button>
+        ) : null}
         <span className="wolf-se-sets-premium__serie-badge">{si + 1}</span>
         <span className="wolf-se-premium-set-card__load">
           <strong>{kg}</strong> kg
@@ -191,7 +225,40 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onAddSet,
   onDuplicateSet,
   onRemoveSet,
+  onReorderSets,
 }) => {
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dropIdx, setDropIdx] = useState<number | null>(null);
+  const canReorderSets = Boolean(onReorderSets) && block.sets.length > 1;
+
+  const handleGripDragStart = useCallback((event: React.DragEvent, setIndex: number) => {
+    setDragIdx(setIndex);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(setIndex));
+    const row = (event.currentTarget as HTMLElement).closest('tr, .wolf-se-premium-set-card');
+    if (row) event.dataTransfer.setDragImage(row, 24, 20);
+  }, []);
+
+  const handleGripDragEnd = useCallback(() => {
+    setDragIdx(null);
+    setDropIdx(null);
+  }, []);
+
+  const handleRowDragOver = useCallback((event: React.DragEvent, setIndex: number) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDropIdx(setIndex);
+  }, []);
+
+  const handleRowDrop = useCallback(
+    (setIndex: number) => {
+      if (dragIdx !== null && dragIdx !== setIndex) onReorderSets?.(dragIdx, setIndex);
+      setDragIdx(null);
+      setDropIdx(null);
+    },
+    [dragIdx, onReorderSets],
+  );
+
   const isPhone = useMediaQuery('(max-width: 767px)');
   const isTightViewport = useMediaQuery('(max-width: 1100px)');
   const isPremiumMobile = useMediaQuery('(max-width: 899px)');
@@ -279,10 +346,21 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     kg={kg}
                     isEs={isEs}
                     canRemove={block.sets.length > 1}
+                    canReorder={canReorderSets}
+                    isDragging={dragIdx === si}
+                    isDropTarget={dropIdx === si && dragIdx !== si}
                     onPctChange={(v) => onPctChange(si, v)}
                     onRepsChange={(v) => onRepsChange(si, v)}
                     onRestChange={(v) => onRestChange(si, v)}
                     onRemove={() => onRemoveSet(si)}
+                    onGripDragStart={(e) => handleGripDragStart(e, si)}
+                    onGripDragEnd={handleGripDragEnd}
+                    onDragOver={(e) => handleRowDragOver(e, si)}
+                    onDragLeave={() => setDropIdx((prev) => (prev === si ? null : prev))}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleRowDrop(si);
+                    }}
                   />
                 );
               })}
@@ -306,11 +384,30 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
                   const restSec = row.restSec ?? DEFAULT_REST_SEC;
                   return (
-                    <tr key={si}>
+                    <tr
+                      key={si}
+                      className={`${dragIdx === si ? 'is-dragging' : ''}${dropIdx === si && dragIdx !== si ? ' is-drop-target' : ''}`}
+                      onDragOver={canReorderSets ? (e) => handleRowDragOver(e, si) : undefined}
+                      onDragLeave={canReorderSets ? () => setDropIdx((prev) => (prev === si ? null : prev)) : undefined}
+                      onDrop={canReorderSets ? (e) => { e.preventDefault(); handleRowDrop(si); } : undefined}
+                    >
                       <td className="wolf-se-sets-premium__col-grip">
-                        <span className="wolf-se-sets-premium__grip" aria-hidden>
-                          <GripVertical size={14} />
-                        </span>
+                        {canReorderSets ? (
+                          <button
+                            type="button"
+                            className="wolf-se-sets-premium__grip"
+                            draggable
+                            aria-label={isEs ? 'Arrastrar para reordenar' : 'Drag to reorder'}
+                            onDragStart={(e) => handleGripDragStart(e, si)}
+                            onDragEnd={handleGripDragEnd}
+                          >
+                            <GripVertical size={14} aria-hidden />
+                          </button>
+                        ) : (
+                          <span className="wolf-se-sets-premium__grip wolf-se-sets-premium__grip--disabled" aria-hidden>
+                            <GripVertical size={14} />
+                          </span>
+                        )}
                       </td>
                       <td>
                         <span className="wolf-se-sets-premium__serie-badge">{si + 1}</span>

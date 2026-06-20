@@ -22,6 +22,7 @@ import {
   removeExerciseBlock,
   removeSetFromBlock,
   reorderComplexSegments,
+  reorderSetsInBlock,
   setBlockCountsTowardTechnicalNBL,
   setBlockExercise,
   setSegmentExercise,
@@ -567,6 +568,9 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 onAddSet={() => apply(() => addSetToBlock(session, bi, athlete, exercises))}
                 onDuplicateSet={(si) => apply(() => duplicateSetAt(session, bi, si, athlete, exercises))}
                 onRemoveSet={(si) => apply(() => removeSetFromBlock(session, bi, si, athlete, exercises))}
+                onReorderSets={(from, to) =>
+                  apply(() => reorderSetsInBlock(session, bi, from, to, athlete, exercises))
+                }
               />
           </div>
           </div>

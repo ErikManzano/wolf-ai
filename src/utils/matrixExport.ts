@@ -179,6 +179,7 @@ function prepareExportRoot(
 
   root.querySelector('.wolf-program-matrix-toolbar')?.remove();
   root.querySelector('.wolf-program-matrix-hint')?.remove();
+  root.querySelectorAll('.wolf-program-matrix-cell-float').forEach((el) => el.remove());
 
   root.querySelectorAll('.is-active-day, .is-selected, .is-active-week').forEach((el) => {
     el.classList.remove('is-active-day', 'is-selected', 'is-active-week');
@@ -194,7 +195,9 @@ function prepareExportRoot(
   }
 
   if (weekRowIndex != null) {
-    const rows = Array.from(root.querySelectorAll('.wolf-program-matrix-table tbody tr'));
+    const rows = Array.from(
+      root.querySelectorAll('.wolf-program-matrix-table tbody tr, .wolf-program-matrix-week-line'),
+    );
     rows.forEach((row, index) => {
       if (index !== weekRowIndex) row.remove();
     });
@@ -282,7 +285,9 @@ function prepareExportRoot(
 }
 
 function countWeekRows(source: HTMLElement): number {
-  return source.querySelectorAll('.wolf-program-matrix-table tbody tr').length;
+  const legacyRows = source.querySelectorAll('.wolf-program-matrix-table tbody tr').length;
+  if (legacyRows > 0) return legacyRows;
+  return source.querySelectorAll('.wolf-program-matrix-week-line').length;
 }
 
 function pickCaptureScale(width: number, height: number): number {

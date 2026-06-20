@@ -2015,8 +2015,22 @@
   overflow-x: hidden;
 }
 
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tabs-reorder {
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab-wrap {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab,
-.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab.active {
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab.active,
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab-wrap .wolf-day-tab,
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab-wrap .wolf-day-tab.active {
   flex: 1 1 0;
   min-width: 0;
   justify-content: center;
@@ -2030,6 +2044,28 @@
 .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab.active {
   gap: 0;
   padding: 4px 2px;
+}
+
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab-wrap .wolf-day-tab {
+  width: 100%;
+  border: 1px solid transparent;
+}
+
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab:hover:not(.active) {
+  color: #fafafa;
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 10%, #111318);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 28%, #27272a);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+    0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab.active:hover {
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 16%, #111318);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 62%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 22%, transparent) inset,
+    0 2px 10px color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 12%, transparent);
 }
 
 .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab__remove {

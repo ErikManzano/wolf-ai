@@ -391,3 +391,142 @@ tr.is-active-week .wolf-program-matrix-week-load {
 .wolf-program-matrix-fullscreen__head strong {
   color: var(--matrix-text);
 }
+
+/* Grid matrix layout */
+.wolf-program-matrix-table--grid {
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  width: max-content;
+}
+
+.wolf-program-matrix-grid-head {
+  display: grid;
+  grid-template-columns: var(--matrix-grid-template);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--matrix-surface);
+}
+
+.wolf-program-matrix-day-header-track {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--matrix-day-count), minmax(100px, 128px));
+}
+
+.wolf-program-matrix-week-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.wolf-program-matrix-week-line {
+  display: grid;
+  grid-template-columns: var(--matrix-grid-template);
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-corner,
+.wolf-program-matrix-table--grid .wolf-program-matrix-day-col,
+.wolf-program-matrix-table--grid .wolf-program-matrix-week-row,
+.wolf-program-matrix-table--grid .wolf-program-matrix-cell {
+  border-bottom: 1px solid var(--matrix-border-soft);
+  border-right: 1px solid var(--matrix-border-soft);
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-week-row {
+  background: color-mix(in srgb, var(--matrix-surface) 55%, var(--matrix-bg));
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell {
+  background: color-mix(in srgb, var(--matrix-surface) 40%, var(--matrix-bg));
+}
+
+.wolf-program-matrix-week-line[data-week-tone='0'] .wolf-program-matrix-week-row-btn {
+  border-left-color: #f97316;
+}
+
+.wolf-program-matrix-week-line[data-week-tone='1'] .wolf-program-matrix-week-row-btn {
+  border-left-color: #22d3ee;
+}
+
+.wolf-program-matrix-week-line[data-week-tone='2'] .wolf-program-matrix-week-row-btn {
+  border-left-color: #a78bfa;
+}
+
+.wolf-program-matrix-week-line[data-week-tone='3'] .wolf-program-matrix-week-row-btn {
+  border-left-color: #34d399;
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-0 {
+  background: #14110f;
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-1 {
+  background: #101516;
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-2 {
+  background: #12101a;
+}
+
+.wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-3 {
+  background: #101613;
+}
+
+.wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-row {
+  background: color-mix(in srgb, var(--matrix-accent) 8%, var(--matrix-surface));
+}
+
+.wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-title {
+  color: var(--matrix-text);
+}
+
+.wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-load {
+  color: color-mix(in srgb, var(--matrix-load) 65%, var(--matrix-text-muted));
+}
+
+.wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-row-btn {
+  border-left-color: var(--matrix-accent);
+}
+
+.wolf-program-matrix-cell--swappable {
+  position: relative;
+}
+
+.wolf-program-matrix-cell--swappable .wolf-program-matrix-cell-hit {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.wolf-program-matrix-cell--swappable.is-drag-source .wolf-program-matrix-cell-hit {
+  cursor: grabbing;
+}
+
+.wolf-program-matrix-cell.is-drag-source {
+  z-index: 3;
+}
+
+.wolf-program-matrix-cell.is-drag-source .wolf-program-matrix-cell-hit {
+  opacity: 0.72;
+  transform: scale(0.98);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.wolf-program-matrix-cell.is-drop-target {
+  z-index: 2;
+  box-shadow: inset 0 0 0 2px var(--matrix-accent);
+  background: color-mix(in srgb, var(--matrix-accent) 10%, var(--matrix-bg)) !important;
+}
+
+.wolf-program-matrix-cell-float {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed color-mix(in srgb, var(--matrix-accent) 55%, transparent);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.wolf-program-matrix-table--swappable .wolf-program-matrix-week-row {
+  padding-left: 0;
+}
+

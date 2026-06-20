@@ -1439,11 +1439,22 @@
   .wolf-program-day-board .wolf-day-tabs-strip {
     gap: 2px;
     padding: 4px 6px 6px;
-    overflow-x: hidden;
+    overflow-x: auto;
+  }
+
+  .wolf-program-day-board .wolf-day-tabs-reorder {
+    gap: 2px;
   }
 
   .wolf-program-day-board .wolf-day-tab,
-  .wolf-program-day-board .wolf-day-tab.active {
+  .wolf-program-day-board .wolf-day-tab.active,
+  .wolf-program-day-board .wolf-day-tab-wrap {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .wolf-program-day-board .wolf-day-tab-wrap .wolf-day-tab,
+  .wolf-program-day-board .wolf-day-tab-wrap .wolf-day-tab.active {
     flex: 1 1 0;
     min-width: 0;
     justify-content: center;
@@ -1470,6 +1481,47 @@
     min-width: 26px;
     min-height: 26px;
   }
+}
+
+.wolf-week-tab-card-wrap {
+  flex: 1 1 75px;
+  min-width: 75px;
+  scroll-snap-align: center;
+}
+
+.wolf-week-tab-card-wrap .wolf-week-tab-card {
+  width: 100%;
+  height: 100%;
+  flex: none;
+  min-width: 0;
+}
+
+.wolf-day-tab-wrap {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  min-width: 0;
+}
+
+.wolf-day-tab-wrap .wolf-day-tab {
+  width: 100%;
+}
+
+.wolf-day-tab-wrap:not(.is-active):hover .wolf-day-tab:not(.active) {
+  color: #e4e4e7;
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 7%, #18181b);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 24%, #3f3f46);
+}
+
+.wolf-day-tabs-reorder {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .wolf-week-tab-card {
@@ -1593,6 +1645,9 @@
 .wolf-day-tab {
   flex: 0 0 auto;
   scroll-snap-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid transparent;
@@ -1604,13 +1659,24 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease,
-    background 0.15s ease;
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .wolf-day-tab:hover:not(.active) {
-  color: #a1a1aa;
+  color: #e4e4e7;
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 7%, #18181b);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 24%, #3f3f46);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 5%, transparent) inset,
+    0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.wolf-day-tab:active:not(.active) {
+  transform: scale(0.98);
 }
 
 .wolf-day-tab.active {
@@ -1623,6 +1689,12 @@
   border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 45%, transparent);
   background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 10%, transparent);
   cursor: default;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 18%, transparent) inset;
+}
+
+.wolf-day-tab.active:hover {
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 15%, transparent);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 58%, transparent);
 }
 
 .wolf-day-tab__select {
