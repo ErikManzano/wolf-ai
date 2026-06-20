@@ -6,6 +6,7 @@ import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { MobileSetList } from '../mobile-wl/cards/MobileSetList';
 import { CompactNumberField } from './CompactNumberField';
+import { ComboNumberField } from './ComboNumberField';
 import { SegmentRepField } from './SegmentRepField';
 import {
   blockAvgIntensity,
@@ -23,7 +24,8 @@ import {
 } from './setSchemeUtils';
 import './set-rows.css';
 
-/** Incremento de %1RM con botones −/+ (entrada manual: enteros 40–120). */
+const PCT_PRESETS_LIST = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 120] as const;
+const REP_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20] as const;
 const PCT_BUTTON_STEP = 5;
 const RIR_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
 const REST_PRESETS_SEC = [90, 120, 150, 180, 210, 240] as const;
@@ -207,14 +209,14 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       <td>
                         <span className="wolf-se-sets-premium__serie-badge">{si + 1}</span>
                       </td>
-                      <td>
-                        <CompactNumberField
-                          size="compact"
+                      <td className="wolf-se-sets-premium__col-pct">
+                        <ComboNumberField
+                          variant="premium"
                           value={row.percentage}
                           min={WL_PCT_MIN}
                           max={WL_PCT_MAX}
-                          step={PCT_BUTTON_STEP}
-                          suffix="%"
+                          step={5}
+                          options={[...PCT_PRESETS_LIST]}
                           onChange={(v) => onPctChange(si, v)}
                           aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
                         />
@@ -222,18 +224,19 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       <td>
                         <span className="wolf-se-sets-premium__load">{kg} kg</span>
                       </td>
-                      <td>
-                        <CompactNumberField
-                          size="compact"
+                      <td className="wolf-se-sets-premium__col-reps">
+                        <ComboNumberField
+                          variant="premium"
                           value={row.reps}
                           min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
                           max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
                           step={1}
+                          options={[...REP_PRESETS_LIST]}
                           onChange={(v) => onRepsChange(si, v)}
                           aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
                         />
                       </td>
-                      <td>
+                      <td className="wolf-se-sets-premium__col-rir">
                         <select
                           className="wolf-se-sets-premium__select"
                           value={rir}

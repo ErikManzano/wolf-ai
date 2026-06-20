@@ -198,6 +198,8 @@ export interface SetCompletionLog {
   actualReps?: number;
   /** Reps realizadas por movimiento en complejos, paralelo a segmentReps del esquema. */
   actualSegmentReps?: number[];
+  /** RPE reportado al completar la serie (6–10). */
+  actualRpe?: number;
 }
 
 export interface Session {

@@ -58,10 +58,12 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
   const t = isEs
     ? {
         title: 'Historial Stats y PRs',
-        sub: 'Cada envío desde «Stats y PRs» queda registrado. Tu coach (Ivan Hellequin) puede pedirte una nueva tanda cuando lo necesite.',
+        subCoach: 'Registros de PRs por atleta. Usa Stats y PRs para añadir o actualizar envíos.',
+        subAthlete: 'Evolución de tus PRs según los registros de tu coach.',
         coachPick: 'Filtrar por atleta',
         all: 'Todos',
-        empty: 'Aún no hay registros. Envía tu perfil desde Stats y PRs.',
+        emptyCoach: 'Sin registros para este filtro.',
+        emptyAthlete: 'Aún no hay registros. Tu coach registrará tus PRs.',
         tableDate: 'Fecha',
         tableSn: 'Snatch',
         tableCj: 'C&J',
@@ -75,10 +77,12 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
       }
     : {
         title: 'Stats & PR history',
-        sub: 'Each submission from “Stats & PRs” is stored. Your coach can ask for a fresh update when needed.',
+        subCoach: 'PR entries by athlete. Use Stats & PRs to add or update submissions.',
+        subAthlete: 'Your PR trend from coach-logged records.',
         coachPick: 'Filter by athlete',
         all: 'All',
-        empty: 'No entries yet. Submit your profile from Stats & PRs.',
+        emptyCoach: 'No entries for this filter.',
+        emptyAthlete: 'No entries yet. Your coach will log your PRs.',
         tableDate: 'Date',
         tableSn: 'Snatch',
         tableCj: 'C&J',
@@ -91,6 +95,9 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
         tableBlock: 'PRs by submission',
       };
 
+  const sub = persona === 'athlete' ? t.subAthlete : t.subCoach;
+  const empty = persona === 'athlete' ? t.emptyAthlete : t.emptyCoach;
+
   return (
     <div className={`perf-stats-history${embedded ? ' perf-stats-history--embedded' : ''}`}>
       {!embedded ? (
@@ -98,7 +105,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
           <ClipboardList size={22} strokeWidth={2} aria-hidden />
           <div>
             <h2 className="perf-stats-title">{t.title}</h2>
-            <p className="perf-stats-sub">{t.sub}</p>
+            <p className="perf-stats-sub">{sub}</p>
           </div>
         </div>
       ) : null}
@@ -118,7 +125,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
       )}
 
       {visibleIntakes.length === 0 ? (
-        <p className="perf-stats-empty">{t.empty}</p>
+        <p className="perf-stats-empty">{empty}</p>
       ) : (
         <>
           <div className="perf-stats-charts">
@@ -190,7 +197,7 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
         </>
       )}
 
-      {persona === 'athlete' && (
+      {persona === 'coach' && (
         <div className="perf-stats-actions">
           <button type="button" className="btn-primary" onClick={onGoToStats}>
             {t.cta}

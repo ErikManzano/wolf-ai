@@ -7,14 +7,25 @@ import {
   countProgramExercises,
   isDayCompleteWithSets,
 } from '../utils/completionHelpers';
-import { DayTrackingCard } from './athlete-tracking/DayTrackingCard';
+import { AthleteDayNavigator } from './athlete-tracking/AthleteDayNavigator';
+import { AthleteDayOverview } from './athlete-tracking/AthleteDayOverview';
+import { AthleteExerciseDetailScreen } from './athlete-tracking/AthleteExerciseDetailScreen';
 import { MobileWeekNavigator } from './athlete-tracking/MobileWeekNavigator';
+import { WorkoutFlow } from './athlete-tracking/workout-flow/WorkoutFlow';
+import type { GeneratedProgram } from '../models/training';
 import './AthleteTrainingView.css';
+import './athlete-tracking/athlete-day-view.css';
 import '../styles/interactive.css';
 
 interface AthleteTrainingViewProps {
   language: 'ES' | 'EN';
 }
+
+type WorkoutStartAt = {
+  exerciseIndex: number;
+  schemeIndex: number;
+  setInstance: number;
+};
 
 const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) => {
   const isEs = language === 'ES';
@@ -23,18 +34,10 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     assignmentsLoading,
     completions,
     setLogs,
-    toggleSessionComplete,
-    isSessionComplete,
-    toggleExerciseComplete,
     toggleSetComplete,
     updateSetLog,
     isSetComplete,
     getSetLog,
-    isTrackingPending,
-    isTrackingFailed,
-    setLogTrackingKey,
-    exerciseTrackingKey,
-    sessionTrackingKey,
     motorExercises,
     wlAthletes,
   } = useWolfAssign();
@@ -45,7 +48,13 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   );
 
   const [week, setWeek] = useState(1);
+  const [activeDay, setActiveDay] = useState(1);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
+  const [workoutDay, setWorkoutDay] = useState<GeneratedProgram['weeks'][number]['days'][number] | null>(
+    null,
+  );
+  const [workoutStartAt, setWorkoutStartAt] = useState<WorkoutStartAt | undefined>(undefined);
+  const [exerciseDetailIndex, setExerciseDetailIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (myAssignments.length === 0) {
@@ -69,6 +78,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   const program = activeAssignment?.program;
   const weekData = program?.weeks.find((w) => w.weekNumber === week);
+  const activeDayData = weekData?.days.find((d) => d.dayNumber === activeDay);
 
   const totalExercises = useMemo(() => (program ? countProgramExercises(program) : 0), [program]);
 
@@ -120,9 +130,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       title: isEs ? 'Mi plan WL' : 'My WL plan',
       discipline: isEs ? 'Disciplina' : 'Discipline',
       exercisesDone: isEs ? 'ejercicios hechos' : 'exercises done',
-      markDone: isEs ? 'Marcar realizada' : 'Mark done',
-      done: isEs ? 'Realizada' : 'Done',
-      reps: isEs ? 'reps' : 'reps',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
         ? 'Cuando tu coach te asigne programas desde «Programas», aparecerán aquí. Puedes llevar varios planes a la vez.'
@@ -137,6 +144,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       for (const d of w.days) {
         if (!isDayDone(w.weekNumber, d.dayNumber, d.session.exercises)) {
           setWeek(w.weekNumber);
+          setActiveDay(d.dayNumber);
           return;
         }
       }
@@ -145,7 +153,45 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   useEffect(() => {
     setWeek(1);
+    setActiveDay(1);
+    setExerciseDetailIndex(null);
   }, [activeAssignment?.id]);
+
+  useEffect(() => {
+    if (firstIncompleteDayNumber != null) {
+      setActiveDay(firstIncompleteDayNumber);
+    } else if (weekData?.days[0]) {
+      setActiveDay(weekData.days[0].dayNumber);
+    }
+  }, [week, weekData?.days, firstIncompleteDayNumber]);
+
+  const completeSet = useCallback(
+    (dayNumber: number, input: WorkoutStartAt & { actualKg: number; actualReps: number; actualRpe: number }) => {
+      if (!activeAssignment || !weekData) return;
+      const payload = {
+        assignmentId: activeAssignment.id,
+        weekNumber: weekData.weekNumber,
+        dayNumber,
+        exerciseIndex: input.exerciseIndex,
+        schemeIndex: input.schemeIndex,
+        setInstance: input.setInstance,
+        actualKg: input.actualKg,
+        actualReps: input.actualReps,
+        actualRpe: input.actualRpe,
+      };
+      const alreadyDone = isSetComplete(
+        activeAssignment.id,
+        weekData.weekNumber,
+        dayNumber,
+        input.exerciseIndex,
+        input.schemeIndex,
+        input.setInstance,
+      );
+      if (alreadyDone) updateSetLog(payload);
+      else toggleSetComplete(payload);
+    },
+    [activeAssignment, weekData, isSetComplete, updateSetLog, toggleSetComplete],
+  );
 
   if (assignmentsLoading) {
     return (
@@ -158,7 +204,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
   }
 
-  if (!activeAssignment || !program || !weekData) {
+  if (!activeAssignment || !program || !weekData || !activeDayData) {
     return (
       <div className="wolf-athlete-plan wolf-athlete-plan--empty">
         <div className="wolf-athlete-empty-visual">
@@ -170,9 +216,12 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
   }
 
+  const detailBlock =
+    exerciseDetailIndex != null ? activeDayData.session.exercises[exerciseDetailIndex] : undefined;
+
   return (
-    <div className="wolf-athlete-plan wolf-athlete-plan--tracking">
-      <header className="wolf-athlete-hero">
+    <div className="wolf-athlete-plan wolf-athlete-plan--tracking wolf-athlete-plan--mobile-day">
+      <header className="wolf-athlete-hero wolf-athlete-hero--compact">
         <div className="wolf-athlete-hero-accent" aria-hidden />
         <div className="wolf-athlete-hero-inner">
           <div className="wolf-athlete-hero-main">
@@ -201,33 +250,15 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
             ) : (
               <p className="wolf-athlete-program-name">{program.name}</p>
             )}
-            {athleteProfile ? (
-              <p className="wolf-athlete-athlete-name">
-                <span className="wolf-athlete-athlete-label">{isEs ? 'Atleta' : 'Athlete'}</span>
-                {athleteProfile.name}
-              </p>
-            ) : null}
           </div>
 
-          <aside className="wolf-athlete-discipline" aria-label={t.discipline}>
+          <aside className="wolf-athlete-discipline wolf-athlete-discipline--compact" aria-label={t.discipline}>
             <div className="wolf-athlete-discipline-top">
-              <TrendingUp size={18} strokeWidth={2} className="wolf-athlete-discipline-icon" aria-hidden />
-              <div>
-                <span className="wolf-athlete-discipline-label">{t.discipline}</span>
-                <span className="wolf-athlete-discipline-sub">
-                  {completedExercises}/{totalExercises} {t.exercisesDone}
-                </span>
-              </div>
+              <TrendingUp size={16} strokeWidth={2} className="wolf-athlete-discipline-icon" aria-hidden />
               <span className="wolf-athlete-discipline-pct">{disciplinePct}%</span>
-            </div>
-            <div
-              className="wolf-athlete-progress-track"
-              role="progressbar"
-              aria-valuenow={disciplinePct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div className="wolf-athlete-progress-fill" style={{ width: `${disciplinePct}%` }} />
+              <span className="wolf-athlete-discipline-sub">
+                {completedExercises}/{totalExercises}
+              </span>
             </div>
           </aside>
         </div>
@@ -247,152 +278,121 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         onWeekChange={setWeek}
       />
 
-      <ul className="wolf-athlete-day-list">
-        {weekData.days.map((day, dayIndex) => {
-          const exerciseCount = day.session.exercises.length;
-          const sessionDone = isSessionComplete(
+      <AthleteDayNavigator
+        days={weekData.days}
+        activeDay={activeDay}
+        isEs={isEs}
+        isDayComplete={(dayNumber) => {
+          const day = weekData.days.find((d) => d.dayNumber === dayNumber);
+          if (!day) return false;
+          return isDayDone(weekData.weekNumber, dayNumber, day.session.exercises);
+        }}
+        onDayChange={(dayNumber) => {
+          setActiveDay(dayNumber);
+          setExerciseDetailIndex(null);
+        }}
+      />
+
+      <AthleteDayOverview
+        day={activeDayData}
+        weekNumber={weekData.weekNumber}
+        assignmentId={activeAssignment.id}
+        primaryGoal={program.primaryGoal}
+        athlete={athleteProfile}
+        exercises={motorExercises}
+        exName={exName}
+        isEs={isEs}
+        completions={completions}
+        setLogs={setLogs}
+        isSetComplete={(exerciseIndex, schemeIndex, setInstance) =>
+          isSetComplete(
             activeAssignment.id,
             weekData.weekNumber,
-            day.dayNumber,
-            exerciseCount,
-          );
-          const dayDone = isDayDone(weekData.weekNumber, day.dayNumber, day.session.exercises);
+            activeDayData.dayNumber,
+            exerciseIndex,
+            schemeIndex,
+            setInstance,
+          )
+        }
+        onOpenExercise={setExerciseDetailIndex}
+        onStartWorkout={() => {
+          setWorkoutStartAt(undefined);
+          setWorkoutDay(activeDayData);
+        }}
+      />
 
-          return (
-            <DayTrackingCard
-              key={day.dayNumber}
-              day={day}
-              dayIndex={dayIndex}
-              weekNumber={weekData.weekNumber}
-              assignmentId={activeAssignment.id}
-              athlete={athleteProfile}
-              exercises={motorExercises}
-              exName={exName}
-              isEs={isEs}
-              isDayDone={dayDone}
-              sessionDone={sessionDone}
-              completions={completions}
-              setLogs={setLogs}
-              defaultExpanded={day.dayNumber === firstIncompleteDayNumber}
-              markDoneLabel={t.markDone}
-              doneLabel={t.done}
-              repsLabel={t.reps}
-              isSetComplete={(exerciseIndex, schemeIndex, setInstance) =>
-                isSetComplete(
-                  activeAssignment.id,
-                  weekData.weekNumber,
-                  day.dayNumber,
-                  exerciseIndex,
-                  schemeIndex,
-                  setInstance,
-                )
-              }
-              getSetLog={(exerciseIndex, schemeIndex, setInstance) =>
-                getSetLog(
-                  activeAssignment.id,
-                  weekData.weekNumber,
-                  day.dayNumber,
-                  exerciseIndex,
-                  schemeIndex,
-                  setInstance,
-                )
-              }
-              isSetSyncPending={(exerciseIndex, schemeIndex, setInstance) =>
-                isTrackingPending(
-                  setLogTrackingKey({
-                    assignmentId: activeAssignment.id,
-                    weekNumber: weekData.weekNumber,
-                    dayNumber: day.dayNumber,
-                    exerciseIndex,
-                    schemeIndex,
-                    setInstance,
-                  }),
-                )
-              }
-              isSetSyncFailed={(exerciseIndex, schemeIndex, setInstance) =>
-                isTrackingFailed(
-                  setLogTrackingKey({
-                    assignmentId: activeAssignment.id,
-                    weekNumber: weekData.weekNumber,
-                    dayNumber: day.dayNumber,
-                    exerciseIndex,
-                    schemeIndex,
-                    setInstance,
-                  }),
-                )
-              }
-              isExerciseSyncPending={(exerciseIndex) =>
-                isTrackingPending(
-                  exerciseTrackingKey(
-                    activeAssignment.id,
-                    weekData.weekNumber,
-                    day.dayNumber,
-                    exerciseIndex,
-                  ),
-                )
-              }
-              isExerciseSyncFailed={(exerciseIndex) =>
-                isTrackingFailed(
-                  exerciseTrackingKey(
-                    activeAssignment.id,
-                    weekData.weekNumber,
-                    day.dayNumber,
-                    exerciseIndex,
-                  ),
-                )
-              }
-              isSessionSyncPending={isTrackingPending(
-                sessionTrackingKey(activeAssignment.id, weekData.weekNumber, day.dayNumber),
-              )}
-              isSessionSyncFailed={isTrackingFailed(
-                sessionTrackingKey(activeAssignment.id, weekData.weekNumber, day.dayNumber),
-              )}
-              onToggleSet={(exerciseIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
-                toggleSetComplete({
-                  assignmentId: activeAssignment.id,
-                  weekNumber: weekData.weekNumber,
-                  dayNumber: day.dayNumber,
-                  exerciseIndex,
-                  schemeIndex,
-                  setInstance,
-                  actualKg,
-                  actualReps,
-                  actualSegmentReps,
-                })
-              }
-              onUpdateSet={(exerciseIndex, schemeIndex, setInstance, actualKg, actualReps, actualSegmentReps) =>
-                updateSetLog({
-                  assignmentId: activeAssignment.id,
-                  weekNumber: weekData.weekNumber,
-                  dayNumber: day.dayNumber,
-                  exerciseIndex,
-                  schemeIndex,
-                  setInstance,
-                  actualKg,
-                  actualReps,
-                  actualSegmentReps,
-                })
-              }
-              onMarkExercise={(exerciseIndex) =>
-                toggleExerciseComplete(
-                  activeAssignment.id,
-                  weekData.weekNumber,
-                  day.dayNumber,
-                  exerciseIndex,
-                )
-              }
-              onToggleSession={() =>
-                toggleSessionComplete(
-                  activeAssignment.id,
-                  weekData.weekNumber,
-                  day.dayNumber,
-                  exerciseCount,
-                )
-              }
-            />
-          );
-        })}
-      </ul>
+      {detailBlock && exerciseDetailIndex != null ? (
+        <AthleteExerciseDetailScreen
+          open
+          block={detailBlock}
+          athlete={athleteProfile}
+          exercises={motorExercises}
+          exName={exName}
+          isEs={isEs}
+          isSetComplete={(schemeIndex, setInstance) =>
+            isSetComplete(
+              activeAssignment.id,
+              weekData.weekNumber,
+              activeDayData.dayNumber,
+              exerciseDetailIndex,
+              schemeIndex,
+              setInstance,
+            )
+          }
+          getSetLog={(schemeIndex, setInstance) =>
+            getSetLog(
+              activeAssignment.id,
+              weekData.weekNumber,
+              activeDayData.dayNumber,
+              exerciseDetailIndex,
+              schemeIndex,
+              setInstance,
+            )
+          }
+          onClose={() => setExerciseDetailIndex(null)}
+          onStartSet={(schemeIndex, setInstance) => {
+            setWorkoutStartAt({
+              exerciseIndex: exerciseDetailIndex,
+              schemeIndex,
+              setInstance,
+            });
+            setWorkoutDay(activeDayData);
+            setExerciseDetailIndex(null);
+          }}
+          onToggleSet={(schemeIndex, setInstance, actualKg, actualReps) =>
+            toggleSetComplete({
+              assignmentId: activeAssignment.id,
+              weekNumber: weekData.weekNumber,
+              dayNumber: activeDayData.dayNumber,
+              exerciseIndex: exerciseDetailIndex,
+              schemeIndex,
+              setInstance,
+              actualKg,
+              actualReps,
+            })
+          }
+        />
+      ) : null}
+
+      {workoutDay ? (
+        <WorkoutFlow
+          open={Boolean(workoutDay)}
+          day={workoutDay}
+          weekNumber={weekData.weekNumber}
+          assignmentId={activeAssignment.id}
+          athlete={athleteProfile}
+          exercises={motorExercises}
+          exName={exName}
+          setLogs={setLogs}
+          isEs={isEs}
+          startAt={workoutStartAt}
+          onClose={() => {
+            setWorkoutDay(null);
+            setWorkoutStartAt(undefined);
+          }}
+          onCompleteSet={(input) => completeSet(workoutDay.dayNumber, input)}
+        />
+      ) : null}
     </div>
   );
 };

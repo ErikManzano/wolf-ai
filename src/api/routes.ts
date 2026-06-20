@@ -1586,6 +1586,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       actualKg?: number;
       actualReps?: number;
       actualSegmentReps?: number[];
+      actualRpe?: number;
     };
     if (
       !body.assignmentId ||
@@ -1619,6 +1620,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       actualSegmentReps: Array.isArray(body.actualSegmentReps)
         ? body.actualSegmentReps.map((n) => Number(n))
         : undefined,
+      actualRpe: body.actualRpe != null ? Number(body.actualRpe) : undefined,
     };
     if (store) {
       const active = await store.toggleSetLog(payload);
@@ -1661,6 +1663,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       actualKg?: number;
       actualReps?: number;
       actualSegmentReps?: number[];
+      actualRpe?: number;
     };
     if (
       !body.assignmentId ||
@@ -1694,6 +1697,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       actualSegmentReps: Array.isArray(body.actualSegmentReps)
         ? body.actualSegmentReps.map((n) => Number(n))
         : undefined,
+      actualRpe: body.actualRpe != null ? Number(body.actualRpe) : undefined,
     };
     if (store) {
       const updated = await store.patchSetLog(payload);
@@ -1714,6 +1718,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         actualKg: payload.actualKg ?? state.setLogs[idx]!.actualKg,
         actualReps: payload.actualReps ?? state.setLogs[idx]!.actualReps,
         actualSegmentReps: payload.actualSegmentReps ?? state.setLogs[idx]!.actualSegmentReps,
+        actualRpe: payload.actualRpe ?? state.setLogs[idx]!.actualRpe,
       };
       res.json(state.setLogs[idx]);
       return;

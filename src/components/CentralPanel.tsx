@@ -122,10 +122,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     if (activeView === 'planning' || activeView === 'sessions') setActiveView('athletes');
   }, [activeView, setActiveView]);
 
-  /** Stats/PRs es vista de atleta; el coach no debe quedar en esta ruta. */
+  /** Stats/PRs: solo coach; atletas ven evolución desde registros del coach. */
   useEffect(() => {
-    if (persona === 'coach' && activeView === 'onboarding') {
-      setActiveView('programs');
+    if (persona === 'athlete' && activeView === 'onboarding') {
+      setActiveView('my-wl-plan');
     }
   }, [persona, activeView, setActiveView]);
 

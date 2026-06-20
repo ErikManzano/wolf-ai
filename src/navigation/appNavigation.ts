@@ -31,9 +31,9 @@ export type AppNavItem = {
   icon: ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
 };
 
-const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes']);
+const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes', 'onboarding']);
 const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
-const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan', 'onboarding']);
+const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
 
 /** Coach mobile bottom bar — left → center (principal) → right */
@@ -45,7 +45,7 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'account',
 ];
 
-const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan', 'onboarding', 'account'];
+const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan', 'account'];
 const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',

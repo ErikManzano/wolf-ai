@@ -6,6 +6,7 @@ import {
   Circle,
   Dumbbell,
   Layers,
+  Play,
 } from 'lucide-react';
 import type { Athlete, Exercise, GeneratedProgram, SessionExerciseBlock } from '../../models/training';
 import { isExerciseCompleteWithSets } from '../../utils/completionHelpers';
@@ -68,6 +69,7 @@ interface DayTrackingCardProps {
   ) => void;
   onMarkExercise: (exerciseIndex: number) => void;
   onToggleSession: () => void;
+  onStartWorkout?: () => void;
   markDoneLabel: string;
   doneLabel: string;
   repsLabel: string;
@@ -99,6 +101,7 @@ export const DayTrackingCard: React.FC<DayTrackingCardProps> = ({
   onUpdateSet,
   onMarkExercise,
   onToggleSession,
+  onStartWorkout,
   markDoneLabel,
   doneLabel,
   repsLabel,
@@ -203,6 +206,12 @@ export const DayTrackingCard: React.FC<DayTrackingCardProps> = ({
         aria-hidden={!expanded}
       >
         <div className="wolf-athlete-day-panel-inner">
+          {exerciseCount > 0 && onStartWorkout ? (
+            <button type="button" className="wolf-athlete-start-workout" onClick={onStartWorkout}>
+              <Play size={18} fill="currentColor" aria-hidden />
+              <span>{isEs ? 'Iniciar entrenamiento' : 'Start workout'}</span>
+            </button>
+          ) : null}
           <div className="wolf-athlete-blocks">
             {exerciseCount === 0 ? (
               <p className="wolf-athlete-empty-text wolf-athlete-empty-text--inline">

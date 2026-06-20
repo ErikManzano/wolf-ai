@@ -80,6 +80,7 @@ export type SetLogInput = {
   actualKg?: number;
   actualReps?: number;
   actualSegmentReps?: number[];
+  actualRpe?: number;
 };
 
 export interface WlAssignmentsProviderProps {
