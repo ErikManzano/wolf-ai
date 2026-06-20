@@ -7,6 +7,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { MobileSetList } from '../mobile-wl/cards/MobileSetList';
 import { CompactNumberField } from './CompactNumberField';
 import { ComboNumberField } from './ComboNumberField';
+import { ComboPresetField } from './ComboPresetField';
 import { SegmentRepField } from './SegmentRepField';
 import {
   blockAvgIntensity,
@@ -28,6 +29,10 @@ const REP_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20] as const;
 const SETS_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10] as const;
 const PCT_BUTTON_STEP = 5;
 const REST_PRESETS_SEC = [90, 120, 150, 180, 210, 240] as const;
+const REST_PRESET_OPTIONS = REST_PRESETS_SEC.map((sec) => ({
+  value: sec,
+  label: formatRestSec(sec),
+}));
 
 interface SetsTableProps {
   block: SessionExerciseBlock;
@@ -192,18 +197,14 @@ function PremiumSetMobileCard({
           <span className="wolf-se-premium-set-card__label">{isEs ? 'Descanso' : 'Rest'}</span>
           <label className="wolf-se-sets-premium__rest wolf-se-premium-set-card__rest">
             <Clock size={14} aria-hidden />
-            <select
-              className="wolf-se-sets-premium__select wolf-se-sets-premium__select--rest"
+            <ComboPresetField
+              variant="premium"
               value={restSec}
+              options={REST_PRESET_OPTIONS}
+              onChange={onRestChange}
+              className="wolf-se-combo-preset--rest"
               aria-label={isEs ? `Descanso serie ${si + 1}` : `Rest set ${si + 1}`}
-              onChange={(e) => onRestChange(Number(e.target.value))}
-            >
-              {REST_PRESETS_SEC.map((sec) => (
-                <option key={sec} value={sec}>
-                  {formatRestSec(sec)}
-                </option>
-              ))}
-            </select>
+            />
           </label>
         </div>
       </div>
@@ -442,18 +443,14 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                       <td>
                         <label className="wolf-se-sets-premium__rest">
                           <Clock size={14} aria-hidden />
-                          <select
-                            className="wolf-se-sets-premium__select wolf-se-sets-premium__select--rest"
+                          <ComboPresetField
+                            variant="premium"
                             value={restSec}
+                            options={REST_PRESET_OPTIONS}
+                            onChange={(v) => onRestChange(si, v)}
+                            className="wolf-se-combo-preset--rest"
                             aria-label={isEs ? `Descanso serie ${si + 1}` : `Rest set ${si + 1}`}
-                            onChange={(e) => onRestChange(si, Number(e.target.value))}
-                          >
-                            {REST_PRESETS_SEC.map((sec) => (
-                              <option key={sec} value={sec}>
-                                {formatRestSec(sec)}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </label>
                       </td>
                       <td className="wolf-se-sets-premium__col-actions">

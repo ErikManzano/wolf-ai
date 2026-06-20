@@ -719,6 +719,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   padding: 10px 8px;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
   vertical-align: middle;
+  overflow: visible;
 }
 
 .wolf-se-sets-premium__table th {
@@ -881,6 +882,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   border: none;
   background: transparent;
   gap: 0;
+  overflow: visible;
 }
 
 .wolf-se-combo-select:focus-within:not(.wolf-se-combo-select--premium) {
@@ -982,6 +984,30 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   border: 1px solid var(--color-border);
   background: var(--color-bg-panel);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.wolf-se-combo-select__menu--portal {
+  right: auto;
+  overscroll-behavior: contain;
+}
+
+.wolf-se-combo-preset--rest {
+  min-width: 72px;
+  max-width: 88px;
+}
+
+button.wolf-se-combo-preset__trigger {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.wolf-se-combo-preset__value {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wolf-se-combo-select__option {

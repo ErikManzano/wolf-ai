@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
+import { usePortaledComboMenu } from './comboMenuPortal';
 
 export interface ComboNumberFieldProps {
   value: number;
@@ -39,6 +41,7 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const menuOptions = options ?? buildOptions(min, max, step);
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -70,16 +73,10 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
     inputRef.current?.blur();
   };
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-
+  const close = useCallback(() => setOpen(false), []);
   const isPremium = variant === 'premium';
+  const menuRect = usePortaledComboMenu(isPremium && open, inputRef, rootRef, menuRef, close);
+
   const rootClass = [
     'wolf-se-combo-select',
     isPremium ? 'wolf-se-combo-select--premium' : '',
@@ -88,6 +85,39 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
   ]
     .filter(Boolean)
     .join(' ');
+
+  const menu =
+    isPremium && open && menuRect && typeof document !== 'undefined' ? (
+      <ul
+        ref={menuRef}
+        className="wolf-se-combo-select__menu wolf-se-combo-select__menu--portal"
+        role="listbox"
+        aria-label={ariaLabel}
+        style={{
+          position: 'fixed',
+          top: menuRect.top,
+          left: menuRect.left,
+          width: menuRect.width,
+          maxHeight: menuRect.maxHeight,
+          transform: menuRect.transform,
+          zIndex: 1200,
+        }}
+      >
+        {menuOptions.map((opt) => (
+          <li key={opt} role="option" aria-selected={opt === value}>
+            <button
+              type="button"
+              className={`wolf-se-combo-select__option${opt === value ? ' is-active' : ''}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => pickOption(opt)}
+            >
+              {opt}
+              {suffix ? suffix : ''}
+            </button>
+          </li>
+        ))}
+      </ul>
+    ) : null;
 
   return (
     <div ref={rootRef} className={rootClass}>
@@ -150,23 +180,7 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
           >
             <ChevronDown size={14} strokeWidth={2.25} />
           </button>
-          {open ? (
-            <ul className="wolf-se-combo-select__menu" role="listbox" aria-label={ariaLabel}>
-              {menuOptions.map((opt) => (
-                <li key={opt} role="option" aria-selected={opt === value}>
-                  <button
-                    type="button"
-                    className={`wolf-se-combo-select__option${opt === value ? ' is-active' : ''}`}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => pickOption(opt)}
-                  >
-                    {opt}
-                    {suffix ? suffix : ''}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {menu ? createPortal(menu, document.body) : null}
         </>
       ) : null}
     </div>
