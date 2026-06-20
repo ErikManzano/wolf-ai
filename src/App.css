@@ -3,7 +3,7 @@
   --sidebar-compact-width: 84px;
   --sidebar-motion: 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--chat-width);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   width: 100%;
   max-width: 100vw;
   height: 100vh;
@@ -14,15 +14,7 @@
 }
 
 .app-container.app-container--sidebar-collapsed {
-  grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr) var(--chat-width);
-}
-
-.app-container.app-container--chat-collapsed {
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--chat-rail-width);
-}
-
-.app-container.app-container--chat-collapsed.app-container--sidebar-collapsed {
-  grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr) var(--chat-rail-width);
+  grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
 }
 
 .sidebar-area {
@@ -218,6 +210,21 @@
   .app-container .workspace-area {
     min-height: 0;
     align-self: stretch;
+    padding: 14px 12px;
+    padding-left: max(12px, var(--safe-left));
+    padding-right: max(12px, var(--safe-right));
+    padding-bottom: max(14px, var(--safe-bottom));
+  }
+
+  .app-container .workspace-area:has(.wl-programs-hub),
+  .app-container .workspace-area:has(.wl-programs-panel),
+  .app-container .workspace-area:has(.prx-page) {
+    padding-left: max(10px, var(--safe-left));
+    padding-right: max(10px, var(--safe-right));
+  }
+
+  .chat-area {
+    display: none;
   }
 }
 
@@ -234,10 +241,10 @@
 }
 
 .chat-area {
+  display: none;
   background: var(--color-bg-panel);
   border-left: 1px solid var(--color-border);
   min-height: 0;
-  display: flex;
   flex-direction: column;
   transition: border-color var(--sidebar-motion);
 }
@@ -315,6 +322,7 @@
   }
 
   .chat-area {
+    display: flex;
     position: fixed;
     top: calc(56px + var(--safe-top));
     bottom: var(--mobile-nav-float-clearance, calc(96px + env(safe-area-inset-bottom, 0px)));
@@ -365,6 +373,52 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+}
+
+/* Asistente AI acoplado al sidebar (escritorio) */
+.chat-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+.chat-sidebar-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-width);
+  z-index: 56;
+  width: min(380px, calc(100vw - var(--sidebar-width) - 12px));
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-panel);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  animation: chat-sidebar-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-container.app-container--sidebar-collapsed .chat-sidebar-drawer {
+  left: var(--sidebar-compact-width);
+  width: min(380px, calc(100vw - var(--sidebar-compact-width) - 12px));
+}
+
+@keyframes chat-sidebar-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

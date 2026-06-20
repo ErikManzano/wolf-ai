@@ -4,7 +4,6 @@ import {
   CalendarRange,
   ChevronDown,
   Trash2,
-  Pencil,
   Users,
 } from 'lucide-react';
 import type { Athlete, GeneratedProgram, SessionGoal } from '../../models/training';
@@ -17,6 +16,7 @@ import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../ut
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
+import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
 import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import '../wl-management/wl-management.css';
@@ -40,7 +40,7 @@ const REFERENCE_ATHLETE: Athlete = {
   readinessScore: 80,
 };
 
-const PLAN_TITLE_MAX_LEN = 48;
+const PLAN_TITLE_MAX_LEN = WL_EDITOR_TITLE_MAX_LEN;
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
@@ -64,7 +64,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const [saving, setSaving] = useState(false);
   const [createActions, setCreateActions] = useState<OlympicProgramPlanCreateActions | null>(null);
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
-  const [titleTouched, setTitleTouched] = useState(false);
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
   const programRef = useRef(program);
   programRef.current = program;
@@ -93,16 +92,13 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     [debouncedSaveTitle],
   );
 
-  const handleProgramTitleBlur = useCallback(() => {
-    setTitleTouched(true);
-    const trimmed = programTitle.trim();
-    if (trimmed !== programTitle) {
-      setProgramTitle(trimmed);
-      void debouncedSaveTitle(trimmed);
-    }
-  }, [programTitle, debouncedSaveTitle]);
+  const handleProgramTitleBlur = useCallback(
+    (title: string) => {
+      void debouncedSaveTitle(title);
+    },
+    [debouncedSaveTitle],
+  );
 
-  const titleTooLong = programTitle.length > PLAN_TITLE_MAX_LEN;
   const titleMissing = programTitle.trim().length === 0;
 
   const mobileTopBar = useMemo(
@@ -231,34 +227,16 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
           {!hasProgram ? editorProgramMeta : null}
         </div>
         <div className="wl-programs-editor-hero-main">
-          <label className="wl-programs-editor-title-field">
-            <div className="wl-programs-editor-title-wrap">
-              <Pencil size={18} strokeWidth={2} className="wl-programs-editor-title-icon" aria-hidden />
-              <input
-                type="text"
-                className="wl-programs-editor-title"
-                value={programTitle}
-                onChange={(e) => handleProgramTitleChange(e.target.value)}
-                onBlur={handleProgramTitleBlur}
-                maxLength={PLAN_TITLE_MAX_LEN + 4}
-                placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
-                aria-label={isEs ? 'Nombre del plan' : 'Plan name'}
-                aria-invalid={titleTooLong || (titleTouched && titleMissing)}
-                aria-required="true"
-              />
-            </div>
-            {titleTooLong && titleTouched ? (
-              <span className="wl-programs-editor-title-error" role="alert">
-                {isEs
-                  ? `Máximo ${PLAN_TITLE_MAX_LEN} caracteres.`
-                  : `Maximum ${PLAN_TITLE_MAX_LEN} characters.`}
-              </span>
-            ) : titleTouched && titleMissing ? (
-              <span className="wl-programs-editor-title-error" role="alert">
-                {isEs ? 'El nombre del plan es obligatorio.' : 'Plan name is required.'}
-              </span>
-            ) : null}
-          </label>
+          <WlEditorTitleField
+            isEs={isEs}
+            value={programTitle}
+            onChange={handleProgramTitleChange}
+            onBlur={handleProgramTitleBlur}
+            maxLength={PLAN_TITLE_MAX_LEN}
+            placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
+            label={isEs ? 'Nombre del plan' : 'Plan name'}
+            required
+          />
         </div>
       </header>
 

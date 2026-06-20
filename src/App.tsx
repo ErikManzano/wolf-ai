@@ -33,8 +33,8 @@ function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('wolf_sidebar_compact_v1') === '1');
   const [sidebarToggleAnimating, setSidebarToggleAnimating] = useState(false);
   const sidebarToggleAnimTimerRef = useRef<number | null>(null);
-  /** Panel AI lateral colapsado solo en vista escritorio (≥1025px). */
-  const [chatDesktopCollapsed, setChatDesktopCollapsed] = useState(true);
+  /** Asistente AI en drawer lateral (escritorio); el rail derecho queda desactivado. */
+  const [sidebarChatOpen, setSidebarChatOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem(AUTH_STORAGE) === '1');
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [isNarrowLayout, setIsNarrowLayout] = useState<boolean>(() =>
@@ -189,7 +189,7 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${lockMobileEdgeSwipe ? ' app-container--program-editor' : ''}`}
+        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${lockMobileEdgeSwipe ? ' app-container--program-editor' : ''}`}
         style={appContainerStyle}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
@@ -240,11 +240,14 @@ function AppShell() {
         >
           <Sidebar 
             activeView={activeView} 
-            setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); }} 
+            setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); setSidebarChatOpen(false); }} 
             language={language}
             collapsed={showSidebarCollapsed}
             showRailToggle={false}
             mobileDrawer={isNarrowLayout}
+            assistantOpen={sidebarChatOpen}
+            showAssistantEntry={!isNarrowLayout}
+            onToggleAssistant={() => setSidebarChatOpen((open) => !open)}
             onToggleCollapsed={() => {
               if (isNarrowLayout) {
                 setMobileMenuOpen((v) => !v);
@@ -316,14 +319,27 @@ function AppShell() {
           />
         </div>
         
-        {/* Chat Panel */}
-        <div className={`chat-area ${mobileChatOpen ? 'open' : ''}`}>
-          <ChatPanel
-            language={language}
-            desktopCollapsed={chatDesktopCollapsed}
-            onToggleDesktopCollapse={() => setChatDesktopCollapsed((c) => !c)}
-          />
-        </div>
+        {isNarrowLayout ? (
+          <div className={`chat-area ${mobileChatOpen ? 'open' : ''}`}>
+            <ChatPanel language={language} />
+          </div>
+        ) : sidebarChatOpen ? (
+          <>
+            <button
+              type="button"
+              className="chat-sidebar-backdrop"
+              aria-label={language === 'ES' ? 'Cerrar asistente' : 'Close assistant'}
+              onClick={() => setSidebarChatOpen(false)}
+            />
+            <div className="chat-sidebar-drawer">
+              <ChatPanel
+                language={language}
+                variant="drawer"
+                onClose={() => setSidebarChatOpen(false)}
+              />
+            </div>
+          </>
+        ) : null}
 
         {isNarrowLayout ? (
           <MobileBottomNav

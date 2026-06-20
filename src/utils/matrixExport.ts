@@ -298,7 +298,16 @@ function pickCaptureScale(width: number, height: number): number {
   return Math.max(1, scale);
 }
 
-async function capturePreparedRoot(exportRoot: HTMLElement): Promise<HTMLCanvasElement> {
+export interface CapturePreparedRootOptions {
+  backgroundColor?: string;
+  cloneRootSelector?: string;
+  onClone?: (cloned: HTMLElement) => void;
+}
+
+export async function capturePreparedRoot(
+  exportRoot: HTMLElement,
+  options: CapturePreparedRootOptions = {},
+): Promise<HTMLCanvasElement> {
   const mount = document.createElement('div');
   mount.setAttribute('data-matrix-export-mount', 'true');
   mount.style.cssText =
@@ -319,8 +328,11 @@ async function capturePreparedRoot(exportRoot: HTMLElement): Promise<HTMLCanvasE
     exportRoot.style.opacity = '1';
     exportRoot.style.visibility = 'visible';
 
+    const cloneRootSelector = options.cloneRootSelector ?? '[data-matrix-export-root]';
+    const backgroundColor = options.backgroundColor ?? MATRIX_EXPORT.bg;
+
     return await html2canvas(exportRoot, {
-      backgroundColor: MATRIX_EXPORT.bg,
+      backgroundColor,
       scale,
       logging: false,
       useCORS: true,
@@ -333,9 +345,14 @@ async function capturePreparedRoot(exportRoot: HTMLElement): Promise<HTMLCanvasE
       scrollY: 0,
       onclone: (doc) => {
         const cloned =
-          (doc.querySelector('[data-matrix-export-mount] [data-matrix-export-root]') as HTMLElement | null) ??
-          (doc.body.querySelector('[data-matrix-export-root]') as HTMLElement | null);
-        if (cloned) applyExportSafeStyles(cloned);
+          (doc.querySelector(`[data-matrix-export-mount] ${cloneRootSelector}`) as HTMLElement | null) ??
+          (doc.body.querySelector(cloneRootSelector) as HTMLElement | null);
+        if (!cloned) return;
+        if (options.onClone) {
+          options.onClone(cloned);
+          return;
+        }
+        applyExportSafeStyles(cloned);
       },
     });
   } finally {
@@ -412,7 +429,7 @@ async function captureForPdf(
   return weekCanvases;
 }
 
-function exportCanvasesToPdf(canvases: HTMLCanvasElement[], filename: string, title?: string): void {
+export function exportCanvasesToPdf(canvases: HTMLCanvasElement[], filename: string, title?: string): void {
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
   if (title?.trim()) {
     pdf.setProperties({ title: title.trim() });

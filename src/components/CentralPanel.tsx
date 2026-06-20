@@ -14,6 +14,7 @@ import WlProgramsPanel from './wl-programs/WlProgramsPanel';
 import './wl-management/wl-management.css';
 import { WL_PROGRAMS_FOCUS_KEY } from './wl-programs/WlProgramsHub';
 import CoachExerciseLibrary from './CoachExerciseLibrary';
+import PraxiogramsPanel from './praxiogram/PraxiogramsPanel';
 import AthleteTrainingView from './AthleteTrainingView';
 import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -112,6 +113,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     const coachOnly =
       activeView === 'programs' ||
       activeView === 'wolf-engine' ||
+      activeView === 'praxiogram' ||
       activeView === 'exercise-intelligence' ||
       activeView === 'athletes' ||
       activeView === 'planning';
@@ -1947,6 +1949,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       {(activeView === 'programs' || activeView === 'wolf-engine') && (
         <WlProgramsPanel language={language} />
       )}
+      {activeView === 'praxiogram' && <PraxiogramsPanel language={language} />}
       {(activeView === 'wl-exercises' || activeView === 'exercise-intelligence') && (
         <CoachExerciseLibrary language={language} />
       )}

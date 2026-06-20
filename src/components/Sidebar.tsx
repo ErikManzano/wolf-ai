@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
+import { Bot, LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
@@ -27,6 +27,9 @@ interface SidebarProps {
   showRailToggle?: boolean;
   /** Mobile drawer: only secondary items + account controls. */
   mobileDrawer?: boolean;
+  showAssistantEntry?: boolean;
+  assistantOpen?: boolean;
+  onToggleAssistant?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -38,6 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapsed,
   showRailToggle = true,
   mobileDrawer = false,
+  showAssistantEntry = false,
+  assistantOpen = false,
+  onToggleAssistant,
 }) => {
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
@@ -98,6 +104,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="sidebar-footer">
+        {showAssistantEntry && onToggleAssistant ? (
+          <button
+            type="button"
+            className={`sidebar-assistant-btn${assistantOpen ? ' active' : ''}`}
+            onClick={onToggleAssistant}
+            aria-expanded={assistantOpen}
+            aria-label={isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}
+            title={isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}
+          >
+            <Bot size={collapsed ? 14 : 16} aria-hidden />
+            <span>{collapsed ? (isEs ? 'AI' : 'AI') : isEs ? 'Asistente AI' : 'AI assistant'}</span>
+          </button>
+        ) : null}
         <div
           className="user-profile"
           style={{ transition: 'all 0.2s', border: userRole === 'admin' ? '1px solid var(--color-accent)' : '1px solid transparent' }}

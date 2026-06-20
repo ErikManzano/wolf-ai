@@ -11,6 +11,7 @@ import { blockDisplayName } from './session-editor/sessionSheetUtils';
 import { AppBreadcrumb } from './wl-shared/AppBreadcrumb';
 import { StickySessionActions } from './mobile-wl/navigation/StickySessionActions';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import './session-editor/set-rows.css';
 import './session-editor/session-editor-polish.css';
 import './mobile-wl/mobile-wl.css';
 import './wl-shared/app-breadcrumb.css';
@@ -201,7 +202,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
               </div>
               {canAddExercise ? (
                 <div className="wolf-se-sheet-footer">
-                  <button type="button" className="btn-outline wolf-se-sheet-add" onClick={handleAddExercise}>
+                  <button type="button" className="wolf-se-sets-premium__add-row wolf-se-sheet-add" onClick={handleAddExercise}>
                     <Plus size={14} aria-hidden />
                     {isEs ? 'Añadir ejercicio' : 'Add exercise'}
                   </button>

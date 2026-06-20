@@ -1,0 +1,161 @@
+.wl-editor-title-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.wl-editor-title-field__label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #71717a;
+  line-height: 1.2;
+}
+
+.wl-editor-title-field__required {
+  color: #f87171;
+}
+
+.wl-editor-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 12px 7px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.wl-editor-title-wrap:hover:not(.wl-editor-title-wrap--readonly) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.wl-editor-title-wrap--focused {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.35);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
+}
+
+.wl-editor-title-wrap--invalid {
+  border-color: rgba(248, 113, 113, 0.55);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1);
+}
+
+.wl-editor-title-wrap--readonly {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.wl-editor-title-icon {
+  flex-shrink: 0;
+  color: #71717a;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.wl-editor-title-wrap--focused .wl-editor-title-icon,
+.wl-editor-title-wrap:hover:not(.wl-editor-title-wrap--readonly) .wl-editor-title-icon {
+  color: #a78bfa;
+  transform: rotate(-8deg);
+}
+
+.wl-editor-title-input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fafafa;
+  font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.wl-editor-title-input::placeholder {
+  color: rgba(113, 113, 122, 0.85);
+  font-weight: 700;
+}
+
+.wl-editor-title-input:focus,
+.wl-editor-title-input:focus-visible {
+  outline: none;
+}
+
+.wl-editor-title-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 16px;
+}
+
+.wl-editor-title-meta__errors {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wl-editor-title-error {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #f87171;
+  line-height: 1.35;
+}
+
+.wl-editor-title-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #71717a;
+  line-height: 1.35;
+}
+
+.wl-editor-title-counter {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #71717a;
+  line-height: 1.35;
+}
+
+.wl-editor-title-counter--warn {
+  color: #f87171;
+}
+
+@media (max-width: 1024px) {
+  .wl-editor-title-input {
+    font-size: 1.15rem;
+  }
+
+  .wl-editor-title-wrap {
+    padding: 6px 10px 6px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .wl-editor-title-input {
+    font-size: 1rem;
+  }
+
+  .wl-editor-title-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .wl-editor-title-input {
+    font-size: 0.94rem;
+  }
+}

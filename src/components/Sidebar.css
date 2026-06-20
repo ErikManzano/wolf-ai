@@ -162,6 +162,41 @@
   color: var(--color-accent);
 }
 
+.sidebar-assistant-btn {
+  width: 100%;
+  min-height: 32px;
+  margin-bottom: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-main));
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--wl-type-sidebar-footer-size);
+  font-weight: 700;
+  line-height: 1.15;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.sidebar-assistant-btn:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-main));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.sidebar-assistant-btn.active {
+  border-color: color-mix(in srgb, var(--color-accent) 65%, var(--color-border));
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
 .sidebar-account-btn {
   width: 100%;
   min-height: 30px;
@@ -241,6 +276,7 @@
   padding-top: 6px;
 }
 
+.sidebar.compact .sidebar-assistant-btn,
 .sidebar.compact .sidebar-account-btn,
 .sidebar.compact .sidebar-logout-btn {
   min-height: 36px;
@@ -249,12 +285,14 @@
   gap: 1px;
 }
 
+.sidebar.compact .sidebar-assistant-btn svg,
 .sidebar.compact .sidebar-account-btn svg,
 .sidebar.compact .sidebar-logout-btn svg {
   width: 13px;
   height: 13px;
 }
 
+.sidebar.compact .sidebar-assistant-btn span,
 .sidebar.compact .sidebar-account-btn span,
 .sidebar.compact .sidebar-logout-btn span {
   display: inline;

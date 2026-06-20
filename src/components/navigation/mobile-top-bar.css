@@ -131,6 +131,14 @@
     display: none;
   }
 
+  .prx-page-top {
+    display: none;
+  }
+
+  .prx-hero__title {
+    font-size: 1.15rem;
+  }
+
   .wolf-athlete-hero--compact .wolf-athlete-hero-main > .wolf-athlete-kicker,
   .wolf-athlete-hero--compact .wolf-athlete-title {
     display: none;

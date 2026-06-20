@@ -5,6 +5,7 @@ import {
   CircleUser,
   ClipboardCheck,
   LayoutDashboard,
+  LayoutGrid,
   ListTree,
   MoreHorizontal,
   ShieldCheck,
@@ -17,6 +18,7 @@ export type AppViewId =
   | 'my-wl-plan'
   | 'athletes'
   | 'programs'
+  | 'praxiogram'
   | 'exercise-intelligence'
   | 'global-calendar'
   | 'account'
@@ -29,7 +31,7 @@ export type AppNavItem = {
   icon: ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
 };
 
-const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes']);
+const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'praxiogram', 'exercise-intelligence', 'athletes']);
 const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
 const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
@@ -57,6 +59,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { id: 'my-wl-plan', labelEs: 'Mi plan WL', labelEn: 'My WL plan', icon: ClipboardCheck },
   { id: 'athletes', labelEs: 'Atletas', labelEn: 'Athletes', icon: Users },
   { id: 'programs', labelEs: 'Programas', labelEn: 'Programs', icon: BookMarked },
+  { id: 'praxiogram', labelEs: 'Praxiograma', labelEn: 'Praxiogram', icon: LayoutGrid },
   { id: 'exercise-intelligence', labelEs: 'Ejercicios', labelEn: 'Exercises', icon: ListTree },
   { id: 'global-calendar', labelEs: 'Calendario', labelEn: 'Calendar', icon: CalendarRange },
   { id: 'account', labelEs: 'Cuenta', labelEn: 'Account', icon: CircleUser },
@@ -147,6 +150,8 @@ export function isMobileBottomNavItemActive(
         activeView === 'wolf-engine' ||
         ctx?.programsView === 'editor'
       );
+    case 'praxiogram':
+      return activeView === 'praxiogram';
     case 'exercise-intelligence':
       return (
         activeView === 'exercise-intelligence' ||

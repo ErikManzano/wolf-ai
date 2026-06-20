@@ -3,23 +3,17 @@ import {
   Send,
   Bot,
   User,
-  MessageSquare,
-  Info,
-  Play,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
+  X,
 } from 'lucide-react';
 import './ChatPanel.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { buildExerciseFeatureVector } from '../services/exercise';
-import { useMediaQuery } from '../hooks/useMediaQuery';
 
 interface ChatPanelProps {
   language: 'ES' | 'EN';
-  desktopCollapsed?: boolean;
-  onToggleDesktopCollapse?: () => void;
+  variant?: 'panel' | 'drawer';
+  onClose?: () => void;
 }
 
 interface Message {
@@ -29,28 +23,17 @@ interface Message {
   actions?: string[];
 }
 
-const DESKTOP_CHAT_LAYOUT = '(min-width: 1025px)';
-
 const ChatPanel: React.FC<ChatPanelProps> = ({
   language,
-  desktopCollapsed = false,
-  onToggleDesktopCollapse,
+  variant = 'panel',
+  onClose,
 }) => {
   const isEs = language === 'ES';
-  const isDesktopChatLayout = useMediaQuery(DESKTOP_CHAT_LAYOUT);
-  const showDesktopCollapse = Boolean(isDesktopChatLayout && onToggleDesktopCollapse);
+  const isDrawer = variant === 'drawer';
 
-  const { applyDeload, reduceVolume, exerciseLibrary, selectedExerciseId } = useAppContext();
+  const { applyDeload, reduceVolume } = useAppContext();
   const { motorExerciseDefinitions, exerciseRelationships } = useWolfAssign();
   const [inputText, setInputText] = useState('');
-  const [activeTab, setActiveTab] = useState<'chat' | 'info'>('chat');
-
-  const allExercises = exerciseLibrary.flatMap((cat) => cat.exercises);
-  const selectedEx = allExercises.find((ex) => ex.id === selectedExerciseId);
-
-  useEffect(() => {
-    if (selectedExerciseId) setActiveTab('info');
-  }, [selectedExerciseId]);
 
   const initialMessages: Message[] = [
     {
@@ -67,6 +50,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const msgIdRef = useRef(2);
+
+  useEffect(() => {
+    setMessages(initialMessages);
+    msgIdRef.current = 2;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset copy when locale changes
+  }, [isEs]);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -139,191 +128,84 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }, 800);
   };
 
-  const renderExerciseDetail = () => {
-    if (!selectedEx) {
-      return (
-        <div className="chat-info-empty">
-          <Info size={48} />
-          <h3>{isEs ? 'Selecciona un ejercicio' : 'Select an exercise'}</h3>
-          <p>
-            {isEs
-              ? 'Toca cualquier ejercicio de la biblioteca para ver su análisis técnico.'
-              : 'Tap any exercise in the library to see its technical analysis.'}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="exercise-detail-view">
-        <div className="exercise-detail-media">
-          {selectedEx.image ? (
-            <img src={selectedEx.image} alt={selectedEx.name} />
-          ) : (
-            <div className="exercise-detail-placeholder">
-              <Play size={40} color="var(--color-accent)" />
-            </div>
-          )}
-          <div className="exercise-detail-badge">
-            {isEs ? 'Video Instructivo' : 'Instructional Video'}
-          </div>
-        </div>
-
-        <h2 className="exercise-detail-title">{selectedEx.name}</h2>
-        <span className="badge">{selectedEx.category}</span>
-
-        <p className="exercise-detail-desc">{selectedEx.description}</p>
-
-        {selectedEx.muscles && (
-          <div className="exercise-detail-section">
-            <h4>{isEs ? 'Músculos Implicados' : 'Target Muscles'}</h4>
-            <div className="exercise-detail-tags">
-              {selectedEx.muscles.map((m) => (
-                <span key={m}>{m}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {selectedEx.cues && (
-          <div className="exercise-detail-section">
-            <h4>{isEs ? 'Claves Técnicas' : 'Technical Cues'}</h4>
-            <ul className="exercise-detail-cues">
-              {selectedEx.cues.map((cue, i) => (
-                <li key={i}>
-                  <CheckCircle2 size={16} color="var(--color-success)" />
-                  <span>{cue}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const collapseLabel = isEs ? 'Ocultar panel AI' : 'Collapse AI panel';
-  const expandLabel = isEs ? 'Mostrar panel AI' : 'Expand AI panel';
-
-  if (showDesktopCollapse && desktopCollapsed) {
-    return (
-      <div className="chat-panel chat-panel--rail">
-        <button
-          type="button"
-          className="chat-rail-expand"
-          onClick={onToggleDesktopCollapse}
-          aria-expanded={false}
-          aria-label={expandLabel}
-          title={expandLabel}
-        >
-          <ChevronLeft size={22} strokeWidth={2.25} />
-        </button>
-        <div className="chat-rail-bot" aria-hidden>
-          <Bot size={20} />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="chat-panel">
+    <div className={`chat-panel${isDrawer ? ' chat-panel--drawer' : ''}`}>
       <div className="chat-header">
-        <div className="chat-header-tabs">
-          <button
-            type="button"
-            className={`chat-tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            <MessageSquare size={18} />
-            <span>{isEs ? 'Chat AI' : 'AI Chat'}</span>
-          </button>
-          <button
-            type="button"
-            className={`chat-tab-btn ${activeTab === 'info' ? 'active' : ''}`}
-            onClick={() => setActiveTab('info')}
-          >
-            <Info size={18} />
-            <span>{isEs ? 'Análisis' : 'Analysis'}</span>
-          </button>
+        <div className="chat-header-title">
+          <Bot size={18} aria-hidden />
+          <span>{isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}</span>
         </div>
         <div className="chat-header-trailing">
-          {showDesktopCollapse && (
+          {isDrawer && onClose ? (
             <button
               type="button"
-              className="chat-header-collapse"
-              onClick={onToggleDesktopCollapse}
-              aria-expanded
-              aria-label={collapseLabel}
-              title={collapseLabel}
+              className="chat-header-close"
+              onClick={onClose}
+              aria-label={isEs ? 'Cerrar asistente' : 'Close assistant'}
+              title={isEs ? 'Cerrar' : 'Close'}
             >
-              <ChevronRight size={20} strokeWidth={2.25} />
+              <X size={18} />
             </button>
-          )}
+          ) : null}
           <span className="status-dot" aria-hidden />
         </div>
       </div>
 
       <div className="chat-body">
-        {activeTab === 'chat' ? (
-          <>
-            <div className="chat-messages">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
-                  <div className="message-bubble">
-                    <div className="message-sender">
-                      {msg.sender === 'ai' ? <Bot size={14} /> : <User size={14} />}
-                      <span>{msg.sender === 'ai' ? 'Wolf AI' : 'Coach'}</span>
-                    </div>
-                    <p className="message-text">{msg.text}</p>
-                  </div>
-
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div className="action-buttons">
-                      {msg.actions.map((action, idx) => (
-                        <button key={idx} type="button" className="action-btn" onClick={() => handleAction(action)}>
-                          {action}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+        <div className="chat-messages">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
+              <div className="message-bubble">
+                <div className="message-sender">
+                  {msg.sender === 'ai' ? <Bot size={14} /> : <User size={14} />}
+                  <span>{msg.sender === 'ai' ? 'Wolf AI' : 'Coach'}</span>
                 </div>
-              ))}
-            </div>
+                <p className="message-text">{msg.text}</p>
+              </div>
 
-            <div className="chat-input-area">
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  placeholder={isEs ? 'Pregúntale a tu Coach IA...' : 'Ask your AI Coach...'}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                />
-                <button type="button" className="send-btn" onClick={handleSend}>
-                  <Send size={18} />
-                </button>
-              </div>
-              <div className="prompt-suggestions">
-                <span
-                  className="suggestion"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() =>
-                    setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
-                  }
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' &&
-                    setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
-                  }
-                >
-                  {isEs ? '"Convierte este mesociclo en peaking"' : '"Convert this mesocycle to peaking"'}
-                </span>
-              </div>
+              {msg.actions && msg.actions.length > 0 ? (
+                <div className="action-buttons">
+                  {msg.actions.map((action, idx) => (
+                    <button key={idx} type="button" className="action-btn" onClick={() => handleAction(action)}>
+                      {action}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-          </>
-        ) : (
-          renderExerciseDetail()
-        )}
+          ))}
+        </div>
+
+        <div className="chat-input-area">
+          <div className="input-wrapper">
+            <input
+              type="text"
+              placeholder={isEs ? 'Pregúntale a tu Coach IA...' : 'Ask your AI Coach...'}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            />
+            <button type="button" className="send-btn" onClick={handleSend}>
+              <Send size={18} />
+            </button>
+          </div>
+          <div className="prompt-suggestions">
+            <span
+              className="suggestion"
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
+              }
+              onKeyDown={(e) =>
+                e.key === 'Enter' &&
+                setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
+              }
+            >
+              {isEs ? '"Convierte este mesociclo en peaking"' : '"Convert this mesocycle to peaking"'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

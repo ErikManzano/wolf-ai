@@ -463,7 +463,7 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
         <div className="wolf-se-sheet-footer">
           <button
             type="button"
-            className="btn-outline wolf-se-sheet-add"
+            className="wolf-se-sets-premium__add-row wolf-se-sheet-add"
             disabled={!canAddExercise}
             onClick={onAddExercise}
           >
