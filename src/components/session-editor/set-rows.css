@@ -521,6 +521,18 @@
   flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
+  align-items: flex-end;
+}
+
+.wolf-se-complex-set-fields .wolf-se-field-chip--combo {
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.wolf-se-complex-set-fields .wolf-se-field-chip--combo .wolf-se-combo-select--premium {
+  width: 72px;
 }
 
 .wolf-se-movement-grid {
@@ -1041,6 +1053,91 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
 @media (max-width: 720px) {
   .wolf-se-sets-premium__summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.wolf-se-sets-premium__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wolf-se-premium-set-card {
+  border: 1px solid color-mix(in srgb, var(--wolf-sets-accent) 18%, var(--color-border));
+  border-radius: 12px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--color-bg-panel) 96%, #0c0a14);
+}
+
+.wolf-se-premium-set-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+.wolf-se-premium-set-card__load {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.wolf-se-premium-set-card__load strong {
+  font-size: 1rem;
+}
+
+.wolf-se-premium-set-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+
+.wolf-se-premium-set-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wolf-se-premium-set-card__label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-premium-set-card__field .wolf-se-combo-select--premium {
+  width: 100%;
+  max-width: none;
+}
+
+.wolf-se-premium-set-card__field .wolf-se-sets-premium__select {
+  min-width: 0;
+}
+
+.wolf-se-premium-set-card__rest {
+  width: 100%;
+}
+
+@media (max-width: 399px) {
+  .wolf-se-premium-set-card__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wolf-se-sets-premium__summary {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .wolf-se-sets-premium__stat-value {
+    font-size: 0.92rem;
   }
 }
 

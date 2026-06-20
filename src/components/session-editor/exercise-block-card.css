@@ -833,6 +833,38 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar-band {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-block-options {
+    width: 100%;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    text-align: center;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip {
+    flex: none;
+    min-width: 0;
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 2px;
+    font-size: 0.72rem;
   }
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-stats-row {
@@ -845,6 +877,22 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
 
   article.wolf-se-block.wolf-se-block-card .wolf-se-block-zone {
     padding: 10px 12px 12px 16px;
+  }
+}
+
+@media (max-width: 399px) {
+  article.wolf-se-block.wolf-se-block-card .wolf-se-panel-label {
+    font-size: 0.6rem;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-option-pill {
+    min-height: 36px;
+    padding: 7px 8px;
+    font-size: 0.7rem;
+  }
+
+  article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1095,6 +1143,11 @@ article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band {
   gap: 10px;
 }
 
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band > .wolf-se-section,
+article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band > .wolf-se-config-section {
+  grid-column: 1 / -1;
+}
+
 article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel {
   flex-direction: row;
   align-items: center;
@@ -1133,6 +1186,35 @@ article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-layout__sets .
   max-height: none;
   overflow-x: auto;
   overflow-y: visible;
+}
+
+@media (max-width: 899px) {
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-toolbar-band {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-panel .wolf-se-panel-label {
+    width: 100%;
+  }
+
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-options,
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-pct-chip-row {
+    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-intensity-section {
+    width: 100%;
+  }
 }
 
 @media (min-width: 900px) {
