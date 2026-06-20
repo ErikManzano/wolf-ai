@@ -16,7 +16,7 @@ interface PerformanceStatsHistoryProps {
   linkedWlAthleteId?: string;
   intakes: IntakeData[];
   appAthletes: AppAthlete[];
-  onGoToStats: () => void;
+  onGoToStats?: () => void;
   /** Oculta cabecera duplicada cuando va incrustado en el super-dashboard. */
   embedded?: boolean;
 }
@@ -197,13 +197,13 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
         </>
       )}
 
-      {persona === 'coach' && (
+      {persona === 'coach' && onGoToStats ? (
         <div className="perf-stats-actions">
           <button type="button" className="btn-primary" onClick={onGoToStats}>
             {t.cta}
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

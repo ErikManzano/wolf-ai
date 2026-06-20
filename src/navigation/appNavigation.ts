@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react';
 import {
   BookMarked,
-  BotMessageSquare,
   CalendarRange,
   CircleUser,
   ClipboardCheck,
@@ -21,8 +20,7 @@ export type AppViewId =
   | 'exercise-intelligence'
   | 'global-calendar'
   | 'account'
-  | 'admin-users'
-  | 'onboarding';
+  | 'admin-users';
 
 export type AppNavItem = {
   id: AppViewId;
@@ -31,7 +29,7 @@ export type AppNavItem = {
   icon: ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
 };
 
-const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes', 'onboarding']);
+const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'exercise-intelligence', 'athletes']);
 const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
 const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
@@ -63,7 +61,6 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { id: 'global-calendar', labelEs: 'Calendario', labelEn: 'Calendar', icon: CalendarRange },
   { id: 'account', labelEs: 'Cuenta', labelEn: 'Account', icon: CircleUser },
   { id: 'admin-users', labelEs: 'Panel maestro', labelEn: 'Master panel', icon: ShieldCheck },
-  { id: 'onboarding', labelEs: 'Stats y PRs', labelEn: 'Stats & PRs', icon: BotMessageSquare },
 ];
 
 export const MOBILE_MORE_ITEM: AppNavItem = {

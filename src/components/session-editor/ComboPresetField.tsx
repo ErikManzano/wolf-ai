@@ -1,7 +1,7 @@
-import { useCallback, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { usePortaledComboMenu } from './comboMenuPortal';
+import { PortaledComboList } from './PortaledComboList';
+import { wrapOptionIndex } from './comboMenuPortal';
 
 export interface ComboPresetOption<T extends string | number> {
   value: T;
@@ -28,14 +28,40 @@ export function ComboPresetField<T extends string | number>({
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const selectedIndex = options.findIndex((opt) => opt.value === value);
+  const selected = options[selectedIndex] ?? options[0];
+  const isPremium = variant === 'premium';
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [open, selectedIndex]);
 
   const close = useCallback(() => setOpen(false), []);
-  const menuRect = usePortaledComboMenu(open, triggerRef, rootRef, menuRef, close);
 
-  const selected = options.find((opt) => opt.value === value) ?? options[0];
-  const isPremium = variant === 'premium';
+  const pickOption = useCallback(
+    (index: number) => {
+      const opt = options[index];
+      if (!opt) return;
+      onChange(opt.value);
+      setOpen(false);
+    },
+    [onChange, options],
+  );
+
+  const moveActive = useCallback(
+    (delta: number) => {
+      setActiveIndex((i) => wrapOptionIndex(i + delta, options.length));
+    },
+    [options.length],
+  );
+
+  const toggleOpen = useCallback(() => {
+    setOpen((v) => !v);
+  }, []);
 
   const rootClass = [
     'wolf-se-combo-select',
@@ -46,57 +72,37 @@ export function ComboPresetField<T extends string | number>({
     .filter(Boolean)
     .join(' ');
 
-  const pickOption = (opt: ComboPresetOption<T>) => {
-    onChange(opt.value);
-    setOpen(false);
-    triggerRef.current?.blur();
-  };
-
-  const menu =
-    open && menuRect && typeof document !== 'undefined' ? (
-      <ul
-        ref={menuRef}
-        id={listId}
-        className="wolf-se-combo-select__menu wolf-se-combo-select__menu--portal"
-        role="listbox"
-        aria-label={ariaLabel}
-        style={{
-          position: 'fixed',
-          top: menuRect.top,
-          left: menuRect.left,
-          width: menuRect.width,
-          maxHeight: menuRect.maxHeight,
-          transform: menuRect.transform,
-          zIndex: 1200,
-        }}
-      >
-        {options.map((opt) => (
-          <li key={String(opt.value)} role="option" aria-selected={opt.value === value}>
-            <button
-              type="button"
-              className={`wolf-se-combo-select__option${opt.value === value ? ' is-active' : ''}`}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => pickOption(opt)}
-            >
-              {opt.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-    ) : null;
-
   return (
     <div ref={rootRef} className={rootClass}>
       <button
         ref={triggerRef}
         type="button"
+        role="combobox"
         className="wolf-se-combo-select__input wolf-se-sets-premium__select wolf-se-combo-preset__trigger"
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={open ? listId : undefined}
-        onClick={() => setOpen((v) => !v)}
+        aria-activedescendant={
+          open && options[activeIndex] != null ? `${listId}-opt-${activeIndex}` : undefined
+        }
+        onClick={toggleOpen}
         onKeyDown={(e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(1);
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(-1);
+          }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (open) pickOption(activeIndex);
+            else setOpen(true);
+          }
           if (e.key === 'Escape') {
             setOpen(false);
             triggerRef.current?.blur();
@@ -110,15 +116,25 @@ export function ComboPresetField<T extends string | number>({
         className="wolf-se-combo-select__chevron"
         tabIndex={-1}
         aria-hidden
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => {
-          setOpen((v) => !v);
-          triggerRef.current?.focus();
-        }}
+        onPointerDown={(e) => e.preventDefault()}
+        onClick={toggleOpen}
       >
         <ChevronDown size={14} strokeWidth={2.25} />
       </button>
-      {menu ? createPortal(menu, document.body) : null}
+      <PortaledComboList
+        open={open}
+        anchorRef={triggerRef}
+        rootRef={rootRef}
+        listId={listId}
+        ariaLabel={ariaLabel}
+        options={options}
+        activeIndex={activeIndex}
+        selectedIndex={selectedIndex}
+        onPick={pickOption}
+        onClose={close}
+        onActiveIndexChange={setActiveIndex}
+        renderOption={(opt) => opt.label}
+      />
     </div>
   );
 }

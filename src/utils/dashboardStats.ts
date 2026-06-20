@@ -10,7 +10,7 @@ export type DashboardAlert = {
   title: string;
   description: string;
   actionLabel: string;
-  targetView: 'athletes' | 'programs' | 'onboarding' | 'my-wl-plan';
+  targetView: 'athletes' | 'programs' | 'my-wl-plan';
   athleteId?: number;
 };
 

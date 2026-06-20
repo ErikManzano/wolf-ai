@@ -1,7 +1,7 @@
-import React, { useCallback, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { usePortaledComboMenu } from './comboMenuPortal';
+import { PortaledComboList } from './PortaledComboList';
+import { wrapOptionIndex } from './comboMenuPortal';
 
 export interface ComboNumberFieldProps {
   value: number;
@@ -41,10 +41,18 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
+  const skipBlurCommitRef = useRef(false);
   const menuOptions = options ?? buildOptions(min, max, step);
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const selectedIndex = menuOptions.findIndex((opt) => opt === value);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [open, selectedIndex]);
 
   const commit = useCallback(
     (raw: string) => {
@@ -66,16 +74,27 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
 
   const display = draft ?? String(value);
 
-  const pickOption = (opt: number) => {
-    onChange(opt);
-    setDraft(null);
-    setOpen(false);
-    inputRef.current?.blur();
-  };
+  const pickOption = useCallback(
+    (index: number) => {
+      const opt = menuOptions[index];
+      if (opt == null) return;
+      skipBlurCommitRef.current = true;
+      onChange(opt);
+      setDraft(null);
+      setOpen(false);
+    },
+    [menuOptions, onChange],
+  );
 
   const close = useCallback(() => setOpen(false), []);
   const isPremium = variant === 'premium';
-  const menuRect = usePortaledComboMenu(isPremium && open, inputRef, rootRef, menuRef, close);
+
+  const moveActive = useCallback(
+    (delta: number) => {
+      setActiveIndex((i) => wrapOptionIndex(i + delta, menuOptions.length));
+    },
+    [menuOptions.length],
+  );
 
   const rootClass = [
     'wolf-se-combo-select',
@@ -86,39 +105,6 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
     .filter(Boolean)
     .join(' ');
 
-  const menu =
-    isPremium && open && menuRect && typeof document !== 'undefined' ? (
-      <ul
-        ref={menuRef}
-        className="wolf-se-combo-select__menu wolf-se-combo-select__menu--portal"
-        role="listbox"
-        aria-label={ariaLabel}
-        style={{
-          position: 'fixed',
-          top: menuRect.top,
-          left: menuRect.left,
-          width: menuRect.width,
-          maxHeight: menuRect.maxHeight,
-          transform: menuRect.transform,
-          zIndex: 1200,
-        }}
-      >
-        {menuOptions.map((opt) => (
-          <li key={opt} role="option" aria-selected={opt === value}>
-            <button
-              type="button"
-              className={`wolf-se-combo-select__option${opt === value ? ' is-active' : ''}`}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => pickOption(opt)}
-            >
-              {opt}
-              {suffix ? suffix : ''}
-            </button>
-          </li>
-        ))}
-      </ul>
-    ) : null;
-
   return (
     <div ref={rootRef} className={rootClass}>
       <input
@@ -126,6 +112,7 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
+        role={isPremium ? 'combobox' : undefined}
         className={
           isPremium
             ? 'wolf-se-combo-select__input wolf-se-sets-premium__select'
@@ -135,16 +122,47 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
         aria-label={ariaLabel}
         aria-expanded={isPremium ? open : undefined}
         aria-haspopup={isPremium ? 'listbox' : undefined}
+        aria-controls={isPremium && open ? listId : undefined}
+        aria-activedescendant={
+          isPremium && open && menuOptions[activeIndex] != null
+            ? `${listId}-opt-${activeIndex}`
+            : undefined
+        }
         value={display}
         onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ''))}
         onFocus={() => isPremium && setOpen(true)}
         onBlur={() => {
-          commit(draft ?? String(value));
-          window.setTimeout(() => setOpen(false), 120);
+          if (skipBlurCommitRef.current) {
+            skipBlurCommitRef.current = false;
+            return;
+          }
+          if (draft != null) commit(draft);
         }}
         onKeyDown={(e) => {
+          if (!isPremium) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commit(draft ?? String(value));
+              inputRef.current?.blur();
+            }
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(1);
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(-1);
+          }
           if (e.key === 'Enter') {
             e.preventDefault();
+            if (open && menuOptions[activeIndex] != null) {
+              pickOption(activeIndex);
+              return;
+            }
             commit(draft ?? String(value));
             setOpen(false);
             inputRef.current?.blur();
@@ -166,21 +184,43 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
       {suffix && !isPremium ? <span className="wolf-se-combo-select__suffix">{suffix}</span> : null}
       {isPremium ? (
         <>
-          {suffix ? <span className="wolf-se-combo-select__suffix wolf-se-combo-select__suffix--inline">{suffix}</span> : null}
+          {suffix ? (
+            <span className="wolf-se-combo-select__suffix wolf-se-combo-select__suffix--inline">{suffix}</span>
+          ) : null}
           <button
             type="button"
             className="wolf-se-combo-select__chevron"
             tabIndex={-1}
             aria-hidden
-            onMouseDown={(e) => e.preventDefault()}
+            onPointerDown={(e) => e.preventDefault()}
             onClick={() => {
-              setOpen((v) => !v);
-              inputRef.current?.focus();
+              setOpen((v) => {
+                if (!v) requestAnimationFrame(() => inputRef.current?.focus());
+                return !v;
+              });
             }}
           >
             <ChevronDown size={14} strokeWidth={2.25} />
           </button>
-          {menu ? createPortal(menu, document.body) : null}
+          <PortaledComboList
+            open={open}
+            anchorRef={inputRef}
+            rootRef={rootRef}
+            listId={listId}
+            ariaLabel={ariaLabel}
+            options={menuOptions}
+            activeIndex={activeIndex}
+            selectedIndex={selectedIndex}
+            onPick={pickOption}
+            onClose={close}
+            onActiveIndexChange={setActiveIndex}
+            renderOption={(opt) => (
+              <>
+                {opt}
+                {suffix ? suffix : ''}
+              </>
+            )}
+          />
         </>
       ) : null}
     </div>

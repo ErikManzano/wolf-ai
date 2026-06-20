@@ -1,15 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import './CentralPanel.css';
 import './SuperDashboard.css';
 import '../styles/interactive.css';
 import {
   ChevronRight, Settings2, SlidersHorizontal, Share, Download, GripVertical, Plus,
   LayoutDashboard, Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp, Award,
-  BarChart3, Clock, Users, BotMessageSquare as IntakeIcon, Search, Info, ShieldCheck, CheckCircle2,
+  BarChart3, Clock, Users, Search, Info, ShieldCheck,
   Save, X, BookMarked, Layers, MoveDiagonal
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import type { IntakeData } from '../context/AppContext';
 import WlAthletesSection from './wl-management/WlAthletesSection';
 import WlProgramsPanel from './wl-programs/WlProgramsPanel';
 import './wl-management/wl-management.css';
@@ -19,7 +18,6 @@ import AthleteTrainingView from './AthleteTrainingView';
 import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { appAthleteIdForWlProfile } from '../utils/wlStatsBridge';
-import { validateIntakeStep, validateFullIntake, firstIntakeStepWithErrors } from '../utils/intakeValidation';
 import {
   aggregateTemplateLogging,
   aggregateWlAttendance,
@@ -75,7 +73,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   } = useWolfAssign();
   const {
     athletes, programs,
-    assignments, assignProgram, intakes, submitIntake,
+    assignments, assignProgram, intakes,
     exerciseLibrary, updateExerciseLog, setSelectedExerciseId,
     userRole, customGroups, createCustomGroup, addToCustomGroup, addMasterExercise,
     addExerciseToProgramSession, selectedWeek, setSelectedWeek,
@@ -83,31 +81,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   const [currentTab, setCurrentTab] = useState<'micro' | 'session'>('micro');
 
   // Athlete View States
-  // Intake Questionnaire States
-  const [intakeStep, setIntakeStep] = useState(1);
   const [isAssigning, setIsAssigning] = useState(false);
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(null);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
-  const [activeAthleteId, setActiveAthleteId] = useState<number | null>(1); // Erik Manzano — demo principal
-  const [intakeFormData, setIntakeFormData] = useState<Omit<IntakeData, 'id'>>({
-    date: new Date().toISOString().split('T')[0],
-    responses: {
-      weight: '',
-      height: '',
-      bodyFat: '',
-      snatch: '',
-      cleanJerk: '',
-      deadlift: '',
-      backSquat: '',
-      frontSquat: '',
-      experience: '',
-      goals: ''
-    }
-  });
-  const [intakeFormErrors, setIntakeFormErrors] = useState<Record<string, string>>({});
-  /** Tras guardar Stats/PRs: pantalla de “qué sigue” (primer contacto frecuente). */
-  const [intakeSubmitSuccess, setIntakeSubmitSuccess] = useState(false);
-
+  const [activeAthleteId, setActiveAthleteId] = useState<number | null>(1); // Erik Manzano â€” demo principal
   useEffect(() => {
     if (activeView === 'library' || activeView === 'wl-exercises') {
       setActiveView('exercise-intelligence');
@@ -115,26 +92,21 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   }, [activeView, setActiveView]);
 
   useEffect(() => {
-    if (activeView !== 'onboarding') setIntakeSubmitSuccess(false);
-  }, [activeView]);
+    if (activeView === 'onboarding') {
+      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'dashboard');
+    }
+  }, [activeView, persona, setActiveView]);
 
   useEffect(() => {
     if (activeView === 'planning' || activeView === 'sessions') setActiveView('athletes');
   }, [activeView, setActiveView]);
-
-  /** Stats/PRs: solo coach; atletas ven evolución desde registros del coach. */
-  useEffect(() => {
-    if (persona === 'athlete' && activeView === 'onboarding') {
-      setActiveView('my-wl-plan');
-    }
-  }, [persona, activeView, setActiveView]);
 
   /** Compatibilidad: bookmarks y sessionStorage antiguos apuntaban a wolf-engine. */
   useEffect(() => {
     if (activeView === 'wolf-engine') setActiveView('programs');
   }, [activeView, setActiveView]);
 
-  /** Atleta: no quedar en vistas exclusivas de coach (programas, atletas, planificación). */
+  /** Atleta: no quedar en vistas exclusivas de coach (programas, atletas, planificaciÃ³n). */
   useEffect(() => {
     if (persona !== 'athlete') return;
     const coachOnly =
@@ -333,9 +305,9 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
 
   const renderBreadcrumbs = () => (
     <div className="breadcrumbs">
-      <span>{isEs ? 'Macrociclo Olímpico 2026' : 'Olympic Macrocycle 2026'}</span>
+      <span>{isEs ? 'Macrociclo OlÃ­mpico 2026' : 'Olympic Macrocycle 2026'}</span>
       <ChevronRight size={14} className="crumb-icon" />
-      <span>{isEs ? 'Mesociclo 1: Acumulación' : 'Mesocycle 1: Accumulation'}</span>
+      <span>{isEs ? 'Mesociclo 1: AcumulaciÃ³n' : 'Mesocycle 1: Accumulation'}</span>
     </div>
   );
 
@@ -383,7 +355,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   <div>
                     <h3 style={{ color: 'var(--color-accent)', fontSize: '1.2rem' }}>{currentProgram?.name}</h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                      {isEs ? `Semana ${selectedWeek} · Sesión Focalizada` : `Week ${selectedWeek} · Focused Session`}
+                      {isEs ? `Semana ${selectedWeek} Â· SesiÃ³n Focalizada` : `Week ${selectedWeek} Â· Focused Session`}
                     </p>
                   </div>
                   <span className="badge" style={{ padding: '4px 12px' }}>W{selectedWeek}</span>
@@ -481,7 +453,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             {renderBreadcrumbs()}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '12px' }}>
               <h1 className="view-title" style={{ marginBottom: 0 }}>
-                {isEs ? 'Planificación de Entrenamiento' : 'Training Periodization'}
+                {isEs ? 'PlanificaciÃ³n de Entrenamiento' : 'Training Periodization'}
               </h1>
               <div style={{ marginLeft: '12px' }}>
                 <select
@@ -521,7 +493,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             >
               {isEs ? 'Sesiones' : 'Sessions'}
             </button>
-            <button className="tab">{isEs ? 'Análisis de Carga' : 'Load Analysis'}</button>
+            <button className="tab">{isEs ? 'AnÃ¡lisis de Carga' : 'Load Analysis'}</button>
             <button
               className={`tab ${isAthletePreview ? 'active-premium' : ''}`}
               onClick={() => setIsAthletePreview(!isAthletePreview)}
@@ -581,7 +553,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   <div className="micro-header">
                     <h3>{isEs ? `Semana ${week.weekNumber}` : `Week ${week.weekNumber}`}</h3>
                     <span className="badge" style={{ background: week.weekNumber === 12 ? 'var(--color-error)' : 'var(--color-success-bg)' }}>
-                      {week.weekNumber === 12 ? (isEs ? 'Peaking' : 'Peaking') : (isEs ? 'Progresión' : 'Progression')}
+                      {week.weekNumber === 12 ? (isEs ? 'Peaking' : 'Peaking') : (isEs ? 'ProgresiÃ³n' : 'Progression')}
                     </span>
                   </div>
                   <div className="micro-stats">
@@ -614,7 +586,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                       <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-bg-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
                         {day.dayNumber}
                       </div>
-                      <h3 style={{ fontSize: '1.2rem' }}>{isEs ? `Día ${day.dayNumber}` : `Day ${day.dayNumber}`}</h3>
+                      <h3 style={{ fontSize: '1.2rem' }}>{isEs ? `DÃ­a ${day.dayNumber}` : `Day ${day.dayNumber}`}</h3>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <button className="btn-outline" style={{ padding: '4px 12px', fontSize: '0.75rem', borderColor: 'var(--color-success)', color: 'var(--color-success)' }}>
@@ -689,10 +661,10 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   <div className="session-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                     <button className="add-exercise-btn" onClick={() => handleAddExercise(day.id)} style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', cursor: 'pointer' }}>
                       <Plus size={16} />
-                      {isEs ? 'Añadir Ejercicio' : 'Add Exercise'}
+                      {isEs ? 'AÃ±adir Ejercicio' : 'Add Exercise'}
                     </button>
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: '500' }}>
-                      {isEs ? 'Tonelaje Total Sesión:' : 'Total Session Tonnage:'} <strong style={{ color: 'var(--color-success)' }}>{(day.exercises.reduce((acc, ex) => acc + (ex.tonnage || 0), 0) || 0).toLocaleString()} kg</strong>
+                      {isEs ? 'Tonelaje Total SesiÃ³n:' : 'Total Session Tonnage:'} <strong style={{ color: 'var(--color-success)' }}>{(day.exercises.reduce((acc, ex) => acc + (ex.tonnage || 0), 0) || 0).toLocaleString()} kg</strong>
                     </span>
                   </div>
                 </div>
@@ -710,8 +682,8 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     const attendanceSub =
       tmplLog.total > 0 && wlAtt.total > 0
         ? isEs
-          ? `Plantilla ${tmplLog.pct}% · Motor WL ${wlAtt.pct}%`
-          : `Template ${tmplLog.pct}% · WL engine ${wlAtt.pct}%`
+          ? `Plantilla ${tmplLog.pct}% Â· Motor WL ${wlAtt.pct}%`
+          : `Template ${tmplLog.pct}% Â· WL engine ${wlAtt.pct}%`
         : tmplLog.total > 0
           ? isEs
             ? `Plantilla: ${tmplLog.done}/${tmplLog.total} bloques`
@@ -721,7 +693,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
               ? `Sesiones WL: ${wlAtt.done}/${wlAtt.total}`
               : `WL sessions: ${wlAtt.done}/${wlAtt.total}`
             : isEs
-              ? 'Sin registros aún'
+              ? 'Sin registros aÃºn'
               : 'No logs yet';
 
     const alertAccent = (s: DashboardAlert['severity']) =>
@@ -757,18 +729,14 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
               </h1>
               <p className="sd-hero__sub">
                 {isEs
-                  ? 'Asignaciones, adherencia, alertas e historial de Stats/PRs en un solo panel — optimizado para móvil y escritorio.'
-                  : 'Assignments, adherence, alerts, and Stats/PR history in one panel — tuned for mobile and desktop.'}
+                  ? 'Asignaciones, adherencia, alertas e historial de Stats/PRs en un solo panel â€” optimizado para mÃ³vil y escritorio.'
+                  : 'Assignments, adherence, alerts, and Stats/PR history in one panel â€” tuned for mobile and desktop.'}
               </p>
             </div>
             <div className="sd-hero__actions">
-              <button type="button" className="sd-btn sd-btn--ghost" title={isEs ? 'Próximamente' : 'Coming soon'} disabled>
+              <button type="button" className="sd-btn sd-btn--ghost" title={isEs ? 'PrÃ³ximamente' : 'Coming soon'} disabled>
                 <Download size={16} aria-hidden />
                 {isEs ? 'Exportar' : 'Export'}
-              </button>
-              <button type="button" className="sd-btn" onClick={() => setActiveView('onboarding')}>
-                <IntakeIcon size={16} aria-hidden />
-                {isEs ? 'Stats / PRs' : 'Stats / PRs'}
               </button>
             </div>
           </div>
@@ -777,7 +745,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
         {d.athleteViewRestricted ? (
           <div className="sd-banner" role="status">
             {isEs
-              ? 'Tu usuario atleta no está enlazado a un perfil de datos (Stats/plantilla). Contacta al coach.'
+              ? 'Tu usuario atleta no estÃ¡ enlazado a un perfil de datos (Stats/plantilla). Contacta al coach.'
               : 'Your athlete account is not linked to a data profile. Ask your coach to link linkedAthleteId.'}
           </div>
         ) : null}
@@ -802,7 +770,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <h3 className="sd-kpi__label">{isEs ? 'PRs nuevos (semana)' : 'New PRs (week)'}</h3>
             <p className="sd-kpi__value">{d.prsWeek}</p>
             <p className="sd-kpi__hint">
-              {isEs ? `${d.intakesWeek} envíos Stats esta semana` : `${d.intakesWeek} Stats submissions this week`}
+              {isEs ? `${d.intakesWeek} envÃ­os Stats esta semana` : `${d.intakesWeek} Stats submissions this week`}
             </p>
           </article>
           <article className="sd-kpi">
@@ -834,7 +802,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           {d.alerts.length === 0 ? (
             <div className="sd-alert sd-alert--ok">
               <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-                {isEs ? 'Sin alertas según los datos actuales.' : 'No alerts for the current data.'}
+                {isEs ? 'Sin alertas segÃºn los datos actuales.' : 'No alerts for the current data.'}
               </p>
             </div>
           ) : (
@@ -862,11 +830,11 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           <div className="sd-section__head">
             <div>
               <h2 id="sd-perf-title" className="sd-section__title">
-                {isEs ? 'Rendimiento & evolución' : 'Performance & trends'}
+                {isEs ? 'Rendimiento & evoluciÃ³n' : 'Performance & trends'}
               </h2>
               <p className="sd-section__desc">
                 {isEs
-                  ? 'Volumen relativo (Snatch + C&J por envío), adherencia por canal y detalle completo abajo.'
+                  ? 'Volumen relativo (Snatch + C&J por envÃ­o), adherencia por canal y detalle completo abajo.'
                   : 'Relative volume (Snatch + C&J per submission), adherence by channel, and full detail below.'}
               </p>
             </div>
@@ -876,15 +844,15 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <div className="sd-insight">
               <h3>
                 <TrendingUp size={18} color="var(--color-success)" aria-hidden />
-                {isEs ? 'Volumen relativo (últimos envíos)' : 'Relative volume (recent submissions)'}
+                {isEs ? 'Volumen relativo (Ãºltimos envÃ­os)' : 'Relative volume (recent submissions)'}
               </h3>
               {d.volumeSpark.length === 0 ? (
                 <p className="sd-insight__hint" style={{ margin: 0 }}>
-                  {isEs ? 'Sin envíos Stats aún.' : 'No Stats submissions yet.'}
+                  {isEs ? 'Sin envÃ­os Stats aÃºn.' : 'No Stats submissions yet.'}
                 </p>
               ) : (
                 <>
-                  <div className="sd-spark" role="img" aria-label={isEs ? 'Mini gráfico de volumen' : 'Volume mini-chart'}>
+                  <div className="sd-spark" role="img" aria-label={isEs ? 'Mini grÃ¡fico de volumen' : 'Volume mini-chart'}>
                     {d.volumeSpark.map((b) => (
                       <div key={b.id} className="sd-spark__bar">
                         <div className="sd-spark__fill" style={{ height: `${Math.max(8, b.h)}%` }} title={`${b.label}`} />
@@ -893,7 +861,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                     ))}
                   </div>
                   <p className="sd-insight__hint">
-                    {isEs ? 'Altura ∝ Snatch + C&J (últimos 8 registros).' : 'Height ∝ Snatch + C&J (last 8 records).'}
+                    {isEs ? 'Altura âˆ Snatch + C&J (Ãºltimos 8 registros).' : 'Height âˆ Snatch + C&J (last 8 records).'}
                   </p>
                 </>
               )}
@@ -925,7 +893,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <div className="sd-insight">
               <h3>
                 <Award size={18} color="var(--color-accent)" aria-hidden />
-                {isEs ? 'Último envío Stats' : 'Latest Stats entry'}
+                {isEs ? 'Ãšltimo envÃ­o Stats' : 'Latest Stats entry'}
               </h3>
               {!lastIntake ? (
                 <p className="sd-insight__hint" style={{ margin: 0 }}>
@@ -942,7 +910,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                     <p>{lastIntake.responses.cleanJerk} kg</p>
                   </div>
                   <p className="sd-pr-mini__meta">
-                    {(d.latestIntakeAthleteName ? `${d.latestIntakeAthleteName} · ` : '') + lastIntake.date}
+                    {(d.latestIntakeAthleteName ? `${d.latestIntakeAthleteName} Â· ` : '') + lastIntake.date}
                   </p>
                 </div>
               )}
@@ -957,7 +925,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
               intakes={intakes}
               appAthletes={athletes}
               embedded
-              onGoToStats={() => setActiveView('onboarding')}
             />
           </div>
         </section>
@@ -1001,7 +968,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                         </td>
                         <td>{row.startDate}</td>
                         <td>
-                          {row.exerciseSlots > 0 ? `${row.completionPct}% (${row.exercisesLogged}/${row.exerciseSlots})` : '—'}
+                          {row.exerciseSlots > 0 ? `${row.completionPct}% (${row.exercisesLogged}/${row.exerciseSlots})` : 'â€”'}
                         </td>
                         <td className="sd-table__actions">
                           <button
@@ -1059,7 +1026,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                         <td>
                           {row.sessionSlots > 0
                             ? `${row.completionPct}% (${row.sessionsDone}/${row.sessionSlots})`
-                            : '—'}
+                            : 'â€”'}
                         </td>
                         <td className="sd-table__actions">
                           <button
@@ -1096,7 +1063,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       {icon}
       <h2 style={{ marginTop: '24px', color: 'var(--color-text-secondary)' }}>{title}</h2>
       <p style={{ marginTop: '8px', color: 'var(--color-text-muted)' }}>
-        {isEs ? 'Módulo en desarrollo para esta demo.' : 'Module in development for this demo.'}
+        {isEs ? 'MÃ³dulo en desarrollo para esta demo.' : 'Module in development for this demo.'}
       </p>
     </div>
   );
@@ -1108,7 +1075,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           <h1 className="view-title">{isEs ? 'Panel maestro' : 'Master panel'}</h1>
           <p style={{ color: 'var(--color-text-muted)', marginTop: '6px' }}>
             {isEs
-              ? 'Solo tu cuenta propietario (super_admin) ve esta pantalla: altas, roles y bajas. El registro público no puede crear super admins.'
+              ? 'Solo tu cuenta propietario (super_admin) ve esta pantalla: altas, roles y bajas. El registro pÃºblico no puede crear super admins.'
               : 'Only your owner account (super_admin) sees this screen: create users, roles, and removals. Public signup cannot create super admins.'}
           </p>
         </div>
@@ -1118,8 +1085,8 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           <h3 style={{ marginBottom: '8px' }}>{isEs ? 'Tu rol' : 'Your role'}</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
             {isEs
-              ? 'Iniciaste sesión como propietario. Desde aquí das de alta coaches y atletas (usuario, contraseña y PRs). El coach solo consulta el roster en «Atletas».'
-              : 'You signed in as the app owner. Create coach and athlete accounts here (username, password, PRs). Coaches only view the roster under «Athletes».'}
+              ? 'Iniciaste sesiÃ³n como propietario. Desde aquÃ­ das de alta coaches y atletas (usuario, contraseÃ±a y PRs). El coach solo consulta el roster en Â«AtletasÂ».'
+              : 'You signed in as the app owner. Create coach and athlete accounts here (username, password, PRs). Coaches only view the roster under Â«AthletesÂ».'}
           </p>
         </div>
         <div className="micro-card glass">
@@ -1149,7 +1116,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <input
               className="edit-input"
               type="password"
-              placeholder={isEs ? 'Contraseña' : 'Password'}
+              placeholder={isEs ? 'ContraseÃ±a' : 'Password'}
               value={adminDraft.password}
               onChange={(e) => setAdminDraft((prev) => ({ ...prev, password: e.target.value }))}
             />
@@ -1283,7 +1250,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                         className="btn-outline"
                         onClick={() => {
                           const next = window.prompt(
-                            isEs ? `Nueva contraseña para ${user.name} (mín. 6):` : `New password for ${user.name} (min 6):`,
+                            isEs ? `Nueva contraseÃ±a para ${user.name} (mÃ­n. 6):` : `New password for ${user.name} (min 6):`,
                           );
                           if (!next || next.trim().length < 6) return;
                           void resetUserPassword(user.id, next.trim()).then((err) => {
@@ -1292,7 +1259,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                           });
                         }}
                       >
-                        {isEs ? 'Contraseña' : 'Password'}
+                        {isEs ? 'ContraseÃ±a' : 'Password'}
                       </button>
                       <button
                         className="btn-outline"
@@ -1318,7 +1285,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <h3 style={{ marginBottom: '12px' }}>{isEs ? 'Perfiles WL (PRs)' : 'WL profiles (PRs)'}</h3>
             <p style={{ color: 'var(--color-text-muted)', marginBottom: '12px', fontSize: '0.9rem' }}>
               {isEs
-                ? 'Edita récords y nivel del motor. Las altas de atleta con cuenta se hacen arriba; aquí puedes ajustar PRs.'
+                ? 'Edita rÃ©cords y nivel del motor. Las altas de atleta con cuenta se hacen arriba; aquÃ­ puedes ajustar PRs.'
                 : 'Edit engine level and PRs. Create athlete accounts above; adjust PRs here.'}
             </p>
             <div className="table-container">
@@ -1411,421 +1378,13 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     </div>
   );
 
-  const renderIntakeView = () => {
-    const steps = [
-      { num: 1, title: isEs ? 'Biometría' : 'Biometrics' },
-      { num: 2, title: isEs ? 'Levantamientos' : 'Weightlifting' },
-      { num: 3, title: isEs ? 'Fuerza' : 'Strength' },
-    ];
-
-    const emptyIntakeResponses = {
-      weight: '',
-      height: '',
-      bodyFat: '',
-      snatch: '',
-      cleanJerk: '',
-      deadlift: '',
-      backSquat: '',
-      frontSquat: '',
-      experience: '',
-      goals: '',
-    };
-
-    const handleIntakeSubmit = () => {
-      const { valid, errors } = validateFullIntake(intakeFormData.responses, language);
-      if (!valid) {
-        setIntakeFormErrors(errors);
-        setIntakeStep(firstIntakeStepWithErrors(errors));
-        return;
-      }
-      setIntakeFormErrors({});
-      const wlId = athleteUser?.linkedAthleteId ?? 'ath-you';
-      const appAthleteFromWl = appAthleteIdForWlProfile(wlId) ?? 1;
-      const athleteIdForIntake = persona === 'athlete' ? appAthleteFromWl : selectedAthleteId ?? 1;
-      submitIntake({
-        ...intakeFormData,
-        athleteId: athleteIdForIntake,
-        date: new Date().toISOString().split('T')[0],
-      });
-      setIntakeStep(1);
-      setIntakeFormData({
-        date: new Date().toISOString().split('T')[0],
-        responses: { ...emptyIntakeResponses },
-      });
-      setIntakeSubmitSuccess(true);
-    };
-
-    const fieldErr = (key: string) => intakeFormErrors[key];
-    const clearIntakeErrors = () => setIntakeFormErrors({});
-    const inputClass = (key: string) => `edit-input${fieldErr(key) ? ' edit-input--error' : ''}`;
-
-    return (
-      <div className="intake-view">
-        <header className="panel-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <IntakeIcon size={28} color="var(--color-accent)" />
-            <h1 className="view-title">
-              {isEs ? 'Stats, PRs y perfil' : 'Stats, PRs & profile'}
-            </h1>
-          </div>
-          <div className="header-actions">
-            {!intakeSubmitSuccess && (
-              <span className="badge" style={{ padding: '8px 16px' }}>
-                {isEs ? `Paso ${intakeStep} de 3` : `Step ${intakeStep} of 3`}
-              </span>
-            )}
-          </div>
-        </header>
-
-        <div className="content-area">
-          {intakeSubmitSuccess ? (
-            <div
-              className="micro-card glass"
-              role="status"
-              aria-live="polite"
-              style={{
-                maxWidth: '640px',
-                margin: '0 auto',
-                padding: '28px 24px',
-                borderLeft: '4px solid var(--color-success)',
-              }}
-            >
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '18px' }}>
-                <CheckCircle2 size={36} strokeWidth={2} color="var(--color-success)" aria-hidden style={{ flexShrink: 0 }} />
-                <div>
-                  <h2 style={{ margin: '0 0 8px', fontSize: '1.35rem', color: 'var(--color-text-primary)' }}>
-                    {isEs ? '¡Envío recibido!' : 'Submission received!'}
-                  </h2>
-                  <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
-                    {isEs
-                      ? 'Has completado este registro de Stats y PRs. Suele ser el primer paso para que el equipo tenga datos al día.'
-                      : 'You’ve completed this Stats & PRs entry. It’s often the first step so your team has up-to-date numbers.'}
-                  </p>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: '16px 18px',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--color-bg-main)',
-                  border: '1px solid var(--color-border)',
-                  marginBottom: '18px',
-                }}
-              >
-                <p style={{ margin: '0 0 10px', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {isEs ? 'Qué pasa ahora' : 'What happens next'}
-                </p>
-                <ul style={{ margin: 0, paddingLeft: '1.15rem', fontSize: '0.9rem', lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
-                  <li style={{ marginBottom: '8px' }}>
-                    {isEs
-                      ? 'Tu coach puede tardar un poco en revisar el envío y aplicar cambios a cargas o planes. No tienes que hacer nada más de inmediato.'
-                      : 'Your coach may take some time to review this entry and apply updates to loads or plans. You don’t need to do anything else right away.'}
-                  </li>
-                  <li>
-                    {isEs
-                      ? 'Si te pidieron una actualización concreta, los nuevos valores quedarán enlazados a tu perfil cuando el sistema los procese.'
-                      : 'If you were asked for a specific update, new values will attach to your profile once they’re processed.'}
-                  </li>
-                </ul>
-              </div>
-
-              <div
-                style={{
-                  padding: '16px 18px',
-                  borderRadius: '12px',
-                  backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-main))',
-                  border: '1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border))',
-                  marginBottom: '22px',
-                }}
-              >
-                <p style={{ margin: '0 0 10px', fontWeight: 700, fontSize: '0.82rem', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
-                  {isEs ? 'Dónde verás lo siguiente' : 'Where you’ll see what’s next'}
-                </p>
-                <ul style={{ margin: 0, paddingLeft: '1.15rem', fontSize: '0.9rem', lineHeight: 1.55, color: 'var(--color-text-secondary)' }}>
-                  <li style={{ marginBottom: '8px' }}>
-                    <strong>{isEs ? 'Dashboard' : 'Dashboard'}</strong>
-                    {isEs
-                      ? ': resumen, adherencia, alertas e historial de Stats en un solo lugar.'
-                      : ': overview, adherence, alerts, and Stats history in one place.'}
-                  </li>
-                  <li style={{ marginBottom: '8px' }}>
-                    <strong>{isEs ? 'Motor WL · Programas' : 'WL engine · Programs'}</strong>
-                    {isEs
-                      ? ': cuando tu coach genere o asigne un plan, puede usar tus últimos PRs de este formulario para las cargas.'
-                      : ': when your coach builds or assigns a plan, they can use your latest PRs from here for loads.'}
-                  </li>
-                  <li>
-                    <strong>{isEs ? 'Mi plan WL' : 'My WL plan'}</strong>
-                    {isEs
-                      ? ': verás el trabajo que te asignen cuando el coach publique el plan.'
-                      : ': you’ll see assigned work once your coach publishes the plan.'}
-                  </li>
-                </ul>
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => setIntakeSubmitSuccess(false)}
-                >
-                  {isEs ? 'Entendido, volver al formulario' : 'Got it — back to the form'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => {
-                    setIntakeSubmitSuccess(false);
-                    setActiveView('dashboard');
-                  }}
-                >
-                  {isEs ? 'Ir al dashboard' : 'Go to dashboard'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-outline"
-                  onClick={() => {
-                    setIntakeSubmitSuccess(false);
-                    setActiveView('programs');
-                  }}
-                >
-                  {isEs ? 'Ir a programas' : 'Go to programs'}
-                </button>
-              </div>
-            </div>
-          ) : (
-          <div className="micro-card glass" style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
-              {steps.map(s => (
-                <div key={s.num} style={{ textAlign: 'center', opacity: intakeStep === s.num ? 1 : 0.4 }}>
-                  <div style={{
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    backgroundColor: intakeStep >= s.num ? 'var(--color-accent)' : 'var(--color-bg-hover)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px',
-                    fontWeight: 'bold', color: 'white'
-                  }}>
-                    {s.num}
-                  </div>
-                  <span style={{ fontSize: '0.7rem' }}>{s.title}</span>
-                </div>
-              ))}
-            </div>
-
-            {intakeStep === 1 && (
-              <div className="animate-in">
-                <h3 style={{ marginBottom: '20px', color: 'var(--color-accent)' }}>{isEs ? 'Tus Datos Antropométricos' : 'Biometric Data'}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-weight">{isEs ? 'Peso (kg)' : 'Weight (kg)'}</label>
-                      <input
-                        id="intake-weight"
-                        type="text"
-                        className={inputClass('weight')}
-                        placeholder="0.0"
-                        value={intakeFormData.responses.weight}
-                        aria-invalid={!!fieldErr('weight')}
-                        aria-describedby={fieldErr('weight') ? 'intake-weight-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, weight: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('weight') && <p id="intake-weight-err" className="intake-field-error">{fieldErr('weight')}</p>}
-                    </div>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-height">{isEs ? 'Estatura (cm)' : 'Height (cm)'}</label>
-                      <input
-                        id="intake-height"
-                        type="text"
-                        className={inputClass('height')}
-                        placeholder="0"
-                        value={intakeFormData.responses.height}
-                        aria-invalid={!!fieldErr('height')}
-                        aria-describedby={fieldErr('height') ? 'intake-height-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, height: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('height') && <p id="intake-height-err" className="intake-field-error">{fieldErr('height')}</p>}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="stat-label" htmlFor="intake-bodyfat">{isEs ? 'Porcentaje de Grasa (%)' : 'Body Fat (%)'}</label>
-                    <input
-                      id="intake-bodyfat"
-                      type="text"
-                      className={inputClass('bodyFat')}
-                      placeholder="15%"
-                      value={intakeFormData.responses.bodyFat}
-                      aria-invalid={!!fieldErr('bodyFat')}
-                      aria-describedby={fieldErr('bodyFat') ? 'intake-bodyfat-err' : undefined}
-                      onChange={e => {
-                        clearIntakeErrors();
-                        setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, bodyFat: e.target.value } });
-                      }}
-                    />
-                    {fieldErr('bodyFat') && <p id="intake-bodyfat-err" className="intake-field-error">{fieldErr('bodyFat')}</p>}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {intakeStep === 2 && (
-              <div className="animate-in">
-                <h3 style={{ marginBottom: '20px', color: 'var(--color-accent)' }}>{isEs ? 'Levantamientos Olímpicos' : 'Olympic Lifts'}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-snatch">Snatch (kg)</label>
-                      <input
-                        id="intake-snatch"
-                        type="text"
-                        className={inputClass('snatch')}
-                        placeholder="MAX"
-                        value={intakeFormData.responses.snatch}
-                        aria-invalid={!!fieldErr('snatch')}
-                        aria-describedby={fieldErr('snatch') ? 'intake-snatch-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, snatch: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('snatch') && <p id="intake-snatch-err" className="intake-field-error">{fieldErr('snatch')}</p>}
-                    </div>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-cj">Clean & Jerk (kg)</label>
-                      <input
-                        id="intake-cj"
-                        type="text"
-                        className={inputClass('cleanJerk')}
-                        placeholder="MAX"
-                        value={intakeFormData.responses.cleanJerk}
-                        aria-invalid={!!fieldErr('cleanJerk')}
-                        aria-describedby={fieldErr('cleanJerk') ? 'intake-cj-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, cleanJerk: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('cleanJerk') && <p id="intake-cj-err" className="intake-field-error">{fieldErr('cleanJerk')}</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {intakeStep === 3 && (
-              <div className="animate-in">
-                <h3 style={{ marginBottom: '12px', color: 'var(--color-accent)' }}>{isEs ? 'Fuerza de base' : 'Base strength'}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-bs">Back Squat (kg)</label>
-                      <input
-                        id="intake-bs"
-                        type="text"
-                        className={inputClass('backSquat')}
-                        placeholder="MAX"
-                        value={intakeFormData.responses.backSquat}
-                        aria-invalid={!!fieldErr('backSquat')}
-                        aria-describedby={fieldErr('backSquat') ? 'intake-bs-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, backSquat: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('backSquat') && <p id="intake-bs-err" className="intake-field-error">{fieldErr('backSquat')}</p>}
-                    </div>
-                    <div>
-                      <label className="stat-label" htmlFor="intake-fs">Front Squat (kg)</label>
-                      <input
-                        id="intake-fs"
-                        type="text"
-                        className={inputClass('frontSquat')}
-                        placeholder="MAX"
-                        value={intakeFormData.responses.frontSquat}
-                        aria-invalid={!!fieldErr('frontSquat')}
-                        aria-describedby={fieldErr('frontSquat') ? 'intake-fs-err' : undefined}
-                        onChange={e => {
-                          clearIntakeErrors();
-                          setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, frontSquat: e.target.value } });
-                        }}
-                      />
-                      {fieldErr('frontSquat') && <p id="intake-fs-err" className="intake-field-error">{fieldErr('frontSquat')}</p>}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="stat-label" htmlFor="intake-dl">Deadlift (kg)</label>
-                    <input
-                      id="intake-dl"
-                      type="text"
-                      className={inputClass('deadlift')}
-                      placeholder="MAX"
-                      value={intakeFormData.responses.deadlift}
-                      aria-invalid={!!fieldErr('deadlift')}
-                      aria-describedby={fieldErr('deadlift') ? 'intake-dl-err' : undefined}
-                      onChange={e => {
-                        clearIntakeErrors();
-                        setIntakeFormData({ ...intakeFormData, responses: { ...intakeFormData.responses, deadlift: e.target.value } });
-                      }}
-                    />
-                    {fieldErr('deadlift') && <p id="intake-dl-err" className="intake-field-error">{fieldErr('deadlift')}</p>}
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between' }}>
-              <button
-                className="btn-secondary"
-                disabled={intakeStep === 1}
-                onClick={() => {
-                  clearIntakeErrors();
-                  setIntakeStep(prev => prev - 1);
-                }}
-              >
-                {isEs ? 'Anterior' : 'Previous'}
-              </button>
-              {intakeStep < 3 ? (
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => {
-                    const { valid, errors } = validateIntakeStep(intakeStep as 1 | 2 | 3, intakeFormData.responses, language);
-                    if (!valid) {
-                      setIntakeFormErrors(errors);
-                      return;
-                    }
-                    setIntakeFormErrors({});
-                    setIntakeStep(prev => prev + 1);
-                  }}
-                >
-                  {isEs ? 'Siguiente' : 'Next'}
-                </button>
-              ) : (
-                <button type="button" className="btn-primary" onClick={handleIntakeSubmit}>
-                  {isEs ? 'Guardar perfil' : 'Save profile'}
-                </button>
-              )}
-            </div>
-          </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const renderCalendarView = () => {
     // Basic traditional calendar logic
     const monthNames = isEs
       ? ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
       : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    const daysArr = isEs ? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const daysArr = isEs ? ['Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b', 'Dom'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
@@ -1884,7 +1443,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   {/* Mock events for visibility */}
                   {d.current && d.day % 7 === 0 && (
                     <div style={{ marginTop: '8px', padding: '4px 8px', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderLeft: '3px solid var(--color-accent)', borderRadius: '4px', fontSize: '0.7rem' }}>
-                      {isEs ? 'Evaluación Técnica' : 'Technical Evaluation'}
+                      {isEs ? 'EvaluaciÃ³n TÃ©cnica' : 'Technical Evaluation'}
                     </div>
                   )}
                   {d.current && d.day % 10 === 0 && (
@@ -1905,7 +1464,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     <div className="planning-view">
       <header className="panel-header">
         <h1 className="view-title">
-          {isEs ? 'Planificación del Equipo' : 'Team Training Planning'}
+          {isEs ? 'PlanificaciÃ³n del Equipo' : 'Team Training Planning'}
         </h1>
         <div className="header-actions">
           <button className="btn-primary" onClick={() => setIsAssigning(!isAssigning)}>
@@ -1918,7 +1477,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       <div className="content-area">
         {isAssigning && (
           <div className="onboarding-card animate-in" style={{ marginBottom: '32px' }}>
-            <h3 style={{ marginBottom: '20px', color: 'var(--color-accent)' }}>{isEs ? 'Nueva Asignación' : 'New Assignment'}</h3>
+            <h3 style={{ marginBottom: '20px', color: 'var(--color-accent)' }}>{isEs ? 'Nueva AsignaciÃ³n' : 'New Assignment'}</h3>
             <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
                 <label className="stat-label">{isEs ? 'Atleta' : 'Athlete'}</label>
@@ -1939,7 +1498,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             {selectedAthleteId && selectedProgramId && (
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
                 <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
-                  {isEs ? '💡 Los pesos se calcularán automáticamente basados en el Onboarding del atleta.' : '💡 Weights will be auto-calculated based on athlete Onboarding data.'}
+                  {isEs ? 'ðŸ’¡ Los pesos se calcularÃ¡n automÃ¡ticamente basados en el Onboarding del atleta.' : 'ðŸ’¡ Weights will be auto-calculated based on athlete Onboarding data.'}
                 </p>
                 <button className="btn-primary" onClick={() => {
                   assignProgram({
@@ -2055,12 +1614,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
             <div style={{ display: 'flex', gap: '12px' }}>
               {isAdmin && (
                 <button className="btn-primary" onClick={() => setShowAdminAdd(!showAdminAdd)}>
-                  <Plus size={16} /> {isEs ? 'Añadir Maestro' : 'Add Master'}
+                  <Plus size={16} /> {isEs ? 'AÃ±adir Maestro' : 'Add Master'}
                 </button>
               )}
               {isCoach && (
                 <button className="btn-secondary glass" onClick={() => setShowGroupBuilder(!showGroupBuilder)}>
-                  <BookMarked size={16} /> {isEs ? 'Nuevo Grupo Técnico' : 'New Technical Group'}
+                  <BookMarked size={16} /> {isEs ? 'Nuevo Grupo TÃ©cnico' : 'New Technical Group'}
                 </button>
               )}
             </div>
@@ -2078,7 +1637,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                 <select className="edit-input" style={{ width: '150px' }} onChange={e => setNewExData({ ...newExData, category: e.target.value })}>
                   {exerciseLibrary.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                 </select>
-                <input className="edit-input" placeholder="Descripción breve" style={{ flex: 2 }} onChange={e => setNewExData({ ...newExData, desc: e.target.value })} />
+                <input className="edit-input" placeholder="DescripciÃ³n breve" style={{ flex: 2 }} onChange={e => setNewExData({ ...newExData, desc: e.target.value })} />
                 <button className="btn-primary" onClick={() => {
                   addMasterExercise(newExData.category, { name: newExData.name, description: newExData.desc, category: newExData.category });
                   setShowAdminAdd(false);
@@ -2090,7 +1649,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           {/* Coach Group Builder Form */}
           {isCoach && showGroupBuilder && (
             <div className="micro-card glass" style={{ width: '100%', padding: '20px', border: '1px solid var(--color-success)' }}>
-              <h3 style={{ marginBottom: '16px' }}>{isEs ? 'Crear Grupo de Progresión Técnica' : 'Create Technical Progression Group'}</h3>
+              <h3 style={{ marginBottom: '16px' }}>{isEs ? 'Crear Grupo de ProgresiÃ³n TÃ©cnica' : 'Create Technical Progression Group'}</h3>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                 <input
                   className="edit-input"
@@ -2224,7 +1783,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                 borderRadius: '24px', boxShadow: '0 20px 80px rgba(0,0,0,0.5)', maxWidth: '80%'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{isEs ? 'Añadir a...' : 'Add to...'}</h2>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{isEs ? 'AÃ±adir a...' : 'Add to...'}</h2>
                   <button className="icon-btn" onClick={() => setShowGroupSelectorFor(null)}><X /></button>
                 </div>
 
@@ -2232,7 +1791,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   {/* Column 1: Groups (Playlists) */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <h4 style={{ marginBottom: '16px', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <BookMarked size={14} color="var(--color-success)" /> {isEs ? 'Grupos Técnicos' : 'Technical Groups'}
+                      <BookMarked size={14} color="var(--color-success)" /> {isEs ? 'Grupos TÃ©cnicos' : 'Technical Groups'}
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
                       {customGroups.map(g => (
@@ -2253,7 +1812,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                   {/* Column 2: Active Sessions (Planning) */}
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <h4 style={{ marginBottom: '16px', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CalendarIcon size={14} color="var(--color-accent)" /> {isEs ? 'Planificación Activa' : 'Active Planning'}
+                      <CalendarIcon size={14} color="var(--color-accent)" /> {isEs ? 'PlanificaciÃ³n Activa' : 'Active Planning'}
                     </h4>
                     <p style={{ fontSize: '0.8rem', marginBottom: '12px', color: 'var(--color-text-secondary)' }}>
                       {isEs ? 'Atleta:' : 'Athlete:'} <strong>{athletes.find(a => a.id === activeAthleteId)?.name}</strong>
@@ -2269,7 +1828,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                             setShowGroupSelectorFor(null);
                           }}
                         >
-                          {isEs ? `Añadir a Día ${d.dayNumber}` : `Add to Day ${d.dayNumber}`}
+                          {isEs ? `AÃ±adir a DÃ­a ${d.dayNumber}` : `Add to Day ${d.dayNumber}`}
                         </button>
                       ))}
                     </div>
@@ -2297,7 +1856,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                                 }
                               }}
                             >
-                              + {isEs ? 'Día 1' : 'Day 1'}
+                              + {isEs ? 'DÃ­a 1' : 'Day 1'}
                             </button>
                           </div>
                         </div>
@@ -2329,7 +1888,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                       });
                     }}
                   >
-                    <Plus size={12} style={{ marginRight: '4px' }} /> {isEs ? 'Añadir Todo' : 'Add All'}
+                    <Plus size={12} style={{ marginRight: '4px' }} /> {isEs ? 'AÃ±adir Todo' : 'Add All'}
                   </button>
                 </div>
 
@@ -2347,7 +1906,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                           {isCoach && (
                             <button
                               className="icon-btn-sm"
-                              title={isEs ? "Añadir a playlist" : "Add to playlist"}
+                              title={isEs ? "AÃ±adir a playlist" : "Add to playlist"}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setShowGroupSelectorFor(ex.id);
@@ -2383,7 +1942,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       {activeView === 'dashboard' && renderDashboard()}
       {activeView === 'athletes' && renderAthletesView()}
       {activeView === 'planning' && renderPlanningView()}
-      {activeView === 'onboarding' && renderIntakeView()}
       {(activeView === 'micros' || activeView === 'sessions' || activeView === 'macros' || activeView === 'mesos') && renderPeriodization()}
       {activeView === 'library' && renderExerciseLibrary()}
       {(activeView === 'programs' || activeView === 'wolf-engine') && (
@@ -2404,7 +1962,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           onNavigate={(view: AppViewId) => setActiveView(view)}
         />
       )}
-      {activeView === 'aicoach' && renderPlaceholder(isEs ? 'Interactúa en el panel derecho' : 'Interact on the right panel', <Settings2 size={64} />)}
+      {activeView === 'aicoach' && renderPlaceholder(isEs ? 'InteractÃºa en el panel derecho' : 'Interact on the right panel', <Settings2 size={64} />)}
     </div>
   );
 };
