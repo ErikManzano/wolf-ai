@@ -1497,6 +1497,7 @@
 
 .wolf-se-sheet--dense .wolf-se-sheet-row {
   grid-template-columns: 26px minmax(0, 1fr) 3.25rem 14px;
+  grid-template-areas: 'num body reps chev';
   gap: 10px;
   padding: 8px 0;
   min-height: 52px;
@@ -1505,6 +1506,9 @@
 }
 
 .wolf-se-sheet--dense .wolf-se-sheet-row-num {
+  grid-area: num;
+  align-self: center;
+  justify-self: center;
   width: 26px;
   height: 26px;
   border-radius: 7px;
@@ -1512,9 +1516,25 @@
 }
 
 .wolf-se-sheet--dense .wolf-se-sheet-row-body {
+  grid-area: body;
+  align-self: center;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+}
+
+.wolf-se-sheet--dense .wolf-se-sheet-row-reps {
+  grid-area: reps;
+  align-self: center;
+  justify-self: end;
+  font-size: 0.78rem;
+  padding: 2px 5px;
+}
+
+.wolf-se-sheet--dense .wolf-se-sheet-row-chevron {
+  grid-area: chev;
+  align-self: center;
+  justify-self: end;
 }
 
 .wolf-se-sheet--dense .wolf-se-sheet-row-name {
@@ -1529,11 +1549,6 @@
   overflow: visible;
   text-overflow: unset;
   word-break: break-word;
-}
-
-.wolf-se-sheet--dense .wolf-se-sheet-row-reps {
-  font-size: 0.78rem;
-  padding: 2px 5px;
 }
 
 .wolf-se-sheet--dense .wolf-se-sheet-row-rx {
