@@ -2,6 +2,7 @@ import { Filter } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import ConfirmationModal from '../ConfirmationModal';
@@ -132,6 +133,21 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const mobileDetailProgram = mobileDetailId
     ? filtered.find((program) => program.id === mobileDetailId) ?? null
     : null;
+
+  const mobileTopBar = useMemo(
+    () =>
+      isMobile && mobileDetailProgram
+        ? {
+            title: mobileDetailProgram.name,
+            back: {
+              label: isEs ? 'Volver a Programas' : 'Back to Programs',
+              onBack: () => setMobileDetailId(null),
+            },
+          }
+        : null,
+    [isMobile, mobileDetailProgram, isEs],
+  );
+  useMobileTopBar(mobileTopBar);
 
   const runProgramAction = (
     program: CoachProgramRow,

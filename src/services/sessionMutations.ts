@@ -67,6 +67,22 @@ export function updateSetSchemeField(
   return finalize(s, athlete, catalog);
 }
 
+export function updateSetSchemeTextField(
+  session: Session,
+  blockIndex: number,
+  setIndex: number,
+  field: 'coachNote',
+  value: string,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block?.sets[setIndex]) return session;
+  block.sets[setIndex] = { ...block.sets[setIndex], [field]: value };
+  return finalize(s, athlete, catalog);
+}
+
 export function updateSegmentRepAt(
   session: Session,
   blockIndex: number,
@@ -213,6 +229,7 @@ export function duplicateSetAt(
     sets: src.sets,
     targetRir: src.targetRir,
     restSec: src.restSec,
+    coachNote: src.coachNote,
     ...(src.segmentReps ? { segmentReps: [...src.segmentReps] } : {}),
   };
   block.sets.splice(setIndex + 1, 0, copy);
@@ -252,6 +269,7 @@ export function addSetToBlock(session: Session, blockIndex: number, athlete: Ath
     sets: 1,
     targetRir: last.targetRir ?? 2,
     restSec: last.restSec ?? 150,
+    coachNote: last.coachNote,
     ...(last.segmentReps ? { segmentReps: [...last.segmentReps] } : {}),
   };
   block.sets.push(copy);

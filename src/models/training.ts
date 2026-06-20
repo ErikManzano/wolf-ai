@@ -88,6 +88,8 @@ export interface SetScheme {
    * Ej: ["1","1","3"] = clean 1 + jerk 1 + front squat 3 en esa entrada de tabla.
    */
   segmentReps?: string[];
+  /** Nota del coach para esta fila de series (complejos y singles). */
+  coachNote?: string;
 }
 
 /** Movimiento dentro de un complejo (misma barra / misma entrada de %). */

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarRange } from 'lucide-react';
 import type { Athlete, AthleteLevel } from '../../models/training';
+import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { buildWlAthleteRosterRows } from '../../utils/wlAthleteRoster';
@@ -78,6 +79,21 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
     setSelectedAthleteId(null);
     setEditId(null);
   };
+
+  const mobileTopBar = useMemo(
+    () =>
+      isMobile && sectionView === 'detail' && selectedRow
+        ? {
+            title: selectedRow.name,
+            back: {
+              label: isEs ? 'Volver a Atletas' : 'Back to Athletes',
+              onBack: closeAthleteDetail,
+            },
+          }
+        : null,
+    [isMobile, sectionView, selectedRow, isEs],
+  );
+  useMobileTopBar(mobileTopBar);
 
   const openEdit = (profileId: string) => {
     setEditId(profileId);

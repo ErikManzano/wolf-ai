@@ -6,8 +6,10 @@ import {
   Minus,
   PenLine,
   Plus,
+  Redo2,
   Table2,
   Trash2,
+  Undo2,
   UserPlus,
 } from 'lucide-react';
 import type { Athlete, GeneratedProgram, Session, SessionGoal } from '../models/training';
@@ -24,13 +26,14 @@ import {
   swapProgramDaySlots,
   type ProgramDaySlot,
 } from '../services/programStructureMutations';
-import { replaceProgramSession } from '../services/sessionMutations';
+import { replaceProgramSession, refreshSession } from '../services/sessionMutations';
 import { calcularCargaTotal } from '../services/trainingEngine';
 import { exportProgramAsJson } from '../services/programExport';
 import {
   saveProgramEditDraft,
 } from '../services/programDraftStore';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
+import { useProgramHistory } from '../hooks/useProgramHistory';
 import OlympicSessionEditor from './OlympicSessionEditor';
 import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramMatrixTable } from './session-editor/ProgramMatrixTable';
@@ -201,6 +204,22 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     programRef.current = program;
   }, [program]);
 
+  const {
+    canUndo,
+    canRedo,
+    resetHistory,
+    recordSnapshot,
+    undo,
+    redo,
+    pushRedoSnapshot,
+    pushUndoSnapshot,
+    runWithoutRecording,
+  } = useProgramHistory(program);
+
+  useEffect(() => {
+    resetHistory();
+  }, [editingAssignmentId, athleteId, resetHistory]);
+
   const showCreate = mode === 'full' || mode === 'create';
   const showCustomize = mode === 'full' || mode === 'customize';
   const showAssign = mode === 'full' || mode === 'assign';
@@ -252,6 +271,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       maxDays: isEs
         ? `Máximo ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} días por semana.`
         : `Maximum ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} days per week.`,
+      undo: isEs ? 'Deshacer' : 'Undo',
+      redo: isEs ? 'Rehacer' : 'Redo',
+      undoShortcut: isEs ? 'Deshacer (Ctrl+Z)' : 'Undo (Ctrl+Z)',
+      redoShortcut: isEs ? 'Rehacer (Ctrl+Shift+Z)' : 'Redo (Ctrl+Shift+Z)',
     }),
     [isEs, athlete.name],
   );
@@ -353,12 +376,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setSelectedWeek(1);
     setSelectedDay(1);
     onProgramGenerated?.();
+    resetHistory();
     persist(p);
-  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate, motorExercises]);
+  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate, motorExercises, resetHistory]);
 
   const handleClearProgram = useCallback(() => {
+    resetHistory();
     persist(null);
-  }, [persist]);
+  }, [persist, resetHistory]);
 
   useEffect(() => {
     if (!externalCreateActions || !showCreate) {
@@ -383,7 +408,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   ]);
 
   const applyProgramUpdate = useCallback(
-    (next: GeneratedProgram, selection?: { week?: number; day?: number }) => {
+    (next: GeneratedProgram, selection?: { week?: number; day?: number }, options?: { skipHistory?: boolean }) => {
+      const current = programRef.current;
+      if (current && !options?.skipHistory) {
+        recordSnapshot(current);
+      }
       programRef.current = next;
       if (selection?.week != null) setSelectedWeek(selection.week);
       if (selection?.day != null) setSelectedDay(selection.day);
@@ -394,16 +423,66 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         debouncedStoragePersist(next);
       }
     },
-    [onProgramChange, writeEditDraft, debouncedStoragePersist, skipLocalDraftPersistence],
+    [onProgramChange, writeEditDraft, debouncedStoragePersist, skipLocalDraftPersistence, recordSnapshot],
   );
+
+  const handleUndo = useCallback(() => {
+    const current = programRef.current;
+    if (!current) return;
+    const prev = undo();
+    if (!prev) return;
+    runWithoutRecording(() => {
+      pushRedoSnapshot(current);
+      applyProgramUpdate(prev, undefined, { skipHistory: true });
+    });
+  }, [undo, pushRedoSnapshot, applyProgramUpdate, runWithoutRecording]);
+
+  const handleRedo = useCallback(() => {
+    const current = programRef.current;
+    if (!current) return;
+    const next = redo();
+    if (!next) return;
+    runWithoutRecording(() => {
+      pushUndoSnapshot(current);
+      applyProgramUpdate(next, undefined, { skipHistory: true });
+    });
+  }, [redo, pushUndoSnapshot, applyProgramUpdate, runWithoutRecording]);
+
+  useEffect(() => {
+    if (!showCustomize || !program) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT')
+      ) {
+        return;
+      }
+      if (e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showCustomize, program, handleUndo, handleRedo]);
 
   const handleSessionEdit = useCallback(
     (s: Session) => {
       const current = programRef.current;
       if (!current) return;
-      applyProgramUpdate(replaceProgramSession(current, selectedWeek, selectedDay, s));
+      const refreshed = refreshSession(s, athleteForEngine, motorExercises);
+      applyProgramUpdate(replaceProgramSession(current, selectedWeek, selectedDay, refreshed));
     },
-    [selectedWeek, selectedDay, applyProgramUpdate],
+    [selectedWeek, selectedDay, applyProgramUpdate, athleteForEngine, motorExercises],
   );
 
   useEffect(() => {
@@ -745,6 +824,28 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               >
                 <Table2 size={14} aria-hidden />
                 {t.customizeViewTable}
+              </button>
+            </div>
+            <div className="wolf-program-customize-toolbar-actions" role="group" aria-label={isEs ? 'Historial de edición' : 'Edit history'}>
+              <button
+                type="button"
+                className="wolf-program-history-btn"
+                disabled={!canUndo}
+                title={t.undoShortcut}
+                aria-label={t.undoShortcut}
+                onClick={handleUndo}
+              >
+                <Undo2 size={15} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className="wolf-program-history-btn"
+                disabled={!canRedo}
+                title={t.redoShortcut}
+                aria-label={t.redoShortcut}
+                onClick={handleRedo}
+              >
+                <Redo2 size={15} aria-hidden />
               </button>
             </div>
             {customizeToolbarEnd ? (

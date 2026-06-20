@@ -1872,6 +1872,16 @@
   flex-shrink: 0;
 }
 
+.wl-programs-embedded-plan .wolf-program-customize-toolbar-actions {
+  gap: 3px;
+}
+
+.wl-programs-embedded-plan .wolf-program-history-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+}
+
 .wl-programs-embedded-plan .wolf-program-customize-tab {
   min-height: 30px;
   padding: 0 10px;
@@ -1917,17 +1927,30 @@
   flex-shrink: 0;
 }
 
+.wl-programs-embedded-plan .wolf-program-matrix-toolbar {
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px;
+}
+
 .wl-programs-embedded-plan .wolf-program-matrix--expanded {
   flex: 1;
-  min-height: 200px;
+  min-height: 0;
   max-height: none;
   border-radius: 10px;
   border-color: var(--color-border, #27272a);
+  display: flex;
+  flex-direction: column;
 }
 
-.wl-programs-embedded-plan .wolf-program-matrix-toolbar {
-  gap: 4px;
-  padding: 6px 8px;
+.wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+  flex: 1;
+  min-height: 0;
 }
 
 .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-corner,
@@ -2089,19 +2112,22 @@
 .wl-programs-embedded-plan .wolf-session-editor--flow {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--dense,
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--sortable {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-session-editor--flow {
@@ -2109,7 +2135,10 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow,
@@ -2135,9 +2164,11 @@
   font-size: var(--wl-type-exercise-name-size, 0.9375rem);
 }
 
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-sheet--dense .wolf-se-sheet-row-rx {
-  font-size: var(--wl-type-exercise-rx-size, 0.8125rem);
-  max-width: 42%;
+@media (min-width: 521px) {
+  .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-sheet--dense .wolf-se-sheet-row-rx {
+    font-size: var(--wl-type-exercise-rx-size, 0.8125rem);
+    max-width: 42%;
+  }
 }
 
 .wl-programs-embedded-plan .wolf-se-exercise-view {
@@ -2234,21 +2265,85 @@
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet--primary {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet-rows,
 .wl-programs-embedded-plan .wolf-se-sheet--sortable .wolf-se-sheet-rows--sortable {
-  flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-item {
+  min-height: auto;
+  height: auto;
+  align-items: stretch;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-item:has(.wolf-se-sheet-row-reorder) {
+  grid-template-columns: 24px minmax(0, 1fr) 50px 34px;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-row {
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  padding: 10px 0;
+  min-height: 52px;
+  height: auto;
+  align-items: start;
+  align-self: stretch;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row--sortable {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-body {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-rx {
+  flex: 0 0 auto;
+  max-width: 100%;
+  width: 100%;
+  font-size: 0.74rem;
+  color: var(--wl-text-accent, #ff6b1a);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-col-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--wl-surface-board, #111318);
 }
 
 .wl-programs-embedded-plan .wolf-se-sheet-head,
@@ -3586,10 +3681,37 @@
     overflow: hidden;
   }
 
+  .wl-programs-embedded-plan .wolf-program-customize-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 6px;
+    align-items: center;
+    overflow: visible;
+  }
+
   .wl-programs-embedded-plan .wolf-program-customize-tabs {
-    flex-shrink: 0;
-    align-self: stretch;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    flex: none;
     width: 100%;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-toolbar-actions {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    flex-shrink: 0;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-toolbar-end {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    margin-left: 0;
+    flex-shrink: 0;
   }
 
   .wl-programs-panel.wl-programs-editor .wl-programs-action-dock {
@@ -3615,6 +3737,35 @@
 
   .wl-programs-editor .wolf-session-editor--embedded.wolf-session-editor--mobile-sticky {
     padding-bottom: 0;
+  }
+
+  /* Un solo eje de scroll interno; el viewport no se mueve */
+  .wl-programs-panel.wl-programs-editor,
+  .wl-programs-editor,
+  .wl-programs-editor-body,
+  .wl-programs-editor-stage,
+  .wl-programs-customize-wrap,
+  .wl-programs-embedded-plan .wolf-program-plan,
+  .wl-programs-embedded-plan .wolf-program-customize-layout,
+  .wl-programs-embedded-plan .wolf-program-day-board {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .wl-programs-panel.wl-programs-editor {
+    touch-action: pan-y;
+    overscroll-behavior: none;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-nav--compact,
+  .wl-programs-embedded-plan .wolf-week-carousel,
+  .wl-programs-embedded-plan .wolf-day-tabs {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow {
+    overflow: hidden;
   }
 
   .wl-programs-action-dock {
@@ -3742,6 +3893,20 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .wl-programs-editor .wl-programs-editor-hero-top:not(:has(.wl-programs-editor-hero-meta)) {
+    display: none;
+  }
+
+  .wl-programs-editor .wl-programs-editor-hero-top:has(.wl-programs-editor-hero-meta) {
+    justify-content: flex-end;
+  }
+
+  .wl-programs-editor-hero {
+    gap: 4px;
+  }
+}
+
 @media (max-width: 768px) {
   .wl-programs-editor-crumb {
     flex: 1 1 auto;
@@ -3779,8 +3944,23 @@
   }
 
   .wl-programs-embedded-plan .wolf-program-customize-toolbar {
-    align-items: center;
     gap: 6px;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-tabs {
+    width: 100%;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-history-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    touch-action: manipulation;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-toolbar-end .wl-programs-editor-hero-meta--toolbar {
+    justify-content: flex-end;
   }
 
   .wl-programs-editor-hero {
@@ -4327,69 +4507,26 @@
     grid-template-columns: 24px minmax(0, 1fr) 34px;
     gap: 4px 6px;
     padding: 6px 8px 6px 4px;
-    min-height: 56px;
-    align-items: start;
-  }
-
-  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-item:has(.wolf-se-sheet-row-reorder) {
-    grid-template-columns: 24px minmax(0, 1fr) 50px 34px;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-drag {
     width: 24px;
-    height: 40px;
+    height: auto;
+    min-height: 40px;
+    align-self: stretch;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-delete {
     width: 34px;
-    height: 40px;
-  }
-
-  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet--dense .wolf-se-sheet-row {
-    grid-template-columns: 22px minmax(0, 1fr) auto;
-    gap: 6px 8px;
-    padding: 10px 0;
-    min-height: 52px;
-    align-items: start;
+    height: auto;
+    min-height: 40px;
+    align-self: stretch;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-reps {
     font-size: 0.76rem;
     align-self: center;
     margin-top: 2px;
-  }
-
-  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-body {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 3px;
-    min-width: 0;
-  }
-
-  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: 100%;
-    font-size: 0.86rem;
-    font-weight: 600;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    word-break: break-word;
-    line-height: 1.3;
-  }
-
-  .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-rx {
-    flex: 0 0 auto;
-    max-width: 100%;
-    width: 100%;
-    font-size: 0.74rem;
-    color: var(--wl-text-accent, #ff6b1a);
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    word-break: break-word;
-    line-height: 1.25;
   }
 
   .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-sheet-row-chevron {

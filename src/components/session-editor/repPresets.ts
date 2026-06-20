@@ -1,15 +1,8 @@
-/** Presets comunes para reps por segmento en complejos olímpicos. */
-export const SEGMENT_REP_PRESETS = [
-  '1',
-  '2',
-  '3',
-  '1+1',
-  '2+1',
-  '1+2',
-  '2+2',
-  '3+1',
-  '1+1+1',
-] as const;
+/** Opciones de reps por segmento (enteros simples). */
+export const SEGMENT_REP_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20] as const;
+
+/** @deprecated Solo compatibilidad con datos antiguos (2+1, etc.). */
+export const SEGMENT_REP_PRESETS = SEGMENT_REP_OPTIONS.map(String);
 
 /** Acepta notación de reps compleja: dígitos separados por + */
 export function sanitizeSegmentRepInput(raw: string): string {

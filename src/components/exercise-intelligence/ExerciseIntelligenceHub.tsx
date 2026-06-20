@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Command, Plus, RefreshCw } from 'lucide-react';
 import { isSingleComposition } from '../../models/exercise';
 import type { ExerciseDefinitionVersion, ExerciseLifecycleStatus, MergedDefinitionView } from '../../models/exercise';
+import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import ExerciseComposerDrawer, { type ComposerDrawerMode } from '../exercise-composer/ExerciseComposerDrawer';
 import SemanticExplorer from './SemanticExplorer';
 import RegistryCardGrid from './RegistryCardGrid';
@@ -33,6 +35,7 @@ interface ExerciseIntelligenceHubProps {
 
 const ExerciseIntelligenceHub: React.FC<ExerciseIntelligenceHubProps> = ({ language }) => {
   const isEs = language === 'ES';
+  const isMobile = useMediaQuery('(max-width: 1024px)');
   const { pushAlert } = useWolfAlert();
   const {
     currentUser,
@@ -183,6 +186,34 @@ const ExerciseIntelligenceHub: React.FC<ExerciseIntelligenceHubProps> = ({ langu
   };
 
   const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  const hubModeTitle = useMemo(() => {
+    switch (mode) {
+      case 'collections':
+        return isEs ? 'Colecciones' : 'Collections';
+      case 'relationships':
+        return isEs ? 'Relaciones' : 'Relationships';
+      case 'admin':
+        return isEs ? 'Taxonomía' : 'Taxonomy';
+      default:
+        return null;
+    }
+  }, [mode, isEs]);
+
+  const mobileTopBar = useMemo(
+    () =>
+      isMobile && hubModeTitle
+        ? {
+            title: hubModeTitle,
+            back: {
+              label: isEs ? 'Volver a Ejercicios' : 'Back to Exercises',
+              onBack: () => setMode('browse'),
+            },
+          }
+        : null,
+    [isMobile, hubModeTitle, isEs],
+  );
+  useMobileTopBar(mobileTopBar);
 
   const paletteActions = useMemo(
     () => [

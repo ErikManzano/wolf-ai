@@ -81,6 +81,32 @@ export function blockTotalReps(block: SessionExerciseBlock): number {
   return Math.round(total);
 }
 
+/** Tonelaje estimado de una fila de series en un bloque complejo. */
+export function complexSetRowTonnage(
+  block: SessionExerciseBlock,
+  row: SessionExerciseBlock['sets'][number],
+  athlete: Athlete,
+  exercises: Exercise[],
+): number {
+  if (!block.segments?.length) return 0;
+  let total = 0;
+  for (let si = 0; si < block.segments.length; si++) {
+    const seg = block.segments[si];
+    if (!seg) continue;
+    const ex = exercises.find((e) => e.id === seg.exerciseId);
+    if (!ex) continue;
+    const kg = (row.percentage / 100) * resolveBaseOneRm(ex, athlete);
+    const reps = parseRepTokens(row.segmentReps?.[si] ?? '0');
+    total += kg * reps * row.sets;
+  }
+  return Math.round(total * 10) / 10;
+}
+
+/** Repeticiones totales de una fila de series (ronda × series). */
+export function complexSetRowTotalReps(block: SessionExerciseBlock, row: SessionExerciseBlock['sets'][number]): number {
+  return repsPerRoundForScheme(block, row) * row.sets;
+}
+
 export function sessionTotalReps(blocks: SessionExerciseBlock[]): number {
   return blocks.reduce((sum, block) => sum + blockTotalReps(block), 0);
 }

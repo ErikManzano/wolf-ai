@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import './App.css';
 import './styles/interactive.css';
+import './components/navigation/mobile-top-bar.css';
 import Sidebar from './components/Sidebar';
 import CentralPanel from './components/CentralPanel.tsx';
 import ChatPanel from './components/ChatPanel';
@@ -8,11 +9,12 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { ChevronsLeft, MessageSquare } from 'lucide-react';
+import { ChevronsLeft } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
-import { getNavLabel } from './navigation/appNavigation';
+import { MobileTopBar } from './components/navigation/MobileTopBar';
+import { MobileTopBarProvider, useMobileTopBarContext } from './context/MobileTopBarContext';
 import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
 import {
@@ -22,11 +24,6 @@ import {
 } from './hooks/useSidebarResize';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
-const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className="mobile-header-logo" aria-hidden>
-    <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
-  </svg>
-);
 
 function AppShell() {
   const [activeView, setActiveView] = useState('programs');
@@ -51,7 +48,8 @@ function AppShell() {
   /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
   const initialViewUserIdRef = useRef<string | null>(null);
 
-  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession } = useWolfAssign();
+  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, programsView, editingProgramId } = useWolfAssign();
+  const { config: mobileTopBarConfig } = useMobileTopBarContext();
   const { setUserRole } = useAppContext();
 
   const appRoleFromWolf = (role: WolfAppRole) => {
@@ -144,6 +142,13 @@ function AppShell() {
 
   const showSidebarCollapsed = effectiveSidebarCollapsed && !sidebarResizing;
 
+  const lockMobileEdgeSwipe =
+    Boolean(mobileTopBarConfig?.lockEdgeSwipe) ||
+    (isNarrowLayout &&
+      activeView === 'programs' &&
+      programsView === 'editor' &&
+      Boolean(editingProgramId));
+
   const sidebarUsesCustomWidth = sidebarResizeEnabled && (!showSidebarCollapsed || sidebarResizing);
   const appContainerStyle = sidebarUsesCustomWidth
     ? ({ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties)
@@ -184,14 +189,14 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}`}
+        className={`app-container${chatDesktopCollapsed ? ' app-container--chat-collapsed' : ''}${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${lockMobileEdgeSwipe ? ' app-container--program-editor' : ''}`}
         style={appContainerStyle}
         onPointerDown={(e) => {
-          if (!isNarrowLayout || e.pointerType === 'mouse') return;
+          if (!isNarrowLayout || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
           gestureRef.current = { startX: e.clientX, startY: e.clientY, tracking: true };
         }}
         onPointerUp={(e) => {
-          if (!isNarrowLayout || !gestureRef.current.tracking || e.pointerType === 'mouse') return;
+          if (!isNarrowLayout || !gestureRef.current.tracking || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
           const dx = e.clientX - gestureRef.current.startX;
           const dy = e.clientY - gestureRef.current.startY;
           gestureRef.current.tracking = false;
@@ -207,27 +212,15 @@ function AppShell() {
           gestureRef.current.tracking = false;
         }}
       >
-        {/* Mobile Header */}
-        <div className="mobile-header">
-          <div className="mobile-header-brand" aria-live="polite">
-            <WolfHeaderIcon />
-            <div className="mobile-header-title">{getNavLabel(activeView, language === 'ES')}</div>
-          </div>
-          <div className="mobile-header-actions">
-            <button
-              type="button"
-              className="mobile-header-btn mobile-header-btn--chat"
-            aria-expanded={mobileChatOpen}
-            aria-label={mobileChatOpen ? (language === 'ES' ? 'Cerrar chat' : 'Close chat') : (language === 'ES' ? 'Abrir chat' : 'Open chat')}
-            onClick={() => {
-              setMobileMenuOpen(false);
-              setMobileChatOpen((v) => !v);
-            }}
-          >
-            <MessageSquare size={22} strokeWidth={2} />
-          </button>
-          </div>
-        </div>
+        <MobileTopBar
+          activeView={activeView}
+          language={language}
+          mobileChatOpen={mobileChatOpen}
+          onToggleChat={() => {
+            setMobileMenuOpen(false);
+            setMobileChatOpen((v) => !v);
+          }}
+        />
 
         {(mobileMenuOpen || mobileChatOpen) && (
           <button
@@ -379,7 +372,9 @@ function App() {
     <AppProvider>
       <WolfAlertProvider>
         <WolfAssignProvider>
-          <AppShell />
+          <MobileTopBarProvider>
+            <AppShell />
+          </MobileTopBarProvider>
         </WolfAssignProvider>
       </WolfAlertProvider>
     </AppProvider>

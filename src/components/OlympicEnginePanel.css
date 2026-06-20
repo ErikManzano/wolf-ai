@@ -1797,6 +1797,48 @@
   margin-left: auto;
 }
 
+.wolf-program-customize-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.wolf-program-history-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  background: #0c0c0e;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.wolf-program-history-btn:hover:not(:disabled) {
+  color: #fafafa;
+  border-color: color-mix(in srgb, #ff6b1a 35%, #27272a);
+  background: color-mix(in srgb, #ff6b1a 8%, #0c0c0e);
+}
+
+.wolf-program-history-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-program-history-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, #ff6b1a 55%, transparent);
+  outline-offset: 2px;
+}
+
 .wolf-program-customize-tabs {
   display: inline-flex;
   align-items: center;
@@ -2130,6 +2172,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
+  flex-shrink: 0;
   padding: 8px 10px;
   border-bottom: 1px solid #27272a;
   background: #0c0c0e;
@@ -4358,21 +4401,6 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
   .wolf-program-matrix-cell-hit {
     min-height: 48px;
-  }
-
-  .wolf-program-matrix-toolbar {
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .wolf-program-matrix-tool-btn span {
-    display: none;
-  }
-
-  .wolf-program-matrix-tool-btn {
-    min-width: 40px;
-    padding-inline: 8px;
   }
 
   .wolf-program-matrix-fullscreen__head strong {

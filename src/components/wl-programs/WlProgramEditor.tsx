@@ -9,8 +9,10 @@ import {
 } from 'lucide-react';
 import type { Athlete, GeneratedProgram, SessionGoal } from '../../models/training';
 import { useAppContext } from '../../context/AppContext';
+import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useDebouncedCallback } from '../../hooks/useDebouncedCallback';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
@@ -42,6 +44,7 @@ const PLAN_TITLE_MAX_LEN = 48;
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
+  const isMobileLayout = useMediaQuery('(max-width: 1024px)');
   const { intakes } = useAppContext();
   const {
     getCoachProgramById,
@@ -101,6 +104,25 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   const titleTooLong = programTitle.length > PLAN_TITLE_MAX_LEN;
   const titleMissing = programTitle.trim().length === 0;
+
+  const mobileTopBar = useMemo(
+    () =>
+      isMobileLayout && coachProgram
+        ? {
+            title:
+              programTitle.trim() ||
+              coachProgram.name ||
+              (isEs ? 'Sin nombre' : 'Untitled'),
+            back: {
+              label: isEs ? 'Volver a Programas' : 'Back to Programs',
+              onBack,
+            },
+            lockEdgeSwipe: true,
+          }
+        : null,
+    [isMobileLayout, coachProgram, programTitle, isEs, onBack],
+  );
+  useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
     if (coachAthletes.length === 0) return;
@@ -194,16 +216,18 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     >
       <header className="wl-programs-editor-hero">
         <div className="wl-programs-editor-hero-top">
-          <AppBreadcrumb
-            isEs={isEs}
-            className="app-breadcrumb--icon-back wl-programs-editor-crumb"
-            onBack={onBack}
-            backLabel={isEs ? 'Programas' : 'Programs'}
-            items={[
-              { label: isEs ? 'Programas' : 'Programs' },
-              { label: programTitle.trim() || coachProgram.name || (isEs ? 'Sin nombre' : 'Untitled') },
-            ]}
-          />
+          {!isMobileLayout ? (
+            <AppBreadcrumb
+              isEs={isEs}
+              className="app-breadcrumb--icon-back wl-programs-editor-crumb"
+              onBack={onBack}
+              backLabel={isEs ? 'Programas' : 'Programs'}
+              items={[
+                { label: isEs ? 'Programas' : 'Programs' },
+                { label: programTitle.trim() || coachProgram.name || (isEs ? 'Sin nombre' : 'Untitled') },
+              ]}
+            />
+          ) : null}
           {!hasProgram ? editorProgramMeta : null}
         </div>
         <div className="wl-programs-editor-hero-main">

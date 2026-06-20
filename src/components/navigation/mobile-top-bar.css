@@ -1,0 +1,138 @@
+.mobile-header {
+  display: none;
+}
+
+.mobile-header-btn {
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.mobile-header-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.mobile-header-btn:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 1024px) {
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    height: calc(56px + var(--safe-top));
+    padding: var(--safe-top) max(12px, var(--safe-right)) 0 max(12px, var(--safe-left));
+    background: var(--color-bg-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  }
+
+  .mobile-header-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding-left: 4px;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-header-btn--back {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin-right: -2px;
+    border-radius: 10px;
+    color: var(--color-text-secondary);
+  }
+
+  .mobile-header-btn--back:hover {
+    color: var(--color-accent);
+  }
+
+  .mobile-header-logo {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .mobile-header-btn--fab {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 999px;
+    background: #ff6b1a;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255, 107, 26, 0.38);
+  }
+
+  .mobile-header-btn--fab:hover {
+    background: #ff8a3d;
+    color: #fff;
+  }
+
+  .mobile-header-btn--fab:active {
+    background: #e85f12;
+    color: #fff;
+  }
+
+  /* ── Hide in-page titles/back duplicated by the global top bar ── */
+  .central-panel .panel-header,
+  .super-dashboard .sd-hero,
+  .wl-programs-head,
+  .wl-athletes-header,
+  .wolf-ei__header,
+  .central-panel .app-breadcrumb--icon-back,
+  .wl-programs-hub .app-breadcrumb--icon-back,
+  .wl-athletes-section .app-breadcrumb--icon-back {
+    display: none !important;
+  }
+
+  .wl-programs-editor .wl-programs-editor-hero-top:not(:has(.wl-programs-editor-hero-meta)) {
+    display: none;
+  }
+
+  .wolf-athlete-hero--compact .wolf-athlete-hero-main > .wolf-athlete-kicker,
+  .wolf-athlete-hero--compact .wolf-athlete-title {
+    display: none;
+  }
+}

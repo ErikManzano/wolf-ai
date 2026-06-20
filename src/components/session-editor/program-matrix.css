@@ -33,11 +33,36 @@
 .wolf-program-matrix-toolbar {
   background: linear-gradient(180deg, var(--matrix-surface-2) 0%, var(--matrix-surface) 100%);
   border-bottom: 1px solid var(--matrix-border-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 10px;
 }
 
 .wolf-program-matrix-tool-btn {
   border-color: var(--matrix-border);
   background: color-mix(in srgb, var(--matrix-surface-3) 80%, var(--matrix-bg));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--matrix-border);
+  border-radius: 8px;
+  color: var(--matrix-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .wolf-program-matrix-tool-btn:hover:not(:disabled) {
@@ -528,5 +553,31 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 .wolf-program-matrix-table--swappable .wolf-program-matrix-week-row {
   padding-left: 0;
+}
+
+@media (max-width: 768px) {
+  .wolf-program-matrix-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 8px;
+    overflow: visible;
+  }
+
+  .wolf-program-matrix-tool-btn {
+    flex: 0 0 auto;
+    min-height: 34px;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .wolf-program-matrix-tool-btn {
+    padding: 6px 6px;
+    font-size: 0.66rem;
+    gap: 4px;
+  }
 }
 
