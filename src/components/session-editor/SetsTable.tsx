@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Copy, GripVertical, Info, ListOrdered, Plus, Trash2 } from 'lucide-react';
+import { Clock, Copy, GripVertical, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
 import { normalizeBlockType, WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
@@ -19,7 +19,6 @@ import {
 import { SectionHeader } from './SectionHeader';
 import {
   DEFAULT_REST_SEC,
-  DEFAULT_TARGET_RIR,
   formatRestSec,
 } from './setSchemeUtils';
 import './set-rows.css';
@@ -28,7 +27,6 @@ const PCT_PRESETS_LIST = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 1
 const REP_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20] as const;
 const SETS_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10] as const;
 const PCT_BUTTON_STEP = 5;
-const RIR_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
 const REST_PRESETS_SEC = [90, 120, 150, 180, 210, 240] as const;
 
 interface SetsTableProps {
@@ -94,7 +92,6 @@ interface PremiumSetMobileCardProps {
   canRemove: boolean;
   onPctChange: (value: number) => void;
   onRepsChange: (value: number) => void;
-  onRirChange: (value: number) => void;
   onRestChange: (value: number) => void;
   onRemove: () => void;
 }
@@ -107,11 +104,9 @@ function PremiumSetMobileCard({
   canRemove,
   onPctChange,
   onRepsChange,
-  onRirChange,
   onRestChange,
   onRemove,
 }: PremiumSetMobileCardProps) {
-  const rir = row.targetRir ?? DEFAULT_TARGET_RIR;
   const restSec = row.restSec ?? DEFAULT_REST_SEC;
   const si = setIndex;
 
@@ -159,22 +154,7 @@ function PremiumSetMobileCard({
             aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
           />
         </div>
-        <div className="wolf-se-premium-set-card__field">
-          <span className="wolf-se-premium-set-card__label">{isEs ? 'RIR obj.' : 'Target RIR'}</span>
-          <select
-            className="wolf-se-sets-premium__select"
-            value={rir}
-            aria-label={isEs ? `RIR serie ${si + 1}` : `RIR set ${si + 1}`}
-            onChange={(e) => onRirChange(Number(e.target.value))}
-          >
-            {RIR_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="wolf-se-premium-set-card__field">
+        <div className="wolf-se-premium-set-card__field wolf-se-premium-set-card__field--rest">
           <span className="wolf-se-premium-set-card__label">{isEs ? 'Descanso' : 'Rest'}</span>
           <label className="wolf-se-sets-premium__rest wolf-se-premium-set-card__rest">
             <Clock size={14} aria-hidden />
@@ -206,7 +186,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onPctChange,
   onRepsChange,
   onSetsChange,
-  onRirChange,
   onRestChange,
   onSegmentRepChange,
   onAddSet,
@@ -302,7 +281,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     canRemove={block.sets.length > 1}
                     onPctChange={(v) => onPctChange(si, v)}
                     onRepsChange={(v) => onRepsChange(si, v)}
-                    onRirChange={(v) => onRirChange(si, v)}
                     onRestChange={(v) => onRestChange(si, v)}
                     onRemove={() => onRemoveSet(si)}
                   />
@@ -319,12 +297,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   <th>% 1RM</th>
                   <th>{isEs ? 'Carga' : 'Load'}</th>
                   <th>{isEs ? 'Reps' : 'Reps'}</th>
-                  <th>
-                    <span className="wolf-se-sets-premium__th-label">
-                      {isEs ? 'RIR obj.' : 'Target RIR'}
-                      <Info size={12} aria-hidden />
-                    </span>
-                  </th>
                   <th>{isEs ? 'Descanso' : 'Rest'}</th>
                   <th className="wolf-se-sets-premium__col-actions" aria-hidden />
                 </tr>
@@ -332,7 +304,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
               <tbody>
                 {block.sets.map((row, si) => {
                   const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
-                  const rir = row.targetRir ?? DEFAULT_TARGET_RIR;
                   const restSec = row.restSec ?? DEFAULT_REST_SEC;
                   return (
                     <tr key={si}>
@@ -370,20 +341,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                           onChange={(v) => onRepsChange(si, v)}
                           aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
                         />
-                      </td>
-                      <td className="wolf-se-sets-premium__col-rir">
-                        <select
-                          className="wolf-se-sets-premium__select"
-                          value={rir}
-                          aria-label={isEs ? `RIR serie ${si + 1}` : `RIR set ${si + 1}`}
-                          onChange={(e) => onRirChange(si, Number(e.target.value))}
-                        >
-                          {RIR_OPTIONS.map((n) => (
-                            <option key={n} value={n}>
-                              {n}
-                            </option>
-                          ))}
-                        </select>
                       </td>
                       <td>
                         <label className="wolf-se-sets-premium__rest">

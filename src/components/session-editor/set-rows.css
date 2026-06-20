@@ -816,8 +816,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
 }
 
 .wolf-se-sets-premium__table td.wolf-se-sets-premium__col-pct,
-.wolf-se-sets-premium__table td.wolf-se-sets-premium__col-reps,
-.wolf-se-sets-premium__table td.wolf-se-sets-premium__col-rir {
+.wolf-se-sets-premium__table td.wolf-se-sets-premium__col-reps {
   width: 1%;
   white-space: nowrap;
 }
@@ -1123,6 +1122,10 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
 
 .wolf-se-premium-set-card__rest {
   width: 100%;
+}
+
+.wolf-se-premium-set-card__field--rest {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 399px) {
