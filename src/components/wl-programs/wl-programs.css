@@ -1806,6 +1806,31 @@
   overflow: visible;
 }
 
+.wl-programs-embedded-plan .wolf-program-customize-panel,
+.wl-programs-embedded-plan .wolf-program-customize-panel--editor {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+  border-radius: 10px;
+  border-color: var(--wl-border-subtle, #27272a);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus .wolf-se-exercise-view {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
 .wl-programs-embedded-plan .wolf-program-matrix-scroll {
   overflow: visible;
   min-height: auto;
@@ -1879,14 +1904,6 @@
 }
 
 .wl-programs-embedded-plan .wolf-program-customize-panel--table {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.wl-programs-embedded-plan .wolf-program-day-board {
-  border-radius: 10px;
-  border-color: var(--wl-border-subtle, #27272a);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -2348,11 +2365,17 @@
   flex-shrink: 0;
 }
 
-.wl-programs-customize-wrap > .wolf-program-plan {
+.wl-programs-customize-wrap:not(.wl-programs-embedded-plan) > .wolf-program-plan {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.wl-programs-customize-wrap.wl-programs-embedded-plan > .wolf-program-plan {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
 }
 
 .wl-programs-customize-empty {
