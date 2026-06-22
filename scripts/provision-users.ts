@@ -10,7 +10,6 @@
  *   COACH_EMAIL=chiron.traine@gmail.com
  *   ATHLETE_EMAIL=erikjonathanmanzano@gmail.com
  */
-import { randomBytes } from 'node:crypto';
 import { Pool } from 'pg';
 import { hashPassword } from '../src/utils/passwordCrypto';
 
@@ -23,11 +22,6 @@ const DEFAULT_ATHLETE_USERNAME = 'erik';
 const DEFAULT_COACH_PASSWORD = 'CoachWL2026!';
 const DEFAULT_ATHLETE_PASSWORD = 'ErikWL2026!';
 const DEFAULT_COACH_EMAIL = 'chiron.traine@gmail.com';
-
-function randomPassword(): string {
-  const base = randomBytes(12).toString('base64url');
-  return `Wolf_${base}!9`;
-}
 
 function tempEmail(username: string): string {
   return `${username}@wolf-ai.temp`;

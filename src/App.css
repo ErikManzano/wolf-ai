@@ -263,7 +263,7 @@
     height: auto;
     overflow: visible;
     padding-top: calc(56px + var(--safe-top));
-    --mobile-nav-float-clearance: calc(96px + env(safe-area-inset-bottom, 0px));
+    --mobile-nav-float-clearance: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-header {
@@ -314,11 +314,17 @@
     max-width: 100vw;
     margin-left: 0;
     min-height: calc(100dvh - (56px + var(--safe-top)));
-    overflow: visible;
+    max-height: calc(100dvh - (56px + var(--safe-top)));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-bottom: var(--mobile-nav-float-clearance);
     padding: 14px;
     padding-left: max(14px, var(--safe-left));
     padding-right: max(14px, var(--safe-right));
-    padding-bottom: max(96px, var(--mobile-nav-float-clearance, calc(96px + var(--safe-bottom))));
+    padding-bottom: var(--mobile-nav-float-clearance);
+    box-sizing: border-box;
   }
 
   .chat-area {
@@ -342,37 +348,8 @@
 
 @media (max-width: 1024px) {
   .workspace-area:has(.wl-programs-editor) {
-    padding-bottom: 0;
-  }
-
-  /* Editor de programas: viewport fijo, sin bounce del documento */
-  .app-container.app-container--program-editor {
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
-  .app-container.app-container--program-editor .workspace-area {
-    display: flex;
-    flex-direction: column;
-    height: calc(
-      100dvh - 56px - var(--safe-top, 0px) - var(--mobile-nav-float-clearance, calc(96px + env(safe-area-inset-bottom, 0px)))
-    );
-    max-height: calc(
-      100dvh - 56px - var(--safe-top, 0px) - var(--mobile-nav-float-clearance, calc(96px + env(safe-area-inset-bottom, 0px)))
-    );
-    min-height: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
-    padding-bottom: 0;
-  }
-
-  .app-container.app-container--program-editor .central-panel {
-    flex: 1;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
+    scroll-padding-bottom: var(--mobile-nav-float-clearance);
+    padding-bottom: var(--mobile-nav-float-clearance);
   }
 }
 
@@ -427,10 +404,6 @@
     padding: 12px;
     padding-left: max(12px, var(--safe-left));
     padding-right: max(12px, var(--safe-right));
-    padding-bottom: max(96px, var(--mobile-nav-float-clearance, calc(96px + var(--safe-bottom))));
-  }
-
-  .workspace-area:has(.wl-programs-editor) {
-    padding-bottom: 0;
+    padding-bottom: var(--mobile-nav-float-clearance);
   }
 }

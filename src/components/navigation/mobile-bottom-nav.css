@@ -9,17 +9,19 @@
   --mobile-nav-glass-shadow: rgba(0, 0, 0, 0.42);
   --mobile-nav-glow-accent: rgba(255, 107, 26, 0.22);
   --mobile-nav-glow-violet: rgba(124, 58, 237, 0.14);
+  --mobile-bottom-nav-occupancy: calc(10px + 68px + max(12px, env(safe-area-inset-bottom, 12px)) + 16px);
 
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 65;
-  padding: 0 max(14px, var(--safe-right)) max(12px, env(safe-area-inset-bottom, 12px))
+  padding: 10px max(14px, var(--safe-right)) max(12px, env(safe-area-inset-bottom, 12px))
     max(14px, var(--safe-left));
   pointer-events: none;
   background: transparent;
   border: none;
+  overflow: visible;
 }
 
 .mobile-bottom-nav::before {
@@ -41,13 +43,13 @@
 .mobile-bottom-nav__dock {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: auto;
   display: grid;
   align-items: end;
   gap: 0;
-  min-height: 62px;
-  padding: 10px 8px 8px;
+  min-height: 68px;
+  padding: 14px 6px 8px;
   border-radius: 28px;
   background:
     linear-gradient(
@@ -160,7 +162,7 @@
 
 .mobile-bottom-nav__item--center {
   min-height: 56px;
-  margin-top: -18px;
+  margin-top: -10px;
   justify-content: flex-end;
   gap: 5px;
   color: var(--mobile-nav-inactive);
@@ -250,6 +252,7 @@
 
 @media (max-width: 400px) {
   .mobile-bottom-nav {
+    padding-top: 8px;
     padding-inline: max(10px, var(--safe-left)) max(10px, var(--safe-right));
   }
 
@@ -261,8 +264,9 @@
   }
 
   .mobile-bottom-nav__dock {
-    padding-inline: 4px;
+    padding: 12px 4px 8px;
     border-radius: 24px;
+    min-height: 64px;
   }
 
   .mobile-bottom-nav__item {
@@ -290,7 +294,7 @@
   }
 
   .mobile-bottom-nav__item--center {
-    margin-top: -14px;
+    margin-top: -8px;
   }
 }
 

@@ -9,8 +9,6 @@ const API_BASE = (process.env.API_BASE ?? 'https://wolf-ai-test-v1-march-2026.ne
 
 const COACH_LOGIN = { email: 'coach-wl', password: 'CoachWL2026!' };
 const ATHLETE_LOGIN = { email: 'erik', password: 'ErikWL2026!' };
-/** Prefer seed id; production may use a coach-scoped profile id (linkedAthleteId on login). */
-const PREFERRED_ATHLETE_PROFILE_ID = 'ath-erik';
 
 type LoginResponse = {
   user: { id: string; role: string; linkedAthleteId?: string; coachId?: string };

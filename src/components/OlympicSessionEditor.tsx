@@ -96,26 +96,29 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const isMobile = useMediaQuery('(max-width: 1024px)');
   const canAddExercise = session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION;
 
-  const apply = (fn: () => Session) => {
-    onChange(fn());
-  };
+  const apply = useCallback(
+    (fn: () => Session) => {
+      onChange(fn());
+    },
+    [onChange],
+  );
 
   const handleAddExercise = useCallback(() => {
     apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises));
-  }, [session, exercises, athlete]);
+  }, [apply, session, exercises, athlete]);
 
   const handleReorderBlocks = useCallback(
     (orderedBlocks: Session['exercises']) => {
       apply(() => setExerciseBlockOrder(session, orderedBlocks, athlete, exercises));
     },
-    [session, exercises, athlete],
+    [apply, session, exercises, athlete],
   );
 
   const handleRemoveBlock = useCallback(
     (index: number) => {
       apply(() => removeExerciseBlock(session, index, athlete, exercises));
     },
-    [session, exercises, athlete],
+    [apply, session, exercises, athlete],
   );
 
   const handleMoveBlockUp = useCallback(
@@ -123,7 +126,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
       if (index <= 0) return;
       apply(() => moveExerciseBlock(session, index, index - 1, athlete, exercises));
     },
-    [session, exercises, athlete],
+    [apply, session, exercises, athlete],
   );
 
   const handleMoveBlockDown = useCallback(
@@ -131,7 +134,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
       if (index >= session.exercises.length - 1) return;
       apply(() => moveExerciseBlock(session, index, index + 1, athlete, exercises));
     },
-    [session, exercises, athlete],
+    [apply, session, exercises, athlete],
   );
 
   const openExercise = useCallback(

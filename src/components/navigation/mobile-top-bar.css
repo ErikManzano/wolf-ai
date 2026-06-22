@@ -94,6 +94,19 @@
     flex-shrink: 0;
   }
 
+  .mobile-header-btn--account {
+    color: var(--color-text-secondary);
+  }
+
+  .mobile-header-btn--account.is-active {
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .mobile-header-btn--account:hover {
+    color: var(--color-accent);
+  }
+
   .mobile-header-btn--fab {
     width: 40px;
     height: 40px;

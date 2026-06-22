@@ -50,7 +50,7 @@ export function toLegacyExercise(def: ExerciseDefinition, bundle: ExerciseTaxono
   let category: ExerciseCategory = 'accessory';
   let subtype: ExerciseSubtype = 'classic';
   let startPosition: StartPosition = 'floor';
-  let complexity: ExerciseComplexity = def.kind === 'complex' ? 'complex' : 'single';
+  const complexity: ExerciseComplexity = def.kind === 'complex' ? 'complex' : 'single';
 
   if (isSingleComposition(comp)) {
     category = FAMILY_TO_CATEGORY[comp.family] ?? 'accessory';

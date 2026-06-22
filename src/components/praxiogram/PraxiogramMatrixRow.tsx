@@ -97,7 +97,7 @@ export const PraxiogramMatrixRow: React.FC<PraxiogramMatrixRowProps> = ({
         {!readOnly ? (
           <button
             type="button"
-            className="prx-delete-btn"
+            className="prx-delete-btn prx-delete-btn--matrix"
             onClick={() => onRemove(row.id)}
             disabled={!canRemove}
             aria-label={isEs ? `Eliminar fila ${index + 1}` : `Delete row ${index + 1}`}

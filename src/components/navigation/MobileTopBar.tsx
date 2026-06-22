@@ -1,5 +1,12 @@
 import { ArrowLeft, MessageSquare } from 'lucide-react';
-import { getNavLabel } from '../../navigation/appNavigation';
+import {
+  APP_NAV_ITEMS,
+  getNavLabel,
+  isMobileBottomNavItemActive,
+  isNavItemVisible,
+  type AppViewId,
+} from '../../navigation/appNavigation';
+import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMobileTopBarContext } from '../../context/MobileTopBarContext';
 import './mobile-top-bar.css';
 
@@ -21,11 +28,24 @@ type MobileTopBarProps = {
   language: 'ES' | 'EN';
   mobileChatOpen: boolean;
   onToggleChat: () => void;
+  onNavigate: (view: AppViewId) => void;
 };
 
-export function MobileTopBar({ activeView, language, mobileChatOpen, onToggleChat }: MobileTopBarProps) {
+export function MobileTopBar({
+  activeView,
+  language,
+  mobileChatOpen,
+  onToggleChat,
+  onNavigate,
+}: MobileTopBarProps) {
   const isEs = language === 'ES';
   const { config } = useMobileTopBarContext();
+  const { persona, currentUser } = useWolfAssign();
+  const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
+  const showAccount =
+    accountItem && isNavItemVisible('account', persona, currentUser?.role);
+  const accountActive = isMobileBottomNavItemActive('account', activeView);
+  const AccountIcon = accountItem?.icon;
   const defaultTitle = getNavLabel(activeView, isEs);
   const title = config?.title?.trim() || defaultTitle;
   const back = config?.back ?? null;
@@ -47,6 +67,17 @@ export function MobileTopBar({ activeView, language, mobileChatOpen, onToggleCha
         <div className="mobile-header-title">{title}</div>
       </div>
       <div className="mobile-header-actions">
+        {showAccount && accountItem && AccountIcon ? (
+          <button
+            type="button"
+            className={`mobile-header-btn mobile-header-btn--account${accountActive ? ' is-active' : ''}`}
+            aria-current={accountActive ? 'page' : undefined}
+            aria-label={isEs ? accountItem.labelEs : accountItem.labelEn}
+            onClick={() => onNavigate('account')}
+          >
+            <AccountIcon size={22} strokeWidth={accountActive ? 2.35 : 2} />
+          </button>
+        ) : null}
         <button
           type="button"
           className="mobile-header-btn mobile-header-btn--chat"

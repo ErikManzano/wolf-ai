@@ -36,22 +36,25 @@ const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
 const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
 
+/** Shown in the mobile top bar instead of the bottom dock */
+export const MOBILE_TOP_BAR_NAV_IDS: AppViewId[] = ['account'];
+
 /** Coach mobile bottom bar — left → center (principal) → right */
 const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
+  'praxiogram',
   'athletes',
-  'account',
 ];
 
-const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan', 'account'];
+const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan'];
 const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
+  'praxiogram',
   'athletes',
-  'account',
 ];
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
@@ -128,7 +131,10 @@ export function getMobileSecondaryNavItems(
   role: WolfAppRole | undefined,
 ): AppNavItem[] {
   const primary = new Set(getMobileBottomNavIds(persona, role));
-  return getVisibleNavItems(persona, role).filter((item) => !primary.has(item.id));
+  const topBar = new Set(MOBILE_TOP_BAR_NAV_IDS);
+  return getVisibleNavItems(persona, role).filter(
+    (item) => !primary.has(item.id) && !topBar.has(item.id),
+  );
 }
 
 export function getNavLabel(id: string, isEs: boolean): string {

@@ -240,6 +240,23 @@ export const PraxiogramaEditor: React.FC<PraxiogramaEditorProps> = ({
     );
   };
 
+  const statsBar = (
+    <div className="prx-stats" aria-live="polite">
+      <span className="prx-stat">
+        <Layers size={14} aria-hidden />
+        {stats.total} {isEs ? 'situaciones' : 'situations'}
+      </span>
+      <span className="prx-stat">
+        <span className="prx-stat__dot prx-stat__dot--violet" aria-hidden />
+        {isEs ? 'Totalmente editado' : 'Fully edited'} {stats.complete}
+      </span>
+      <span className="prx-stat">
+        <span className="prx-stat__dot prx-stat__dot--orange" aria-hidden />
+        {isEs ? 'Pendiente' : 'Pending'} {stats.pending}
+      </span>
+    </div>
+  );
+
   return (
     <div className="prx-editor">
       <header className="prx-hero">
@@ -326,35 +343,60 @@ export const PraxiogramaEditor: React.FC<PraxiogramaEditorProps> = ({
 
       <div className="prx-export-surface" ref={exportRef}>
       {isNarrow ? (
+        <>
+        <div className="prx-mobile-meta">{statsBar}</div>
         <div className="prx-cards">
           <AnimatePresence initial={false} mode="popLayout">
             {rows.map((row, index) => (
               <motion.article key={row.id} className="prx-card" {...cardMotion}>
               <div className="prx-card__head">
-                <span className="prx-card__index">{index + 1}</span>
+                <div className="prx-card__head-main">
+                  <span className="prx-card__index">{index + 1}</span>
+                  <div className="prx-card__head-text">
+                    <span className="prx-card__head-kicker">
+                      {isEs ? 'Situación motriz' : 'Motor situation'}
+                    </span>
+                    <span className="prx-card__head-title">
+                      {row.situacionMotriz.trim() ||
+                        (isEs ? 'Sin título' : 'Untitled')}
+                    </span>
+                  </div>
+                </div>
                 {!readOnly ? (
                   <button
                     type="button"
-                    className="prx-delete-btn"
+                    className="prx-delete-btn prx-delete-btn--card"
                     onClick={() => removeRow(row.id)}
                     disabled={rows.length <= 1}
                     aria-label={isEs ? `Eliminar situación ${index + 1}` : `Remove situation ${index + 1}`}
                   >
                     <Trash2 size={16} aria-hidden />
-                    {isEs ? 'Eliminar' : 'Remove'}
+                    <span className="prx-delete-btn__label">
+                      {isEs ? 'Eliminar' : 'Remove'}
+                    </span>
                   </button>
                 ) : null}
               </div>
               <div className="prx-card__fields">
-                {PRAXIOGRAM_COLUMNS.map((col) => {
+                {PRAXIOGRAM_COLUMNS.map((col, colIndex) => {
                   const Icon = col.icon;
+                  const label = isEs
+                    ? isNarrow
+                      ? col.shortEs
+                      : col.labelEs
+                    : isNarrow
+                      ? col.shortEn
+                      : col.labelEn;
                   return (
-                    <label key={col.key}>
+                    <label
+                      key={col.key}
+                      className={`prx-card__field${colIndex === 0 ? ' prx-card__field--lead' : ''}`}
+                    >
                       <span className="prx-field-label">
                         <span className={`prx-field-label__icon ${col.headTone}`}>
                           <Icon size={13} className={col.iconClass} aria-hidden />
                         </span>
-                        {isEs ? col.labelEs : col.labelEn}
+                        {label}
                       </span>
                       {renderCellInput(row, col, index)}
                     </label>
@@ -371,23 +413,11 @@ export const PraxiogramaEditor: React.FC<PraxiogramaEditorProps> = ({
             </button>
           ) : null}
         </div>
+        </>
       ) : (
         <div className="prx-matrix" role="region" aria-label={isEs ? 'Matriz de praxiograma' : 'Praxiogram matrix'}>
           <div className="prx-matrix-meta">
-            <div className="prx-stats" aria-live="polite">
-              <span className="prx-stat">
-                <Layers size={14} aria-hidden />
-                {stats.total} {isEs ? 'situaciones' : 'situations'}
-              </span>
-              <span className="prx-stat">
-                <span className="prx-stat__dot prx-stat__dot--violet" aria-hidden />
-                {isEs ? 'Totalmente editado' : 'Fully edited'} {stats.complete}
-              </span>
-              <span className="prx-stat">
-                <span className="prx-stat__dot prx-stat__dot--orange" aria-hidden />
-                {isEs ? 'Pendiente' : 'Pending'} {stats.pending}
-              </span>
-            </div>
+            {statsBar}
             {!readOnly ? (
               <button
                 type="button"

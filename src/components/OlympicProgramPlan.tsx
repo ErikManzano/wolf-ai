@@ -826,31 +826,31 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                 {t.customizeViewTable}
               </button>
             </div>
-            <div className="wolf-program-customize-toolbar-actions" role="group" aria-label={isEs ? 'Historial de edición' : 'Edit history'}>
-              <button
-                type="button"
-                className="wolf-program-history-btn"
-                disabled={!canUndo}
-                title={t.undoShortcut}
-                aria-label={t.undoShortcut}
-                onClick={handleUndo}
-              >
-                <Undo2 size={15} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className="wolf-program-history-btn"
-                disabled={!canRedo}
-                title={t.redoShortcut}
-                aria-label={t.redoShortcut}
-                onClick={handleRedo}
-              >
-                <Redo2 size={15} aria-hidden />
-              </button>
+            <div className="wolf-program-customize-toolbar-end">
+              <div className="wolf-program-customize-toolbar-actions" role="group" aria-label={isEs ? 'Historial de edición' : 'Edit history'}>
+                <button
+                  type="button"
+                  className="wolf-program-history-btn"
+                  disabled={!canUndo}
+                  title={t.undoShortcut}
+                  aria-label={t.undoShortcut}
+                  onClick={handleUndo}
+                >
+                  <Undo2 size={15} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="wolf-program-history-btn"
+                  disabled={!canRedo}
+                  title={t.redoShortcut}
+                  aria-label={t.redoShortcut}
+                  onClick={handleRedo}
+                >
+                  <Redo2 size={15} aria-hidden />
+                </button>
+              </div>
+              {customizeToolbarEnd}
             </div>
-            {customizeToolbarEnd ? (
-              <div className="wolf-program-customize-toolbar-end">{customizeToolbarEnd}</div>
-            ) : null}
           </div>
 
           {customizeSubview === 'table' ? (

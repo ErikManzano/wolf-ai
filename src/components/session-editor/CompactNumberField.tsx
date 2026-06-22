@@ -35,8 +35,13 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
   const onChangeRef = useRef(onChange);
   const [draft, setDraft] = useState<string | null>(null);
 
-  valueRef.current = value;
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const clamp = useCallback((n: number) => Math.min(max, Math.max(min, n)), [min, max]);
 
@@ -106,8 +111,10 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
     [bump],
   );
 
-  const scheduleHoldRepeat = useCallback(
-    (delta: number, tick: number) => {
+  const scheduleHoldRepeatRef = useRef<(delta: number, tick: number) => void>(() => {});
+
+  useEffect(() => {
+    scheduleHoldRepeatRef.current = (delta: number, tick: number) => {
       holdTimerRef.current = setTimeout(() => {
         const raw = draftRef.current;
         const base = raw != null && raw.trim() !== '' ? Number(raw) : valueRef.current;
@@ -119,20 +126,19 @@ export const CompactNumberField: React.FC<CompactNumberFieldProps> = ({
         }
         bump(delta);
         holdTickRef.current = tick + 1;
-        scheduleHoldRepeat(delta, tick + 1);
+        scheduleHoldRepeatRef.current(delta, tick + 1);
       }, nextSmoothHoldDelayMs(tick));
-    },
-    [bump, clamp, stopHold],
-  );
+    };
+  }, [bump, clamp, stopHold]);
 
   const startHold = useCallback(
     (delta: number) => {
       stepOnce(delta);
       stopHold();
       holdTickRef.current = 0;
-      scheduleHoldRepeat(delta, 0);
+      scheduleHoldRepeatRef.current(delta, 0);
     },
-    [scheduleHoldRepeat, stepOnce, stopHold],
+    [stepOnce, stopHold],
   );
 
   const displayValue = draft ?? String(value);

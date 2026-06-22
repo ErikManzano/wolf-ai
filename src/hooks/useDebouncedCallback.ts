@@ -15,11 +15,8 @@ export function useDebouncedCallback<T extends (...args: never[]) => void>(fn: T
     [],
   );
 
-  return useCallback(
-    ((...args: Parameters<T>) => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => fnRef.current(...args), delayMs);
-    }) as T,
-    [delayMs],
-  );
+  return useCallback((...args: Parameters<T>) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => fnRef.current(...args), delayMs);
+  }, [delayMs]) as T;
 }

@@ -220,6 +220,11 @@ function AppShell() {
             setMobileMenuOpen(false);
             setMobileChatOpen((v) => !v);
           }}
+          onNavigate={(view) => {
+            setActiveView(view);
+            setMobileMenuOpen(false);
+            setMobileChatOpen(false);
+          }}
         />
 
         {(mobileMenuOpen || mobileChatOpen) && (

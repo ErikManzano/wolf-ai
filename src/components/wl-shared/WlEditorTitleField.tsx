@@ -78,31 +78,22 @@ export const WlEditorTitleField: React.FC<WlEditorTitleFieldProps> = ({
           readOnly={readOnly}
           disabled={readOnly}
         />
-      </div>
-
-      <div className="wl-editor-title-meta">
-        <div className="wl-editor-title-meta__errors">
-          {tooLong && touched ? (
-            <span className="wl-editor-title-error" role="alert">
-              {isEs ? `Máximo ${maxLength} caracteres.` : `Maximum ${maxLength} characters.`}
-            </span>
-          ) : touched && missing ? (
-            <span className="wl-editor-title-error" role="alert">
-              {isEs ? 'El nombre es obligatorio.' : 'Name is required.'}
-            </span>
-          ) : focused && !readOnly ? (
-            <span className="wl-editor-title-hint">
-              {isEs ? 'Pulsa Enter o haz clic fuera para confirmar.' : 'Press Enter or click away to confirm.'}
-            </span>
-          ) : null}
-        </div>
-
         {showCounter && !readOnly ? (
           <span className={counterClass} aria-live="polite">
             {value.length}/{maxLength}
           </span>
         ) : null}
       </div>
+
+      {tooLong && touched ? (
+        <p className="wl-editor-title-error" role="alert">
+          {isEs ? `Máximo ${maxLength} caracteres.` : `Maximum ${maxLength} characters.`}
+        </p>
+      ) : touched && missing ? (
+        <p className="wl-editor-title-error" role="alert">
+          {isEs ? 'El nombre es obligatorio.' : 'Name is required.'}
+        </p>
+      ) : null}
     </div>
   );
 };

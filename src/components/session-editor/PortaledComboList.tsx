@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  measureComboMenuRect,
   usePortaledComboMenu,
   type MeasureComboMenuOptions,
 } from './comboMenuPortal';
@@ -52,11 +51,8 @@ export function PortaledComboList<T>({
 
   if (!open || typeof document === 'undefined') return null;
 
-  const rect =
-    menuRect ??
-    measureComboMenuRect(anchorRef.current, resolvedMeasure) ??
-    null;
-  if (!rect) return null;
+  if (!menuRect) return null;
+  const rect = menuRect;
 
   const isSheet = rect.layout === 'sheet';
   const menuClass = [
