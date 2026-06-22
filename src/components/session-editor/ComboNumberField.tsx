@@ -54,6 +54,11 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [open, selectedIndex]);
 
+  useEffect(() => {
+    if (document.activeElement === inputRef.current) return;
+    setDraft(null);
+  }, [value]);
+
   const commit = useCallback(
     (raw: string) => {
       const trimmed = raw.trim();

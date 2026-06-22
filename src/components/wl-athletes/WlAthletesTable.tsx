@@ -1,4 +1,4 @@
-import { MoreHorizontal } from 'lucide-react';
+import { Gauge, MoreHorizontal } from 'lucide-react';
 import type { WlAthleteRosterRow } from '../../utils/wlAthleteRoster';
 import { AthleteAvatar } from './AthleteAvatar';
 import { AthletePrSummary } from './AthletePrSummary';
@@ -112,12 +112,14 @@ export function WlAthletesTable({
                     <button
                       type="button"
                       className="btn-outline wl-athletes-btn-edit"
+                      aria-label={isEs ? 'Editar PRs' : 'Edit PRs'}
                       onClick={(event) => {
                         event.stopPropagation();
                         onEdit(row.profileId);
                       }}
                     >
-                      {isEs ? 'Editar PRs' : 'Edit PRs'}
+                      <Gauge size={16} strokeWidth={2.25} aria-hidden />
+                      <span className="wl-athletes-btn-edit__label">{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
                     </button>
                     <button
                       type="button"

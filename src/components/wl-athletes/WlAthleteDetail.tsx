@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, MoreHorizontal, X } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Gauge, MoreHorizontal, X } from 'lucide-react';
 import type { WlAthleteRosterRow } from '../../utils/wlAthleteRoster';
 import { LevelBadge } from './LevelBadge';
 import { StatusBadge } from './StatusBadge';
@@ -60,7 +60,8 @@ export function WlAthleteDetail({
             )}
             {canEdit ? (
               <button type="button" className="btn-outline wl-athlete-detail__edit-btn" onClick={onEdit}>
-                {isEs ? 'Editar PRs' : 'Edit PRs'}
+                <Gauge size={16} strokeWidth={2.25} aria-hidden />
+                <span>{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
               </button>
             ) : null}
           </div>
@@ -68,7 +69,8 @@ export function WlAthleteDetail({
           <div className="wl-athlete-detail__head-top wl-athlete-detail__head-top--desktop wl-athlete-detail__head-top--actions-only">
             {canEdit ? (
               <button type="button" className="btn-outline wl-athlete-detail__edit-btn" onClick={onEdit}>
-                {isEs ? 'Editar PRs' : 'Edit PRs'}
+                <Gauge size={16} strokeWidth={2.25} aria-hidden />
+                <span>{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
               </button>
             ) : null}
           </div>

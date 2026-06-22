@@ -514,9 +514,20 @@
 }
 
 .wl-athletes-btn-edit {
-  padding: 8px 14px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 37px;
+  padding: 0 14px !important;
   font-size: 0.8rem !important;
+  font-weight: 700;
   border-radius: 10px !important;
+  white-space: nowrap;
+}
+
+.wl-athletes-btn-edit__label {
+  line-height: 1;
 }
 
 .wl-athletes-btn-more {
@@ -661,9 +672,14 @@
 }
 
 .wl-athlete-detail__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 36px;
   padding: 0 12px;
   font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .wl-athlete-detail__title-wrap {

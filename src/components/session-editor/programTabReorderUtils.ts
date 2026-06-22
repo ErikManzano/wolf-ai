@@ -3,7 +3,7 @@ import type { ProgramDay, ProgramWeek } from '../../models/training';
 export type WeekRow = { id: string; weekNumber: number };
 export type DayRow = { id: string; dayNumber: number; label?: string };
 
-export const TAB_SPRING = { type: 'spring' as const, stiffness: 520, damping: 38, mass: 0.82 };
+export const TAB_SPRING = { type: 'spring' as const, stiffness: 640, damping: 40, mass: 0.7 };
 
 export const TAB_DRAG = {
   scale: 1.045,

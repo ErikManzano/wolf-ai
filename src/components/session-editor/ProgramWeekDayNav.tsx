@@ -41,10 +41,14 @@ export interface ProgramWeekDayNavProps {
   onReorderDay?: (fromDayNumber: number, toDayNumber: number) => void;
 }
 
-function scrollActiveIntoView(container: HTMLElement | null, selector: string) {
+function scrollActiveIntoView(
+  container: HTMLElement | null,
+  selector: string,
+  behavior: ScrollBehavior = 'auto',
+) {
   if (!container) return;
   const el = container.querySelector<HTMLElement>(selector);
-  el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  el?.scrollIntoView({ behavior, block: 'nearest', inline: 'nearest' });
 }
 
 interface SortableWeekTabProps {
@@ -231,12 +235,18 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   };
 
   useEffect(() => {
-    scrollActiveIntoView(weekStripRef.current, '.wolf-week-tab-card.active');
-  }, [selectedWeek, weekRows.length]);
+    const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
+    scrollActiveIntoView(weekStripRef.current, '.wolf-week-tab-card.active', behavior);
+  }, [selectedWeek, weekRows.length, reduceMotion]);
 
   useEffect(() => {
-    scrollActiveIntoView(dayStripRef.current, '.wolf-day-tab.active, .wolf-day-tab-wrap.is-active');
-  }, [selectedDay, selectedWeek, dayRows.length]);
+    const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
+    scrollActiveIntoView(
+      dayStripRef.current,
+      '.wolf-day-tab.active, .wolf-day-tab-wrap.is-active',
+      behavior,
+    );
+  }, [selectedDay, selectedWeek, dayRows.length, reduceMotion]);
 
   const handleWeekReorder = useCallback(
     (nextRows: WeekRow[]) => {

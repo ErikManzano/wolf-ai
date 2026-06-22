@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarRange } from 'lucide-react';
-import type { Athlete, AthleteLevel } from '../../models/training';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -15,6 +14,7 @@ import { WlAthletesMobileList } from '../wl-athletes/WlAthletesMobileList';
 import { WlAthletesTable } from '../wl-athletes/WlAthletesTable';
 import { WlAthletesToolbar } from '../wl-athletes/WlAthletesToolbar';
 import WlAthleteCreateSheet from '../wl-athletes/WlAthleteCreateSheet';
+import WlAthleteEditPrSheet from '../wl-athletes/WlAthleteEditPrSheet';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import '../wl-shared/app-breadcrumb.css';
 import '../wl-shared/wl-list-toolbar.css';
@@ -26,8 +26,6 @@ interface WlAthletesSectionProps {
 }
 
 type AthletesSectionView = 'list' | 'detail';
-
-const LEVELS: AthleteLevel[] = ['beginner', 'intermediate', 'advanced'];
 
 const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalendar }) => {
   const {
@@ -54,7 +52,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
 
   const [sectionView, setSectionView] = useState<AthletesSectionView>('list');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [prEditId, setPrEditId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<AthleteSortId>('name_asc');
@@ -65,20 +63,44 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
   );
 
   const selectedRow = selectedAthleteId ? rows.find((r) => r.profileId === selectedAthleteId) ?? null : null;
-  const editing = roster.find((a) => a.id === editId);
+  const prEditAthlete = prEditId ? roster.find((a) => a.id === prEditId) ?? null : null;
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   const openAthleteDetail = (profileId: string) => {
     setSelectedAthleteId(profileId);
     setSectionView('detail');
-    setEditId(null);
   };
 
   const closeAthleteDetail = () => {
     setSectionView('list');
     setSelectedAthleteId(null);
-    setEditId(null);
   };
+
+  const openEdit = (profileId: string) => {
+    setPrEditId(profileId);
+  };
+
+  const closePrEdit = () => setPrEditId(null);
+
+  const handleSavePrEdit = async (patch: Parameters<typeof updateWlAthlete>[1]) => {
+    if (!prEditAthlete) return;
+    const saved = await updateWlAthlete(prEditAthlete.id, patch);
+    if (saved) {
+      closePrEdit();
+      void reloadWlAthletesFromApi();
+    }
+  };
+
+  const prEditSheet =
+    prEditAthlete && canEditWlRoster ? (
+      <WlAthleteEditPrSheet
+        key={prEditAthlete.id}
+        isEs={isEs}
+        athlete={prEditAthlete}
+        onClose={closePrEdit}
+        onSave={handleSavePrEdit}
+      />
+    ) : null;
 
   const mobileTopBar = useMemo(
     () =>
@@ -95,14 +117,6 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
   );
   useMobileTopBar(mobileTopBar);
 
-  const openEdit = (profileId: string) => {
-    setEditId(profileId);
-    if (sectionView === 'list') {
-      setSelectedAthleteId(profileId);
-      setSectionView('detail');
-    }
-  };
-
   if (sectionView === 'detail' && selectedRow) {
     return (
       <div className="athletes-view wl-athletes-section wl-list-toolbar-scope">
@@ -117,31 +131,17 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
           ]}
         />
 
-        {editId === selectedRow.profileId && editing && canEditWlRoster ? (
-          <AthletePrEditForm
-            athlete={editing}
-            isEs={isEs}
-            onCancel={() => setEditId(null)}
-            onSave={(patch) => {
-              void updateWlAthlete(editing.id, patch).then((saved) => {
-                if (saved) {
-                  setEditId(null);
-                  void reloadWlAthletesFromApi();
-                }
-              });
-            }}
-          />
-        ) : (
-          <WlAthleteDetail
-            row={selectedRow}
-            isEs={isEs}
-            canEdit={canEditWlRoster}
-            layout={isMobile ? 'mobile' : 'desktop'}
-            showNav={false}
-            onEdit={() => openEdit(selectedRow.profileId)}
-            onOpenProgram={(coachProgramId) => openProgramEditor(coachProgramId)}
-          />
-        )}
+        <WlAthleteDetail
+          row={selectedRow}
+          isEs={isEs}
+          canEdit={canEditWlRoster}
+          layout={isMobile ? 'mobile' : 'desktop'}
+          showNav={false}
+          onEdit={() => openEdit(selectedRow.profileId)}
+          onOpenProgram={(coachProgramId) => openProgramEditor(coachProgramId)}
+        />
+
+        {prEditSheet}
       </div>
     );
   }
@@ -173,6 +173,8 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
           }}
         />
       ) : null}
+
+      {prEditSheet}
 
       <WlAthletesToolbar
         isEs={isEs}
@@ -240,77 +242,5 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
     </div>
   );
 };
-
-function AthletePrEditForm({
-  athlete,
-  isEs,
-  onCancel,
-  onSave,
-}: {
-  athlete: Athlete;
-  isEs: boolean;
-  onCancel: () => void;
-  onSave: (patch: Partial<Athlete>) => void;
-}) {
-  const [name, setName] = useState(athlete.name);
-  const [level, setLevel] = useState(athlete.level);
-  const [bodyweight, setBodyweight] = useState(athlete.bodyweight);
-  const [oneRM, setOneRM] = useState(athlete.oneRM);
-
-  return (
-    <div className="wl-mgmt-inline-form">
-      <h4 className="wl-mgmt-inline-form-title">{athlete.name}</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
-        <label className="wolf-engine-field">
-          <span className="wolf-engine-field-label">{isEs ? 'Nombre' : 'Name'}</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <label className="wolf-engine-field">
-          <span className="wolf-engine-field-label">{isEs ? 'Nivel' : 'Level'}</span>
-          <select value={level} onChange={(e) => setLevel(e.target.value as AthleteLevel)}>
-            {LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="wolf-engine-field">
-          <span className="wolf-engine-field-label">PC</span>
-          <input type="number" value={bodyweight} onChange={(e) => setBodyweight(Number(e.target.value))} />
-        </label>
-        {(['snatch', 'cleanJerk', 'backSquat', 'frontSquat'] as const).map((key) => (
-          <label key={key} className="wolf-engine-field">
-            <span className="wolf-engine-field-label">{key}</span>
-            <input
-              type="number"
-              value={oneRM[key]}
-              onChange={(e) => setOneRM((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
-            />
-          </label>
-        ))}
-      </div>
-      <div className="wl-mgmt-inline-form-btns">
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() =>
-            onSave({
-              name: name.trim(),
-              level,
-              bodyweight,
-              oneRM,
-            })
-          }
-        >
-          {isEs ? 'Guardar' : 'Save'}
-        </button>
-        <button type="button" className="btn-outline" onClick={onCancel}>
-          {isEs ? 'Cancelar' : 'Cancel'}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default WlAthletesSection;

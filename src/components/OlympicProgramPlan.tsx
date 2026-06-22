@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CalendarRange,
   Download,
@@ -69,6 +70,10 @@ interface OlympicProgramPlanProps {
   onProgramNameChange?: (name: string) => void;
   /** Slot aligned to the right of Editor/Table tabs (e.g. status + enrollments). */
   customizeToolbarEnd?: React.ReactNode;
+  /** When set, renders Editor/Table toolbar into this element (desktop sticky header). */
+  customizeToolbarPortalId?: string | null;
+  /** Flush pending autosave (e.g. before week/day navigation). */
+  onFlushAutosave?: () => void;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -154,6 +159,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   programName: programNameProp,
   onProgramNameChange,
   customizeToolbarEnd,
+  customizeToolbarPortalId = null,
+  onFlushAutosave,
 }) => {
   const isEs = language === 'ES';
   const recommendedConfig = useMemo(() => {
@@ -180,6 +187,17 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [selectedDay, setSelectedDay] = useState(1);
   const [sessionEditorView, setSessionEditorView] = useState<'sheet' | 'exercise'>('sheet');
   const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table'>('editor');
+  const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
+  const navFlushEpochRef = useRef(0);
+  const skipNavFlushRef = useRef(true);
+
+  useLayoutEffect(() => {
+    if (!customizeToolbarPortalId) {
+      setToolbarPortalNode(null);
+      return;
+    }
+    setToolbarPortalNode(document.getElementById(customizeToolbarPortalId));
+  }, [customizeToolbarPortalId, program]);
 
   useEffect(() => {
     setSessionEditorView('sheet');
@@ -189,6 +207,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [syncPending, setSyncPending] = useState(false);
   const programRef = useRef(program);
+  const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingHistoryRef = useRef<GeneratedProgram | null>(null);
   const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles } =
     useWolfAssign();
 
@@ -215,6 +235,73 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     pushUndoSnapshot,
     runWithoutRecording,
   } = useProgramHistory(program);
+
+  useEffect(
+    () => () => {
+      if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
+    },
+    [],
+  );
+
+  const scheduleHistorySnapshot = useCallback(
+    (snapshot: GeneratedProgram) => {
+      pendingHistoryRef.current = snapshot;
+      if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
+      historyTimerRef.current = setTimeout(() => {
+        const pending = pendingHistoryRef.current;
+        pendingHistoryRef.current = null;
+        historyTimerRef.current = null;
+        if (pending) recordSnapshot(pending);
+      }, 450);
+    },
+    [recordSnapshot],
+  );
+
+  const flushHistorySnapshot = useCallback(() => {
+    if (!historyTimerRef.current) return;
+    clearTimeout(historyTimerRef.current);
+    historyTimerRef.current = null;
+    const pending = pendingHistoryRef.current;
+    pendingHistoryRef.current = null;
+    if (pending) recordSnapshot(pending);
+  }, [recordSnapshot]);
+
+  useEffect(() => {
+    if (skipNavFlushRef.current) {
+      skipNavFlushRef.current = false;
+      return;
+    }
+    const epoch = ++navFlushEpochRef.current;
+    const runFlush = () => {
+      if (navFlushEpochRef.current !== epoch) return;
+      onFlushAutosave?.();
+      flushHistorySnapshot();
+    };
+    const idleId =
+      typeof requestIdleCallback !== 'undefined'
+        ? requestIdleCallback(runFlush, { timeout: 1200 })
+        : window.setTimeout(runFlush, 0);
+    return () => {
+      if (typeof idleId === 'number') window.clearTimeout(idleId);
+      else cancelIdleCallback(idleId);
+    };
+  }, [selectedWeek, selectedDay, onFlushAutosave, flushHistorySnapshot]);
+
+  const navigateToWeek = useCallback((weekNumber: number, dayNumber = 1) => {
+    if (weekNumber === selectedWeek && dayNumber === selectedDay) return;
+    setSelectedWeek(weekNumber);
+    setSelectedDay(dayNumber);
+  }, [selectedWeek, selectedDay]);
+
+  const navigateToDay = useCallback((dayNumber: number) => {
+    if (dayNumber === selectedDay) return;
+    setSelectedDay(dayNumber);
+  }, [selectedDay]);
+
+  const switchCustomizeSubview = useCallback((view: 'editor' | 'table') => {
+    if (view === customizeSubview) return;
+    setCustomizeSubview(view);
+  }, [customizeSubview]);
 
   useEffect(() => {
     resetHistory();
@@ -408,10 +495,19 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   ]);
 
   const applyProgramUpdate = useCallback(
-    (next: GeneratedProgram, selection?: { week?: number; day?: number }, options?: { skipHistory?: boolean }) => {
+    (
+      next: GeneratedProgram,
+      selection?: { week?: number; day?: number },
+      options?: { skipHistory?: boolean; immediateHistory?: boolean },
+    ) => {
       const current = programRef.current;
       if (current && !options?.skipHistory) {
-        recordSnapshot(current);
+        if (options?.immediateHistory) {
+          flushHistorySnapshot();
+          recordSnapshot(current);
+        } else {
+          scheduleHistorySnapshot(current);
+        }
       }
       programRef.current = next;
       if (selection?.week != null) setSelectedWeek(selection.week);
@@ -423,7 +519,15 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         debouncedStoragePersist(next);
       }
     },
-    [onProgramChange, writeEditDraft, debouncedStoragePersist, skipLocalDraftPersistence, recordSnapshot],
+    [
+      onProgramChange,
+      writeEditDraft,
+      debouncedStoragePersist,
+      skipLocalDraftPersistence,
+      recordSnapshot,
+      scheduleHistorySnapshot,
+      flushHistorySnapshot,
+    ],
   );
 
   const handleUndo = useCallback(() => {
@@ -525,7 +629,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const current = programRef.current;
     if (!current || !canAddWeek) return;
     const next = addWeekToGeneratedProgram(current, athleteForEngine, motorExercises);
-    applyProgramUpdate(next, { week: next.weeks[next.weeks.length - 1]!.weekNumber, day: 1 });
+    applyProgramUpdate(next, { week: next.weeks[next.weeks.length - 1]!.weekNumber, day: 1 }, { immediateHistory: true });
   }, [athleteForEngine, motorExercises, canAddWeek, applyProgramUpdate]);
 
   const handleAddDay = useCallback(() => {
@@ -536,7 +640,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const next = addDayToGeneratedWeek(current, selectedWeek, athleteForEngine, motorExercises);
     const updatedWeek = next.weeks.find((w) => w.weekNumber === selectedWeek);
     const newDay = updatedWeek?.days[updatedWeek.days.length - 1]?.dayNumber ?? 1;
-    applyProgramUpdate(next, { day: newDay });
+    applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
   }, [selectedWeek, athleteForEngine, motorExercises, canAddDay, applyProgramUpdate]);
 
   const handleRemoveDay = useCallback(
@@ -557,7 +661,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         newIndex = selectedIndex - 1;
       }
       const newDay = weekAfter?.days[newIndex]?.dayNumber ?? 1;
-      applyProgramUpdate(next, { day: newDay });
+      applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
     },
     [selectedWeek, selectedDay, canRemoveDay, applyProgramUpdate],
   );
@@ -574,7 +678,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         fromWeekNumber,
         toWeekNumber,
       );
-      applyProgramUpdate(next, { week: newWeek, day: selectedDay });
+      applyProgramUpdate(next, { week: newWeek, day: selectedDay }, { immediateHistory: true });
     },
     [selectedWeek, selectedDay, applyProgramUpdate],
   );
@@ -593,7 +697,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         fromDayNumber,
         toDayNumber,
       );
-      applyProgramUpdate(next, { day: newDay });
+      applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
     },
     [selectedWeek, selectedDay, applyProgramUpdate],
   );
@@ -604,7 +708,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       if (!current) return;
       const next = swapProgramDaySlots(current, from, to);
       if (next === current) return;
-      applyProgramUpdate(next);
+      applyProgramUpdate(next, undefined, { immediateHistory: true });
     },
     [applyProgramUpdate],
   );
@@ -648,6 +752,76 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     a.click();
     URL.revokeObjectURL(a.href);
   }, [program]);
+
+  const customizeToolbar =
+    program && showCustomize ? (
+      <div
+        className={`wolf-program-customize-toolbar${toolbarPortalNode ? ' wolf-program-customize-toolbar--in-head' : ''}`}
+      >
+        <div
+          className="wolf-program-customize-tabs"
+          role="tablist"
+          aria-label={t.customizeViewLabel}
+        >
+          <button
+            type="button"
+            role="tab"
+            id="wolf-program-tab-editor"
+            aria-selected={customizeSubview === 'editor'}
+            aria-controls="wolf-program-panel-editor"
+            className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
+            onClick={() => switchCustomizeSubview('editor')}
+          >
+            <PenLine size={14} aria-hidden />
+            {t.customizeViewEditor}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="wolf-program-tab-table"
+            aria-selected={customizeSubview === 'table'}
+            aria-controls="wolf-program-panel-table"
+            className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
+            onClick={() => switchCustomizeSubview('table')}
+          >
+            <Table2 size={14} aria-hidden />
+            {t.customizeViewTable}
+          </button>
+        </div>
+        <div className="wolf-program-customize-toolbar-end">
+          <div
+            className="wolf-program-customize-toolbar-actions"
+            role="group"
+            aria-label={isEs ? 'Historial de edición' : 'Edit history'}
+          >
+            <button
+              type="button"
+              className="wolf-program-history-btn"
+              disabled={!canUndo}
+              title={t.undoShortcut}
+              aria-label={t.undoShortcut}
+              onClick={handleUndo}
+            >
+              <Undo2 size={15} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="wolf-program-history-btn"
+              disabled={!canRedo}
+              title={t.redoShortcut}
+              aria-label={t.redoShortcut}
+              onClick={handleRedo}
+            >
+              <Redo2 size={15} aria-hidden />
+            </button>
+          </div>
+          {customizeToolbarEnd}
+        </div>
+      </div>
+    ) : null;
+
+  const customizeToolbarPortaled =
+    toolbarPortalNode && customizeToolbar ? createPortal(customizeToolbar, toolbarPortalNode) : null;
 
   return (
     <div className={`wolf-program-plan${showCustomize && !showCreate ? ' wolf-program-plan--edit' : ''}`}>
@@ -795,63 +969,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         <div
           className={`wolf-program-customize-layout wolf-program-customize-layout--${customizeSubview}`}
         >
-          <div className="wolf-program-customize-toolbar">
-            <div
-              className="wolf-program-customize-tabs"
-              role="tablist"
-              aria-label={t.customizeViewLabel}
-            >
-              <button
-                type="button"
-                role="tab"
-                id="wolf-program-tab-editor"
-                aria-selected={customizeSubview === 'editor'}
-                aria-controls="wolf-program-panel-editor"
-                className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
-                onClick={() => setCustomizeSubview('editor')}
-              >
-                <PenLine size={14} aria-hidden />
-                {t.customizeViewEditor}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="wolf-program-tab-table"
-                aria-selected={customizeSubview === 'table'}
-                aria-controls="wolf-program-panel-table"
-                className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
-                onClick={() => setCustomizeSubview('table')}
-              >
-                <Table2 size={14} aria-hidden />
-                {t.customizeViewTable}
-              </button>
-            </div>
-            <div className="wolf-program-customize-toolbar-end">
-              <div className="wolf-program-customize-toolbar-actions" role="group" aria-label={isEs ? 'Historial de edición' : 'Edit history'}>
-                <button
-                  type="button"
-                  className="wolf-program-history-btn"
-                  disabled={!canUndo}
-                  title={t.undoShortcut}
-                  aria-label={t.undoShortcut}
-                  onClick={handleUndo}
-                >
-                  <Undo2 size={15} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className="wolf-program-history-btn"
-                  disabled={!canRedo}
-                  title={t.redoShortcut}
-                  aria-label={t.redoShortcut}
-                  onClick={handleRedo}
-                >
-                  <Redo2 size={15} aria-hidden />
-                </button>
-              </div>
-              {customizeToolbarEnd}
-            </div>
-          </div>
+          {!toolbarPortalNode ? customizeToolbar : null}
 
           {customizeSubview === 'table' ? (
             <div
@@ -875,9 +993,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   overviewHint: t.matrixOverview,
                 }}
                 onSelectCell={(weekNumber, dayNumber) => {
-                  setSelectedWeek(weekNumber);
-                  setSelectedDay(dayNumber);
-                  setCustomizeSubview('editor');
+                  navigateToWeek(weekNumber, dayNumber);
+                  switchCustomizeSubview('editor');
                 }}
                 onSwapCells={handleSwapCells}
               />
@@ -912,11 +1029,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                       removeDay: t.removeDay,
                     }}
                     canRemoveDay={canRemoveDay}
-                    onSelectWeek={(weekNumber) => {
-                      setSelectedWeek(weekNumber);
-                      setSelectedDay(1);
-                    }}
-                    onSelectDay={setSelectedDay}
+                    onSelectWeek={(weekNumber) => navigateToWeek(weekNumber, 1)}
+                    onSelectDay={navigateToDay}
                     onAddWeek={handleAddWeek}
                     onAddDay={handleAddDay}
                     onRemoveDay={handleRemoveDay}
@@ -925,28 +1039,33 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   />
                 ) : null}
                 {daySession ? (
-                  <OlympicSessionEditor
+                  <div
                     key={`${selectedWeek}-${selectedDay}`}
-                    session={daySession}
-                    athlete={athleteForEngine}
-                    exercises={motorExercises}
-                    catalog={sessionCatalog}
-                    isEs={isEs}
-                    onChange={handleSessionEdit}
-                    draftSavedAt={draftSavedAt}
-                    syncPending={syncPending}
-                    dayLabel={selectedDayLabel}
-                    weekNumber={selectedWeek}
-                    dayNumber={selectedDay}
-                    embedded
-                    onViewChange={setSessionEditorView}
-                  />
+                    className="wolf-program-session-pane"
+                  >
+                    <OlympicSessionEditor
+                      session={daySession}
+                      athlete={athleteForEngine}
+                      exercises={motorExercises}
+                      catalog={sessionCatalog}
+                      isEs={isEs}
+                      onChange={handleSessionEdit}
+                      draftSavedAt={draftSavedAt}
+                      syncPending={syncPending}
+                      dayLabel={selectedDayLabel}
+                      weekNumber={selectedWeek}
+                      dayNumber={selectedDay}
+                      embedded
+                      onViewChange={setSessionEditorView}
+                    />
+                  </div>
                 ) : null}
               </div>
             </div>
           )}
         </div>
       )}
+      {customizeToolbarPortaled}
     </div>
   );
 };

@@ -10,7 +10,7 @@ import type { Athlete, GeneratedProgram, SessionGoal } from '../../models/traini
 import { useAppContext } from '../../context/AppContext';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
-import { useDebouncedCallback } from '../../hooks/useDebouncedCallback';
+import { useDebouncedCallback, useDebouncedCallbackWithControls } from '../../hooks/useDebouncedCallback';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
@@ -41,6 +41,10 @@ const REFERENCE_ATHLETE: Athlete = {
 };
 
 const PLAN_TITLE_MAX_LEN = WL_EDITOR_TITLE_MAX_LEN;
+const PROGRAM_AUTOSAVE_MS = 900;
+const WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID = 'wl-program-editor-toolbar-anchor';
+
+type ProgramSyncState = 'saved' | 'pending' | 'saving';
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
@@ -61,21 +65,37 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     () => coachAthletes.find((a) => a.id === 'ath-erik')?.id ?? coachAthletes[0]?.id ?? '',
   );
   const [program, setProgram] = useState<GeneratedProgram | null>(coachProgram?.program ?? null);
-  const [saving, setSaving] = useState(false);
+  const [syncState, setSyncState] = useState<ProgramSyncState>('saved');
   const [createActions, setCreateActions] = useState<OlympicProgramPlanCreateActions | null>(null);
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
   const programRef = useRef(program);
-  programRef.current = program;
+  const dirtyRef = useRef(false);
+  const saveSeqRef = useRef(0);
+
+  useEffect(() => {
+    programRef.current = program;
+  }, [program]);
 
   const hasProgram = Boolean(program?.weeks?.length);
 
   useEffect(() => {
-    if (coachProgram) setProgram(coachProgram.program);
-  }, [coachProgram?.id, coachProgram?.updatedAt]);
+    dirtyRef.current = false;
+    saveSeqRef.current = 0;
+    if (coachProgram) {
+      setProgram(coachProgram.program);
+      setSyncState('saved');
+    }
+  }, [programId, coachProgram?.id]);
 
   useEffect(() => {
-    if (coachProgram) setProgramTitle(coachProgram.name);
+    if (!coachProgram || dirtyRef.current) return;
+    setProgram(coachProgram.program);
+  }, [coachProgram?.updatedAt, coachProgram?.id]);
+
+  useEffect(() => {
+    if (!coachProgram || dirtyRef.current) return;
+    setProgramTitle(coachProgram.name);
   }, [coachProgram?.id, coachProgram?.name]);
 
   const debouncedSaveTitle = useDebouncedCallback(async (name: string) => {
@@ -133,32 +153,89 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   );
   const athleteForEngine = athlete ?? REFERENCE_ATHLETE;
 
-  const debouncedSave = useDebouncedCallback(async (p: GeneratedProgram) => {
-    setSaving(true);
-    try {
-      await updateCoachProgram(programId, { program: p });
-    } finally {
-      setSaving(false);
-    }
-  }, 1200);
+  const persistProgram = useCallback(
+    async (p: GeneratedProgram, seq: number) => {
+      if (seq !== saveSeqRef.current) return;
+      setSyncState('saving');
+      try {
+        await updateCoachProgram(programId, { program: p });
+        if (seq !== saveSeqRef.current) return;
+        dirtyRef.current = false;
+        setSyncState('saved');
+      } catch {
+        if (seq === saveSeqRef.current) {
+          setSyncState('pending');
+        }
+      }
+    },
+    [programId, updateCoachProgram],
+  );
+
+  const { run: debouncedSave, flush: flushAutosave, cancel: cancelAutosave } = useDebouncedCallbackWithControls(
+    (p: GeneratedProgram) => {
+      saveSeqRef.current += 1;
+      const seq = saveSeqRef.current;
+      void persistProgram(p, seq);
+    },
+    PROGRAM_AUTOSAVE_MS,
+  );
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushAutosave();
+    };
+    const onBeforeUnload = () => flushAutosave();
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      flushAutosave();
+      cancelAutosave();
+    };
+  }, [flushAutosave, cancelAutosave]);
 
   const handleProgramChange = useCallback(
     (p: GeneratedProgram | null) => {
+      if (!p) {
+        dirtyRef.current = false;
+        cancelAutosave();
+        setProgram(null);
+        setSyncState('saved');
+        return;
+      }
+      dirtyRef.current = true;
+      setSyncState('pending');
       setProgram(p);
-      if (p) void debouncedSave(p);
+      debouncedSave(p);
     },
-    [debouncedSave],
+    [debouncedSave, cancelAutosave],
   );
 
   const handlePublish = async () => {
-    if (!program) return;
-    setSaving(true);
+    const latest = programRef.current;
+    if (!latest) return;
+    cancelAutosave();
+    saveSeqRef.current += 1;
+    const seq = saveSeqRef.current;
+    await persistProgram(latest, seq);
+    if (seq !== saveSeqRef.current) return;
     try {
-      await updateCoachProgram(programId, { program, status: 'published' });
-    } finally {
-      setSaving(false);
+      await updateCoachProgram(programId, { program: latest, status: 'published' });
+      dirtyRef.current = false;
+      setSyncState('saved');
+    } catch {
+      setSyncState('pending');
     }
   };
+
+  const saving = syncState === 'saving';
+  const syncHint = useMemo(() => {
+    if (!hasProgram) return null;
+    if (syncState === 'saving') return isEs ? 'Guardando…' : 'Saving…';
+    if (syncState === 'pending') return isEs ? 'Cambios pendientes' : 'Unsaved changes';
+    return isEs ? 'Guardado' : 'Saved';
+  }, [hasProgram, syncState, isEs]);
 
   const actionDockHint = useMemo(() => {
     if (!hasProgram) {
@@ -167,9 +244,23 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       }
       return isEs ? 'Define la estructura y genera el mesociclo.' : 'Set structure and generate the mesocycle.';
     }
-    if (saving) return isEs ? 'Guardando…' : 'Saving…';
-    return isEs ? 'Los cambios se guardan automáticamente.' : 'Changes save automatically.';
-  }, [hasProgram, titleMissing, isEs, saving]);
+    if (syncState === 'saving') return isEs ? 'Guardando…' : 'Saving…';
+    if (syncState === 'pending') {
+      return isEs ? 'Los cambios se guardan al pausar la edición.' : 'Changes save when you pause editing.';
+    }
+    return isEs ? 'Todo guardado.' : 'All changes saved.';
+  }, [hasProgram, titleMissing, isEs, syncState]);
+
+  const syncStatusChip =
+    hasProgram && syncHint ? (
+      <span
+        className={`wl-programs-sync-chip wl-programs-sync-chip--${syncState}`}
+        role="status"
+        aria-live="polite"
+      >
+        {syncHint}
+      </span>
+    ) : null;
 
   if (!coachProgram) {
     return (
@@ -184,12 +275,15 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   const isPublished = coachProgram.status === 'published';
   const showActionDock = !hasProgram || !isPublished;
+  const useStickyDesktopHead = !isMobileLayout;
+  const portalToolbarToHead = useStickyDesktopHead && hasProgram;
 
   const editorProgramMeta = (
     <div className="wl-programs-editor-hero-meta wl-programs-editor-hero-meta--toolbar">
       <span className={`wl-programs-status-pill wl-programs-status-pill--${coachProgram.status}`}>
         {coachProgram.status === 'published' ? (isEs ? 'Publicado' : 'Published') : isEs ? 'Borrador' : 'Draft'}
       </span>
+      {syncStatusChip}
       {hasProgram ? (
         <button
           type="button"
@@ -213,36 +307,64 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   return (
     <div
-      className={`wl-programs-panel wl-programs-editor${showActionDock ? '' : ' wl-programs-editor--no-dock'}`}
+      className={`wl-programs-panel wl-programs-editor${showActionDock ? '' : ' wl-programs-editor--no-dock'}${useStickyDesktopHead ? ' wl-programs-editor--sticky-head' : ''}`}
     >
-      <header className="wl-programs-editor-hero">
-        <div className="wl-programs-editor-hero-top">
-          {!isMobileLayout ? (
-            <AppBreadcrumb
-              isEs={isEs}
-              className="app-breadcrumb--icon-back wl-programs-editor-crumb"
-              onBack={onBack}
-              backLabel={isEs ? 'Programas' : 'Programs'}
-              items={[
-                { label: isEs ? 'Programas' : 'Programs' },
-                { label: programTitle.trim() || coachProgram.name || (isEs ? 'Sin nombre' : 'Untitled') },
-              ]}
-            />
-          ) : null}
-          {!hasProgram ? editorProgramMeta : null}
-        </div>
-        <div className="wl-programs-editor-hero-main">
-          <WlEditorTitleField
-            isEs={isEs}
-            value={programTitle}
-            onChange={handleProgramTitleChange}
-            onBlur={handleProgramTitleBlur}
-            maxLength={PLAN_TITLE_MAX_LEN}
-            placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
-            label={isEs ? 'Nombre del plan' : 'Plan name'}
-            required
-          />
-        </div>
+      <header
+        className={`wl-programs-editor-hero${useStickyDesktopHead ? ' wl-programs-editor-sticky-head' : ''}${portalToolbarToHead ? ' wl-programs-editor-sticky-head--unified' : ''}`}
+      >
+        {useStickyDesktopHead ? (
+          <>
+            <div className="wl-programs-editor-sticky-head__nav">
+              <AppBreadcrumb
+                isEs={isEs}
+                className="app-breadcrumb--icon-back wl-programs-editor-crumb"
+                onBack={onBack}
+                backLabel={isEs ? 'Programas' : 'Programs'}
+                items={[{ label: isEs ? 'Programas' : 'Programs' }]}
+              />
+            </div>
+            {(portalToolbarToHead || !hasProgram) ? (
+              <div className="wl-programs-editor-sticky-head__status">{editorProgramMeta}</div>
+            ) : null}
+            <div className="wl-programs-editor-sticky-head__main">
+              <WlEditorTitleField
+                isEs={isEs}
+                value={programTitle}
+                onChange={handleProgramTitleChange}
+                onBlur={handleProgramTitleBlur}
+                maxLength={PLAN_TITLE_MAX_LEN}
+                placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
+                label={isEs ? 'Nombre del plan' : 'Plan name'}
+                required
+                className="wl-programs-editor-sticky-title"
+              />
+              {portalToolbarToHead ? (
+                <div
+                  id={WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID}
+                  className="wl-programs-editor-toolbar-anchor"
+                />
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="wl-programs-editor-hero-top">
+              {!hasProgram ? editorProgramMeta : null}
+            </div>
+            <div className="wl-programs-editor-hero-main">
+              <WlEditorTitleField
+                isEs={isEs}
+                value={programTitle}
+                onChange={handleProgramTitleChange}
+                onBlur={handleProgramTitleBlur}
+                maxLength={PLAN_TITLE_MAX_LEN}
+                placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
+                label={isEs ? 'Nombre del plan' : 'Plan name'}
+                required
+              />
+            </div>
+          </>
+        )}
       </header>
 
       <div className="wl-programs-editor-body">
@@ -275,11 +397,13 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 primaryGoal={PRIMARY_GOAL}
                 program={program}
                 onProgramChange={handleProgramChange}
+                onFlushAutosave={flushAutosave}
                 skipLocalDraftPersistence
                 mode="customize"
                 programName={programTitle}
                 onProgramNameChange={handleProgramTitleChange}
-                customizeToolbarEnd={editorProgramMeta}
+                customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
+                customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
               />
             )}
           </div>
