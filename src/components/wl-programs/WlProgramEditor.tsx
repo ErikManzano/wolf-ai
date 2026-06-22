@@ -134,8 +134,13 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const athleteForEngine = athlete ?? REFERENCE_ATHLETE;
 
   const debouncedSave = useDebouncedCallback(async (p: GeneratedProgram) => {
-    await updateCoachProgram(programId, { program: p });
-  }, 800);
+    setSaving(true);
+    try {
+      await updateCoachProgram(programId, { program: p });
+    } finally {
+      setSaving(false);
+    }
+  }, 1200);
 
   const handleProgramChange = useCallback(
     (p: GeneratedProgram | null) => {

@@ -652,7 +652,24 @@ export class PostgresStore {
     return this.mapAssignmentRow(result.rows[0]);
   }
 
-  async updateAssignmentProgram(id: string, program: ProgramAssignment['program']): Promise<ProgramAssignment | null> {
+  async updateAssignmentProgram(
+    id: string,
+    program: ProgramAssignment['program'],
+    options?: { skipVersionHistory?: boolean },
+  ): Promise<ProgramAssignment | null> {
+    if (options?.skipVersionHistory) {
+      const result = await this.pool.query(
+        `
+        UPDATE assignments
+        SET program = $2::jsonb
+        WHERE id = $1
+        RETURNING ${this.assignmentSelectColumns};
+        `,
+        [id, JSON.stringify(program)],
+      );
+      return result.rows[0] ? this.mapAssignmentRow(result.rows[0]) : null;
+    }
+
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');

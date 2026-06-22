@@ -70,9 +70,29 @@ export function getWebSocketUrl(): string | null {
   return websocketUrlFromApiBase(getApiBase());
 }
 
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const MAX_API_RETRIES = 3;
+
+function retryDelayMs(attempt: number): number {
+  return 500 * (attempt + 1);
+}
+
 export async function assignmentApiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   const token = readApiToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  return fetch(`${getApiBase()}${path}`, { ...init, headers });
+
+  let lastResponse: Response | null = null;
+  for (let attempt = 0; attempt < MAX_API_RETRIES; attempt += 1) {
+    const response = await fetch(`${getApiBase()}${path}`, { ...init, headers });
+    lastResponse = response;
+    if (!RETRYABLE_STATUSES.has(response.status) || attempt === MAX_API_RETRIES - 1) {
+      return response;
+    }
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, retryDelayMs(attempt));
+    });
+  }
+
+  return lastResponse!;
 }

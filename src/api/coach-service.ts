@@ -141,13 +141,15 @@ export class CoachService {
     }
     if (patch.program) {
       const linked = await this.store.getAssignmentsByCoachProgramId(programId);
-      for (const asg of linked) {
-        const cloned = cloneProgramForAthlete(patch.program, asg.athleteProfileId, {
-          name: updated.name,
-        });
-        await this.store.updateAssignmentProgram(asg.id, cloned);
-      }
       if (linked.length > 0) {
+        await Promise.all(
+          linked.map(async (asg) => {
+            const cloned = cloneProgramForAthlete(patch.program!, asg.athleteProfileId, {
+              name: updated.name,
+            });
+            await this.store.updateAssignmentProgram(asg.id, cloned, { skipVersionHistory: true });
+          }),
+        );
         this.onAssignmentsChanged?.(coachId);
       }
     }

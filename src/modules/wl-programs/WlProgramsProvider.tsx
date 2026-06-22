@@ -24,6 +24,9 @@ const WlProgramsContext = createContext<WlProgramsContextValue | null>(null);
 const REALTIME_EVENT = 'coach-programs:changed';
 
 async function readApiError(res: Response): Promise<string> {
+  if (res.status === 504) {
+    return 'El servidor tardó demasiado (504). Espera unos segundos y vuelve a intentar.';
+  }
   try {
     const j = (await res.json()) as { error?: string };
     const detail = j.error?.trim() || `HTTP ${res.status}`;
@@ -38,8 +41,26 @@ async function readApiError(res: Response): Promise<string> {
     if (res.status === 404) {
       return 'Ruta /coach-programs no encontrada. Reinicia el API (`npm run server`) con el código actual.';
     }
+    if (res.status === 504) {
+      return 'El servidor tardó demasiado (504). Espera unos segundos y vuelve a intentar.';
+    }
     return `HTTP ${res.status}`;
   }
+}
+
+function mergeSavedProgram(prev: CoachProgramRow[], saved: CoachProgram): CoachProgramRow[] {
+  const index = prev.findIndex((program) => program.id === saved.id);
+  if (index < 0) return prev;
+  const current = prev[index]!;
+  const next: CoachProgramRow = {
+    ...current,
+    ...saved,
+    enrolledAthletes: current.enrolledAthletes,
+    avgAdherencePct: current.avgAdherencePct,
+  };
+  const copy = [...prev];
+  copy[index] = next;
+  return copy;
 }
 
 function coachScopeId(currentUser: WlProgramsProviderProps['currentUser']): string | null {
@@ -213,10 +234,10 @@ export function WlProgramsProvider({
         return null;
       }
       const saved = (await res.json()) as CoachProgram;
-      await loadProgramsFromApi();
+      setRawPrograms((prev) => mergeSavedProgram(prev, saved));
       return saved;
     },
-    [apiMode, apiToken, scopedCoachId, rawPrograms, pushAlert, loadProgramsFromApi],
+    [apiMode, apiToken, scopedCoachId, rawPrograms, pushAlert],
   );
 
   const deleteProgram = useCallback(
