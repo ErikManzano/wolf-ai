@@ -16,6 +16,7 @@
     "db:setup": "tsx scripts/db-setup-production.ts",
     "smoke:coach-week1": "tsx scripts/smoke-coach-week1.ts",
     "smoke:prd-coach-erik": "tsx scripts/smoke-prd-coach-erik.ts",
+    "smoke:prd-program-save": "tsx scripts/smoke-prd-program-save.ts",
     "verify:coach-exercises": "tsx scripts/verify-coach-exercises.ts",
     "db:seed-exercises": "tsx scripts/db-setup-production.ts",
     "db:provision-users": "tsx scripts/provision-users.ts"
