@@ -297,7 +297,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   };
 
   const renderAthletesView = () => {
-    return (
+      return (
       <WlAthletesSection
         isEs={isEs}
         onOpenCalendar={() => setActiveView('global-calendar')}
@@ -1286,7 +1286,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           <div className="micro-card glass">
             <h3 style={{ marginBottom: '12px' }}>{isEs ? 'Perfiles WL (PRs)' : 'WL profiles (PRs)'}</h3>
             <p style={{ color: 'var(--color-text-muted)', marginBottom: '12px', fontSize: '0.9rem' }}>
-              {isEs
+                    {isEs
                 ? 'Edita rÃ©cords y nivel del motor. Las altas de atleta con cuenta se hacen arriba; aquÃ­ puedes ajustar PRs.'
                 : 'Edit engine level and PRs. Create athlete accounts above; adjust PRs here.'}
             </p>
@@ -1309,22 +1309,22 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                         {a.oneRM.snatch} / {a.oneRM.cleanJerk} / {a.oneRM.backSquat}
                       </td>
                       <td style={{ display: 'flex', gap: '8px' }}>
-                        <button
+                <button
                           className="btn-outline"
                           onClick={() => setWlProfileEditId(a.id)}
-                        >
+                >
                           {isEs ? 'Editar PRs' : 'Edit PRs'}
-                        </button>
-                        <button
-                          className="btn-outline"
+                </button>
+                <button
+                  className="btn-outline"
                           style={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
-                          onClick={() => {
+                  onClick={() => {
                             if (!window.confirm(isEs ? 'Eliminar perfil WL?' : 'Delete WL profile?')) return;
                             void deleteWlAthlete(a.id).then(() => reloadWlAthletesFromApi());
-                          }}
-                        >
+                  }}
+                >
                           {isEs ? 'Eliminar' : 'Delete'}
-                        </button>
+                </button>
                       </td>
                     </tr>
                   ))}
@@ -1341,18 +1341,18 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                     {(['snatch', 'cleanJerk', 'backSquat', 'frontSquat'] as const).map((key) => (
                       <label key={key} className="wolf-engine-field">
                         <span className="wolf-engine-field-label">{key}</span>
-                        <input
+                      <input
                           type="number"
                           defaultValue={profile.oneRM[key]}
                           id={`wl-pr-${key}-${profile.id}`}
                         />
                       </label>
                     ))}
-                  </div>
+                    </div>
                   <div className="wl-mgmt-inline-form-btns">
-                    <button
-                      className="btn-primary"
-                      onClick={() => {
+              <button
+                  className="btn-primary"
+                  onClick={() => {
                         const oneRM = {
                           snatch: Number((document.getElementById(`wl-pr-snatch-${profile.id}`) as HTMLInputElement)?.value) || 0,
                           cleanJerk: Number((document.getElementById(`wl-pr-cleanJerk-${profile.id}`) as HTMLInputElement)?.value) || 0,
@@ -1366,19 +1366,19 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                       }}
                     >
                       {isEs ? 'Guardar' : 'Save'}
-                    </button>
+                </button>
                     <button className="btn-outline" onClick={() => setWlProfileEditId(null)}>
                       {isEs ? 'Cancelar' : 'Cancel'}
-                    </button>
-                  </div>
-                </div>
+                </button>
+            </div>
+          </div>
               );
             })() : null}
           </div>
         ) : null}
+        </div>
       </div>
-    </div>
-  );
+    );
 
   const renderCalendarView = () => {
     // Basic traditional calendar logic

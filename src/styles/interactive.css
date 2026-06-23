@@ -610,6 +610,69 @@
   transform: scale(0.97);
 }
 
+/* ——— App select (chevron custom + opciones dark) ——— */
+.wolf-select-wrap--app {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.wolf-select-wrap--app select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 32px 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color-scheme: dark;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  transition:
+    border-color var(--ix-duration) var(--ix-ease),
+    background var(--ix-duration) var(--ix-ease),
+    box-shadow var(--ix-duration) var(--ix-ease);
+}
+
+.wolf-select-wrap--app select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: var(--color-bg-hover);
+}
+
+.wolf-select-wrap--app select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow:
+    var(--ix-focus-ring),
+    inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+}
+
+.wolf-select-wrap--app select:disabled {
+  opacity: 0.9;
+  cursor: default;
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, var(--color-bg-panel));
+}
+
+.wolf-select-wrap--app select option {
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wolf-select-wrap--app .wolf-select-chevron {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: var(--color-text-secondary);
+}
+
 .wolf-se-autocomplete-option {
   transition: background-color var(--ix-duration) var(--ix-ease);
 }

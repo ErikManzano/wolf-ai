@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ClipboardList, TrendingUp } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
+import { AthleteDisciplineCard } from './athlete-tracking/AthleteDisciplineCard';
+import { AthletePlanSelect } from './athlete-tracking/AthletePlanSwitcher';
+import { useMobileTopBar } from '../context/MobileTopBarContext';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { loadAthletesFromLocal } from '../modules/wl-athletes/athleteStore';
@@ -16,6 +19,7 @@ import { MobileWeekNavigator } from './athlete-tracking/MobileWeekNavigator';
 import { WorkoutFlow } from './athlete-tracking/workout-flow/WorkoutFlow';
 import type { GeneratedProgram, SessionExerciseBlock } from '../models/training';
 import './AthleteTrainingView.css';
+import './OlympicEnginePanel.css';
 import './athlete-tracking/athlete-day-view.css';
 import '../styles/interactive.css';
 
@@ -126,9 +130,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
   }, [completions, setLogs, activeAssignment, program, athleteProfile, motorExercises, exName]);
 
-  const disciplinePct =
-    totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
-
   const firstIncompleteDayNumber = useMemo(() => {
     if (!weekData) return null;
     const incomplete = weekData.days.find(
@@ -150,6 +151,41 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     }),
     [isEs],
   );
+
+  const mobileTopBar = useMemo(() => {
+    if (!activeAssignment || myAssignments.length === 0) {
+      return { title: t.kicker };
+    }
+    const bar = {
+      title: t.kicker,
+      belowTitle: (
+        <AthletePlanSelect
+          assignments={myAssignments}
+          activeAssignmentId={activeAssignment.id}
+          isEs={isEs}
+          onSelect={setActiveAssignmentId}
+          showLabel={false}
+        />
+      ),
+      pinnedBelowHeader: program ? (
+        <MobileWeekNavigator
+          variant="subheader"
+          weeks={program.weeks}
+          activeWeek={week}
+          isEs={isEs}
+          isDayComplete={(w, d) => {
+            const wd = program.weeks.find((x) => x.weekNumber === w);
+            const dd = wd?.days.find((x) => x.dayNumber === d);
+            if (!dd) return false;
+            return isDayDone(w, d, dd.session.exercises);
+          }}
+          onWeekChange={setWeek}
+        />
+      ) : undefined,
+    };
+    return bar;
+  }, [t.kicker, myAssignments, activeAssignment, isEs, program, week, isDayDone]);
+  useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
     if (!program || !activeAssignment) return;
@@ -234,62 +270,18 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   return (
     <div className="wolf-athlete-plan wolf-athlete-plan--tracking wolf-athlete-plan--mobile-day">
-      <header className="wolf-athlete-hero wolf-athlete-hero--compact">
+      <header className="wolf-athlete-hero wolf-athlete-hero--discipline wolf-athlete-hero--desktop-only">
         <div className="wolf-athlete-hero-accent" aria-hidden />
         <div className="wolf-athlete-hero-inner">
-          <div className="wolf-athlete-hero-main">
-            <p className="wolf-athlete-kicker">
-              <CalendarDays size={14} strokeWidth={2} aria-hidden />
-              {t.kicker}
-            </p>
-            <h1 className="wolf-athlete-title">{t.title}</h1>
-            {myAssignments.length > 1 ? (
-              <div className="wolf-athlete-plan-switcher" role="tablist" aria-label={isEs ? 'Planes activos' : 'Active plans'}>
-                {myAssignments.map((asg) => (
-                  <button
-                    key={asg.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={asg.id === activeAssignment.id}
-                    className={`wolf-athlete-plan-switcher__btn${
-                      asg.id === activeAssignment.id ? ' wolf-athlete-plan-switcher__btn--active' : ''
-                    }`}
-                    onClick={() => setActiveAssignmentId(asg.id)}
-                  >
-                    {asg.program.name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="wolf-athlete-program-name">{program.name}</p>
-            )}
-          </div>
-
-          <aside className="wolf-athlete-discipline wolf-athlete-discipline--compact" aria-label={t.discipline}>
-            <div className="wolf-athlete-discipline-top">
-              <TrendingUp size={16} strokeWidth={2} className="wolf-athlete-discipline-icon" aria-hidden />
-              <span className="wolf-athlete-discipline-pct">{disciplinePct}%</span>
-              <span className="wolf-athlete-discipline-sub">
-                {completedExercises}/{totalExercises}
-              </span>
-            </div>
-          </aside>
+          <AthleteDisciplineCard
+            completed={completedExercises}
+            total={totalExercises}
+            isEs={isEs}
+            label={t.discipline}
+            exercisesDoneLabel={t.exercisesDone}
+          />
         </div>
       </header>
-
-      <MobileWeekNavigator
-        weeks={program.weeks}
-        activeWeek={week}
-        totalWeeks={program.weeks.length}
-        isEs={isEs}
-        isDayComplete={(w, d) => {
-          const wd = program.weeks.find((x) => x.weekNumber === w);
-          const dd = wd?.days.find((x) => x.dayNumber === d);
-          if (!dd) return false;
-          return isDayDone(w, d, dd.session.exercises);
-        }}
-        onWeekChange={setWeek}
-      />
 
       <AthleteDayNavigator
         days={weekData.days}

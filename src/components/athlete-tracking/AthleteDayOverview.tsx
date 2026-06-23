@@ -79,39 +79,27 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
 
   return (
     <div className="wa-day-overview">
-      <header className="wa-day-overview__head">
-        <h2 className="wa-day-overview__title">{dayDisplayTitle(day, isEs)}</h2>
-        <span className="wa-day-overview__badge">
-          <CheckCircle2 size={12} strokeWidth={2.5} aria-hidden />
-          {dayFocusBadge(day, primaryGoal, isEs)}
-        </span>
-      </header>
-
       <section className="wa-day-summary" aria-label={isEs ? 'Resumen del día' : 'Day summary'}>
-        <div className="wa-day-summary__progress-row">
-          <div>
-            <p className="wa-day-summary__label">{isEs ? 'Progreso del día' : 'Day progress'}</p>
-            <p className="wa-day-summary__value">
-              <CheckCircle2 size={14} className="wa-day-summary__value-icon" aria-hidden />
-              {completedExercises} / {exerciseCount} {isEs ? 'ejercicios' : 'exercises'}
-            </p>
-          </div>
-          <div className="wa-day-summary__ring" aria-hidden>
-            <svg viewBox="0 0 56 56">
-              <circle className="wa-day-summary__ring-track" cx="28" cy="28" r="26" />
-              <circle
-                className="wa-day-summary__ring-fill"
-                cx="28"
-                cy="28"
-                r="26"
-                strokeDasharray={ringDash(progressPct)}
-              />
-            </svg>
-            <span className="wa-day-summary__ring-pct">{progressPct}%</span>
-          </div>
-        </div>
+        <header className="wa-day-summary__head">
+          <h2 className="wa-day-summary__title">{dayDisplayTitle(day, isEs)}</h2>
+          <span className="wa-day-summary__badge">
+            <CheckCircle2 size={12} strokeWidth={2.5} aria-hidden />
+            {dayFocusBadge(day, primaryGoal, isEs)}
+          </span>
+        </header>
 
-        <div className="wa-day-summary__grid">
+        <div className="wa-day-summary__metrics">
+          <div className="wa-day-summary__stat">
+            <CheckCircle2 size={16} className="wa-day-summary__value-icon" aria-hidden />
+            <div>
+              <span className="wa-day-summary__stat-label">
+                {isEs ? 'Progreso del día' : 'Day progress'}
+              </span>
+              <strong>
+                {completedExercises} / {exerciseCount} {isEs ? 'ejerc.' : 'ex.'}
+              </strong>
+            </div>
+          </div>
           <div className="wa-day-summary__stat">
             <Clock size={16} aria-hidden />
             <div>
@@ -130,8 +118,38 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
               <strong>{restLabel}</strong>
             </div>
           </div>
+          <div
+            className="wa-day-summary__ring"
+            role="img"
+            aria-label={
+              isEs ? `Progreso ${progressPct} por ciento` : `Progress ${progressPct} percent`
+            }
+          >
+            <svg viewBox="0 0 56 56" aria-hidden>
+              <circle className="wa-day-summary__ring-track" cx="28" cy="28" r="26" />
+              <circle
+                className="wa-day-summary__ring-fill"
+                cx="28"
+                cy="28"
+                r="26"
+                strokeDasharray={ringDash(progressPct)}
+              />
+            </svg>
+            <span className="wa-day-summary__ring-pct" aria-hidden>
+              {progressPct}%
+            </span>
+          </div>
         </div>
       </section>
+
+      {hasExercises ? (
+        <div className="wa-day-start">
+          <button type="button" className="wa-day-cta" onClick={onStartWorkout}>
+            <Play size={18} fill="currentColor" aria-hidden />
+            {isEs ? 'Iniciar entrenamiento' : 'Start workout'}
+          </button>
+        </div>
+      ) : null}
 
       <section className="wa-day-exercises" aria-labelledby="wa-day-exercises-title">
         <h3 id="wa-day-exercises-title" className="wa-day-exercises__title">
@@ -172,15 +190,6 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
           </ul>
         )}
       </section>
-
-      {hasExercises ? (
-        <footer className="wa-day-overview__footer">
-          <button type="button" className="wa-day-cta" onClick={onStartWorkout}>
-            <Play size={18} fill="currentColor" aria-hidden />
-            {isEs ? 'Iniciar entrenamiento' : 'Start workout'}
-          </button>
-        </footer>
-      ) : null}
     </div>
   );
 };

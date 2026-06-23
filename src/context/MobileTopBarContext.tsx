@@ -15,6 +15,10 @@ export type MobileTopBarBack = {
 export type MobileTopBarConfig = {
   title?: string;
   back?: MobileTopBarBack | null;
+  /** Optional row below the title (e.g. program select on athlete plan). */
+  belowTitle?: ReactNode;
+  /** Fixed strip directly under the mobile header (outside scroll containers). */
+  pinnedBelowHeader?: ReactNode;
   /** Disables edge-swipe sidebar when nested editor/detail is open. */
   lockEdgeSwipe?: boolean;
 };

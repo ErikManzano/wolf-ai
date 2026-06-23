@@ -13,7 +13,9 @@ export function assertJwtConfiguredForProduction(): void {
   const raw = process.env.JWT_SECRET?.trim();
   if (!raw || raw.length < 32) {
     throw new Error(
-      'JWT_SECRET must be set to a random string of at least 32 characters in production (e.g. openssl rand -base64 48).',
+      'JWT_SECRET must be set to a random string of at least 32 characters in production. ' +
+        'Generate one: npm run generate-jwt-secret (or openssl rand -base64 48). ' +
+        'Then add JWT_SECRET in Railway/Render → Environment variables and redeploy.',
     );
   }
 }

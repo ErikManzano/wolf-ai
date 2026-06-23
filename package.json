@@ -13,6 +13,7 @@
     "deploy": "gh-pages -d dist",
     "deploy:netlify": "netlify deploy --dir=dist --prod",
     "hash-password": "node scripts/hash-password.mjs",
+    "generate-jwt-secret": "node scripts/generate-jwt-secret.mjs",
     "db:setup": "tsx scripts/db-setup-production.ts",
     "smoke:coach-week1": "tsx scripts/smoke-coach-week1.ts",
     "smoke:prd-coach-erik": "tsx scripts/smoke-prd-coach-erik.ts",

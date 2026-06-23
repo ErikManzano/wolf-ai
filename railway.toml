@@ -1,0 +1,15 @@
+# Railway — API (Express). Required env vars (set in Railway → Variables):
+#   JWT_SECRET          — random string, 32+ chars (npm run generate-jwt-secret)
+#   DATABASE_URL        — Postgres connection string
+#   FRONTEND_ORIGIN     — exact Netlify/front URL (https, no trailing slash)
+# Optional: JWT_EXPIRES_IN=7d, WOLF_SYNC_SEED_PASSWORDS=0, WOLF_ALLOW_PUBLIC_REGISTER=0
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm install --include=dev"
+
+[deploy]
+startCommand = "npm run server"
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"

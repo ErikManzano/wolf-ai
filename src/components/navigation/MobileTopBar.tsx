@@ -51,7 +51,8 @@ export function MobileTopBar({
   const back = config?.back ?? null;
 
   return (
-    <div className="mobile-header">
+    <>
+    <div className={`mobile-header${config?.belowTitle ? ' mobile-header--inline-plan' : ''}`}>
       <div className="mobile-header-brand" aria-live="polite">
         {back ? (
           <button
@@ -64,7 +65,12 @@ export function MobileTopBar({
           </button>
         ) : null}
         <WolfHeaderIcon />
-        <div className="mobile-header-title">{title}</div>
+        <div className="mobile-header-brand-copy">
+          <div className="mobile-header-title">{title}</div>
+          {config?.belowTitle ? (
+            <div className="mobile-header-inline-slot">{config.belowTitle}</div>
+          ) : null}
+        </div>
       </div>
       <div className="mobile-header-actions">
         {showAccount && accountItem && AccountIcon ? (
@@ -97,5 +103,9 @@ export function MobileTopBar({
         </button>
       </div>
     </div>
+    {config?.pinnedBelowHeader ? (
+      <div className="mobile-subheader">{config.pinnedBelowHeader}</div>
+    ) : null}
+    </>
   );
 }

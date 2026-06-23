@@ -2,6 +2,10 @@
   display: none;
 }
 
+.mobile-subheader {
+  display: none;
+}
+
 .mobile-header-btn {
   flex-shrink: 0;
   color: var(--color-text-primary);
@@ -43,6 +47,57 @@
     padding: var(--safe-top) max(12px, var(--safe-right)) 0 max(12px, var(--safe-left));
     background: var(--color-bg-main);
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  }
+
+  .mobile-header--inline-plan {
+    align-items: center;
+    height: calc(56px + var(--safe-top));
+    padding-bottom: 0;
+  }
+
+  .mobile-header--inline-plan .mobile-header-brand {
+    align-items: center;
+  }
+
+  .mobile-header-brand-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-header--inline-plan .mobile-header-title {
+    flex: 0 1 auto;
+    max-width: 52%;
+    padding-left: 0;
+    font-size: 0.88rem;
+  }
+
+  .mobile-header-inline-slot {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: min(11.5rem, 38vw);
+  }
+
+  .mobile-header-inline-slot .wolf-athlete-plan-select {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .mobile-header-inline-slot .wolf-select-wrap--app {
+    width: 100%;
+    max-width: min(11.5rem, 38vw);
+  }
+
+  .mobile-header-inline-slot .wolf-select-wrap--app select {
+    min-height: 32px;
+    padding: 4px 28px 4px 8px;
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .mobile-header-title {
@@ -152,8 +207,24 @@
     font-size: 1.15rem;
   }
 
-  .wolf-athlete-hero--compact .wolf-athlete-hero-main > .wolf-athlete-kicker,
-  .wolf-athlete-hero--compact .wolf-athlete-title {
-    display: none;
+  .mobile-subheader {
+    display: block;
+    position: fixed;
+    top: calc(56px + var(--safe-top));
+    left: 0;
+    right: 0;
+    z-index: 55;
+    padding: 6px max(12px, var(--safe-right)) 8px max(12px, var(--safe-left));
+    background: var(--color-bg-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  }
+
+  .app-container:has(.mobile-subheader) {
+    padding-top: calc(106px + var(--safe-top));
+  }
+
+  .app-container:has(.mobile-subheader) .workspace-area {
+    min-height: calc(100dvh - (106px + var(--safe-top)));
+    max-height: calc(100dvh - (106px + var(--safe-top)));
   }
 }

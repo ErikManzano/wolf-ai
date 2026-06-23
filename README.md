@@ -31,7 +31,27 @@ Proyecto React + TypeScript + Vite con API Express para demos coach/athlete.
 - `PATCH /assignments/:id/program`
 - `DELETE /assignments/:id`
 
-## Free Backend Deploy (Recommended: Render + Neon Postgres)
+## Backend deploy (Railway or Render + Neon Postgres)
+
+### Railway (API)
+
+1. **New Project** → Deploy from GitHub → repo `wolf-ai` (web service, root `/`).
+2. **Variables** (required before the service will pass healthcheck):
+   - `JWT_SECRET` — run locally `npm run generate-jwt-secret` and paste the output (32+ chars). **Without this the API crash-loops on startup.**
+   - `DATABASE_URL` — Neon or Railway Postgres connection string
+   - `FRONTEND_ORIGIN` — e.g. `https://tu-app.netlify.app` (exact URL, no trailing `/`)
+   - `JWT_EXPIRES_IN` — `7d` (optional)
+   - `WOLF_SYNC_SEED_PASSWORDS` — `0`
+   - `WOLF_ALLOW_PUBLIC_REGISTER` — `0`
+3. **Networking** → Generate domain → copy `https://….up.railway.app`.
+4. **Netlify** (front): `VITE_API_URL=/api`, `NETLIFY_API_PROXY_TARGET=https://….up.railway.app`, then **redeploy** the front.
+5. Test: `curl https://….up.railway.app/health` → `"ok":true`, `"persistence":"postgres"`.
+
+Repo includes `railway.toml` (start command + `/health` check). Secrets are **never** committed; set `JWT_SECRET` only in the Railway dashboard.
+
+### Render (alternative)
+
+## Free Backend Deploy (Render + Neon Postgres)
 
 Este repo incluye `render.yaml` para desplegar gratis el backend.
 

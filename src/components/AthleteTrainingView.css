@@ -7,39 +7,48 @@
 }
 
 .wolf-athlete-plan--mobile-day {
-  padding-bottom: 0;
+  padding-bottom: 0.5rem;
+  padding-top: 0;
 }
 
-.wolf-athlete-hero--compact .wolf-athlete-hero-inner {
-  align-items: center;
-}
-
-.wolf-athlete-hero--compact .wolf-athlete-title {
-  font-size: 1.35rem;
-}
-
-.wolf-athlete-discipline--compact {
-  min-width: 72px;
-  padding: 0.55rem 0.75rem;
-}
-
-.wolf-athlete-discipline--compact .wolf-athlete-discipline-top {
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
+.wolf-athlete-week-section--subheader {
   margin: 0;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: none;
 }
 
-.wolf-athlete-discipline--compact .wolf-athlete-discipline-pct {
-  font-size: 1.1rem;
+.wolf-athlete-hero--discipline {
+  margin-bottom: 0.85rem;
 }
 
-.wolf-athlete-discipline--compact .wolf-athlete-discipline-sub {
-  font-size: 0.68rem;
+.wolf-athlete-hero--discipline .wolf-athlete-hero-inner {
+  padding: 0.75rem 0.9rem;
 }
 
-.wolf-athlete-discipline--compact .wolf-athlete-progress-track {
+.wolf-athlete-hero--discipline .wolf-athlete-discipline {
+  max-width: none;
+  width: 100%;
+}
+
+.wolf-athlete-discipline-panel--mobile {
   display: none;
+}
+
+.wolf-athlete-hero--desktop-only {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  .wolf-athlete-hero--desktop-only {
+    display: block;
+  }
+}
+
+.wolf-athlete-hero-main {
+  flex: 1 1 280px;
+  min-width: 0;
 }
 
 .wolf-athlete-plan--tracking {
@@ -50,11 +59,155 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  margin: 0 -0.35rem 1rem;
-  padding: 0.75rem 0.35rem 0.85rem;
-  background: color-mix(in srgb, var(--color-bg-main) 92%, transparent);
+  margin: 0 -0.35rem 0.65rem;
+  padding: 0.5rem 0.35rem 0.65rem;
+  background: color-mix(in srgb, var(--color-bg-main) 94%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+@media (max-width: 1024px) {
+  .wolf-athlete-plan:not(.wolf-athlete-plan--mobile-day) .wolf-athlete-week-section--sticky {
+    top: calc(56px + var(--safe-top, 0px));
+  }
+}
+
+@media (min-width: 1025px) {
+  .wolf-athlete-week-section--sticky {
+    top: 0;
+  }
+}
+
+.wolf-athlete-week-select__row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wolf-athlete-week-select__field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.wolf-athlete-week-select.wolf-week-select-mobile {
+  display: block;
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap {
+  width: 100%;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 36px 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.wolf-athlete-week-select .wolf-athlete-week-arrow {
+  width: 42px;
+  height: 42px;
+  margin: 0;
+}
+
+.wolf-athlete-plan-week-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wolf-athlete-plan-week-nav .wolf-week-select-mobile__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-athlete-plan-week-nav .wolf-week-select-mobile__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.wolf-athlete-plan-week-nav .wolf-select-wrap {
+  width: 100%;
+}
+
+.wolf-athlete-plan-week-nav .wolf-select-wrap select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 36px 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.wolf-athlete-plan-week-nav .wolf-select-wrap select:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.wolf-athlete-plan-week-nav .wolf-select-wrap select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.wolf-athlete-plan-select {
+  width: 100%;
+}
+
+.wolf-athlete-week-select.wolf-week-select-mobile {
+  display: flex;
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.wolf-athlete-week-select .wolf-week-select-mobile__row {
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wolf-athlete-week-select .wolf-week-select-mobile__field {
+  flex: 1;
+  min-width: 0;
 }
 
 .wolf-athlete-week-section-head {
@@ -280,6 +433,13 @@
   padding: 1.35rem 1.35rem 1.25rem;
 }
 
+@media (min-width: 641px) {
+  .wolf-athlete-hero-inner {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+}
+
 .wolf-athlete-kicker {
   display: inline-flex;
   align-items: center;
@@ -307,6 +467,40 @@
   font-weight: 500;
   color: var(--color-text-secondary);
   line-height: 1.4;
+}
+
+.wolf-athlete-program-name--hero {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-plan-select-mobile {
+  display: none;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+  min-width: 0;
+}
+
+.wolf-athlete-plan-select-mobile__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-athlete-plan-select-mobile .wolf-select-wrap select {
+  min-height: 42px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.wolf-athlete-discipline-panel--mobile {
+  display: none;
 }
 
 .wolf-athlete-plan-switcher {
@@ -359,30 +553,39 @@
 
 /* Disciplina */
 .wolf-athlete-discipline {
-  flex: 0 1 260px;
-  min-width: 220px;
-  align-self: center;
-  padding: 1rem 1.1rem;
+  flex: 1 1 220px;
+  min-width: min(100%, 200px);
+  max-width: 320px;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
   border-radius: 12px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-secondary) 88%, var(--color-accent) 4%);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, var(--color-accent) 12%);
 }
 
-.wolf-athlete-discipline-top {
+.wolf-athlete-discipline__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.65rem;
-  margin-bottom: 0.65rem;
+}
+
+.wolf-athlete-discipline__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
 }
 
 .wolf-athlete-discipline-icon {
   flex-shrink: 0;
-  margin-top: 2px;
   color: var(--color-accent);
 }
 
 .wolf-athlete-discipline-label {
-  display: block;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -390,24 +593,69 @@
   color: var(--color-text-muted);
 }
 
-.wolf-athlete-discipline-sub {
-  display: block;
-  font-size: 0.82rem;
-  color: var(--color-text-secondary);
-  margin-top: 0.15rem;
-}
-
 .wolf-athlete-discipline-pct {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 1.35rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
   color: var(--color-accent);
+  line-height: 1;
+}
+
+.wolf-athlete-discipline-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+.wolf-athlete-discipline-count {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-discipline--compact {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.wolf-athlete-discipline__strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.wolf-athlete-discipline__strip-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.wolf-athlete-discipline-sub--inline {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.wolf-athlete-discipline--compact .wolf-athlete-discipline-pct {
+  font-size: 1.05rem;
+}
+
+.wolf-athlete-discipline--compact .wolf-athlete-progress-track {
+  height: 5px;
 }
 
 .wolf-athlete-progress-track {
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-border) 65%, var(--color-bg-main));
   overflow: hidden;
@@ -860,6 +1108,12 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .wolf-athlete-plan--mobile-day .wolf-athlete-hero--discipline {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .wolf-athlete-plan {
     padding: 0 0.35rem 1.4rem;
@@ -872,8 +1126,14 @@
 
   .wolf-athlete-hero-inner {
     flex-direction: column;
-    gap: 0.8rem;
+    align-items: stretch;
+    gap: 0.85rem;
     padding: 0.95rem 0.9rem 0.95rem;
+  }
+
+  .wolf-athlete-hero-main {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .wolf-athlete-title {
@@ -884,23 +1144,11 @@
     font-size: 0.88rem;
   }
 
-  .wolf-athlete-discipline {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
-    padding: 0.8rem 0.85rem;
-  }
-
-  .wolf-athlete-week-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .wolf-athlete-week-pill {
-    flex: 0 0 auto;
-    min-height: 42px;
+  .wolf-athlete-week-select .wolf-athlete-week-arrow {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0;
   }
 
   .wolf-athlete-day-top {

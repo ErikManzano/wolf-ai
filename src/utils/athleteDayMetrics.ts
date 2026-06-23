@@ -34,22 +34,39 @@ export function countBlockSets(block: SessionExerciseBlock): number {
 }
 
 export function exercisePreviewMeta(block: SessionExerciseBlock, isEs: boolean): string {
+  const { setsText, prescription } = exercisePreviewParts(block, isEs);
+  if (!prescription) return setsText;
+  return `${setsText} • ${prescription}`;
+}
+
+export function exercisePreviewParts(
+  block: SessionExerciseBlock,
+  isEs: boolean,
+): { setsText: string; prescription: string } {
   const totalSets = countBlockSets(block);
   const seriesLabel = isEs ? 'series' : 'sets';
   const repsLabel = isEs ? 'reps' : 'reps';
 
-  if (!block.sets.length) return isEs ? 'Sin series' : 'No sets';
+  if (!block.sets.length) {
+    return { setsText: isEs ? 'Sin series' : 'No sets', prescription: '' };
+  }
 
   const isComplex = blockUsesComplexReps(block);
-  const prefix = `${totalSets} ${seriesLabel}`;
+  const setsText = `${totalSets} ${seriesLabel}`;
 
   if (block.sets.length === 1) {
     const row = block.sets[0]!;
     const repsToken = formatSchemeRepsToken(row, isComplex);
-    return `${prefix} • ${row.percentage}% • ${repsToken} ${repsLabel}`;
+    return {
+      setsText,
+      prescription: `${row.percentage}% · ${repsToken} ${repsLabel}`,
+    };
   }
 
-  return `${prefix} • ${formatBlockPrescription(block)}`;
+  return {
+    setsText,
+    prescription: formatBlockPrescription(block),
+  };
 }
 
 export function estimateSessionDuration(day: ProgramDay): { min: number; max: number } {
