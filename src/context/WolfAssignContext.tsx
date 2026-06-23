@@ -724,14 +724,19 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       if (!res.ok) {
         let detail = '';
         try {
-          const j = (await res.json()) as { error?: string };
-          detail = j.error ? ` ${j.error}` : '';
+          const j = (await res.json()) as { error?: string; message?: string };
+          detail = j.error ?? j.message ?? '';
+          if (detail) detail = ` ${detail}`;
         } catch {
           /* ignore */
         }
-        throw new Error(
-          `El servidor respondiÃ³ ${res.status}.${detail} Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.`,
-        );
+        const hint =
+          res.status === 500
+            ? ' Revisa JWT_EXPIRES_IN en el API (usa 7d, no 604800) y los logs del servidor.'
+            : res.status === 403 || res.status === 0
+              ? ' Revisa CORS (FRONTEND_ORIGIN en el API) y que la URL sea correcta.'
+              : ' Revisa que la URL del API sea correcta.';
+        throw new Error(`El servidor respondió ${res.status}.${detail}${hint}`);
       }
       const data = (await res.json()) as { user?: WolfUser; token?: string; accessToken?: string; refreshToken?: string };
       storeTokens(data.accessToken ?? data.token, data.refreshToken);
@@ -741,11 +746,11 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (e) {
-      if (e instanceof Error && e.message.startsWith('El servidor respondiÃ³')) {
+      if (e instanceof Error && e.message.startsWith('El servidor respondió')) {
         throw e;
       }
       throw new Error(
-        'Sin conexiÃ³n al API. Netlify: en Site â†’ Environment variables pon VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.onrender.com (redeploy). O VITE_API_URL=https://TU-API.onrender.com sin proxy. Ver README.',
+        'Sin conexión al API. Netlify: Site → Environment variables → VITE_API_URL=/api y NETLIFY_API_PROXY_TARGET=https://TU-API.railway.app (redeploy). Ver README.',
       );
     }
   }, [applyUserSession, storeTokens, users]);

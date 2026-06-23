@@ -37,20 +37,30 @@ function getSecretBytes(): Uint8Array {
   return secretBytes;
 }
 
+/** Normaliza TTL para jose: acepta `7d`, `15m` o segundos en número (`604800` → `604800s`). */
+export function normalizeJoseExpiration(raw: string | undefined, fallback: string): string {
+  const v = raw?.trim();
+  if (!v) return fallback;
+  if (/^\d+$/.test(v)) return `${v}s`;
+  return v;
+}
+
 /** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 15 minutos. */
 export function getAccessTokenExpiresIn(): string {
   const v = process.env.JWT_ACCESS_EXPIRES_IN?.trim() ?? process.env.JWT_EXPIRES_IN?.trim();
-  return v && v.length > 0 ? v : '15m';
+  return normalizeJoseExpiration(v, '15m');
 }
 
-/** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 30 días. */
+/** Valores tipo `15m`, `12h`, `7d` (jose). Por defecto 7 días. */
 export function getRefreshTokenExpiresIn(): string {
   const v = process.env.JWT_REFRESH_EXPIRES_IN?.trim();
-  return v && v.length > 0 ? v : '7d';
+  return normalizeJoseExpiration(v, '7d');
 }
 
 export function expiryToSeconds(exp: string): number {
-  const m = /^(\d+)([smhd])$/i.exec(exp.trim());
+  const trimmed = exp.trim();
+  if (/^\d+$/.test(trimmed)) return parseInt(trimmed, 10);
+  const m = /^(\d+)([smhd])$/i.exec(trimmed);
   if (!m) return 7 * 86400;
   const n = parseInt(m[1], 10);
   switch (m[2].toLowerCase()) {

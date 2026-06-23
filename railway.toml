@@ -2,7 +2,7 @@
 #   JWT_SECRET          — random string, 32+ chars (npm run generate-jwt-secret)
 #   DATABASE_URL        — Postgres connection string
 #   FRONTEND_ORIGIN     — exact Netlify/front URL (https, no trailing slash)
-# Optional: JWT_EXPIRES_IN=7d, WOLF_SYNC_SEED_PASSWORDS=0, WOLF_ALLOW_PUBLIC_REGISTER=0
+# Optional: JWT_EXPIRES_IN=7d (not bare 604800 — use 7d or 604800s), WOLF_SYNC_SEED_PASSWORDS=0, WOLF_ALLOW_PUBLIC_REGISTER=0
 
 [build]
 builder = "nixpacks"

@@ -240,28 +240,34 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.post('/auth/login', async (req, res) => {
-    const body = req.body as { email?: string; password?: string };
-    const loginId = body.email?.trim().toLowerCase() ?? '';
-    const password = body.password ?? '';
-    let user: WolfUser | null = null;
-    if (store) {
-      user = await store.validateUser(loginId, password);
-    } else {
-      user =
-        state.users.find((u) => userMatchesLoginId(u, loginId) && matchesStoredPassword(u, password)) ?? null;
+    try {
+      const body = req.body as { email?: string; password?: string };
+      const loginId = body.email?.trim().toLowerCase() ?? '';
+      const password = body.password ?? '';
+      let user: WolfUser | null = null;
+      if (store) {
+        user = await store.validateUser(loginId, password);
+      } else {
+        user =
+          state.users.find((u) => userMatchesLoginId(u, loginId) && matchesStoredPassword(u, password)) ?? null;
+      }
+      if (!user) {
+        res.status(401).json({ error: 'Invalid credentials.' });
+        return;
+      }
+      const resolved =
+        store && user.role === 'athlete' ? (await store.reconcileAthleteUserLink(user.id)) ?? user : user;
+      const { token, expiresIn } = await signAccessToken(resolved.id, {
+        role: resolved.role,
+        verified: true,
+        email: resolved.email ?? '',
+      });
+      res.json({ user: sanitizeUser(resolved), token, expiresIn });
+    } catch (err) {
+      console.error('[auth/login]', err);
+      const message = err instanceof Error ? err.message : 'Login failed.';
+      res.status(500).json({ error: message });
     }
-    if (!user) {
-      res.status(401).json({ error: 'Invalid credentials.' });
-      return;
-    }
-    const resolved =
-      store && user.role === 'athlete' ? (await store.reconcileAthleteUserLink(user.id)) ?? user : user;
-    const { token, expiresIn } = await signAccessToken(resolved.id, {
-      role: resolved.role,
-      verified: true,
-      email: resolved.email ?? '',
-    });
-    res.json({ user: sanitizeUser(resolved), token, expiresIn });
   });
 
   router.post('/auth/register', async (req, res) => {
