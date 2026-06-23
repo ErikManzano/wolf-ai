@@ -5,6 +5,13 @@
  *
  * Endpoints: GET/POST — /athletes, /exercises, /sessions, /sessions/generate, etc.
  */
+import { webcrypto } from 'node:crypto';
+
+/** jose y otros paquetes esperan Web Crypto global (Railway/Nixpacks a veces no lo expone). */
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as typeof globalThis & { crypto: Crypto }).crypto = webcrypto as Crypto;
+}
+
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'node:http';

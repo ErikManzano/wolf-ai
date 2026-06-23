@@ -2,6 +2,7 @@
  * Coach domain service — programs, templates, assignments with clone immutability.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { PostgresStore } from './postgresStore';
 import type {
   ActiveAssignment,
@@ -32,7 +33,7 @@ type CoachServiceDeps = {
 };
 
 function newId(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID()}`;
+  return `${prefix}-${randomUUID()}`;
 }
 
 function mapAssignmentRow(row: ProgramAssignment): ActiveAssignment {
@@ -52,7 +53,7 @@ function mapAssignmentRow(row: ProgramAssignment): ActiveAssignment {
 
 function emptyDraftProgram(name: string): GeneratedProgram {
   return {
-    id: `prog-${crypto.randomUUID()}`,
+    id: `prog-${randomUUID()}`,
     name,
     athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
     createdAt: new Date().toISOString(),
