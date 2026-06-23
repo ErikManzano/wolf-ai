@@ -1,5 +1,5 @@
 /**
- * Full Exercise OS schema + seed for production Postgres (Neon, Render, etc.).
+ * Full Exercise OS schema + seed for production Postgres (Railway, Neon, etc.).
  *
  * Usage:
  *   DATABASE_URL="postgresql://..." npx tsx scripts/db-setup-production.ts

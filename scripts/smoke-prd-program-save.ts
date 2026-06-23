@@ -3,7 +3,7 @@
  *
  * Usage:
  *   npx tsx scripts/smoke-prd-program-save.ts
- *   API_BASE=https://wolf-ai-api.onrender.com npx tsx scripts/smoke-prd-program-save.ts
+ *   API_BASE=https://TU-API.up.railway.app npx tsx scripts/smoke-prd-program-save.ts
  */
 const API_BASE = (process.env.API_BASE ?? 'https://wolf-ai-test-v1-march-2026.netlify.app/api').replace(/\/+$/, '');
 

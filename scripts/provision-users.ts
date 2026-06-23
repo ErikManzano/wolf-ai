@@ -140,7 +140,7 @@ async function main() {
     console.log('\nEmails de login:');
     console.log(`  Coach email:   ${coachEmail}`);
     console.log(`  Athlete email: ${athleteEmail}`);
-    console.log('\nSet WOLF_SYNC_SEED_PASSWORDS=0 on Render so redeploys do not overwrite these passwords.');
+    console.log('\nSet WOLF_SYNC_SEED_PASSWORDS=0 on Railway so redeploys do not overwrite these passwords.');
   } finally {
     await pool.end();
   }

@@ -48,7 +48,7 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'athletes',
 ];
 
-const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['my-wl-plan'];
+const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['dashboard', 'my-wl-plan'];
 const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',

@@ -1,6 +1,6 @@
 /**
- * Añade public/_redirects con proxy /api/* → Render (junto al [[redirects]] SPA del netlify.toml).
- * Netlify: NETLIFY_API_PROXY_TARGET=https://tu-api.onrender.com y VITE_API_URL=/api
+ * Añade public/_redirects con proxy /api/* → Railway (junto al [[redirects]] SPA del netlify.toml).
+ * Netlify: NETLIFY_API_PROXY_TARGET=https://tu-api.up.railway.app y VITE_API_URL=/api
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

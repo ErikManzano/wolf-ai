@@ -125,9 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {userRole === 'admin' ? <ShieldCheck size={14} /> : currentUser?.name?.[0]?.toUpperCase() ?? (persona === 'athlete' ? 'E' : 'I')}
           </div>
           <div className="user-info">
-            <span className="name">
-              {currentUser?.name ?? (persona === 'athlete' ? 'Erik Manzano' : 'Ivan Hellequin')}
-            </span>
+            <span className="name">{currentUser?.name ?? (isEs ? 'Usuario' : 'User')}</span>
             <span className="role">
               {userRole === 'admin'
                 ? isEs
@@ -137,7 +135,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                   ? isEs
                     ? 'Atleta'
                     : 'Athlete'
-                  : 'Head Coach'}
+                  : isEs
+                    ? 'Coach'
+                    : 'Coach'}
             </span>
           </div>
         </div>

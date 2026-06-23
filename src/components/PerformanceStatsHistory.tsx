@@ -3,7 +3,8 @@ import './PerformanceStatsHistory.css';
 import { Activity, Award, ClipboardList, TrendingUp } from 'lucide-react';
 import type { IntakeData, Athlete as AppAthlete } from '../context/AppContext';
 import type { WolfAppRole } from '../models/training';
-import { appAthleteIdForWlProfile } from '../utils/wlStatsBridge';
+import { intakesForWlProfile } from '../utils/wlStatsBridge';
+import { useWolfAssign } from '../context/WolfAssignContext';
 
 function parseKg(s: string): number {
   const n = parseFloat(String(s).replace(',', '.'));
@@ -32,19 +33,21 @@ const PerformanceStatsHistory: React.FC<PerformanceStatsHistoryProps> = ({
 }) => {
   const isEs = language === 'ES';
   const [coachFilterId, setCoachFilterId] = useState<number | 'all'>('all');
+  const { wlAthletes } = useWolfAssign();
 
-  const selfAppAthleteId = useMemo(
-    () => appAthleteIdForWlProfile(linkedWlAthleteId ?? 'ath-you') ?? 1,
-    [linkedWlAthleteId],
-  );
+  const wlProfileName = useMemo(() => {
+    if (!linkedWlAthleteId) return undefined;
+    return wlAthletes.find((a) => a.id === linkedWlAthleteId)?.name;
+  }, [linkedWlAthleteId, wlAthletes]);
+
 
   const visibleIntakes = useMemo(() => {
-    if (persona === 'athlete') {
-      return intakes.filter((i) => i.athleteId === selfAppAthleteId).sort((a, b) => a.date.localeCompare(b.date));
+    if (persona === 'athlete' && linkedWlAthleteId) {
+      return intakesForWlProfile(linkedWlAthleteId, intakes, wlProfileName, appAthletes);
     }
     if (coachFilterId === 'all') return [...intakes].sort((a, b) => a.date.localeCompare(b.date));
     return intakes.filter((i) => i.athleteId === coachFilterId).sort((a, b) => a.date.localeCompare(b.date));
-  }, [intakes, persona, selfAppAthleteId, coachFilterId]);
+  }, [intakes, persona, linkedWlAthleteId, wlProfileName, appAthletes, coachFilterId]);
 
   const maxSn = useMemo(
     () => Math.max(1, ...visibleIntakes.map((i) => parseKg(i.responses.snatch))),

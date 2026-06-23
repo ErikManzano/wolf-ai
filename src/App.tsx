@@ -69,7 +69,7 @@ function AppShell() {
     initialViewUserIdRef.current = currentUser.id;
     setActiveView(
       currentUser.role === 'athlete'
-        ? 'my-wl-plan'
+        ? 'dashboard'
         : currentUser.role === 'super_admin'
           ? 'admin-users'
           : 'programs',

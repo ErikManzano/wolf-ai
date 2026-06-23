@@ -42,10 +42,10 @@ npm run dev
 
 Comprobar: `GET http://localhost:4000/health` → `"persistence":"postgres"`.
 
-### C) Producción (Render + front)
+### C) Producción (Railway + Netlify)
 
-- Render: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `WOLF_SYNC_SEED_PASSWORDS=0` tras provisionar.
-- Front: `VITE_API_URL=/api` (Netlify proxy) o URL directa del API.
+- Railway: `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGIN`, `WOLF_SYNC_SEED_PASSWORDS=0` tras provisionar.
+- Netlify: `VITE_API_URL=/api`, `NETLIFY_API_PROXY_TARGET=https://TU-API.up.railway.app`, luego redeploy del front.
 - `npm run db:setup` + `npm run db:provision-users` en Neon una vez.
 
 ### Roles y control del coach
@@ -94,10 +94,10 @@ Con API activo, las asignaciones y ediciones de plan se sincronizan en **tiempo 
 
 Health: `GET http://localhost:4000/health` → `"persistence":"memory"` or `"postgres"` if `DATABASE_URL` is set.
 
-### Production (Render + Neon)
+### Production (Railway + Postgres)
 
-1. Set `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGIN` on Render.
-2. Front: `VITE_API_URL` or Netlify proxy per [README.md](../README.md).
+1. Set `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGIN` on Railway.
+2. Netlify: `VITE_API_URL=/api` + `NETLIFY_API_PROXY_TARGET` per [README.md](../README.md).
 3. Seed catalog after JSON changes:
 
 ```bash

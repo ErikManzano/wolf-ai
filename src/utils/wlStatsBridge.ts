@@ -11,14 +11,32 @@ export function appAthleteIdForWlProfile(wlId: string): number | undefined {
   return WL_PROFILE_TO_APP_ATHLETE_ID[wlId];
 }
 
-export function intakesForWlProfile(wlId: string, intakes: IntakeData[]): IntakeData[] {
+export function intakesForWlProfile(
+  wlId: string,
+  intakes: IntakeData[],
+  wlAthleteName?: string,
+  appAthletes?: { id: number; name: string }[],
+): IntakeData[] {
   const aid = appAthleteIdForWlProfile(wlId);
-  if (aid == null) return [];
-  return intakes.filter((i) => i.athleteId === aid).sort((a, b) => a.date.localeCompare(b.date));
+  if (aid != null) {
+    return intakes.filter((i) => i.athleteId === aid).sort((a, b) => a.date.localeCompare(b.date));
+  }
+  if (wlAthleteName && appAthletes?.length) {
+    const match = appAthletes.find((a) => a.name.trim().toLowerCase() === wlAthleteName.trim().toLowerCase());
+    if (match) {
+      return intakes.filter((i) => i.athleteId === match.id).sort((a, b) => a.date.localeCompare(b.date));
+    }
+  }
+  return [];
 }
 
-export function latestIntakeForWlProfile(wlId: string, intakes: IntakeData[]): IntakeData | null {
-  const list = intakesForWlProfile(wlId, intakes);
+export function latestIntakeForWlProfile(
+  wlId: string,
+  intakes: IntakeData[],
+  wlAthleteName?: string,
+  appAthletes?: { id: number; name: string }[],
+): IntakeData | null {
+  const list = intakesForWlProfile(wlId, intakes, wlAthleteName, appAthletes);
   return list.length ? list[list.length - 1] : null;
 }
 

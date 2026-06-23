@@ -31,16 +31,16 @@ Proyecto React + TypeScript + Vite con API Express para demos coach/athlete.
 - `PATCH /assignments/:id/program`
 - `DELETE /assignments/:id`
 
-## Backend deploy (Railway or Render + Neon Postgres)
+## Backend deploy (Railway + Postgres)
 
 ### Railway (API)
 
 1. **New Project** → Deploy from GitHub → repo `wolf-ai` (web service, root `/`).
 2. **Variables** (required before the service will pass healthcheck):
    - `JWT_SECRET` — run locally `npm run generate-jwt-secret` and paste the output (32+ chars). **Without this the API crash-loops on startup.**
-   - `DATABASE_URL` — Neon or Railway Postgres connection string
+   - `DATABASE_URL` — Railway Postgres or Neon connection string (use the **public** URL for local scripts, not `railway.internal`)
    - `FRONTEND_ORIGIN` — e.g. `https://tu-app.netlify.app` (exact URL, no trailing `/`)
-   - `JWT_EXPIRES_IN` — `7d` (optional)
+   - `JWT_EXPIRES_IN` — `7d` (optional; not bare `604800` — use `7d` or `604800s`)
    - `WOLF_SYNC_SEED_PASSWORDS` — `0`
    - `WOLF_ALLOW_PUBLIC_REGISTER` — `0`
 3. **Networking** → Generate domain → copy `https://….up.railway.app`.
@@ -49,26 +49,6 @@ Proyecto React + TypeScript + Vite con API Express para demos coach/athlete.
 
 Repo includes `railway.toml` (start command + `/health` check). Secrets are **never** committed; set `JWT_SECRET` only in the Railway dashboard.
 
-### Render (alternative)
-
-## Free Backend Deploy (Render + Neon Postgres)
-
-Este repo incluye `render.yaml` para desplegar gratis el backend.
-
-1. Sube el repo a GitHub.
-2. En Render, crea un **Blueprint** apuntando al repo.
-3. Crea una base Postgres gratis en Neon y copia el `DATABASE_URL`.
-4. Verifica variables en Render:
-   - `FRONTEND_ORIGIN`: URL de tu Netlify (ej. `https://tu-app.netlify.app`)
-   - `JWT_SECRET`: 32+ caracteres aleatorios (obligatorio en producción)
-   - `DATABASE_URL`: connection string de Neon
-   - En el **front** (Netlify): `VITE_API_URL=/api` + `NETLIFY_API_PROXY_TARGET` = URL del API, o `VITE_API_URL` = URL https del API.
-   - Usuarios demo (coach / atleta): ver `.env.example`.
-5. Deploy.
-6. Prueba:
-   - `https://TU-BACKEND.onrender.com/health`
-   - Debe devolver `"persistence":"postgres"` cuando esté bien conectado.
-
 ### Persistencia y demo multi-dispositivo
 
 - Si `DATABASE_URL` no está configurado, la API cae en modo memoria (`"persistence":"memory"`).
@@ -76,8 +56,7 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 - Al arrancar el API se ejecutan migraciones `CREATE TABLE IF NOT EXISTS` + **upsert** del catálogo oficial desde `exercises.json` (37) + catálogo búlgaro [exercises-bulgarian-catalog.json](src/data/exercises-bulgarian-catalog.json) (~100 movimientos).
 - Guía coach semana 1 y persistencia: [docs/COACH_PERSISTENCE.md](docs/COACH_PERSISTENCE.md).
 - En la app: menú coach **Ejercicios** — registro composable; los ejercicios creados por coach se guardan con `coach_id` y no se pisan al redeploy.
-- Al ser plan gratis, Render puede “dormir” tras inactividad.
-- Para demo en tiempo real, todos deben usar el mismo backend URL.
+- Para demo en tiempo real, todos deben usar el mismo backend URL (Railway).
 
 ### Exercise OS — base de datos (producción y pruebas)
 
@@ -91,7 +70,7 @@ Este repo incluye `render.yaml` para desplegar gratis el backend.
 | `coach_exercise_overrides` | Overrides por coach |
 | `technical_collections` | Colecciones técnicas demo |
 
-**Antes del primer deploy o tras cambiar `exercises.json`**, ejecuta contra la misma `DATABASE_URL` de Render/Neon:
+**Antes del primer deploy o tras cambiar `exercises.json`**, ejecuta contra la misma `DATABASE_URL` de Railway/Neon:
 
 ```bash
 # En local (copia DATABASE_URL de Neon en .env o export)
@@ -107,7 +86,7 @@ DATABASE_URL="postgresql://..." npx tsx scripts/db-setup-production.ts
 **Verificar en producción:**
 
 ```bash
-curl https://TU-API.onrender.com/health
+curl https://TU-API.up.railway.app/health
 ```
 
 Respuesta esperada con Postgres:
@@ -143,16 +122,16 @@ Respuesta esperada con Postgres:
 2. **Fuerza un deploy:** *Deploys* → **Trigger deploy** → **Deploy site** (o push vacío a `main`).
 3. **Caché del navegador:** recarga forzada `Ctrl+Shift+R` (Mac: `Cmd+Shift+R`) o ventana privada.
 4. **Verifica el bundle:** en producción, F12 → *Network* → recarga → el JS debe ser `index-*.js` distinto al anterior tras cada deploy relevante.
-5. **Backend (Render):** tras cambios en `src/api/*`, en Render → **Manual Deploy** o espera auto-deploy. Prueba `GET https://wolf-ai-api.onrender.com/completions` (debe responder `200`, no `404`).
+5. **Backend (Railway):** tras cambios en `src/api/*`, Railway redeploy automático desde `main` o **Redeploy** manual. Prueba `GET https://TU-API.up.railway.app/health`.
 
-Variables Netlify necesarias para login/API: `VITE_API_URL=/api` y `NETLIFY_API_PROXY_TARGET=https://wolf-ai-api.onrender.com` (sin `/` final).
+Variables Netlify necesarias para login/API: `VITE_API_URL=/api` y `NETLIFY_API_PROXY_TARGET=https://TU-API.up.railway.app` (sin `/` final).
 
 ### Local funciona pero el deploy no (login)
 
 1. **Netlify (recomendado):** en *Site settings → Environment variables*:
-   - `NETLIFY_API_PROXY_TARGET` = `https://TU-API.onrender.com` (sin `/` final)
+   - `NETLIFY_API_PROXY_TARGET` = `https://TU-API.up.railway.app` (sin `/` final)
    - `VITE_API_URL` = `/api`
-   El build de Netlify ya ejecuta `prep-netlify-proxy.mjs` y genera `public/_redirects` para enrutar `/api/*` al backend.
-2. **Alternativa:** `VITE_API_URL` = `https://TU-API.onrender.com` (URL completa) y redeploy del front.
-3. **Render (API):** `FRONTEND_ORIGIN` = URL exacta del front Netlify. Opcional: `FRONTEND_ORIGINS` (varias URLs separadas por comas).
-4. `GET https://TU-API.onrender.com/health` → revisa `corsOrigins`.
+   El build de Netlify ejecuta `prep-netlify-proxy.mjs` y genera `public/_redirects` para enrutar `/api/*` al backend Railway.
+2. **Alternativa:** `VITE_API_URL` = `https://TU-API.up.railway.app` (URL completa) y redeploy del front.
+3. **Railway (API):** `FRONTEND_ORIGIN` = URL exacta del front Netlify. Opcional: `FRONTEND_ORIGINS` (varias URLs separadas por comas).
+4. `GET https://TU-API.up.railway.app/health` → revisa `corsOrigins` y `persistence`.

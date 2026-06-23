@@ -2,10 +2,10 @@
   command = "node scripts/prep-netlify-proxy.mjs && npm run build"
   publish = "dist"
   # Opción A (recomendada): proxy sin pelear con CORS
-  #   NETLIFY_API_PROXY_TARGET = https://TU-API.onrender.com
+  #   NETLIFY_API_PROXY_TARGET = https://TU-API.up.railway.app
   #   VITE_API_URL = /api
   # Opción B: URL directa del API
-  #   VITE_API_URL = https://TU-API.onrender.com
+  #   VITE_API_URL = https://TU-API.up.railway.app
 
 [[redirects]]
   from = "/*"

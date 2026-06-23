@@ -15,6 +15,7 @@ import './wl-management/wl-management.css';
 import { WL_PROGRAMS_FOCUS_KEY } from './wl-programs/WlProgramsHub';
 import CoachExerciseLibrary from './CoachExerciseLibrary';
 import PraxiogramsPanel from './praxiogram/PraxiogramsPanel';
+import AthleteDashboard from './athlete-dashboard/AthleteDashboard';
 import AthleteTrainingView from './AthleteTrainingView';
 import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
@@ -33,7 +34,6 @@ import {
   volumeSparklineFromIntakes,
   type DashboardAlert,
 } from '../utils/dashboardStats';
-import { mockAthletes } from '../data/loadMockData';
 import type { AthleteLevel } from '../models/training';
 import type { AppViewId } from '../navigation/appNavigation';
 import { WlAccountView } from './account/WlAccountView';
@@ -94,7 +94,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
 
   useEffect(() => {
     if (activeView === 'onboarding') {
-      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'dashboard');
+      setActiveView('dashboard');
     }
   }, [activeView, persona, setActiveView]);
 
@@ -117,12 +117,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       activeView === 'exercise-intelligence' ||
       activeView === 'athletes' ||
       activeView === 'planning';
-    if (coachOnly) setActiveView('my-wl-plan');
+    if (coachOnly) setActiveView('dashboard');
   }, [persona, activeView, setActiveView]);
 
   useEffect(() => {
     if (activeView === 'admin-users' && currentUser?.role !== 'super_admin') {
-      setActiveView(persona === 'athlete' ? 'my-wl-plan' : 'programs');
+      setActiveView(persona === 'athlete' ? 'dashboard' : 'programs');
     }
   }, [activeView, currentUser?.role, persona, setActiveView]);
 
@@ -167,8 +167,8 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   const [calendarDate, setCalendarDate] = useState(new Date());
 
   const wlNameByProfileId = useMemo(
-    () => Object.fromEntries(mockAthletes.map((a) => [a.id, a.name] as const)),
-    [],
+    () => Object.fromEntries(wlAthletes.map((a) => [a.id, a.name] as const)),
+    [wlAthletes],
   );
 
   const dashboardData = useMemo(() => {
@@ -1941,7 +1941,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
 
   return (
     <div className="central-panel">
-      {activeView === 'dashboard' && renderDashboard()}
+      {activeView === 'dashboard' &&
+        (persona === 'athlete' ? (
+          <AthleteDashboard language={language} onOpenPlan={() => setActiveView('my-wl-plan')} />
+        ) : (
+          renderDashboard()
+        ))}
       {activeView === 'athletes' && renderAthletesView()}
       {activeView === 'planning' && renderPlanningView()}
       {(activeView === 'micros' || activeView === 'sessions' || activeView === 'macros' || activeView === 'mesos') && renderPeriodization()}

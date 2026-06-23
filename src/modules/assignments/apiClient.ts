@@ -3,7 +3,7 @@ const STORAGE_API_TOKEN = 'wolf_api_token_v1';
 function productionApiBaseFallback(): string {
   if (!import.meta.env.PROD || typeof window === 'undefined') return '';
   const host = window.location.hostname;
-  if (host.includes('netlify.app') || host.includes('onrender.com') || host.endsWith('.wolf-ai.app')) {
+  if (host.includes('netlify.app') || host.includes('railway.app') || host.endsWith('.wolf-ai.app')) {
     return '/api';
   }
   return '';
@@ -38,7 +38,7 @@ export function readApiToken(): string | null {
   }
 }
 
-/** URL explícita del WebSocket (p. ej. wss://api.onrender.com/ws). Opcional si REST usa proxy relativo /api. */
+/** URL explícita del WebSocket (p. ej. wss://tu-api.up.railway.app/ws). Opcional si REST usa proxy relativo /api. */
 function readWsOverride(): string {
   const fromEnv = (import.meta.env.VITE_WS_URL as string | undefined)?.trim();
   if (fromEnv) return fromEnv.replace(/\/+$/, '');

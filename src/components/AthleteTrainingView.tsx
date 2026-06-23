@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import { AthleteDisciplineCard } from './athlete-tracking/AthleteDisciplineCard';
 import { AthletePlanSelect } from './athlete-tracking/AthletePlanSwitcher';
 import { useMobileTopBar } from '../context/MobileTopBarContext';
 import { useAppContext } from '../context/AppContext';
@@ -8,8 +7,6 @@ import { useWolfAssign } from '../context/WolfAssignContext';
 import { loadAthletesFromLocal } from '../modules/wl-athletes/athleteStore';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../utils/wlStatsBridge';
 import {
-  countCompletedExercisesWithSets,
-  countProgramExercises,
   isDayCompleteWithSets,
 } from '../utils/completionHelpers';
 import { AthleteDayNavigator } from './athlete-tracking/AthleteDayNavigator';
@@ -97,8 +94,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const weekData = program?.weeks.find((w) => w.weekNumber === week);
   const activeDayData = weekData?.days.find((d) => d.dayNumber === activeDay);
 
-  const totalExercises = useMemo(() => (program ? countProgramExercises(program) : 0), [program]);
-
   const isDayDone = useCallback(
     (w: number, d: number, sessionExercises: SessionExerciseBlock[]) => {
       if (!activeAssignment) return false;
@@ -117,19 +112,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     [completions, setLogs, activeAssignment, athleteProfile, motorExercises, exName],
   );
 
-  const completedExercises = useMemo(() => {
-    if (!activeAssignment || !program) return 0;
-    return countCompletedExercisesWithSets(
-      completions,
-      setLogs,
-      activeAssignment.id,
-      program,
-      athleteProfile,
-      motorExercises,
-      exName,
-    );
-  }, [completions, setLogs, activeAssignment, program, athleteProfile, motorExercises, exName]);
-
   const firstIncompleteDayNumber = useMemo(() => {
     if (!weekData) return null;
     const incomplete = weekData.days.find(
@@ -141,9 +123,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const t = useMemo(
     () => ({
       kicker: isEs ? 'Tu semana de entreno' : 'Your training week',
-      title: isEs ? 'Mi plan WL' : 'My WL plan',
-      discipline: isEs ? 'Disciplina' : 'Discipline',
-      exercisesDone: isEs ? 'ejercicios hechos' : 'exercises done',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
         ? 'Cuando tu coach te asigne programas desde «Programas», aparecerán aquí. Puedes llevar varios planes a la vez.'
@@ -152,39 +131,48 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     [isEs],
   );
 
+  const planSelect = useMemo(() => {
+    if (!activeAssignment || myAssignments.length === 0) return null;
+    return (
+      <AthletePlanSelect
+        assignments={myAssignments}
+        activeAssignmentId={activeAssignment.id}
+        isEs={isEs}
+        onSelect={setActiveAssignmentId}
+        showLabel={false}
+      />
+    );
+  }, [myAssignments, activeAssignment, isEs]);
+
+  const weekNavigator = useMemo(() => {
+    if (!program) return null;
+    return (
+      <MobileWeekNavigator
+        variant="subheader"
+        weeks={program.weeks}
+        activeWeek={week}
+        isEs={isEs}
+        isDayComplete={(w, d) => {
+          const wd = program.weeks.find((x) => x.weekNumber === w);
+          const dd = wd?.days.find((x) => x.dayNumber === d);
+          if (!dd) return false;
+          return isDayDone(w, d, dd.session.exercises);
+        }}
+        onWeekChange={setWeek}
+      />
+    );
+  }, [program, week, isEs, isDayDone]);
+
   const mobileTopBar = useMemo(() => {
     if (!activeAssignment || myAssignments.length === 0) {
       return { title: t.kicker };
     }
-    const bar = {
+    return {
       title: t.kicker,
-      belowTitle: (
-        <AthletePlanSelect
-          assignments={myAssignments}
-          activeAssignmentId={activeAssignment.id}
-          isEs={isEs}
-          onSelect={setActiveAssignmentId}
-          showLabel={false}
-        />
-      ),
-      pinnedBelowHeader: program ? (
-        <MobileWeekNavigator
-          variant="subheader"
-          weeks={program.weeks}
-          activeWeek={week}
-          isEs={isEs}
-          isDayComplete={(w, d) => {
-            const wd = program.weeks.find((x) => x.weekNumber === w);
-            const dd = wd?.days.find((x) => x.dayNumber === d);
-            if (!dd) return false;
-            return isDayDone(w, d, dd.session.exercises);
-          }}
-          onWeekChange={setWeek}
-        />
-      ) : undefined,
+      belowTitle: planSelect ?? undefined,
+      pinnedBelowHeader: weekNavigator ?? undefined,
     };
-    return bar;
-  }, [t.kicker, myAssignments, activeAssignment, isEs, program, week, isDayDone]);
+  }, [t.kicker, myAssignments, activeAssignment, planSelect, weekNavigator]);
   useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
@@ -270,18 +258,12 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   return (
     <div className="wolf-athlete-plan wolf-athlete-plan--tracking wolf-athlete-plan--mobile-day">
-      <header className="wolf-athlete-hero wolf-athlete-hero--discipline wolf-athlete-hero--desktop-only">
-        <div className="wolf-athlete-hero-accent" aria-hidden />
-        <div className="wolf-athlete-hero-inner">
-          <AthleteDisciplineCard
-            completed={completedExercises}
-            total={totalExercises}
-            isEs={isEs}
-            label={t.discipline}
-            exercisesDoneLabel={t.exercisesDone}
-          />
+      {planSelect || weekNavigator ? (
+        <div className="wolf-athlete-plan-toolbar wolf-athlete-plan-toolbar--desktop" aria-label={isEs ? 'Plan y semana' : 'Plan and week'}>
+          {planSelect}
+          {weekNavigator}
         </div>
-      </header>
+      ) : null}
 
       <AthleteDayNavigator
         days={weekData.days}

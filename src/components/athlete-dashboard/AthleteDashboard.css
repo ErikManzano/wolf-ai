@@ -1,0 +1,317 @@
+.athlete-dashboard {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.ad-hero {
+  position: relative;
+  border-radius: 20px;
+  padding: clamp(18px, 3vw, 28px);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-bg-panel) 82%, var(--color-accent) 18%) 0%,
+    var(--color-bg-panel) 60%,
+    color-mix(in srgb, var(--color-bg-panel) 90%, #0a0c10) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, var(--color-accent) 35%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+}
+
+.ad-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 55% at 100% 0%, rgba(249, 115, 22, 0.14), transparent 58%);
+  pointer-events: none;
+}
+
+.ad-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ad-hero__copy {
+  flex: 1;
+  min-width: min(100%, 260px);
+}
+
+.ad-hero__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ad-hero__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ad-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-main) 70%, transparent);
+  border: 1px solid var(--color-border);
+}
+
+.ad-hero__cta {
+  display: flex;
+  align-items: stretch;
+}
+
+.ad-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-accent-gradient, linear-gradient(135deg, #f97316, #ea580c));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-accent) 45%, transparent);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.ad-cta-btn small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.ad-cta-btn:hover {
+  transform: translateY(-1px);
+}
+
+.ad-cta-btn--ghost {
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.ad-kpi__unit {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+.ad-pr-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: 10px;
+}
+
+.ad-pr-card {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 72px;
+}
+
+.ad-pr-card--accent {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+}
+
+.ad-pr-card--meta {
+  grid-column: span 1;
+}
+
+.ad-pr-card__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.ad-pr-card__value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.ad-pr-card__sub {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.ad-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+.ad-plan-card {
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+}
+
+.ad-plan-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ad-plan-card__head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ad-plan-card__pct {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.ad-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg-main);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.ad-progress__bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-success) 70%, var(--color-accent)));
+  max-width: 100%;
+}
+
+.ad-plan-card__stats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.ad-plan-card__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.ad-next-session {
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.ad-next-session strong {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.ad-inline-btn {
+  font-size: 0.82rem;
+}
+
+.ad-activity-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ad-activity-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  font-size: 0.82rem;
+}
+
+.ad-activity-item strong {
+  display: block;
+  color: var(--color-text-primary);
+}
+
+.ad-activity-item span {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.ad-activity-item time {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.ad-activity-item__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.ad-activity-item__dot--session {
+  background: var(--color-success);
+}
+
+@media (max-width: 640px) {
+  .ad-cta-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ad-hero__cta {
+    width: 100%;
+  }
+
+  .ad-activity-item {
+    grid-template-columns: auto 1fr;
+  }
+
+  .ad-activity-item time {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
