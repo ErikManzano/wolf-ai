@@ -1,9 +1,8 @@
 import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../models/training';
-import { kgForExercise } from '../components/session-editor/blockMetrics';
-import { formatAthleteSetRxLabel } from '../components/session-editor/schemeFormat';
+import { findCatalogExercise, kgForExercise } from '../components/session-editor/blockMetrics';
+import { formatAthleteSetRxLabel, blockUsesComplexReps } from '../components/session-editor/schemeFormat';
 import {
   effectiveSegmentRepStrings,
-  normalizeBlockType,
   parseRepTokens,
   repsPerRoundForScheme,
   syncBlockSetSchemes,
@@ -23,6 +22,7 @@ export interface FlatSetRow {
   /** Solo complejos */
   prescribedSegmentReps?: number[];
   prescribedSegmentRepLabels?: string[];
+  prescribedSegmentKg?: number[];
   segmentLabels?: string[];
   movementName?: string;
 }
@@ -55,11 +55,15 @@ export function flattenBlockSets(
 ): FlatSetRow[] {
   syncBlockSetSchemes(block);
   const rows: FlatSetRow[] = [];
-  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  const isComplex = blockUsesComplexReps(block);
 
   for (let schemeIndex = 0; schemeIndex < block.sets.length; schemeIndex++) {
     const scheme = block.sets[schemeIndex]!;
-    const segmentRepStrings = isComplex ? effectiveSegmentRepStrings(block, scheme) : [];
+    const segmentRepStrings = isComplex
+      ? block.segments?.length
+        ? effectiveSegmentRepStrings(block, scheme)
+        : (scheme.segmentReps?.map((token) => token.trim() || '1') ?? [])
+      : [];
     const schemeForLabel: typeof scheme =
       isComplex && segmentRepStrings.length
         ? { ...scheme, segmentReps: segmentRepStrings }
@@ -67,10 +71,18 @@ export function flattenBlockSets(
     const prescribedRepsLabel = formatAthleteSetRxLabel(schemeForLabel, isComplex);
 
     for (let setInstance = 1; setInstance <= scheme.sets; setInstance++) {
-      if (isComplex && block.segments?.length) {
-        const firstSeg = block.segments[0]!;
-        const ex = exercises.find((e) => e.id === firstSeg.exerciseId);
-        const kg = athlete && ex ? kgForExercise(athlete, ex, scheme.percentage) : 0;
+      if (isComplex) {
+        const prescribedSegmentKg = block.segments?.length
+          ? block.segments.map((seg) => {
+              const ex = findCatalogExercise(exercises, seg.exerciseId);
+              return athlete && ex ? kgForExercise(athlete, ex, scheme.percentage) : 0;
+            })
+          : (() => {
+              const ex = findCatalogExercise(exercises, block.exerciseId);
+              const kg = athlete && ex ? kgForExercise(athlete, ex, scheme.percentage) : 0;
+              return segmentRepStrings.map(() => kg);
+            })();
+        const kg = prescribedSegmentKg.find((value) => value > 0) ?? prescribedSegmentKg[0] ?? 0;
         const prescribedSegmentReps = segmentRepStrings.map((token) => parseRepTokens(token));
         rows.push({
           schemeIndex,
@@ -84,11 +96,16 @@ export function flattenBlockSets(
           isComplex: true,
           prescribedSegmentReps,
           prescribedSegmentRepLabels: segmentRepStrings,
-          segmentLabels: block.segments.map((s) => exName(s.exerciseId)),
-          movementName: block.segments.map((s) => exName(s.exerciseId)).join(' → '),
+          prescribedSegmentKg,
+          segmentLabels: block.segments?.length
+            ? block.segments.map((s) => exName(s.exerciseId))
+            : segmentRepStrings.map((_, i) => `M${i + 1}`),
+          movementName: block.segments?.length
+            ? block.segments.map((s) => exName(s.exerciseId)).join(' → ')
+            : undefined,
         });
       } else {
-        const ex = exercises.find((e) => e.id === block.exerciseId);
+        const ex = findCatalogExercise(exercises, block.exerciseId);
         const kg = athlete && ex ? kgForExercise(athlete, ex, scheme.percentage) : 0;
         rows.push({
           schemeIndex,

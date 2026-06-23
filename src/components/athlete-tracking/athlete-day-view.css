@@ -302,6 +302,17 @@
   font-weight: 600;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.wa-exercise-card__meta--complex {
+  letter-spacing: 0.01em;
 }
 
 .wa-exercise-card__ring {
@@ -580,7 +591,15 @@
   display: block;
   margin-top: 0.1rem;
   font-size: 0.72rem;
-  color: var(--color-text-muted);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.wa-detail-set--done .wa-detail-set__reps,
+.wa-detail-set--active .wa-detail-set__reps {
+  color: var(--color-text-primary);
 }
 
 .wa-detail-set__status {

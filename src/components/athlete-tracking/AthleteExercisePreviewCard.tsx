@@ -72,7 +72,12 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
 
         <span className="wa-exercise-card__body">
           <span className="wa-exercise-card__name">{title}</span>
-          <span className="wa-exercise-card__meta">{meta}</span>
+          <span
+            className={cn('wa-exercise-card__meta', isComplex && 'wa-exercise-card__meta--complex')}
+            title={meta}
+          >
+            {meta}
+          </span>
         </span>
 
         <span className="wa-exercise-card__ring" aria-hidden>

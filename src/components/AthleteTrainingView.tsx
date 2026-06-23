@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ClipboardList, TrendingUp } from 'lucide-react';
-import type { SessionExerciseBlock } from '../models/training';
+import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
+import { loadAthletesFromLocal } from '../modules/wl-athletes/athleteStore';
+import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../utils/wlStatsBridge';
 import {
   countCompletedExercisesWithSets,
   countProgramExercises,
@@ -12,7 +14,7 @@ import { AthleteDayOverview } from './athlete-tracking/AthleteDayOverview';
 import { AthleteExerciseDetailScreen } from './athlete-tracking/AthleteExerciseDetailScreen';
 import { MobileWeekNavigator } from './athlete-tracking/MobileWeekNavigator';
 import { WorkoutFlow } from './athlete-tracking/workout-flow/WorkoutFlow';
-import type { GeneratedProgram } from '../models/training';
+import type { GeneratedProgram, SessionExerciseBlock } from '../models/training';
 import './AthleteTrainingView.css';
 import './athlete-tracking/athlete-day-view.css';
 import '../styles/interactive.css';
@@ -29,6 +31,7 @@ type WorkoutStartAt = {
 
 const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) => {
   const isEs = language === 'ES';
+  const { intakes } = useAppContext();
   const {
     myAssignments,
     assignmentsLoading,
@@ -71,10 +74,20 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     [myAssignments, activeAssignmentId],
   );
 
-  const athleteProfile = useMemo(
-    () => wlAthletes.find((a) => a.id === activeAssignment?.athleteProfileId),
-    [wlAthletes, activeAssignment?.athleteProfileId],
-  );
+  const baseAthleteProfile = useMemo(() => {
+    const profileId = activeAssignment?.athleteProfileId;
+    if (!profileId) return undefined;
+    return (
+      wlAthletes.find((a) => a.id === profileId) ??
+      loadAthletesFromLocal().find((a) => a.id === profileId)
+    );
+  }, [wlAthletes, activeAssignment?.athleteProfileId]);
+
+  const athleteProfile = useMemo(() => {
+    if (!baseAthleteProfile) return undefined;
+    const intake = latestIntakeForWlProfile(baseAthleteProfile.id, intakes);
+    return mergeAthleteWithLatestIntake(baseAthleteProfile, intake);
+  }, [baseAthleteProfile, intakes]);
 
   const program = activeAssignment?.program;
   const weekData = program?.weeks.find((w) => w.weekNumber === week);

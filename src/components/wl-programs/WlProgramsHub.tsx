@@ -82,7 +82,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ProgramFilterId>('all');
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
-  const [assignProgram, setAssignProgram] = useState<CoachProgramRow | null>(null);
+  const [assignProgramId, setAssignProgramId] = useState<string | null>(null);
   const [assignAthleteId, setAssignAthleteId] = useState<string | undefined>();
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
@@ -116,9 +116,13 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   };
 
   const openAssign = (program: CoachProgramRow, athleteProfileId?: string) => {
-    setAssignProgram(program);
+    setAssignProgramId(program.id);
     setAssignAthleteId(athleteProfileId);
   };
+
+  const assignProgram = assignProgramId
+    ? coachPrograms.find((program) => program.id === assignProgramId) ?? null
+    : null;
 
   const handleRemoveEnrollment = async (assignmentId: string, athleteName: string, programName: string) => {
     const ok = window.confirm(
@@ -297,7 +301,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
       program={assignProgram}
       preselectedAthleteId={assignAthleteId}
       onClose={() => {
-        setAssignProgram(null);
+        setAssignProgramId(null);
         setAssignAthleteId(undefined);
       }}
     />

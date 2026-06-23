@@ -1767,6 +1767,30 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.status(204).send();
   });
 
+  router.get('/wl-athletes/me', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor || actor.role !== 'athlete' || !actor.linkedAthleteId) {
+      res.status(403).json({ error: 'Athlete session required.' });
+      return;
+    }
+    if (store) {
+      const profile = await store.getAthleteProfileById(actor.linkedAthleteId);
+      if (!profile) {
+        res.status(404).json({ error: 'Athlete profile not found.' });
+        return;
+      }
+      const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...athlete } = profile;
+      res.json(athlete);
+      return;
+    }
+    const athlete = state.athletes.find((a) => a.id === actor.linkedAthleteId);
+    if (!athlete) {
+      res.status(404).json({ error: 'Athlete profile not found.' });
+      return;
+    }
+    res.json(athlete);
+  });
+
   router.get('/wl-athletes', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
     if (!isCoachOrAdmin(actor)) {

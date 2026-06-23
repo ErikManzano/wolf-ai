@@ -1,8 +1,8 @@
 import type { Athlete, Exercise, ExerciseGoal, ProgramDay, SessionExerciseBlock } from '../models/training';
-import { kgForExercise } from '../components/session-editor/blockMetrics';
+import { findCatalogExercise, kgForExercise } from '../components/session-editor/blockMetrics';
+import { formatBlockPrescription, blockUsesComplexReps, formatSchemeRepsToken } from '../components/session-editor/schemeFormat';
 import { DEFAULT_REST_SEC } from '../components/session-editor/setSchemeUtils';
 import { flattenBlockSets } from './athleteSetLogs';
-import { normalizeBlockType } from '../services/trainingEngine';
 
 export function dayDisplayTitle(day: ProgramDay, isEs: boolean): string {
   const trimmed = day.label?.trim();
@@ -35,12 +35,21 @@ export function countBlockSets(block: SessionExerciseBlock): number {
 
 export function exercisePreviewMeta(block: SessionExerciseBlock, isEs: boolean): string {
   const totalSets = countBlockSets(block);
-  const first = block.sets[0];
-  if (!first) return isEs ? 'Sin series' : 'No sets';
-  const pct = first.percentage;
-  const reps = first.reps;
   const seriesLabel = isEs ? 'series' : 'sets';
-  return `${totalSets} ${seriesLabel} • ${pct}% • ${reps} ${isEs ? 'reps' : 'reps'}`;
+  const repsLabel = isEs ? 'reps' : 'reps';
+
+  if (!block.sets.length) return isEs ? 'Sin series' : 'No sets';
+
+  const isComplex = blockUsesComplexReps(block);
+  const prefix = `${totalSets} ${seriesLabel}`;
+
+  if (block.sets.length === 1) {
+    const row = block.sets[0]!;
+    const repsToken = formatSchemeRepsToken(row, isComplex);
+    return `${prefix} • ${row.percentage}% • ${repsToken} ${repsLabel}`;
+  }
+
+  return `${prefix} • ${formatBlockPrescription(block)}`;
 }
 
 export function estimateSessionDuration(day: ProgramDay): { min: number; max: number } {
@@ -88,8 +97,8 @@ export function blockExerciseTitle(
   block: SessionExerciseBlock,
   exName: (id: string) => string,
 ): { title: string; isComplex: boolean } {
-  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
-  const title = isComplex
+  const isComplex = blockUsesComplexReps(block);
+  const title = isComplex && block.segments?.length
     ? (block.segments ?? []).map((s) => exName(s.exerciseId)).join(' → ')
     : exName(block.exerciseId);
   return { title, isComplex };
@@ -102,7 +111,7 @@ export function blockTechniqueTag(
   isEs: boolean,
 ): string | null {
   const id = block.segments?.[0]?.exerciseId ?? block.exerciseId;
-  const ex = exercises.find((e) => e.id === id);
+  const ex = findCatalogExercise(exercises, id);
   if (!ex) return null;
   if (ex.goal === 'technique') return isEs ? 'Técnica de tirón' : 'Pull technique';
   if (ex.subtype) return ex.subtype.replace(/_/g, ' ');
@@ -119,7 +128,8 @@ export function blockSummaryStats(
   const intensity = first?.percentage ?? 0;
   const targetReps = first?.reps ?? 0;
   const restSec = first?.restSec ?? DEFAULT_REST_SEC;
-  const ex = exercises.find((e) => e.id === block.exerciseId);
+  const anchorExerciseId = block.segments?.[0]?.exerciseId ?? block.exerciseId;
+  const ex = findCatalogExercise(exercises, anchorExerciseId);
   const anchorKg = athlete && ex ? kgForExercise(athlete, ex, intensity) : 0;
   const flat = flattenBlockSets(block, athlete, exercises, () => '');
   return { totalSets, intensity, targetReps, restSec, anchorKg, flat };

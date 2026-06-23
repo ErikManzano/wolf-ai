@@ -1,7 +1,24 @@
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType, parseRepTokens, repsPerRoundForScheme, resolveBaseOneRm } from '../../services/trainingEngine';
 export function exerciseName(exercises: Exercise[], id: string): string {
-  return exercises.find((e) => e.id === id)?.name ?? id;
+  return findCatalogExercise(exercises, id)?.name ?? id;
+}
+
+/** Resolve motor/catalog exercise by id (exact, case-insensitive id, or name). */
+export function findCatalogExercise(exercises: Exercise[], exerciseId: string): Exercise | undefined {
+  const trimmed = exerciseId.trim();
+  if (!trimmed) return undefined;
+  const direct = exercises.find((e) => e.id === trimmed);
+  if (direct) return direct;
+  const lower = trimmed.toLowerCase();
+  return exercises.find(
+    (e) => e.id.toLowerCase() === lower || e.name.toLowerCase() === lower,
+  );
+}
+
+export function formatAthleteKg(kg: number): string {
+  if (!Number.isFinite(kg) || kg <= 0) return '—';
+  return Number.isInteger(kg) ? String(kg) : kg.toFixed(1);
 }
 
 export function matchExerciseQuery(query: string, name: string): boolean {
@@ -39,7 +56,7 @@ export function blockTonnage(block: SessionExerciseBlock, athlete: Athlete, exer
       for (let si = 0; si < block.segments.length; si++) {
         const seg = block.segments[si];
         if (!seg) continue;
-        const ex = exercises.find((e) => e.id === seg.exerciseId);
+        const ex = findCatalogExercise(exercises, seg.exerciseId);
         if (!ex) continue;
         const kg = (row.percentage / 100) * resolveBaseOneRm(ex, athlete);
         const reps = parseRepTokens(row.segmentReps?.[si] ?? '0');
@@ -48,7 +65,7 @@ export function blockTonnage(block: SessionExerciseBlock, athlete: Athlete, exer
     }
     return Math.round(total);
   }
-  const ex = exercises.find((e) => e.id === block.exerciseId);
+  const ex = findCatalogExercise(exercises, block.exerciseId);
   if (!ex) return 0;
   const oneRm = resolveBaseOneRm(ex, athlete);
   for (const row of block.sets) {
@@ -93,7 +110,7 @@ export function complexSetRowTonnage(
   for (let si = 0; si < block.segments.length; si++) {
     const seg = block.segments[si];
     if (!seg) continue;
-    const ex = exercises.find((e) => e.id === seg.exerciseId);
+    const ex = findCatalogExercise(exercises, seg.exerciseId);
     if (!ex) continue;
     const kg = (row.percentage / 100) * resolveBaseOneRm(ex, athlete);
     const reps = parseRepTokens(row.segmentReps?.[si] ?? '0');

@@ -55,8 +55,6 @@ function mergeSavedProgram(prev: CoachProgramRow[], saved: CoachProgram): CoachP
   const next: CoachProgramRow = {
     ...current,
     ...saved,
-    enrolledAthletes: current.enrolledAthletes,
-    avgAdherencePct: current.avgAdherencePct,
   };
   const copy = [...prev];
   copy[index] = next;

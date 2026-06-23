@@ -8,6 +8,7 @@ import {
   blockTechniqueTag,
   formatRestLabel,
 } from '../../utils/athleteDayMetrics';
+import { formatSetLoadLabel, formatSetDoneRepsLabel, formatSetRepsLabel } from '../../utils/athleteLoadLabels';
 import { ExerciseDetailMock } from './ExerciseDetailMock';
 import { cn } from '../../lib/utils';
 
@@ -94,7 +95,11 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
               <span className="wa-exercise-detail__stat-label">{isEs ? 'Intensidad' : 'Intensity'}</span>
               <strong>{stats.intensity}%</strong>
               <span className="wa-exercise-detail__stat-sub">
-                {stats.anchorKg} kg {isEs ? '(1RM ancla)' : '(anchor 1RM)'}
+                {stats.anchorKg > 0
+                  ? `${stats.anchorKg} kg ${isEs ? '(referencia)' : '(reference)'}`
+                  : isEs
+                    ? 'Sin PRs cargados'
+                    : 'No PRs loaded'}
               </span>
             </div>
             <div className="wa-exercise-detail__stat">
@@ -120,7 +125,6 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
                 const done = isSetComplete(row.schemeIndex, row.setInstance);
                 const log = getSetLog(row.schemeIndex, row.setInstance);
                 const active = idx === activeSetIndex && !done;
-                const actualReps = log?.actualReps ?? 0;
 
                 return (
                   <li key={`${row.schemeIndex}-${row.setInstance}`}>
@@ -133,16 +137,12 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
                     >
                       <span className="wa-detail-set__num">{row.setInstance}</span>
                       <div className="wa-detail-set__main">
-                        <span className="wa-detail-set__load">
-                          {row.percentage}% • {row.prescribedKg} kg
-                        </span>
-                        <span className="wa-detail-set__reps">
-                          {row.prescribedReps} {isEs ? 'reps' : 'reps'}
-                        </span>
+                        <span className="wa-detail-set__load">{formatSetLoadLabel(row)}</span>
+                        <span className="wa-detail-set__reps">{formatSetRepsLabel(row, isEs)}</span>
                       </div>
                       <div className="wa-detail-set__status">
                         <span className="wa-detail-set__done-label">
-                          {actualReps} {isEs ? 'realizadas' : 'done'}
+                          {formatSetDoneRepsLabel(row, log, isEs)}
                         </span>
                         <button
                           type="button"

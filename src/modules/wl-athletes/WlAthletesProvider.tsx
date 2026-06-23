@@ -12,6 +12,7 @@ import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, preferLocalDataFallback, wlAthletesApiFetch } from './apiClient';
 import {
   coachIdForAthleteLocal,
+  loadAthletesFromLocal,
   loadCoachAthletesFromLocal,
   normalizeAthleteFromApi,
   removeCoachAthleteLocal,
@@ -93,13 +94,41 @@ export function WlAthletesProvider({
     }
   }, [apiMode, apiToken, scopedCoachId, pushAlert, allowLocalFallback]);
 
+  const loadOwnAthleteProfile = useCallback(async () => {
+    if (currentUser?.role !== 'athlete' || !currentUser.linkedAthleteId) return;
+    const profileId = currentUser.linkedAthleteId;
+
+    if (!apiMode || !apiToken) {
+      const local = loadAthletesFromLocal().find((a) => a.id === profileId);
+      if (local) setAthletes([local]);
+      return;
+    }
+
+    try {
+      const res = await wlAthletesApiFetch('/wl-athletes/me');
+      if (res.ok) {
+        setAthletes([normalizeAthleteFromApi(await res.json())]);
+        return;
+      }
+    } catch {
+      /* fall through to local */
+    }
+
+    const local = loadAthletesFromLocal().find((a) => a.id === profileId);
+    if (local) setAthletes([local]);
+  }, [apiMode, apiToken, currentUser?.role, currentUser?.linkedAthleteId]);
+
   useEffect(() => {
+    if (currentUser?.role === 'athlete') {
+      void loadOwnAthleteProfile();
+      return;
+    }
     if (apiMode) {
       void loadAthletesFromApi();
       return;
     }
     if (scopedCoachId) setAthletes(loadCoachAthletesFromLocal(scopedCoachId));
-  }, [apiMode, apiToken, scopedCoachId, loadAthletesFromApi]);
+  }, [apiMode, apiToken, scopedCoachId, loadAthletesFromApi, currentUser?.role, loadOwnAthleteProfile]);
 
   useEffect(() => {
     if (!apiMode || !apiToken) return;

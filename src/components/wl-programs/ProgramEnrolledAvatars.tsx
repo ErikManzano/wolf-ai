@@ -18,6 +18,19 @@ export function ProgramEnrolledAvatars({
 
   const visible = enrolledAthletes.slice(0, MAX_VISIBLE);
   const overflow = enrolledAthletes.length - visible.length;
+  const label =
+    enrolledAthletes.length === 1
+      ? enrolledAthletes[0]!.athleteName
+      : isEs
+        ? `${enrolledAthletes.length} atletas`
+        : `${enrolledAthletes.length} athletes`;
+  const manageLabel = isEs ? 'Gestionar inscritos' : 'Manage enrollments';
+  const ariaLabel =
+    enrolledAthletes.length === 1
+      ? `${enrolledAthletes[0]!.athleteName}. ${manageLabel}.`
+      : isEs
+        ? `${enrolledAthletes.length} atletas inscritos. ${manageLabel}.`
+        : `${enrolledAthletes.length} athletes enrolled. ${manageLabel}.`;
 
   const content = (
     <>
@@ -36,21 +49,21 @@ export function ProgramEnrolledAvatars({
           <span className="wl-programs-avatar-stack__item wl-programs-avatar-stack__item--more">+{overflow}</span>
         ) : null}
       </span>
-      <span className="wl-programs-avatar-stack__label">
-        {isEs
-          ? `${enrolledAthletes.length} atleta${enrolledAthletes.length === 1 ? '' : 's'}`
-          : `${enrolledAthletes.length} athlete${enrolledAthletes.length === 1 ? '' : 's'}`}
-      </span>
+      <span className="wl-programs-avatar-stack__label">{label}</span>
     </>
   );
 
   if (onClick) {
     return (
-      <button type="button" className="wl-programs-avatar-stack-btn" onClick={onClick}>
+      <button type="button" className="wl-programs-avatar-stack-btn" onClick={onClick} aria-label={ariaLabel}>
         {content}
       </button>
     );
   }
 
-  return <div className="wl-programs-avatar-stack-wrap">{content}</div>;
+  return (
+    <div className="wl-programs-avatar-stack-wrap" aria-label={ariaLabel}>
+      {content}
+    </div>
+  );
 }
