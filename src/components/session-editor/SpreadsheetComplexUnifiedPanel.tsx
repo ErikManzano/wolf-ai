@@ -292,10 +292,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
                 {isEs ? 'Descanso' : 'Rest'}
               </th>
               <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-vol">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Volumen' : 'Volume'}</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">kg</span>
-                </span>
+                {isEs ? 'Vol. kg' : 'Vol. kg'}
               </th>
               <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-actions" aria-hidden />
             </tr>

@@ -2191,15 +2191,46 @@
 
 .wolf-se-spreadsheet-complex-unified__table {
   width: 100%;
-  min-width: 680px;
+  min-width: 960px;
+  table-layout: fixed;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-idx {
+  width: 52px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-purpose {
+  width: 124px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-pct {
+  width: 96px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-sets {
+  width: 116px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-rest {
+  width: 144px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-vol {
+  width: 96px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__col-actions {
+  width: 76px;
 }
 
 .wolf-se-spreadsheet-complex-unified__col-reps {
-  width: 10%;
+  width: 108px;
+  min-width: 108px;
 }
 
 .wolf-se-spreadsheet-complex-unified__col-load {
-  width: 9%;
+  width: 92px;
+  min-width: 92px;
 }
 
 .wolf-se-spreadsheet-complex-unified__table thead tr:first-child th[rowspan] {
@@ -2285,18 +2316,111 @@
 .wolf-se-spreadsheet-complex-unified__seg-cell {
   border-left: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
   text-align: center;
-  padding-inline: 8px;
+  padding: 12px 10px;
+  vertical-align: middle;
 }
 
 .wolf-se-spreadsheet-complex-unified__seg-cell--load {
   border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  font-size: 0.88rem;
-  color: color-mix(in srgb, var(--color-text-muted) 40%, var(--color-text-primary));
+  font-size: 0.92rem;
+  color: color-mix(in srgb, var(--color-text-muted) 30%, var(--color-text-primary));
   white-space: nowrap;
   text-align: right;
-  padding-right: 12px;
+  padding-right: 14px;
+}
+
+/* Complex set rows — readable combo / rep selects */
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium .wolf-se-combo-select__input {
+  min-height: 42px;
+  padding: 8px 30px 8px 11px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border-color: color-mix(in srgb, var(--color-border) 86%, transparent);
+  background: color-mix(in srgb, var(--color-bg-main) 92%, var(--color-bg-panel));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium.is-open .wolf-se-combo-select__input,
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium .wolf-se-combo-select__input:focus-visible {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium .wolf-se-combo-select__chevron {
+  color: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-preset__trigger-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-preset__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-preset__suffix {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--color-text-muted) 20%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select--premium {
+  min-width: 88px;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__sets .wolf-se-combo-select--premium {
+  min-width: 104px;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__rest .wolf-se-combo-select--premium,
+.wolf-se-spreadsheet-complex-unified .wolf-se-combo-preset--rest.wolf-se-combo-select--premium {
+  min-width: 132px;
+}
+
+.wolf-se-spreadsheet-complex-unified__seg-cell .wolf-se-combo-select--premium {
+  min-width: 88px;
+  max-width: 128px;
+  margin-inline: auto;
+}
+
+.wolf-se-spreadsheet-complex-unified__table tbody td.wolf-se-spreadsheet-blocks__pct,
+.wolf-se-spreadsheet-complex-unified__table tbody td.wolf-se-spreadsheet-blocks__sets,
+.wolf-se-spreadsheet-complex-unified__table tbody td.wolf-se-spreadsheet-blocks__rest,
+.wolf-se-spreadsheet-complex-unified__table tbody td.wolf-se-spreadsheet-blocks__purpose {
+  padding: 12px 10px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table tbody td.wolf-se-spreadsheet-blocks__idx {
+  padding: 12px 8px;
+}
+
+.wolf-se-spreadsheet-complex-unified__sub {
+  font-size: 0.68rem;
+  padding: 9px 8px;
+  min-height: 34px;
 }
 
 .wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__vol {
@@ -2348,6 +2472,16 @@
   border-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 90%, transparent);
 }
 
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified .wolf-se-combo-select--premium .wolf-se-combo-select__input {
+  background: color-mix(in srgb, #0f0f12 90%, var(--wl-bg-panel, #111318));
+  border-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 88%, transparent);
+  color: #f4f4f5;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified .wolf-se-combo-preset__suffix {
+  color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 35%, #e4e4e7);
+}
+
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__seg-cell--load {
   color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 35%, #f4f4f5);
 }
@@ -2387,25 +2521,29 @@
 
 .wolf-se-spreadsheet-blocks .wolf-se-combo-select--premium {
   display: inline-flex;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   margin-block: 0;
 }
 
 .wolf-se-spreadsheet-blocks .wolf-se-combo-select--premium .wolf-se-combo-select__input {
-  min-height: 36px;
-  font-size: 0.92rem;
+  min-height: 40px;
+  padding: 8px 28px 8px 10px;
+  font-size: 0.94rem;
   font-weight: 700;
+  border-radius: 10px;
 }
 
 .wolf-se-spreadsheet-blocks .wolf-se-combo-preset--rest.wolf-se-combo-select--premium {
-  min-width: 108px;
-  max-width: 128px;
+  min-width: 124px;
+  max-width: none;
 }
 
 .wolf-se-spreadsheet-blocks .wolf-se-combo-preset__suffix {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--color-text-muted) 35%, var(--color-text-primary));
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-text-muted) 25%, var(--color-text-primary));
 }
 
 .wolf-se-spreadsheet-blocks .wolf-se-combo-preset__value {
