@@ -2462,6 +2462,12 @@ tr.is-active-week .wolf-program-matrix-week-load {
   overflow: hidden;
 }
 
+.wolf-program-customize-panel--editor:has(.wolf-program-day-board) {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
 /* Unified day board: week/day nav header + exercise sheet body */
 .wolf-program-day-board {
   display: flex;
@@ -2504,6 +2510,13 @@ tr.is-active-week .wolf-program-matrix-week-load {
   gap: 0;
   overflow: hidden;
   background: var(--wl-surface-board, #111318);
+}
+
+.wolf-program-day-board__body > .wolf-program-day-board__pane > .wolf-session-editor--flow,
+.wolf-program-day-board__body > .wolf-program-day-board__pane > .wolf-session-editor--embedded {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
 }
 
 .wolf-program-day-board--exercise-focus > .wolf-session-editor--flow {

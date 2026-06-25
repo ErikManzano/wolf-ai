@@ -2187,6 +2187,12 @@
   background: var(--se-sheet-header-bg);
   color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 35%, #f4f4f5);
   border-bottom-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 95%, transparent);
+  position: static;
+  top: auto;
+  min-height: 58px;
+  padding-block: 12px;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-metric--zone {
@@ -2274,6 +2280,14 @@
   flex-direction: column;
   min-width: 0;
   flex: 1 1 auto;
+  overflow: visible;
+}
+
+.wolf-program-day-board__body .wolf-program-day-board__pane,
+.wolf-program-day-board__body .wolf-session-editor--flow,
+.wolf-program-day-board__body .wolf-session-editor--embedded {
+  overflow: visible;
+  min-height: auto;
 }
 
 @media (min-width: 1025px) {
@@ -4253,7 +4267,12 @@
   .wl-programs-embedded-plan .wolf-program-customize-layout,
   .wl-programs-embedded-plan .wolf-program-day-board {
     max-width: 100%;
-    overflow-x: clip;
+    overflow-x: visible;
+  }
+
+  .wl-programs-embedded-plan .wolf-se-spreadsheet__table-wrap {
+    overflow-x: auto;
+    max-width: 100%;
   }
 
   .wl-programs-embedded-plan .wolf-program-nav--compact,
