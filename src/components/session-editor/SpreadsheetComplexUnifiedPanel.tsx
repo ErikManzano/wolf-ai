@@ -72,13 +72,10 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             <span>{setIndex + 1}</span>
           </div>
         </td>
-        <td>
-          <span
-            className={`wolf-se-spreadsheet-purpose wolf-se-spreadsheet-purpose--${purpose}`}
-          >
+        <td className="wolf-se-spreadsheet-blocks__purpose">
+          <span className={`wolf-se-spreadsheet-purpose wolf-se-spreadsheet-purpose--${purpose}`}>
             <span className="wolf-se-spreadsheet-purpose__dot" aria-hidden />
-            {purposeLabel(purpose, isEs)}
-            <span className="wolf-se-spreadsheet-purpose__pct">({row.percentage}%)</span>
+            <span className="wolf-se-spreadsheet-purpose__label">{purposeLabel(purpose, isEs)}</span>
           </span>
         </td>
         <td className="wolf-se-spreadsheet-blocks__pct">
@@ -171,29 +168,77 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
       </p>
       <div className="wolf-se-spreadsheet-blocks__table-wrap wolf-se-spreadsheet-complex-unified__wrap">
         <table className="wolf-se-spreadsheet-blocks__table wolf-se-spreadsheet-complex-unified__table">
+          <colgroup>
+            <col className="wolf-se-spreadsheet-blocks__col-idx" />
+            <col className="wolf-se-spreadsheet-blocks__col-purpose" />
+            <col className="wolf-se-spreadsheet-blocks__col-pct" />
+            <col className="wolf-se-spreadsheet-blocks__col-sets" />
+            {segments.map((_, segIndex) => (
+              <React.Fragment key={`col-seg-${segIndex}`}>
+                <col className="wolf-se-spreadsheet-complex-unified__col-reps" />
+                <col className="wolf-se-spreadsheet-complex-unified__col-load" />
+              </React.Fragment>
+            ))}
+            <col className="wolf-se-spreadsheet-blocks__col-rest" />
+            <col className="wolf-se-spreadsheet-blocks__col-vol" />
+            <col className="wolf-se-spreadsheet-blocks__col-actions" />
+          </colgroup>
           <thead>
             <tr>
-              <th rowSpan={2}>{isEs ? 'Bloque' : 'Block'}</th>
-              <th rowSpan={2}>{isEs ? 'Propósito' : 'Purpose'}</th>
-              <th rowSpan={2}>{isEs ? 'Intensidad' : 'Intensity'}</th>
-              <th rowSpan={2}>{isEs ? 'Series' : 'Sets'}</th>
-              {segments.map((_, segIndex) => (
-                <th
-                  key={segIndex}
-                  colSpan={2}
-                  className="wolf-se-spreadsheet-complex-unified__seg-head"
-                >
-                  {isEs ? `Mov. ${segIndex + 1}` : `Mov. ${segIndex + 1}`}
-                </th>
-              ))}
-              <th rowSpan={2}>{isEs ? 'Descanso' : 'Rest'}</th>
-              <th rowSpan={2}>{isEs ? 'Volumen' : 'Volume'}</th>
-              <th rowSpan={2} aria-hidden />
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-idx">
+                {isEs ? 'Bloque' : 'Block'}
+              </th>
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-purpose">
+                {isEs ? 'Propósito' : 'Purpose'}
+              </th>
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-pct">
+                {isEs ? 'Intensidad' : 'Intensity'}
+              </th>
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-sets">
+                {isEs ? 'Series' : 'Sets'}
+              </th>
+              {segments.map((seg, segIndex) => {
+                const ex = exercises.find((e) => e.id === seg.exerciseId);
+                return (
+                  <th
+                    key={segIndex}
+                    colSpan={2}
+                    className="wolf-se-spreadsheet-complex-unified__seg-head"
+                  >
+                    <span className="wolf-se-spreadsheet-complex-unified__seg-head-stack">
+                      <span className="wolf-se-spreadsheet-complex-unified__seg-head-label">
+                        {isEs ? `Mov. ${segIndex + 1}` : `Mov. ${segIndex + 1}`}
+                      </span>
+                      {ex ? (
+                        <span className="wolf-se-spreadsheet-complex-unified__seg-head-name" title={ex.name}>
+                          {ex.name}
+                        </span>
+                      ) : (
+                        <span className="wolf-se-spreadsheet-complex-unified__seg-head-name wolf-se-spreadsheet-complex-unified__seg-head-name--empty">
+                          {isEs ? 'Sin ejercicio' : 'No exercise'}
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-rest">
+                {isEs ? 'Descanso' : 'Rest'}
+              </th>
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-vol">
+                <span className="wolf-se-spreadsheet__th-stack">
+                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Volumen' : 'Volume'}</span>
+                  <span className="wolf-se-spreadsheet__th-secondary">kg</span>
+                </span>
+              </th>
+              <th rowSpan={2} className="wolf-se-spreadsheet-blocks__th-actions" aria-hidden />
             </tr>
             <tr>
               {segments.map((_, segIndex) => (
                 <React.Fragment key={segIndex}>
-                  <th className="wolf-se-spreadsheet-complex-unified__sub">{isEs ? 'Reps' : 'Reps'}</th>
+                  <th className="wolf-se-spreadsheet-complex-unified__sub wolf-se-spreadsheet-complex-unified__sub--reps">
+                    Reps
+                  </th>
                   <th className="wolf-se-spreadsheet-complex-unified__sub wolf-se-spreadsheet-complex-unified__sub--load">
                     {isEs ? 'Carga' : 'Load'}
                   </th>
@@ -203,10 +248,9 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
           </thead>
           <tbody>
             <tr className="wolf-se-spreadsheet-complex-unified__movement-row">
-              <td colSpan={3} className="wolf-se-spreadsheet-complex-unified__movement-label">
+              <td colSpan={4} className="wolf-se-spreadsheet-complex-unified__movement-label">
                 {isEs ? 'Movimientos' : 'Movements'}
               </td>
-              <td className="wolf-se-spreadsheet-complex-unified__movement-series" aria-hidden />
               {segments.map((seg, segIndex) => (
                 <td
                   key={segIndex}

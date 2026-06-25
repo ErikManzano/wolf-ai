@@ -1796,7 +1796,10 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
   background: color-mix(in srgb, var(--color-bg-hover) 78%, var(--color-bg-panel));
   box-shadow: 0 1px 0 color-mix(in srgb, var(--color-border) 45%, transparent);
-  vertical-align: bottom;
+  vertical-align: middle;
+  overflow: visible;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .wolf-se-spreadsheet-blocks__table thead th.wolf-se-spreadsheet-blocks__th-idx {
@@ -1899,10 +1902,6 @@
 
 .wolf-se-spreadsheet-blocks .wolf-se-spreadsheet-purpose__label {
   min-width: 0;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-row td {
-  border-radius: 10px;
 }
 
 .wolf-se-spreadsheet-blocks__idx {
@@ -2020,39 +2019,112 @@
 .wolf-se-spreadsheet-complex-unified {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .wolf-se-spreadsheet-complex-unified__wrap {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: min(480px, 58vh);
 }
 
 .wolf-se-spreadsheet-complex-unified__table {
-  min-width: 880px;
+  min-width: 920px;
+}
+
+.wolf-se-spreadsheet-complex-unified__col-reps {
+  width: 88px;
+}
+
+.wolf-se-spreadsheet-complex-unified__col-load {
+  width: 84px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table thead tr:first-child th[rowspan] {
+  vertical-align: middle;
+  min-height: 52px;
+}
+
+.wolf-se-spreadsheet-complex-unified__table thead tr:nth-child(2) th {
+  position: sticky;
+  top: 52px;
+  z-index: 1;
+  padding: 8px 10px;
+  min-height: 32px;
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--color-bg-hover) 68%, var(--color-bg-panel));
 }
 
 .wolf-se-spreadsheet-complex-unified__seg-head {
   text-align: center;
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  color: color-mix(in srgb, var(--color-accent) 75%, var(--color-text-primary));
+  border-left: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-panel));
+  color: color-mix(in srgb, var(--color-accent) 78%, var(--color-text-primary));
+  padding: 10px 8px;
+}
+
+.wolf-se-spreadsheet-complex-unified__seg-head-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.wolf-se-spreadsheet-complex-unified__seg-head-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.wolf-se-spreadsheet-complex-unified__seg-head-name {
+  display: block;
+  max-width: 148px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: color-mix(in srgb, var(--color-text-muted) 35%, var(--color-text-primary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.wolf-se-spreadsheet-complex-unified__seg-head-name--empty {
+  font-style: italic;
+  opacity: 0.72;
 }
 
 .wolf-se-spreadsheet-complex-unified__sub {
-  font-size: 0.62rem;
+  font-size: 0.64rem;
+  font-weight: 800;
   text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-text-primary));
   border-left: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
 }
 
+.wolf-se-spreadsheet-complex-unified__sub--reps {
+  background: color-mix(in srgb, var(--color-accent) 4%, var(--color-bg-panel));
+}
+
 .wolf-se-spreadsheet-complex-unified__sub--load {
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
 }
 
 .wolf-se-spreadsheet-complex-unified__movement-row td {
-  padding: 16px 14px;
-  background: color-mix(in srgb, var(--color-bg-hover) 45%, var(--color-bg-panel));
+  padding: 14px 12px;
+  background: color-mix(in srgb, var(--color-bg-hover) 38%, var(--color-bg-panel));
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
   border-bottom: none;
+  border-radius: 10px;
   vertical-align: middle;
 }
 
@@ -2061,20 +2133,21 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: color-mix(in srgb, var(--color-text-muted) 50%, var(--color-text-primary));
   white-space: nowrap;
 }
 
 .wolf-se-spreadsheet-complex-unified__movement-cell {
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 18%, var(--color-border));
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 18%, var(--color-border));
+  border-left: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-bg-panel));
 }
 
 .wolf-se-spreadsheet-complex-unified__movement-editor {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 200px;
+  gap: 8px;
+  min-width: 220px;
 }
 
 .wolf-se-spreadsheet-complex-unified__movement-editor .wolf-se-autocomplete {
@@ -2082,24 +2155,80 @@
   min-width: 0;
 }
 
+.wolf-se-spreadsheet-complex-unified__movement-editor .wolf-se-autocomplete-input-wrap {
+  min-height: 40px;
+  padding: 8px 10px;
+}
+
 .wolf-se-spreadsheet-complex-unified__movement-actions {
   text-align: right;
   vertical-align: middle;
+  background: color-mix(in srgb, var(--color-bg-hover) 32%, var(--color-bg-panel));
 }
 
 .wolf-se-spreadsheet-complex-unified__movement-actions .wolf-se-spreadsheet-blocks__add {
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .wolf-se-spreadsheet-complex-unified__seg-cell {
   border-left: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
   text-align: center;
+  padding-inline: 8px;
 }
 
 .wolf-se-spreadsheet-complex-unified__seg-cell--load {
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 18%, var(--color-border));
-  font-weight: 600;
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+  color: color-mix(in srgb, var(--color-text-muted) 40%, var(--color-text-primary));
   white-space: nowrap;
+  text-align: right;
+  padding-right: 12px;
+}
+
+.wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__vol {
+  font-size: 0.92rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--color-accent) 72%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__th-vol,
+.wolf-se-spreadsheet-complex-unified__table .wolf-se-spreadsheet-blocks__th-vol .wolf-se-spreadsheet__th-stack {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__table thead th {
+  position: static;
+  top: auto;
+  box-shadow: none;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__table thead tr:nth-child(2) th {
+  position: static;
+  top: auto;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__seg-head {
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 10%, var(--se-sheet-header-bg, #1c1c22));
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 24%, var(--wl-border-subtle, #27272a));
+  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 75%, #f4f4f5);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movement-cell {
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 6%, #16161b);
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 20%, var(--wl-border-subtle, #27272a));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__seg-cell--load {
+  color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 35%, #f4f4f5);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__vol {
+  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 78%, #f4f4f5);
 }
 
 .wolf-se-spreadsheet .wolf-se-compact-field {
