@@ -243,6 +243,29 @@ export class PostgresStore {
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS coach_programs_coach_id_idx ON coach_programs (coach_id);
     `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS plan_change_notifications (
+        id TEXT PRIMARY KEY,
+        recipient_user_id TEXT NOT NULL,
+        coach_id TEXT NOT NULL,
+        coach_name TEXT NOT NULL,
+        coach_program_id TEXT NOT NULL DEFAULT '',
+        program_name TEXT NOT NULL,
+        assignment_id TEXT,
+        athlete_profile_id TEXT NOT NULL,
+        week_number INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        day_label TEXT,
+        changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        read_at TIMESTAMPTZ,
+        message_es TEXT NOT NULL,
+        message_en TEXT NOT NULL
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS plan_change_notifications_recipient_idx
+      ON plan_change_notifications (recipient_user_id, read_at, changed_at DESC);
+    `);
     await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS coach_program_id TEXT;`);
     await this.pool.query(`
       ALTER TABLE assignments DROP CONSTRAINT IF EXISTS assignments_athlete_profile_id_key;
@@ -1764,5 +1787,101 @@ export class PostgresStore {
       [coachProgramId],
     );
     return (result.rows[0]?.c as number) ?? 0;
+  }
+
+  private mapPlanChangeNotificationRow(row: Record<string, unknown>): import('../models/notifications').PlanChangeNotification {
+    return {
+      id: row.id as string,
+      recipientUserId: row.recipient_user_id as string,
+      coachId: row.coach_id as string,
+      coachName: row.coach_name as string,
+      coachProgramId: row.coach_program_id as string,
+      programName: row.program_name as string,
+      assignmentId: (row.assignment_id as string | null) ?? undefined,
+      athleteProfileId: row.athlete_profile_id as string,
+      weekNumber: row.week_number as number,
+      dayNumber: row.day_number as number,
+      dayLabel: (row.day_label as string | null) ?? undefined,
+      changedAt: new Date(row.changed_at as string).toISOString(),
+      readAt: row.read_at ? new Date(row.read_at as string).toISOString() : null,
+      messageEs: row.message_es as string,
+      messageEn: row.message_en as string,
+    };
+  }
+
+  async insertPlanChangeNotification(
+    input: Omit<import('../models/notifications').PlanChangeNotification, 'readAt'> & { readAt?: string | null },
+  ): Promise<import('../models/notifications').PlanChangeNotification> {
+    const result = await this.pool.query(
+      `
+      INSERT INTO plan_change_notifications (
+        id, recipient_user_id, coach_id, coach_name, coach_program_id, program_name,
+        assignment_id, athlete_profile_id, week_number, day_number, day_label,
+        changed_at, read_at, message_es, message_en
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING *;
+      `,
+      [
+        input.id,
+        input.recipientUserId,
+        input.coachId,
+        input.coachName,
+        input.coachProgramId,
+        input.programName,
+        input.assignmentId ?? null,
+        input.athleteProfileId,
+        input.weekNumber,
+        input.dayNumber,
+        input.dayLabel ?? null,
+        input.changedAt,
+        input.readAt ?? null,
+        input.messageEs,
+        input.messageEn,
+      ],
+    );
+    return this.mapPlanChangeNotificationRow(result.rows[0] as Record<string, unknown>);
+  }
+
+  async listNotificationsForUser(
+    userId: string,
+    options?: { asCoach?: boolean },
+  ): Promise<import('../models/notifications').PlanChangeNotification[]> {
+    const result = options?.asCoach
+      ? await this.pool.query(
+          `
+          SELECT * FROM plan_change_notifications
+          WHERE coach_id = $1
+          ORDER BY changed_at DESC
+          LIMIT 100;
+          `,
+          [userId],
+        )
+      : await this.pool.query(
+          `
+          SELECT * FROM plan_change_notifications
+          WHERE recipient_user_id = $1
+          ORDER BY changed_at DESC
+          LIMIT 100;
+          `,
+          [userId],
+        );
+    return result.rows.map((row) => this.mapPlanChangeNotificationRow(row as Record<string, unknown>));
+  }
+
+  async markNotificationRead(
+    id: string,
+    recipientUserId: string,
+  ): Promise<import('../models/notifications').PlanChangeNotification | null> {
+    const result = await this.pool.query(
+      `
+      UPDATE plan_change_notifications
+      SET read_at = COALESCE(read_at, now())
+      WHERE id = $1 AND recipient_user_id = $2
+      RETURNING *;
+      `,
+      [id, recipientUserId],
+    );
+    if (!result.rows[0]) return null;
+    return this.mapPlanChangeNotificationRow(result.rows[0] as Record<string, unknown>);
   }
 }

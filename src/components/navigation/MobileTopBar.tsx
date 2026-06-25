@@ -8,6 +8,7 @@ import {
 } from '../../navigation/appNavigation';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMobileTopBarContext } from '../../context/MobileTopBarContext';
+import { NotificationsBell } from '../notifications/NotificationsBell';
 import './mobile-top-bar.css';
 
 const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
@@ -27,6 +28,8 @@ type MobileTopBarProps = {
   activeView: string;
   language: 'ES' | 'EN';
   mobileChatOpen: boolean;
+  notificationsOpen: boolean;
+  onNotificationsOpenChange: (open: boolean) => void;
   onToggleChat: () => void;
   onNavigate: (view: AppViewId) => void;
 };
@@ -35,6 +38,8 @@ export function MobileTopBar({
   activeView,
   language,
   mobileChatOpen,
+  notificationsOpen,
+  onNotificationsOpenChange,
   onToggleChat,
   onNavigate,
 }: MobileTopBarProps) {
@@ -73,6 +78,13 @@ export function MobileTopBar({
         </div>
       </div>
       <div className="mobile-header-actions">
+        <NotificationsBell
+          variant="mobile"
+          isEs={isEs}
+          open={notificationsOpen}
+          onOpenChange={onNotificationsOpenChange}
+          className="wolf-notifications-bell--header"
+        />
         {showAccount && accountItem && AccountIcon ? (
           <button
             type="button"

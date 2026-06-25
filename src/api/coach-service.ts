@@ -23,6 +23,8 @@ import {
   TEMPLATE_PROGRAM_ATHLETE_ID,
 } from '../models/coach-architecture';
 import type { GeneratedProgram, ProgramAssignment, ProgramAssignmentVersion, WolfUser } from '../models/training';
+import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
+import { buildPlanChangeMessages } from './planChangeNotificationMessages';
 import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
 
 type CoachServiceDeps = {
@@ -30,6 +32,7 @@ type CoachServiceDeps = {
   onAssignmentsChanged?: (coachId: string) => void;
   onTemplatesChanged?: (coachId: string) => void;
   onProgramsChanged?: (coachId: string) => void;
+  onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
 };
 
 function newId(prefix: string): string {
@@ -69,12 +72,54 @@ export class CoachService {
   private readonly onAssignmentsChanged?: (coachId: string) => void;
   private readonly onTemplatesChanged?: (coachId: string) => void;
   private readonly onProgramsChanged?: (coachId: string) => void;
+  private readonly onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
 
   constructor(deps: CoachServiceDeps) {
     this.store = deps.store;
     this.onAssignmentsChanged = deps.onAssignmentsChanged;
     this.onTemplatesChanged = deps.onTemplatesChanged;
     this.onProgramsChanged = deps.onProgramsChanged;
+    this.onPlanChangeCreated = deps.onPlanChangeCreated;
+  }
+
+  private async maybeNotifyPlanChange(params: {
+    coachId: string;
+    recipientUserId: string;
+    athleteProfileId: string;
+    assignmentId?: string;
+    coachProgramId: string;
+    programName: string;
+    editContext: ProgramEditContext;
+  }): Promise<void> {
+    const users = await this.store.getUsers();
+    const coach = users.find((u) => u.id === params.coachId);
+    const coachName = coach?.name ?? 'Coach';
+    const changedAt = new Date();
+    const { messageEs, messageEn } = buildPlanChangeMessages({
+      programName: params.programName,
+      coachName,
+      weekNumber: params.editContext.weekNumber,
+      dayNumber: params.editContext.dayNumber,
+      dayLabel: params.editContext.dayLabel,
+      changedAt,
+    });
+    const notification = await this.store.insertPlanChangeNotification({
+      id: newId('pcn'),
+      recipientUserId: params.recipientUserId,
+      coachId: params.coachId,
+      coachName,
+      coachProgramId: params.coachProgramId,
+      programName: params.programName,
+      assignmentId: params.assignmentId,
+      athleteProfileId: params.athleteProfileId,
+      weekNumber: params.editContext.weekNumber,
+      dayNumber: params.editContext.dayNumber,
+      dayLabel: params.editContext.dayLabel,
+      changedAt: changedAt.toISOString(),
+      messageEs,
+      messageEn,
+    });
+    this.onPlanChangeCreated?.(notification);
   }
 
   async listPrograms(coachId: string): Promise<CoachProgramRow[]> {
@@ -149,6 +194,17 @@ export class CoachService {
               name: updated.name,
             });
             await this.store.updateAssignmentProgram(asg.id, cloned, { skipVersionHistory: true });
+            if (input.editContext && asg.athleteUserId) {
+              await this.maybeNotifyPlanChange({
+                coachId,
+                recipientUserId: asg.athleteUserId,
+                athleteProfileId: asg.athleteProfileId,
+                assignmentId: asg.id,
+                coachProgramId: programId,
+                programName: updated.name,
+                editContext: input.editContext,
+              });
+            }
           }),
         );
         this.onAssignmentsChanged?.(coachId);
@@ -332,6 +388,18 @@ export class CoachService {
     const updated = await this.store.updateAssignmentProgram(assignmentId, program);
     if (!updated) {
       throw new CoachServiceError('UPDATE_FAILED', 'Could not update assignment program.');
+    }
+
+    if (input.editContext && existing.athleteUserId) {
+      await this.maybeNotifyPlanChange({
+        coachId,
+        recipientUserId: existing.athleteUserId,
+        athleteProfileId: existing.athleteProfileId,
+        assignmentId,
+        coachProgramId: existing.coachProgramId ?? existing.program.id,
+        programName: input.program.name,
+        editContext: input.editContext,
+      });
     }
 
     this.onAssignmentsChanged?.(coachId);

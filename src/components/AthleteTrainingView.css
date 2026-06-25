@@ -1,5 +1,45 @@
 /* Vista atleta — Mi plan WL */
 
+.wolf-plan-change-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-accent-glow, rgba(99, 102, 241, 0.35));
+  background: var(--color-accent-glow, rgba(99, 102, 241, 0.12));
+  overflow: hidden;
+}
+
+.wolf-plan-change-banner__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text, #e8e8ec);
+}
+
+.wolf-plan-change-banner__btn {
+  flex-shrink: 0;
+  border: 1px solid var(--color-accent, #6366f1);
+  background: transparent;
+  color: var(--color-accent, #6366f1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-plan-change-banner__btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+}
+
 .wolf-athlete-plan {
   padding: 0 1rem 2.5rem;
   max-width: 920px;

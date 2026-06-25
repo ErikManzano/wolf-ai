@@ -159,6 +159,23 @@ export function addDayToGeneratedWeek(
   return syncProgramMeta(next);
 }
 
+/** Clona el contenido de un día dentro de la misma semana (nuevo slot al final). */
+export function duplicateDayInGeneratedWeek(
+  program: GeneratedProgram,
+  weekNumber: number,
+  dayNumber: number,
+): GeneratedProgram {
+  const next = cloneProgram(program);
+  const week = next.weeks.find((w) => w.weekNumber === weekNumber);
+  if (!week || week.days.length >= PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK) return program;
+  const src = week.days.find((d) => d.dayNumber === dayNumber);
+  if (!src) return program;
+  const clone: ProgramDay = JSON.parse(JSON.stringify(src)) as ProgramDay;
+  week.days.push(clone);
+  week.days = renumberDays(week.days);
+  return syncProgramMeta(next);
+}
+
 export function removeDayFromGeneratedWeek(
   program: GeneratedProgram,
   weekNumber: number,

@@ -7,6 +7,7 @@ export type RealtimeMessage = {
 };
 
 const ASSIGNMENTS_EVENT = 'assignments:changed';
+export const PLAN_CHANGE_EVENT = 'plan-change:created';
 
 export function isAssignmentsChangedEvent(msg: RealtimeMessage): boolean {
   return msg.event === ASSIGNMENTS_EVENT;

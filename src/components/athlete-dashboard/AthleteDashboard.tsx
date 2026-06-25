@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Activity,
   ArrowRight,
   Award,
   BarChart3,
+  Bell,
   CalendarCheck,
   ClipboardCheck,
   Dumbbell,
@@ -52,7 +53,15 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
     wlAthletes,
     motorExercises,
     assignmentsLoading,
+    planChangeNotifications,
+    unreadPlanChangeCount,
+    markPlanChangeNotificationRead,
+    loadPlanChangeNotifications,
   } = useWolfAssign();
+
+  useEffect(() => {
+    void loadPlanChangeNotifications();
+  }, [loadPlanChangeNotifications]);
 
   const exName = useMemo(
     () => (id: string) => motorExercises.find((e) => e.id === id)?.name ?? id,
@@ -91,6 +100,10 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
 
   const next = model.nextSession;
   const active = model.activeProgram;
+  const coachNotices = useMemo(
+    () => planChangeNotifications.slice(0, 12),
+    [planChangeNotifications],
+  );
 
   return (
     <div className="athlete-dashboard super-dashboard">
@@ -154,6 +167,42 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
             ? 'Aún no tienes planes asignados. Tu coach debe asignarte un programa desde Programas.'
             : 'No plans assigned yet. Your coach must assign a program from Programs.'}
         </div>
+      ) : null}
+
+      {coachNotices.length > 0 ? (
+        <section className="sd-section ad-coach-notices" aria-label={isEs ? 'Avisos del coach' : 'Coach notices'}>
+          <header className="sd-section__head">
+            <h2>
+              <Bell size={18} aria-hidden />
+              {isEs ? 'Avisos del coach' : 'Coach notices'}
+              {unreadPlanChangeCount > 0 ? (
+                <span className="ad-coach-notices__badge">{unreadPlanChangeCount}</span>
+              ) : null}
+            </h2>
+          </header>
+          <ul className="ad-coach-notices__list">
+            {coachNotices.map((notice) => (
+              <li key={notice.id} className={`ad-coach-notice${notice.readAt ? ' is-read' : ''}`}>
+                <p className="ad-coach-notice__message">
+                  {isEs ? notice.messageEs : notice.messageEn}
+                </p>
+                <div className="ad-coach-notice__meta">
+                  <span>{notice.coachName}</span>
+                  <span>{formatRelativeDate(notice.changedAt, isEs)}</span>
+                  {!notice.readAt ? (
+                    <button
+                      type="button"
+                      className="btn-outline ad-inline-btn"
+                      onClick={() => void markPlanChangeNotificationRead(notice.id)}
+                    >
+                      {isEs ? 'Marcar leído' : 'Mark read'}
+                    </button>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <section className="sd-kpi-grid" aria-label={isEs ? 'Indicadores' : 'Metrics'}>

@@ -423,8 +423,8 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-movement-pick-btn {
 
 /* ── Config toolbar ── */
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-toolbar-band {
-  display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
   gap: 12px;
   width: 100%;

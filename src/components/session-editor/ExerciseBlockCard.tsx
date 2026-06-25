@@ -7,7 +7,6 @@ import {
   Plus,
   Settings2,
   Trash2,
-  Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
@@ -16,7 +15,6 @@ import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   addComplexSegment,
   addSetToBlock,
-  applyBlockPercentagePreset,
   duplicateSetAt,
   removeComplexSegment,
   removeExerciseBlock,
@@ -41,8 +39,6 @@ import type { SessionCatalogProps } from './types';
 import './session-editor.css';
 import './exercise-block-card.css';
 import '../../styles/interactive.css';
-
-const PCT_PRESETS = [70, 75, 80, 85, 90] as const;
 
 function BlockZoneHeader({
   icon: Icon,
@@ -513,29 +509,6 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 />
               </>
             ) : null}
-
-            <div className="wolf-se-block-panel wolf-se-block-panel--intensity">
-              <span className="wolf-se-panel-label">
-                <Zap size={13} aria-hidden />
-                {isEs ? 'Intensidad rápida' : 'Quick intensity'}
-              </span>
-            <div className="wolf-se-intensity-section">
-              <div className="wolf-se-pct-chip-row" role="group" aria-label={isEs ? 'Presets %1RM' : '%1RM presets'}>
-                {PCT_PRESETS.map((pct) => (
-                  <button
-                    key={pct}
-                    type="button"
-                    className={`wolf-se-pct-chip${block.sets[0]?.percentage === pct ? ' active' : ''}`}
-                    onClick={() =>
-                      apply(() => applyBlockPercentagePreset(session, bi, pct, athlete, exercises))
-                    }
-                  >
-                    {pct}%
-                  </button>
-                ))}
-              </div>
-            </div>
-            </div>
             </div>
           </div>
 

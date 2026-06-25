@@ -4,6 +4,7 @@ import type {
   SetCompletionLog,
   WolfUser,
 } from '../../models/training';
+import type { PlanChangeNotification, ProgramEditContext } from '../../models/notifications';
 
 export interface WlAssignmentsContextValue {
   assignments: ProgramAssignment[];
@@ -13,7 +14,11 @@ export interface WlAssignmentsContextValue {
     program: ProgramAssignment['program'],
     athleteProfileId: string,
   ) => Promise<string>;
-  updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
+  updateAssignmentProgram: (
+    assignmentId: string,
+    program: ProgramAssignment['program'],
+    editContext?: ProgramEditContext,
+  ) => void;
   removeAssignment: (assignmentId: string) => Promise<boolean>;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
@@ -68,6 +73,10 @@ export interface WlAssignmentsContextValue {
   exerciseTrackingKey: (assignmentId: string, weekNumber: number, dayNumber: number, exerciseIndex: number) => string;
   sessionTrackingKey: (assignmentId: string, weekNumber: number, dayNumber: number) => string;
   reloadAssignmentsFromApi: () => Promise<void>;
+  planChangeNotifications: PlanChangeNotification[];
+  unreadPlanChangeCount: number;
+  loadPlanChangeNotifications: () => Promise<void>;
+  markPlanChangeNotificationRead: (id: string) => Promise<void>;
 }
 
 export type SetLogInput = {

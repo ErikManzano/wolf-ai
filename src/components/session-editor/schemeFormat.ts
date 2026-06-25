@@ -31,6 +31,19 @@ export function formatAthleteSetRxLabel(row: SetScheme, isComplex: boolean): str
   return `${row.percentage}%/${formatSchemeRepsToken(row, isComplex)}`;
 }
 
+/** Una fila legible para coaches: 70%×3×3 */
+export function formatSetSchemeDisplayRow(row: SetScheme, isComplex: boolean): string {
+  const reps = formatSchemeRepsToken(row, isComplex);
+  return `${row.percentage}%×${reps}×${row.sets}`;
+}
+
+/** Prescripción legible del bloque, p. ej. 70%×3×3 · 80%×2×3 */
+export function formatBlockPrescriptionDisplay(block: SessionExerciseBlock): string {
+  const isComplex = blockUsesComplexReps(block);
+  if (!block.sets.length) return '—';
+  return block.sets.map((row) => formatSetSchemeDisplayRow(row, isComplex)).join(' · ');
+}
+
 /** Prescripción completa del bloque, p. ej. 60%/2,70%/2,(85%/2)2 */
 export function formatBlockPrescription(block: SessionExerciseBlock): string {
   const isComplex = blockUsesComplexReps(block);

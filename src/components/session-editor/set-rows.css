@@ -1644,8 +1644,8 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
 }
 
 .wolf-se-combo-preset--rest {
-  min-width: 72px;
-  max-width: 88px;
+  min-width: 108px;
+  max-width: 136px;
 }
 
 button.wolf-se-combo-preset__trigger {
@@ -1655,11 +1655,46 @@ button.wolf-se-combo-preset__trigger {
   font: inherit;
 }
 
+.wolf-se-combo-preset__trigger-inner {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.wolf-se-combo-preset__suffix {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.wolf-se-combo-select--premium.wolf-se-combo-preset--with-suffix {
+  min-width: 88px;
+  max-width: 112px;
+}
+
+.wolf-se-combo-preset--rest.wolf-se-combo-select--premium {
+  min-width: 108px;
+  max-width: 136px;
+}
+
+.wolf-se-combo-preset--rest .wolf-se-combo-preset__value {
+  font-size: 0.78rem;
+}
+
 .wolf-se-combo-preset__value {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.wolf-se-combo-preset--with-suffix .wolf-se-combo-preset__trigger-inner {
+  padding-right: 2px;
 }
 
 .wolf-se-combo-select__option {

@@ -66,6 +66,15 @@ function programConfirmCopy(
   };
 }
 
+function programRowClickIgnores(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      'button, a, input, select, textarea, label, [role="combobox"], [role="listbox"], .wl-programs-actions-bar',
+    ),
+  );
+}
+
 const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const {
     coachPrograms,
@@ -234,7 +243,20 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             <tr
               key={row.id}
               className="wl-programs-table-row"
-              onClick={() => openProgramRow(row)}
+              tabIndex={0}
+              aria-label={
+                isEs ? `Abrir programa ${row.name}` : `Open program ${row.name}`
+              }
+              onClick={(e) => {
+                if (programRowClickIgnores(e.target)) return;
+                openProgramRow(row);
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                if (programRowClickIgnores(e.target)) return;
+                e.preventDefault();
+                openProgramRow(row);
+              }}
             >
               <td>
                 <strong className="wl-programs-table-row__name">{row.name}</strong>
@@ -242,17 +264,12 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
               <td className="wl-programs-col-status">
                 <ProgramStatusBadge status={row.status} isEs={isEs} />
               </td>
-              <td
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
-                <div role="presentation">
-                  <ProgramEnrolledAvatars
-                    enrolledAthletes={row.enrolledAthletes}
-                    isEs={isEs}
-                    onClick={row.enrolledAthletes.length > 0 ? () => openAssign(row) : undefined}
-                  />
-                </div>
+              <td>
+                <ProgramEnrolledAvatars
+                  enrolledAthletes={row.enrolledAthletes}
+                  isEs={isEs}
+                  onClick={row.enrolledAthletes.length > 0 ? () => openAssign(row) : undefined}
+                />
               </td>
               <td>
                 <div className="wl-programs-adherence-cell">
@@ -263,11 +280,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
                 </div>
               </td>
               <td>{new Date(row.updatedAt).toLocaleDateString(isEs ? 'es' : 'en')}</td>
-              <td
-                className="wl-programs-col-actions"
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
+              <td className="wl-programs-col-actions">
                 <ProgramActionsMenu
                   isEs={isEs}
                   onEdit={() => runProgramAction(row, 'edit')}

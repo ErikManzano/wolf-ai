@@ -72,6 +72,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const programRef = useRef(program);
   const dirtyRef = useRef(false);
   const saveSeqRef = useRef(0);
+  const editContextRef = useRef<import('../../models/notifications').ProgramEditContext | undefined>(undefined);
 
   useEffect(() => {
     programRef.current = program;
@@ -158,7 +159,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       if (seq !== saveSeqRef.current) return;
       setSyncState('saving');
       try {
-        await updateCoachProgram(programId, { program: p });
+        await updateCoachProgram(programId, { program: p, editContext: editContextRef.current });
         if (seq !== saveSeqRef.current) return;
         dirtyRef.current = false;
         setSyncState('saved');
@@ -196,7 +197,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   }, [flushAutosave, cancelAutosave]);
 
   const handleProgramChange = useCallback(
-    (p: GeneratedProgram | null) => {
+    (p: GeneratedProgram | null, editContext?: import('../../models/notifications').ProgramEditContext) => {
       if (!p) {
         dirtyRef.current = false;
         cancelAutosave();
@@ -204,6 +205,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
         setSyncState('saved');
         return;
       }
+      if (editContext) editContextRef.current = editContext;
       dirtyRef.current = true;
       setSyncState('pending');
       setProgram(p);
@@ -229,13 +231,20 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     }
   };
 
+  const enrolledCount = coachProgram?.enrolledAthletes?.length ?? 0;
+
   const saving = syncState === 'saving';
   const syncHint = useMemo(() => {
     if (!hasProgram) return null;
     if (syncState === 'saving') return isEs ? 'Guardando…' : 'Saving…';
     if (syncState === 'pending') return isEs ? 'Cambios pendientes' : 'Unsaved changes';
+    if (enrolledCount > 0) {
+      return isEs
+        ? `Guardado · ${enrolledCount} atleta${enrolledCount === 1 ? '' : 's'} avisado${enrolledCount === 1 ? '' : 's'}`
+        : `Saved · ${enrolledCount} athlete${enrolledCount === 1 ? '' : 's'} notified`;
+    }
     return isEs ? 'Guardado' : 'Saved';
-  }, [hasProgram, syncState, isEs]);
+  }, [hasProgram, syncState, isEs, enrolledCount]);
 
   const actionDockHint = useMemo(() => {
     if (!hasProgram) {
@@ -248,8 +257,13 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     if (syncState === 'pending') {
       return isEs ? 'Los cambios se guardan al pausar la edición.' : 'Changes save when you pause editing.';
     }
+    if (enrolledCount > 0) {
+      return isEs
+        ? `Cambios sincronizados. Los atletas inscritos reciben aviso del día editado.`
+        : `Changes synced. Enrolled athletes are notified about the edited day.`;
+    }
     return isEs ? 'Todo guardado.' : 'All changes saved.';
-  }, [hasProgram, titleMissing, isEs, syncState]);
+  }, [hasProgram, titleMissing, isEs, syncState, enrolledCount]);
 
   const syncStatusChip =
     hasProgram && syncHint ? (
@@ -320,7 +334,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 className="app-breadcrumb--icon-back wl-programs-editor-crumb"
                 onBack={onBack}
                 backLabel={isEs ? 'Programas' : 'Programs'}
-                items={[{ label: isEs ? 'Programas' : 'Programs' }]}
+                items={[]}
               />
             </div>
             {(portalToolbarToHead || !hasProgram) ? (

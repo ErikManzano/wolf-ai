@@ -19,6 +19,7 @@ export interface PortaledComboListProps<T> {
   onActiveIndexChange?: (index: number) => void;
   renderOption: (option: T, index: number, isActive: boolean, isSelected: boolean) => ReactNode;
   measureOptions?: MeasureComboMenuOptions;
+  menuClassName?: string;
 }
 
 export function PortaledComboList<T>({
@@ -35,6 +36,7 @@ export function PortaledComboList<T>({
   onActiveIndexChange,
   renderOption,
   measureOptions,
+  menuClassName,
 }: PortaledComboListProps<T>) {
   const menuRef = useRef<HTMLUListElement>(null);
   const resolvedMeasure = useMemo(
@@ -60,6 +62,7 @@ export function PortaledComboList<T>({
     'wolf-se-combo-select__menu--portal',
     isSheet ? 'wolf-se-combo-select__menu--sheet' : '',
     rect.columns === 2 ? 'wolf-se-combo-select__menu--grid' : '',
+    menuClassName ?? '',
     'is-visible',
   ]
     .filter(Boolean)

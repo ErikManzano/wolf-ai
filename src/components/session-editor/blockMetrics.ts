@@ -128,6 +128,27 @@ export function sessionTotalReps(blocks: SessionExerciseBlock[]): number {
   return blocks.reduce((sum, block) => sum + blockTotalReps(block), 0);
 }
 
+export function sessionTotalSets(blocks: SessionExerciseBlock[]): number {
+  return blocks.reduce((sum, block) => sum + blockTotalSets(block), 0);
+}
+
+export function sessionTonnage(session: Session, athlete: Athlete, exercises: Exercise[]): number {
+  return session.exercises.reduce((sum, block) => sum + blockTonnage(block, athlete, exercises), 0);
+}
+
+export function sessionAvgIntensity(blocks: SessionExerciseBlock[]): number {
+  if (!blocks.length) return 0;
+  let weighted = 0;
+  let sets = 0;
+  for (const block of blocks) {
+    for (const row of block.sets) {
+      weighted += row.percentage * row.sets;
+      sets += row.sets;
+    }
+  }
+  return sets > 0 ? Math.round(weighted / sets) : 0;
+}
+
 export function estimateBlockMinutes(block: SessionExerciseBlock): number {
   const workSets = blockTotalSets(block);
   return Math.max(1, Math.round(workSets * 2));

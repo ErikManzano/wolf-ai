@@ -88,6 +88,7 @@ const state = {
       return [a.id, linked?.coachId ?? 'user-coach-wl'];
     }),
   ),
+  planChangeNotifications: [],
 };
 
 async function bootstrap() {

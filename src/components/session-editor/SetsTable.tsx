@@ -279,19 +279,6 @@ function PremiumSetMobileCard({
           />
         </div>
         <div className="wolf-se-premium-set-card__field">
-          <span className="wolf-se-premium-set-card__label">{isEs ? 'Reps' : 'Reps'}</span>
-          <ComboNumberField
-            variant="premium"
-            value={row.reps}
-            min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-            max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-            step={1}
-            options={[...REP_PRESETS_LIST]}
-            onChange={onRepsChange}
-            aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
-          />
-        </div>
-        <div className="wolf-se-premium-set-card__field">
           <span className="wolf-se-premium-set-card__label">{isEs ? 'Series' : 'Sets'}</span>
           <ComboNumberField
             variant="premium"
@@ -302,6 +289,19 @@ function PremiumSetMobileCard({
             options={[...SETS_PRESETS_LIST]}
             onChange={onSetsChange}
             aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
+          />
+        </div>
+        <div className="wolf-se-premium-set-card__field">
+          <span className="wolf-se-premium-set-card__label">{isEs ? 'Reps' : 'Reps'}</span>
+          <ComboNumberField
+            variant="premium"
+            value={row.reps}
+            min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+            max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+            step={1}
+            options={[...REP_PRESETS_LIST]}
+            onChange={onRepsChange}
+            aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
           />
         </div>
         <div className="wolf-se-premium-set-card__field wolf-se-premium-set-card__field--rest">
@@ -415,18 +415,6 @@ function SortableSetTableRow({
       <td>
         <span className="wolf-se-sets-premium__load">{kg} kg</span>
       </td>
-      <td className="wolf-se-sets-premium__col-reps">
-        <ComboNumberField
-          variant="premium"
-          value={row.reps}
-          min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-          max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-          step={1}
-          options={[...REP_PRESETS_LIST]}
-          onChange={onRepsChange}
-          aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
-        />
-      </td>
       <td className="wolf-se-sets-premium__col-sets">
         <ComboNumberField
           variant="premium"
@@ -437,6 +425,18 @@ function SortableSetTableRow({
           options={[...SETS_PRESETS_LIST]}
           onChange={onSetsChange}
           aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
+        />
+      </td>
+      <td className="wolf-se-sets-premium__col-reps">
+        <ComboNumberField
+          variant="premium"
+          value={row.reps}
+          min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+          max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+          step={1}
+          options={[...REP_PRESETS_LIST]}
+          onChange={onRepsChange}
+          aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
         />
       </td>
       <td>
@@ -839,8 +839,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   <th>#</th>
                   <th>% 1RM</th>
                   <th>{isEs ? 'Carga' : 'Load'}</th>
-                  <th>{isEs ? 'Reps' : 'Reps'}</th>
                   <th>{isEs ? 'Series' : 'Sets'}</th>
+                  <th>{isEs ? 'Reps' : 'Reps'}</th>
                   <th>{isEs ? 'Descanso' : 'Rest'}</th>
                   <th className="wolf-se-sets-premium__col-actions" aria-hidden />
                 </tr>
@@ -966,18 +966,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         aria-label={isEs ? `Porcentaje serie ${si + 1}` : `Percent set ${si + 1}`}
                       />
                     </div>
-                    <div className="wolf-se-field-chip" role="group" aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}>
-                      <span className="wolf-se-field-chip-label">{isEs ? 'Reps' : 'Reps'}</span>
-                      <CompactNumberField
-                        size="compact"
-                        value={row.reps}
-                        min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-                        max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-                        step={1}
-                        onChange={(v) => onRepsChange(si, v)}
-                        aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
-                      />
-                    </div>
                     <div className="wolf-se-field-chip" role="group" aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}>
                       <span className="wolf-se-field-chip-label">{isEs ? 'Series' : 'Sets'}</span>
                       <CompactNumberField
@@ -988,6 +976,18 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                         step={1}
                         onChange={(v) => onSetsChange(si, v)}
                         aria-label={isEs ? `Series fila ${si + 1}` : `Sets row ${si + 1}`}
+                      />
+                    </div>
+                    <div className="wolf-se-field-chip" role="group" aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}>
+                      <span className="wolf-se-field-chip-label">{isEs ? 'Reps' : 'Reps'}</span>
+                      <CompactNumberField
+                        size="compact"
+                        value={row.reps}
+                        min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+                        max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                        step={1}
+                        onChange={(v) => onRepsChange(si, v)}
+                        aria-label={isEs ? `Reps serie ${si + 1}` : `Reps set ${si + 1}`}
                       />
                     </div>
                   </div>
@@ -1010,8 +1010,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                 <th className="wolf-se-col-idx">#</th>
                 <th>%1RM</th>
                 <th>Kg</th>
-                <th>Reps</th>
                 <th>{isEs ? 'Series' : 'Sets'}</th>
+                <th>Reps</th>
                 <th className="wolf-se-text-end" />
               </tr>
             </thead>
@@ -1041,23 +1041,23 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                     <td>
                       <CompactNumberField
                         size="compact"
-                        value={row.reps}
-                        min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-                        max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-                        step={1}
-                        onChange={(v) => onRepsChange(si, v)}
-                        aria-label={`Reps ${si + 1}`}
-                      />
-                    </td>
-                    <td>
-                      <CompactNumberField
-                        size="compact"
                         value={row.sets}
                         min={WL_SESSION_LIMITS.MIN_SETS_PER_SCHEME}
                         max={WL_SESSION_LIMITS.MAX_SETS_PER_SCHEME}
                         step={1}
                         onChange={(v) => onSetsChange(si, v)}
                         aria-label={`Sets ${si + 1}`}
+                      />
+                    </td>
+                    <td>
+                      <CompactNumberField
+                        size="compact"
+                        value={row.reps}
+                        min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+                        max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                        step={1}
+                        onChange={(v) => onRepsChange(si, v)}
+                        aria-label={`Reps ${si + 1}`}
                       />
                     </td>
                     <td className="wolf-se-text-end">{rowActions(si)}</td>

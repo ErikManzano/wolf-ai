@@ -9,6 +9,7 @@ interface SegmentRepFieldProps {
   min?: number;
   max?: number;
   variant?: 'default' | 'premium';
+  suffix?: string;
   'aria-label'?: string;
 }
 
@@ -19,6 +20,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
   min = 1,
   max = 30,
   variant = 'premium',
+  suffix,
   'aria-label': ariaLabel,
 }) => {
   const parsed = parseRepTokens(value);
@@ -34,6 +36,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
       step={1}
       options={options}
       onChange={(n) => onChange(String(n))}
+      suffix={suffix}
       aria-label={ariaLabel}
     />
   );

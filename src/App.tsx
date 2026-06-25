@@ -14,6 +14,7 @@ import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
 import { MobileTopBar } from './components/navigation/MobileTopBar';
+import { NotificationsBell } from './components/notifications/NotificationsBell';
 import { MobileTopBarProvider, useMobileTopBarContext } from './context/MobileTopBarContext';
 import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
@@ -30,6 +31,7 @@ function AppShell() {
   const [language, setLanguage] = useState<'ES' | 'EN'>('ES');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('wolf_sidebar_compact_v1') === '1');
   const [sidebarToggleAnimating, setSidebarToggleAnimating] = useState(false);
   const sidebarToggleAnimTimerRef = useRef<number | null>(null);
@@ -93,6 +95,7 @@ function AppShell() {
       setIsAuthenticated(false);
       setMobileMenuOpen(false);
       setMobileChatOpen(false);
+      setNotificationsOpen(false);
     };
     window.addEventListener('wolf:session-expired', onSessionExpired);
     return () => window.removeEventListener('wolf:session-expired', onSessionExpired);
@@ -106,6 +109,7 @@ function AppShell() {
       if (!next) {
         setMobileMenuOpen(false);
         setMobileChatOpen(false);
+        setNotificationsOpen(false);
       }
     };
     apply();
@@ -216,14 +220,18 @@ function AppShell() {
           activeView={activeView}
           language={language}
           mobileChatOpen={mobileChatOpen}
+          notificationsOpen={notificationsOpen}
+          onNotificationsOpenChange={setNotificationsOpen}
           onToggleChat={() => {
             setMobileMenuOpen(false);
+            setNotificationsOpen(false);
             setMobileChatOpen((v) => !v);
           }}
           onNavigate={(view) => {
             setActiveView(view);
             setMobileMenuOpen(false);
             setMobileChatOpen(false);
+            setNotificationsOpen(false);
           }}
         />
 
@@ -235,6 +243,7 @@ function AppShell() {
             onClick={() => {
               setMobileMenuOpen(false);
               setMobileChatOpen(false);
+              setNotificationsOpen(false);
             }}
           />
         )}
@@ -315,6 +324,16 @@ function AppShell() {
         
         {/* Workspace */}
         <div className="workspace-area">
+          {!isNarrowLayout && currentUser?.role === 'athlete' ? (
+            <div className="desktop-athlete-chrome" aria-label={language === 'ES' ? 'Acciones' : 'Actions'}>
+              <NotificationsBell
+                variant="desktop"
+                isEs={language === 'ES'}
+                open={notificationsOpen}
+                onOpenChange={setNotificationsOpen}
+              />
+            </div>
+          ) : null}
           <CentralPanel
             language={language}
             activeView={activeView}
@@ -355,9 +374,11 @@ function AppShell() {
               setActiveView(view);
               setMobileMenuOpen(false);
               setMobileChatOpen(false);
+              setNotificationsOpen(false);
             }}
             onOpenMore={() => {
               setMobileChatOpen(false);
+              setNotificationsOpen(false);
               setMobileMenuOpen((open) => !open);
             }}
           />

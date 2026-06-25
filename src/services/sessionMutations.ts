@@ -212,6 +212,55 @@ export function toggleBlockComplex(
   return finalize(s, athlete, catalog);
 }
 
+export type ExerciseBlockKind = 'simple' | 'complex' | 'warmup';
+
+export function getExerciseBlockKind(block: SessionExerciseBlock): ExerciseBlockKind {
+  if (block.countsTowardTechnicalNBL === false) return 'warmup';
+  if (normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length)) return 'complex';
+  return 'simple';
+}
+
+/** Simple, complejo o calentamiento (mutuamente excluyentes en la hoja). */
+export function setExerciseBlockKind(
+  session: Session,
+  blockIndex: number,
+  kind: ExerciseBlockKind,
+  athlete: Athlete,
+  catalog: Exercise[],
+  defaultSecondExerciseId: string,
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block) return session;
+  if (getExerciseBlockKind(block) === kind) return session;
+
+  if (kind === 'warmup') {
+    block.countsTowardTechnicalNBL = false;
+    return finalize(s, athlete, catalog);
+  }
+
+  block.countsTowardTechnicalNBL = true;
+  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+
+  if (kind === 'complex' && !isComplex) {
+    block.blockType = 'complex';
+    block.segments = [{ exerciseId: block.exerciseId }, { exerciseId: defaultSecondExerciseId }];
+    for (const scheme of block.sets) {
+      scheme.segmentReps = ['1', '1'];
+      scheme.reps = 2;
+    }
+  } else if (kind === 'simple' && isComplex) {
+    block.blockType = 'single';
+    delete block.segments;
+    for (const scheme of block.sets) {
+      delete scheme.segmentReps;
+      scheme.reps = Math.max(1, scheme.reps);
+    }
+  }
+
+  return finalize(s, athlete, catalog);
+}
+
 export function duplicateSetAt(
   session: Session,
   blockIndex: number,
@@ -392,6 +441,42 @@ export function removeExerciseBlock(session: Session, blockIndex: number, athlet
   return finalize(s, athlete, catalog);
 }
 
+export function duplicateExerciseBlock(
+  session: Session,
+  blockIndex: number,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block || s.exercises.length >= MAX_BLOCKS_PER_SESSION) return session;
+  s.exercises.splice(blockIndex + 1, 0, structuredClone(block));
+  return finalize(s, athlete, catalog);
+}
+
+/** Actualiza reps de un segmento en todos los bloques de series del complejo. */
+export function setSegmentRepForAllSets(
+  session: Session,
+  blockIndex: number,
+  segmentIndex: number,
+  value: string,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const s = cloneSession(session);
+  const block = s.exercises[blockIndex];
+  if (!block?.segments?.length || normalizeBlockType(block) !== 'complex') return session;
+  for (let setIndex = 0; setIndex < block.sets.length; setIndex++) {
+    const row = { ...block.sets[setIndex]! };
+    const sr = [...(row.segmentReps ?? block.segments.map(() => '1'))];
+    sr[segmentIndex] = value;
+    row.segmentReps = sr;
+    row.reps = block.segments.reduce((acc, _, i) => acc + parseRepTokens(sr[i] ?? '0'), 0);
+    block.sets[setIndex] = row;
+  }
+  return finalize(s, athlete, catalog);
+}
+
 export function refreshSession(session: Session, athlete: Athlete, catalog: Exercise[]): Session {
   return finalize(cloneSession(session), athlete, catalog);
 }
@@ -407,6 +492,95 @@ export function replaceProgramSession(
   const d = w?.days.find((x) => x.dayNumber === dayNumber);
   if (d) d.session = session;
   return next;
+}
+
+/** Filas extra del bug antiguo o copias accidentales con sets=1 y misma prescripción. */
+function isBuggySpreadsheetAddRow(block: SessionExerciseBlock, setIndex: number): boolean {
+  if (setIndex <= 0) return false;
+  if (normalizeBlockType(block) === 'complex') return false;
+  const prev = block.sets[setIndex - 1];
+  const curr = block.sets[setIndex];
+  if (!prev || !curr) return false;
+  const samePrescription =
+    curr.percentage === prev.percentage &&
+    curr.reps === prev.reps &&
+    (curr.restSec ?? 150) === (prev.restSec ?? 150) &&
+    (curr.targetRir ?? 2) === (prev.targetRir ?? 2) &&
+    !curr.segmentReps &&
+    !prev.segmentReps &&
+    !curr.coachNote &&
+    !prev.coachNote;
+  if (!samePrescription) return false;
+  // Bug «Agregar fila»: copia con sets=1 aunque la fila anterior tuviera más series.
+  if (curr.sets === 1) return true;
+  // Copia idéntica accidental (duplicar fila sin cambiar nada).
+  return curr.sets === prev.sets;
+}
+
+export function sessionNeedsSpreadsheetRepair(session: Session): boolean {
+  return session.exercises.some(
+    (block) =>
+      normalizeBlockType(block) !== 'complex' &&
+      block.sets.some((_, setIndex) => isBuggySpreadsheetAddRow(block, setIndex)),
+  );
+}
+
+/**
+ * Convierte en bloques/ejercicios separados las filas que el bug de «Agregar fila»
+ * añadía al último ejercicio (esquemas duplicados con sets=1).
+ */
+export function repairBuggySpreadsheetRows(
+  session: Session,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  if (!sessionNeedsSpreadsheetRepair(session)) return session;
+
+  const newExercises: SessionExerciseBlock[] = [];
+
+  for (const block of session.exercises) {
+    if (normalizeBlockType(block) === 'complex' || block.sets.length <= 1) {
+      newExercises.push(block);
+      continue;
+    }
+
+    const kept: SetScheme[] = [block.sets[0]!];
+    const toSplit: SetScheme[] = [];
+
+    for (let i = 1; i < block.sets.length; i++) {
+      const scheme = block.sets[i]!;
+      if (isBuggySpreadsheetAddRow(block, i)) {
+        toSplit.push(scheme);
+      } else {
+        kept.push(scheme);
+      }
+    }
+
+    if (toSplit.length === 0) {
+      newExercises.push(block);
+      continue;
+    }
+
+    newExercises.push({ ...block, sets: [...kept] });
+
+    for (const scheme of toSplit) {
+      if (newExercises.length >= MAX_BLOCKS_PER_SESSION) {
+        const last = newExercises[newExercises.length - 1]!;
+        last.sets = [...last.sets, { ...scheme }];
+        continue;
+      }
+      newExercises.push({
+        exerciseId: block.exerciseId,
+        blockType: 'single',
+        sets: [{ ...scheme }],
+        countsTowardTechnicalNBL: block.countsTowardTechnicalNBL,
+      });
+    }
+  }
+
+  const s = cloneSession(session);
+  s.exercises = newExercises;
+  return finalize(s, athlete, catalog);
 }
 
 export const WL_SESSION_LIMITS = {

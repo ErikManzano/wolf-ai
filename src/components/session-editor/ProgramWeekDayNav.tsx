@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
+import ConfirmationModal from '../ConfirmationModal';
 import { formatWeekTonnageLabel } from './sessionSheetUtils';
+import { programNavConfirmCopy, type ProgramNavConfirmKind } from './programNavConfirmCopy';
 import {
   type DayRow,
   type WeekRow,
@@ -30,15 +32,22 @@ export interface ProgramWeekDayNavProps {
     maxWeeks: string;
     maxDays: string;
     removeDay: string;
+    removeWeek: string;
   };
+  canRemoveWeek?: boolean;
   canRemoveDay?: boolean;
   onSelectWeek: (weekNumber: number) => void;
   onSelectDay: (dayNumber: number) => void;
   onAddWeek: () => void;
   onAddDay: () => void;
+  onRemoveWeek?: (weekNumber: number) => void;
   onRemoveDay?: (dayNumber: number) => void;
   onReorderWeek?: (fromWeekNumber: number, toWeekNumber: number) => void;
   onReorderDay?: (fromDayNumber: number, toDayNumber: number) => void;
+  /** Rendered at the start of the week row head (e.g. session/stats tabs). */
+  weekHeadLeading?: React.ReactNode;
+  /** Tighter chrome for embedded program editor — more room for the exercise sheet. */
+  density?: 'default' | 'editor';
 }
 
 function scrollActiveIntoView(
@@ -51,11 +60,84 @@ function scrollActiveIntoView(
   el?.scrollIntoView({ behavior, block: 'nearest', inline: 'nearest' });
 }
 
+function dayTabLabel(row: DayRow): string {
+  const trimmed = row.label?.trim();
+  if (
+    trimmed &&
+    !/^D[ií]a\s+\d+$/i.test(trimmed) &&
+    !/^Day\s+\d+$/i.test(trimmed)
+  ) {
+    return trimmed;
+  }
+  return `D${row.dayNumber}`;
+}
+
+interface NavSectionHeadProps {
+  title: string;
+  meta?: string;
+  leading?: React.ReactNode;
+  hideContext?: boolean;
+  canRemove: boolean;
+  removeLabel: string;
+  onRemove?: () => void;
+}
+
+function NavSectionHead({
+  title,
+  meta,
+  leading,
+  hideContext = false,
+  canRemove,
+  removeLabel,
+  onRemove,
+}: NavSectionHeadProps) {
+  if (!canRemove || !onRemove) {
+    return (
+      <div
+        className={`wolf-program-nav-row-head wolf-program-nav-row-head--static${hideContext ? ' wolf-program-nav-row-head--context-hidden' : ''}`}
+      >
+        {leading ? <div className="wolf-program-nav-row-head__leading">{leading}</div> : null}
+        {!hideContext ? (
+          <div className="wolf-program-nav-row-head__context">
+            <span className="wolf-program-nav-row-head__title">{title}</span>
+            {meta ? <span className="wolf-program-nav-row-head__meta">{meta}</span> : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`wolf-program-nav-row-head${hideContext ? ' wolf-program-nav-row-head--context-hidden' : ''}`}
+    >
+      {leading ? <div className="wolf-program-nav-row-head__leading">{leading}</div> : null}
+      {!hideContext ? (
+        <div className="wolf-program-nav-row-head__context">
+          <span className="wolf-program-nav-row-head__title">{title}</span>
+          {meta ? <span className="wolf-program-nav-row-head__meta">{meta}</span> : null}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className="wolf-program-nav-remove-btn"
+        onClick={onRemove}
+        aria-label={removeLabel}
+        title={removeLabel}
+      >
+        <Trash2 size={15} strokeWidth={2} aria-hidden />
+        <span className="wolf-program-nav-remove-btn__text">{removeLabel}</span>
+      </button>
+    </div>
+  );
+}
+
 interface SortableWeekTabProps {
   row: WeekRow;
   isActive: boolean;
   tonnage: number;
   isEs: boolean;
+  compactLabel?: boolean;
   canReorder: boolean;
   reduceMotion: boolean | null;
   onSelect: (weekNumber: number) => void;
@@ -66,11 +148,18 @@ const SortableWeekTab: React.FC<SortableWeekTabProps> = ({
   isActive,
   tonnage,
   isEs,
+  compactLabel = false,
   canReorder,
   reduceMotion,
   onSelect,
 }) => {
-  const weekLabel = isEs ? `Semana ${row.weekNumber}` : `Week ${row.weekNumber}`;
+  const weekLabel = compactLabel
+    ? isEs
+      ? `S${row.weekNumber}`
+      : `W${row.weekNumber}`
+    : isEs
+      ? `Semana ${row.weekNumber}`
+      : `Week ${row.weekNumber}`;
 
   return (
     <Reorder.Item
@@ -100,36 +189,28 @@ const SortableWeekTab: React.FC<SortableWeekTabProps> = ({
   );
 };
 
+type PendingConfirm =
+  | { kind: 'removeWeek'; weekNumber: number }
+  | { kind: 'removeDay'; dayNumber: number }
+  | { kind: 'reorderWeek'; from: number; to: number; nextRows: WeekRow[] }
+  | { kind: 'reorderDay'; from: number; to: number; nextRows: DayRow[] };
+
 interface SortableDayTabProps {
   row: DayRow;
   isActive: boolean;
   canReorder: boolean;
-  canRemove: boolean;
   reduceMotion: boolean | null;
-  removeLabel: string;
   onSelect: (dayNumber: number) => void;
-  onRemove?: (dayNumber: number) => void;
 }
 
 const SortableDayTab: React.FC<SortableDayTabProps> = ({
   row,
   isActive,
   canReorder,
-  canRemove,
   reduceMotion,
-  removeLabel,
   onSelect,
-  onRemove,
 }) => {
-  const trimmed = row.label?.trim();
-  const label =
-    trimmed &&
-    !/^D[ií]a\s+\d+$/i.test(trimmed) &&
-    !/^Day\s+\d+$/i.test(trimmed)
-      ? trimmed
-      : `D${row.dayNumber}`;
-
-  const showRemove = isActive && canRemove && onRemove;
+  const label = dayTabLabel(row);
 
   return (
     <Reorder.Item
@@ -143,32 +224,14 @@ const SortableDayTab: React.FC<SortableDayTabProps> = ({
       whileDrag={reduceMotion ? undefined : { scale: 1.04, boxShadow: '0 8px 22px rgba(0, 0, 0, 0.24)', zIndex: 24 }}
       style={{ touchAction: canReorder ? 'pan-x' : 'manipulation' }}
     >
-      {showRemove ? (
-        <div className="wolf-day-tab active" aria-current="true">
-          <button type="button" className="wolf-day-tab__select" onClick={() => onSelect(row.dayNumber)}>
-            {label}
-          </button>
-          <button
-            type="button"
-            className="wolf-day-tab__remove"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => onRemove(row.dayNumber)}
-            aria-label={removeLabel}
-            title={removeLabel}
-          >
-            <X size={14} strokeWidth={2.25} aria-hidden />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className={`wolf-day-tab${isActive ? ' active' : ''}`}
-          aria-current={isActive ? 'true' : undefined}
-          onClick={() => onSelect(row.dayNumber)}
-        >
-          {label}
-        </button>
-      )}
+      <button
+        type="button"
+        className={`wolf-day-tab${isActive ? ' active' : ''}`}
+        aria-current={isActive ? 'true' : undefined}
+        onClick={() => onSelect(row.dayNumber)}
+      >
+        {label}
+      </button>
     </Reorder.Item>
   );
 };
@@ -182,20 +245,27 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   weekTonnages,
   canAddWeek,
   canAddDay,
+  canRemoveWeek = false,
   canRemoveDay = false,
   labels,
   onSelectWeek,
   onSelectDay,
   onAddWeek,
   onAddDay,
+  onRemoveWeek,
   onRemoveDay,
   onReorderWeek,
   onReorderDay,
+  weekHeadLeading,
+  density = 'default',
 }) => {
   const reduceMotion = useReducedMotion();
+  const isEditorDensity = density === 'editor';
+  const hideWeekContext = isEditorDensity && Boolean(weekHeadLeading);
   const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStripRef = useRef<HTMLDivElement>(null);
   const dayWeekRef = useRef(selectedWeek);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
 
   const canReorderWeeks = Boolean(onReorderWeek) && program.weeks.length > 1;
   const canReorderDays = Boolean(onReorderDay) && (selectedWeekData?.days.length ?? 0) > 1;
@@ -254,10 +324,10 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         weekRows.map((r) => r.id),
         nextRows.map((r) => r.id),
       );
-      setWeekRows(nextRows);
-      if (move && onReorderWeek) {
-        onReorderWeek(weekRows[move.from]!.weekNumber, weekRows[move.to]!.weekNumber);
-      }
+      if (!move || !onReorderWeek) return;
+      const from = weekRows[move.from]!.weekNumber;
+      const to = weekRows[move.to]!.weekNumber;
+      setPendingConfirm({ kind: 'reorderWeek', from, to, nextRows });
     },
     [weekRows, onReorderWeek],
   );
@@ -268,22 +338,112 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         dayRows.map((r) => r.id),
         nextRows.map((r) => r.id),
       );
-      setDayRows(nextRows);
-      if (move && onReorderDay) {
-        onReorderDay(dayRows[move.from]!.dayNumber, dayRows[move.to]!.dayNumber);
-      }
+      if (!move || !onReorderDay) return;
+      const from = dayRows[move.from]!.dayNumber;
+      const to = dayRows[move.to]!.dayNumber;
+      setPendingConfirm({ kind: 'reorderDay', from, to, nextRows });
     },
     [dayRows, onReorderDay],
   );
+
+  const requestRemoveWeek = useCallback(
+    (weekNumber: number) => {
+      if (!canRemoveWeek || !onRemoveWeek) return;
+      setPendingConfirm({ kind: 'removeWeek', weekNumber });
+    },
+    [canRemoveWeek, onRemoveWeek],
+  );
+
+  const requestRemoveDay = useCallback(
+    (dayNumber: number) => {
+      if (!canRemoveDay || !onRemoveDay) return;
+      setPendingConfirm({ kind: 'removeDay', dayNumber });
+    },
+    [canRemoveDay, onRemoveDay],
+  );
+
+  const handleConfirmPending = useCallback(() => {
+    if (!pendingConfirm) return;
+    switch (pendingConfirm.kind) {
+      case 'removeWeek':
+        onRemoveWeek?.(pendingConfirm.weekNumber);
+        break;
+      case 'removeDay':
+        onRemoveDay?.(pendingConfirm.dayNumber);
+        break;
+      case 'reorderWeek':
+        setWeekRows(pendingConfirm.nextRows);
+        onReorderWeek?.(pendingConfirm.from, pendingConfirm.to);
+        break;
+      case 'reorderDay':
+        setDayRows(pendingConfirm.nextRows);
+        onReorderDay?.(pendingConfirm.from, pendingConfirm.to);
+        break;
+      default:
+        break;
+    }
+    setPendingConfirm(null);
+  }, [pendingConfirm, onRemoveWeek, onRemoveDay, onReorderWeek, onReorderDay]);
+
+  const confirmModal = pendingConfirm
+    ? programNavConfirmCopy(pendingConfirm.kind as ProgramNavConfirmKind, isEs, {
+        weekNumber: pendingConfirm.kind === 'removeWeek' ? pendingConfirm.weekNumber : undefined,
+        dayNumber: pendingConfirm.kind === 'removeDay' ? pendingConfirm.dayNumber : undefined,
+        from:
+          pendingConfirm.kind === 'reorderWeek' || pendingConfirm.kind === 'reorderDay'
+            ? pendingConfirm.from
+            : undefined,
+        to:
+          pendingConfirm.kind === 'reorderWeek' || pendingConfirm.kind === 'reorderDay'
+            ? pendingConfirm.to
+            : undefined,
+      })
+    : null;
 
   const weekOptionLabel = (n: number, tonnage: number) => {
     const load = formatWeekTonnageLabel(tonnage, isEs);
     return isEs ? `Semana - ${n} · ${load}` : `Week - ${n} · ${load}`;
   };
 
+  const selectedDayRow = dayRows.find((row) => row.dayNumber === selectedDay);
+  const selectedDayTitle = selectedDayRow
+    ? dayTabLabel(selectedDayRow)
+    : isEs
+      ? `Día ${selectedDay}`
+      : `Day ${selectedDay}`;
+  const selectedWeekTitle = isEs ? `Semana ${selectedWeek}` : `Week ${selectedWeek}`;
+  const selectedWeekMeta = formatWeekTonnageLabel(weekTonnages[selectedWeek] ?? 0, isEs);
+
   return (
-    <div className="wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact">
+    <div
+      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}`}
+    >
+      <ConfirmationModal
+        open={pendingConfirm != null}
+        title={confirmModal?.title ?? ''}
+        message={confirmModal?.message ?? ''}
+        confirmLabel={confirmModal?.confirmLabel ?? ''}
+        cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+        danger={confirmModal?.danger}
+        onConfirm={handleConfirmPending}
+        onCancel={() => setPendingConfirm(null)}
+      />
       <div className="wolf-program-nav-compact">
+        <div className="wolf-program-nav-section wolf-program-nav-section--weeks">
+          <NavSectionHead
+            title={selectedWeekTitle}
+            meta={selectedWeekMeta}
+            leading={weekHeadLeading}
+            hideContext={hideWeekContext}
+            canRemove={canRemoveWeek}
+            removeLabel={labels.removeWeek}
+            onRemove={
+              canRemoveWeek && onRemoveWeek
+                ? () => requestRemoveWeek(selectedWeek)
+                : undefined
+            }
+          />
+
         <div className="wolf-week-select-mobile">
           <div className="wolf-week-select-mobile__row">
             <label className="wolf-week-select-mobile__field">
@@ -343,6 +503,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   isActive={selectedWeek === row.weekNumber}
                   tonnage={weekTonnages[row.weekNumber] ?? 0}
                   isEs={isEs}
+                  compactLabel={isEditorDensity}
                   canReorder={canReorderWeeks}
                   reduceMotion={reduceMotion}
                   onSelect={onSelectWeek}
@@ -372,14 +533,24 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
           </button>
         </div>
+        </div>
 
         <section
-          className="wolf-day-tabs-section"
+          className="wolf-program-nav-section wolf-program-nav-section--days"
           aria-label={labels.daysRow}
           id={`wolf-week-panel-${selectedWeek}`}
           role="tabpanel"
           aria-labelledby={`wolf-week-tab-${selectedWeek}`}
         >
+          <NavSectionHead
+            title={selectedDayTitle}
+            canRemove={canRemoveDay}
+            removeLabel={labels.removeDay}
+            onRemove={
+              canRemoveDay && onRemoveDay ? () => requestRemoveDay(selectedDay) : undefined
+            }
+          />
+          <div className="wolf-day-tabs-section">
           <div className="wolf-day-tabs-strip" ref={dayStripRef}>
             <Reorder.Group
               as="div"
@@ -396,11 +567,8 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   row={row}
                   isActive={selectedDay === row.dayNumber}
                   canReorder={canReorderDays}
-                  canRemove={canRemoveDay}
                   reduceMotion={reduceMotion}
-                  removeLabel={labels.removeDay}
                   onSelect={onSelectDay}
-                  onRemove={onRemoveDay}
                 />
               ))}
             </Reorder.Group>
@@ -414,6 +582,18 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             >
               <Plus size={16} strokeWidth={2.25} aria-hidden />
             </button>
+            {isEditorDensity && canRemoveDay && onRemoveDay ? (
+              <button
+                type="button"
+                className="wolf-program-nav-day-remove wolf-program-nav-day-remove--strip"
+                onClick={() => requestRemoveDay(selectedDay)}
+                aria-label={labels.removeDay}
+                title={labels.removeDay}
+              >
+                <Trash2 size={14} strokeWidth={2} aria-hidden />
+              </button>
+            ) : null}
+          </div>
           </div>
         </section>
       </div>

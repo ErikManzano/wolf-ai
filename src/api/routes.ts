@@ -36,6 +36,9 @@ import { getEnrollmentsForCoachProgram, upsertAssignmentInList } from '../utils/
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
+import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
+import { buildPlanChangeMessages } from './planChangeNotificationMessages';
+import { randomUUID } from 'node:crypto';
 
 export interface MockApiState {
   athletes: Athlete[];
@@ -55,8 +58,53 @@ export interface MockApiState {
   coachPrograms: CoachProgram[];
   /** athleteProfileId → coachId dueño (modo memoria sin Postgres) */
   wlAthleteCoachById: Record<string, string>;
+  planChangeNotifications: PlanChangeNotification[];
 }
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
+
+function createMockPlanChangeNotification(
+  state: MockApiState,
+  params: {
+    coachId: string;
+    recipientUserId: string;
+    athleteProfileId: string;
+    assignmentId?: string;
+    coachProgramId: string;
+    programName: string;
+    editContext: ProgramEditContext;
+  },
+): PlanChangeNotification {
+  const coach = state.users.find((u) => u.id === params.coachId);
+  const coachName = coach?.name ?? 'Coach';
+  const changedAt = new Date();
+  const { messageEs, messageEn } = buildPlanChangeMessages({
+    programName: params.programName,
+    coachName,
+    weekNumber: params.editContext.weekNumber,
+    dayNumber: params.editContext.dayNumber,
+    dayLabel: params.editContext.dayLabel,
+    changedAt,
+  });
+  const notification: PlanChangeNotification = {
+    id: `pcn-${randomUUID()}`,
+    recipientUserId: params.recipientUserId,
+    coachId: params.coachId,
+    coachName,
+    coachProgramId: params.coachProgramId,
+    programName: params.programName,
+    assignmentId: params.assignmentId,
+    athleteProfileId: params.athleteProfileId,
+    weekNumber: params.editContext.weekNumber,
+    dayNumber: params.editContext.dayNumber,
+    dayLabel: params.editContext.dayLabel,
+    changedAt: changedAt.toISOString(),
+    readAt: null,
+    messageEs,
+    messageEn,
+  };
+  state.planChangeNotifications.unshift(notification);
+  return notification;
+}
 
 function sanitizeUser(u: WolfUser): Omit<WolfUser, 'password' | 'passwordHash'> {
   return {
@@ -220,6 +268,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         onAssignmentsChanged: (coachId) => notify?.('assignments:changed', { coachId }),
         onTemplatesChanged: (coachId) => notify?.('wl-templates:changed', { coachId }),
         onProgramsChanged: (coachId) => notify?.('coach-programs:changed', { coachId }),
+        onPlanChangeCreated: (notification) => notify?.('plan-change:created', notification),
       })
     : null;
 
@@ -1343,7 +1392,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(403).json({ error: 'Forbidden.' });
       return;
     }
-    const body = req.body as { program?: ProgramAssignment['program'] };
+    const body = req.body as { program?: ProgramAssignment['program']; editContext?: ProgramEditContext };
     if (!body.program) {
       res.status(400).json({ error: 'program is required.' });
       return;
@@ -1352,6 +1401,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       try {
         const updated = await coachService.updateActiveAssignment(existing.coachId, id, {
           program: body.program,
+          editContext: body.editContext,
         });
         res.json(updated);
         return;
@@ -1370,6 +1420,18 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         return;
       }
       notify?.('assignments:changed', { id: updated.id, athleteProfileId: updated.athleteProfileId });
+      if (body.editContext && existing.athleteUserId) {
+        const notification = createMockPlanChangeNotification(state, {
+          coachId: existing.coachId,
+          recipientUserId: existing.athleteUserId,
+          athleteProfileId: existing.athleteProfileId,
+          assignmentId: id,
+          coachProgramId: existing.coachProgramId ?? existing.program.id,
+          programName: body.program.name,
+          editContext: body.editContext,
+        });
+        notify?.('plan-change:created', notification);
+      }
       res.json(updated);
       return;
     }
@@ -1390,6 +1452,68 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     state.assignments[idx] = updated;
     notify?.('assignments:changed', { id: updated.id, athleteProfileId: updated.athleteProfileId });
+    if (body.editContext && current.athleteUserId) {
+      const notification = createMockPlanChangeNotification(state, {
+        coachId: current.coachId,
+        recipientUserId: current.athleteUserId,
+        athleteProfileId: current.athleteProfileId,
+        assignmentId: id,
+        coachProgramId: current.coachProgramId ?? current.program.id,
+        programName: body.program.name,
+        editContext: body.editContext,
+      });
+      notify?.('plan-change:created', notification);
+    }
+    res.json(updated);
+  });
+
+  router.get('/notifications', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const asCoach = actor.role === 'coach' || actor.role === 'super_admin';
+    if (store) {
+      const list = await store.listNotificationsForUser(actor.id, { asCoach });
+      res.json(list);
+      return;
+    }
+    const list = asCoach
+      ? state.planChangeNotifications.filter((n) => n.coachId === actor.id)
+      : state.planChangeNotifications.filter((n) => n.recipientUserId === actor.id);
+    res.json(list);
+  });
+
+  router.patch('/notifications/:id/read', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (store) {
+      const updated = await store.markNotificationRead(id, actor.id);
+      if (!updated) {
+        res.status(404).json({ error: 'Notification not found.' });
+        return;
+      }
+      res.json(updated);
+      return;
+    }
+    const idx = state.planChangeNotifications.findIndex(
+      (n) => n.id === id && n.recipientUserId === actor.id,
+    );
+    if (idx < 0) {
+      res.status(404).json({ error: 'Notification not found.' });
+      return;
+    }
+    const current = state.planChangeNotifications[idx]!;
+    const updated: PlanChangeNotification = {
+      ...current,
+      readAt: current.readAt ?? new Date().toISOString(),
+    };
+    state.planChangeNotifications[idx] = updated;
     res.json(updated);
   });
 
@@ -2224,7 +2348,12 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     }
     const coachId = coachProgramsScope(actor);
     const { id } = req.params as { id: string };
-    const patch = (req.body ?? {}) as { name?: string; program?: GeneratedProgram; status?: CoachProgramStatus };
+    const patch = (req.body ?? {}) as {
+      name?: string;
+      program?: GeneratedProgram;
+      status?: CoachProgramStatus;
+      editContext?: ProgramEditContext;
+    };
     if (coachService) {
       try {
         const updated = await coachService.updateProgram(coachId, id, patch);
@@ -2263,6 +2392,18 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         asg.version += 1;
         asg.program = cloned;
         asg.versionHistory = [...(asg.versionHistory ?? []), hist];
+        if (patch.editContext && asg.athleteUserId) {
+          const notification = createMockPlanChangeNotification(state, {
+            coachId,
+            recipientUserId: asg.athleteUserId,
+            athleteProfileId: asg.athleteProfileId,
+            assignmentId: asg.id,
+            coachProgramId: id,
+            programName: updated.name,
+            editContext: patch.editContext,
+          });
+          notify?.('plan-change:created', notification);
+        }
       }
       notify?.('assignments:changed', { coachId });
     }

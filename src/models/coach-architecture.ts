@@ -78,6 +78,7 @@ export interface UpdateCoachProgramInput {
   name?: string;
   program?: GeneratedProgram;
   status?: CoachProgramStatus;
+  editContext?: import('./notifications').ProgramEditContext;
 }
 
 export interface AssignCoachProgramInput {
@@ -135,6 +136,7 @@ export interface AssignTemplateInput {
 /** Coach live-edit of an in-flight assignment (step 3 wizard / assignment detail). */
 export interface UpdateActiveAssignmentInput {
   program: GeneratedProgram;
+  editContext?: import('./notifications').ProgramEditContext;
 }
 
 export type CreateAthleteProfileInput = Omit<Athlete, 'fatigueScore' | 'readinessScore'> &

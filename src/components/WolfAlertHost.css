@@ -47,17 +47,11 @@
     0 10px 28px rgba(0, 0, 0, 0.42),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   pointer-events: auto;
-  animation: wolf-alert-in 0.24s ease-out;
 }
 
-@keyframes wolf-alert-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (prefers-reduced-motion: reduce) {
+  .wolf-alert {
+    animation: none;
   }
 }
 
@@ -156,7 +150,10 @@
   color: #a1a1aa;
   cursor: pointer;
   touch-action: manipulation;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .wolf-alert__close:hover {

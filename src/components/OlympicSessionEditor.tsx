@@ -5,13 +5,14 @@ import type { SessionCatalogProps } from './session-editor/types';
 import { addExerciseBlock, moveExerciseBlock, removeExerciseBlock, setExerciseBlockOrder, WL_SESSION_LIMITS } from '../services/sessionMutations';
 import { normalizeBlockType } from '../services/trainingEngine';
 import { BlockKindBadges, ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
+import { SessionDayEditor } from './session-editor/SessionDayEditor';
 import { SessionDayHero } from './session-editor/SessionDayHero';
-import { SessionSheetOverview } from './session-editor/SessionSheetOverview';
 import { blockDisplayName } from './session-editor/sessionSheetUtils';
 import { AppBreadcrumb } from './wl-shared/AppBreadcrumb';
 import { StickySessionActions } from './mobile-wl/navigation/StickySessionActions';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import './session-editor/set-rows.css';
+import './session-editor/session-sheet-spreadsheet.css';
 import './session-editor/session-editor-polish.css';
 import './mobile-wl/mobile-wl.css';
 import './wl-shared/app-breadcrumb.css';
@@ -66,6 +67,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 }) => {
   const [view, setView] = useState<SessionEditorView>('sheet');
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
+  const [focusBlockIndex, setFocusBlockIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialBlockIndex == null || initialBlockIndex < 0) return;
@@ -104,7 +106,11 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   );
 
   const handleAddExercise = useCallback(() => {
-    apply(() => addExerciseBlock(session, exercises[0]?.id ?? 'ex-001', athlete, exercises));
+    apply(() => {
+      const next = addExerciseBlock(session, '', athlete, exercises);
+      setFocusBlockIndex(next.exercises.length - 1);
+      return next;
+    });
   }, [apply, session, exercises, athlete]);
 
   const handleReorderBlocks = useCallback(
@@ -214,15 +220,20 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             </div>
           ) : (
             <>
-              <SessionSheetOverview
+              <SessionDayEditor
                 session={session}
+                athlete={athlete}
                 exercises={exercises}
+                pickerOptions={catalog.pickerOptions}
                 isEs={isEs}
-                breadcrumbItems={sheetBreadcrumbItems}
+                breadcrumbItems={embedded ? undefined : sheetBreadcrumbItems}
+                showSummary={!embedded}
                 canAddExercise={canAddExercise}
                 dense={embedded}
-                hideHead={false}
                 sortable
+                focusBlockIndex={focusBlockIndex}
+                onFocusBlockHandled={() => setFocusBlockIndex(null)}
+                onApply={apply}
                 onSelectBlock={openExercise}
                 onAddExercise={handleAddExercise}
                 onReorderBlocks={handleReorderBlocks}

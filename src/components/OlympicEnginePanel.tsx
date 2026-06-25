@@ -142,12 +142,15 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
     }
   }, [assignments, athleteId, editingAssignmentId]);
 
-  const debouncedAssignmentSync = useDebouncedCallback((assignmentId: string, p: GeneratedProgram) => {
-    updateAssignmentProgram(assignmentId, p);
-  }, 600);
+  const debouncedAssignmentSync = useDebouncedCallback(
+    (assignmentId: string, p: GeneratedProgram, editContext?: import('../models/notifications').ProgramEditContext) => {
+      updateAssignmentProgram(assignmentId, p, editContext);
+    },
+    600,
+  );
 
   const handleProgramChange = useCallback(
-    (p: GeneratedProgram | null) => {
+    (p: GeneratedProgram | null, editContext?: import('../models/notifications').ProgramEditContext) => {
       setProgram(p);
       if (!p) {
         editingAssignmentRef.current = null;
@@ -161,7 +164,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
       }
       const aid = editingAssignmentRef.current;
       if (aid) {
-        debouncedAssignmentSync(aid, p);
+        debouncedAssignmentSync(aid, p, editContext);
         return;
       }
       try {
@@ -170,7 +173,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
         /* ignore */
       }
     },
-    [debouncedAssignmentSync, updateAssignmentProgram],
+    [debouncedAssignmentSync],
   );
 
   const onNewProgramGenerated = useCallback(() => {

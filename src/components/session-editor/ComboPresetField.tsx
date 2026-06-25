@@ -15,6 +15,8 @@ export interface ComboPresetFieldProps<T extends string | number> {
   'aria-label'?: string;
   className?: string;
   variant?: 'premium';
+  /** Short unit shown beside the value (e.g. series, reps). */
+  suffix?: string;
 }
 
 export function ComboPresetField<T extends string | number>({
@@ -24,6 +26,7 @@ export function ComboPresetField<T extends string | number>({
   'aria-label': ariaLabel,
   className,
   variant = 'premium',
+  suffix,
 }: ComboPresetFieldProps<T>) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -66,11 +69,14 @@ export function ComboPresetField<T extends string | number>({
   const rootClass = [
     'wolf-se-combo-select',
     isPremium ? 'wolf-se-combo-select--premium wolf-se-combo-preset' : '',
+    suffix ? 'wolf-se-combo-preset--with-suffix' : '',
     open ? 'is-open' : '',
     className ?? '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  const renderLabel = (label: string) => (suffix ? `${label} ${suffix}` : label);
 
   return (
     <div ref={rootRef} className={rootClass}>
@@ -109,7 +115,14 @@ export function ComboPresetField<T extends string | number>({
           }
         }}
       >
-        <span className="wolf-se-combo-preset__value">{selected?.label ?? ''}</span>
+        <span className="wolf-se-combo-preset__trigger-inner">
+          <span className="wolf-se-combo-preset__value">{selected?.label ?? ''}</span>
+          {suffix ? (
+            <span className="wolf-se-combo-preset__suffix" aria-hidden>
+              {suffix}
+            </span>
+          ) : null}
+        </span>
       </button>
       <button
         type="button"
@@ -133,7 +146,7 @@ export function ComboPresetField<T extends string | number>({
         onPick={pickOption}
         onClose={close}
         onActiveIndexChange={setActiveIndex}
-        renderOption={(opt) => opt.label}
+        renderOption={(opt) => renderLabel(opt.label)}
       />
     </div>
   );

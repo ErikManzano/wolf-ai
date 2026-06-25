@@ -204,7 +204,12 @@ export function WlProgramsProvider({
   const updateProgram = useCallback(
     async (
       id: string,
-      patch: { name?: string; program?: CoachProgram['program']; status?: CoachProgramStatus },
+      patch: {
+        name?: string;
+        program?: CoachProgram['program'];
+        status?: CoachProgramStatus;
+        editContext?: import('../../models/notifications').ProgramEditContext;
+      },
     ): Promise<CoachProgram | null> => {
       if (!scopedCoachId) return null;
       if (!apiMode) {

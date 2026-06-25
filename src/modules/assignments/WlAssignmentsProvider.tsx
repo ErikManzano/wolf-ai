@@ -25,7 +25,7 @@ import {
   isApiEnabled,
   preferLocalDataFallback,
 } from './apiClient';
-import { subscribeAssignmentsRealtime } from './realtimeClient';
+import { subscribeAssignmentsRealtime, subscribeRealtimeEvent, PLAN_CHANGE_EVENT } from './realtimeClient';
 import {
   athleteUserIdForProfile,
   initialAssignmentsState,
@@ -38,6 +38,9 @@ import {
   persistSetLogsLocal,
 } from './assignmentStore';
 import { upsertAssignmentInList } from '../../utils/wlAssignmentRules';
+import { filterAssignmentsForAthlete } from './athleteAssignmentFilter';
+import { loadAthletesFromLocal } from '../wl-athletes/athleteStore';
+import type { PlanChangeNotification, ProgramEditContext } from '../../models/notifications';
 import type { SetLogInput, WlAssignmentsContextValue, WlAssignmentsProviderProps } from './types';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import {
@@ -91,6 +94,7 @@ export function WlAssignmentsProvider({
   );
   const [pendingTrackingKeys, setPendingTrackingKeys] = useState<Set<string>>(() => new Set());
   const [failedTrackingKeys, setFailedTrackingKeys] = useState<Set<string>>(() => new Set());
+  const [planChangeNotifications, setPlanChangeNotifications] = useState<PlanChangeNotification[]>([]);
 
   useEffect(() => {
     setLogsRef.current = setLogs;
@@ -128,7 +132,18 @@ export function WlAssignmentsProvider({
         return;
       }
       const list = (await res.json()) as ProgramAssignment[];
-      if (Array.isArray(list)) setAssignments(list.map(normalizeAssignment));
+      if (Array.isArray(list)) {
+        const normalized = list.map(normalizeAssignment);
+        if (normalized.length > 0) {
+          setAssignments(normalized);
+          if (allowLocalFallback) persistAssignmentsLocal(normalized);
+        } else if (allowLocalFallback) {
+          const cached = loadAssignmentsFromLocal();
+          if (cached?.length) setAssignments(cached);
+        } else {
+          setAssignments([]);
+        }
+      }
     } catch {
       const cached = allowLocalFallback ? loadAssignmentsFromLocal() : null;
       if (cached?.length) setAssignments(cached.map(normalizeAssignment));
@@ -171,7 +186,15 @@ export function WlAssignmentsProvider({
     void loadAssignmentsFromApi();
     void loadCompletionsFromApi();
     void loadSetLogsFromApi();
-  }, [apiMode, apiToken, loadAssignmentsFromApi, loadCompletionsFromApi, loadSetLogsFromApi]);
+  }, [
+    apiMode,
+    apiToken,
+    athleteUser?.id,
+    athleteUser?.linkedAthleteId,
+    loadAssignmentsFromApi,
+    loadCompletionsFromApi,
+    loadSetLogsFromApi,
+  ]);
 
   useEffect(() => {
     if (!apiMode || !apiToken) return;
@@ -179,6 +202,73 @@ export function WlAssignmentsProvider({
       void loadAssignmentsFromApi();
     });
   }, [apiMode, apiToken, loadAssignmentsFromApi]);
+
+  const loadPlanChangeNotifications = useCallback(async () => {
+    if (!apiMode || !apiToken) return;
+    try {
+      const res = await assignmentApiFetch('/notifications');
+      if (!res.ok) return;
+      const list = (await res.json()) as PlanChangeNotification[];
+      if (Array.isArray(list)) setPlanChangeNotifications(list);
+    } catch {
+      /* keep cached */
+    }
+  }, [apiMode, apiToken]);
+
+  useEffect(() => {
+    if (!apiMode || !apiToken || !athleteUser) return;
+    void loadPlanChangeNotifications();
+  }, [apiMode, apiToken, athleteUser?.id, loadPlanChangeNotifications]);
+
+  useEffect(() => {
+    if (!apiMode || !apiToken || !athleteUser) return;
+    return subscribeRealtimeEvent(PLAN_CHANGE_EVENT, (payload) => {
+      const notification = payload as PlanChangeNotification;
+      if (!notification?.id || notification.recipientUserId !== athleteUser.id) return;
+      setPlanChangeNotifications((prev) => [
+        notification,
+        ...prev.filter((n) => n.id !== notification.id),
+      ]);
+      pushAlert({
+        tone: 'info',
+        title:
+          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('es')
+            ? 'Plan actualizado'
+            : 'Plan updated',
+        message:
+          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('es')
+            ? notification.messageEs
+            : notification.messageEn,
+      });
+    });
+  }, [apiMode, apiToken, athleteUser, pushAlert]);
+
+  const markPlanChangeNotificationRead = useCallback(
+    async (id: string) => {
+      setPlanChangeNotifications((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n,
+        ),
+      );
+      if (!apiMode || !apiToken) return;
+      try {
+        const res = await assignmentApiFetch(`/notifications/${id}/read`, { method: 'PATCH' });
+        if (!res.ok) return;
+        const updated = (await res.json()) as PlanChangeNotification;
+        setPlanChangeNotifications((prev) =>
+          prev.map((n) => (n.id === updated.id ? updated : n)),
+        );
+      } catch {
+        /* optimistic */
+      }
+    },
+    [apiMode, apiToken],
+  );
+
+  const unreadPlanChangeCount = useMemo(
+    () => planChangeNotifications.filter((n) => !n.readAt).length,
+    [planChangeNotifications],
+  );
 
   useEffect(() => {
     if (apiMode) return;
@@ -268,38 +358,41 @@ export function WlAssignmentsProvider({
     [apiMode, apiToken, currentUser, users, pushAlert],
   );
 
-  const updateAssignmentProgram = useCallback((assignmentId: string, program: ProgramAssignment['program']) => {
-    setAssignments((prev) =>
-      prev.map((a) =>
-        a.id === assignmentId
-          ? {
-              ...a,
-              version: (a.version ?? 1) + 1,
-              program: { ...program, athleteId: a.athleteProfileId },
-              versionHistory: [
-                ...(a.versionHistory ?? []),
-                { version: a.version ?? 1, editedAt: new Date().toISOString(), program: a.program },
-              ],
-            }
-          : a,
-      ),
-    );
-    if (isApiEnabled()) {
-      void assignmentApiFetch(`/assignments/${assignmentId}/program`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ program }),
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
-        .then((updated) => {
-          if (!updated) return;
-          setAssignments((prev) => prev.map((a) => (a.id === updated.id ? normalizeAssignment(updated) : a)));
+  const updateAssignmentProgram = useCallback(
+    (assignmentId: string, program: ProgramAssignment['program'], editContext?: ProgramEditContext) => {
+      setAssignments((prev) =>
+        prev.map((a) =>
+          a.id === assignmentId
+            ? {
+                ...a,
+                version: (a.version ?? 1) + 1,
+                program: { ...program, athleteId: a.athleteProfileId },
+                versionHistory: [
+                  ...(a.versionHistory ?? []),
+                  { version: a.version ?? 1, editedAt: new Date().toISOString(), program: a.program },
+                ],
+              }
+            : a,
+        ),
+      );
+      if (isApiEnabled()) {
+        void assignmentApiFetch(`/assignments/${assignmentId}/program`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ program, editContext }),
         })
-        .catch(() => {
-          /* optimistic */
-        });
-    }
-  }, []);
+          .then((r) => (r.ok ? (r.json() as Promise<ProgramAssignment>) : null))
+          .then((updated) => {
+            if (!updated) return;
+            setAssignments((prev) => prev.map((a) => (a.id === updated.id ? normalizeAssignment(updated) : a)));
+          })
+          .catch(() => {
+            /* optimistic */
+          });
+      }
+    },
+    [],
+  );
 
   const removeAssignment = useCallback(async (assignmentId: string): Promise<boolean> => {
     const prevAssignments = assignments;
@@ -598,17 +691,11 @@ export function WlAssignmentsProvider({
   );
 
   const myAssignments = useMemo(() => {
-    const linked = athleteUser?.linkedAthleteId;
-    const userId = athleteUser?.id;
-    if (!linked && !userId) return [];
-    return assignments
-      .filter(
-        (a) =>
-          (linked != null && a.athleteProfileId === linked) ||
-          (userId != null && a.athleteUserId === userId),
-      )
-      .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime());
-  }, [assignments, athleteUser?.linkedAthleteId, athleteUser?.id]);
+    const roster = loadAthletesFromLocal();
+    return filterAssignmentsForAthlete(assignments, athleteUser, roster).sort(
+      (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime(),
+    );
+  }, [assignments, athleteUser]);
 
   const myAssignment = useMemo(() => myAssignments[0], [myAssignments]);
 
@@ -638,6 +725,10 @@ export function WlAssignmentsProvider({
     exerciseTrackingKey,
     sessionTrackingKey,
     reloadAssignmentsFromApi: loadAssignmentsFromApi,
+    planChangeNotifications,
+    unreadPlanChangeCount,
+    loadPlanChangeNotifications,
+    markPlanChangeNotificationRead,
   };
 
   return <WlAssignmentsContext.Provider value={value}>{children}</WlAssignmentsContext.Provider>;

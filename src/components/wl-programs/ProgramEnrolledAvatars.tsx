@@ -55,7 +55,15 @@ export function ProgramEnrolledAvatars({
 
   if (onClick) {
     return (
-      <button type="button" className="wl-programs-avatar-stack-btn" onClick={onClick} aria-label={ariaLabel}>
+      <button
+        type="button"
+        className="wl-programs-avatar-stack-btn"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        aria-label={ariaLabel}
+      >
         {content}
       </button>
     );

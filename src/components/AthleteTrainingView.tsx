@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ClipboardList } from 'lucide-react';
 import { AthletePlanSelect } from './athlete-tracking/AthletePlanSwitcher';
 import { useMobileTopBar } from '../context/MobileTopBarContext';
@@ -44,6 +45,8 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     getSetLog,
     motorExercises,
     wlAthletes,
+    planChangeNotifications,
+    markPlanChangeNotificationRead,
   } = useWolfAssign();
 
   const exName = useCallback(
@@ -119,6 +122,20 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
     return incomplete?.dayNumber ?? weekData.days[0]?.dayNumber ?? null;
   }, [weekData, isDayDone]);
+
+  const activeDayPlanNotice = useMemo(() => {
+    if (!activeAssignment) return null;
+    return (
+      planChangeNotifications.find(
+        (n) =>
+          !n.readAt &&
+          (n.assignmentId === activeAssignment.id ||
+            n.athleteProfileId === activeAssignment.athleteProfileId) &&
+          n.weekNumber === week &&
+          n.dayNumber === activeDay,
+      ) ?? null
+    );
+  }, [planChangeNotifications, activeAssignment, week, activeDay]);
 
   const t = useMemo(
     () => ({
@@ -264,6 +281,31 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
           {weekNavigator}
         </div>
       ) : null}
+
+      <AnimatePresence initial={false}>
+        {activeDayPlanNotice ? (
+          <motion.div
+            key={activeDayPlanNotice.id}
+            className="wolf-plan-change-banner"
+            role="status"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <p className="wolf-plan-change-banner__text">
+              {isEs ? activeDayPlanNotice.messageEs : activeDayPlanNotice.messageEn}
+            </p>
+            <button
+              type="button"
+              className="wolf-plan-change-banner__btn"
+              onClick={() => void markPlanChangeNotificationRead(activeDayPlanNotice.id)}
+            >
+              {isEs ? 'Entendido' : 'Got it'}
+            </button>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <AthleteDayNavigator
         days={weekData.days}

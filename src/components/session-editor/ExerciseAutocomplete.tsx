@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Search } from 'lucide-react';
 import type { ExerciseCategory } from '../../models/training';
@@ -73,24 +73,51 @@ interface PanelRect {
   top: number;
   left: number;
   width: number;
+  maxHeight: number;
+  flipAbove: boolean;
 }
 
 function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRect {
+  const gap = 6;
   const inputRect = input.getBoundingClientRect();
   const card = input.closest('article.wolf-se-block-card');
   const margin = 12;
+
+  let width = Math.max(inputRect.width, 300);
+  let left = inputRect.left;
+
   if (matchCard && card) {
     const cardRect = card.getBoundingClientRect();
+    left = cardRect.left + margin;
+    width = Math.max(cardRect.width - margin * 2, inputRect.width);
+  }
+
+  width = Math.min(Math.max(width, 280), window.innerWidth - 16);
+  if (left + width > window.innerWidth - 8) {
+    left = Math.max(8, window.innerWidth - width - 8);
+  }
+
+  const viewportCap = Math.min(380, Math.floor(window.innerHeight * 0.52));
+  const spaceBelow = window.innerHeight - inputRect.bottom - gap;
+  const spaceAbove = inputRect.top - gap;
+  const preferBelow = spaceBelow >= 140 || spaceBelow >= spaceAbove;
+
+  if (preferBelow) {
     return {
-      top: inputRect.bottom + 6,
-      left: cardRect.left + margin,
-      width: Math.max(cardRect.width - margin * 2, inputRect.width),
+      top: inputRect.bottom + gap,
+      left,
+      width,
+      maxHeight: Math.min(viewportCap, Math.max(140, spaceBelow - 8)),
+      flipAbove: false,
     };
   }
+
   return {
-    top: inputRect.bottom + 6,
-    left: inputRect.left,
-    width: Math.max(inputRect.width, 320),
+    top: inputRect.top - gap,
+    left,
+    width,
+    maxHeight: Math.min(viewportCap, Math.max(140, spaceAbove - 8)),
+    flipAbove: true,
   };
 }
 
@@ -223,15 +250,24 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     setPanelRect(measurePanelRect(inputRef.current, panelMatchCard));
   }, [panelMatchCard]);
 
+  useLayoutEffect(() => {
+    if (!open) {
+      setPanelRect(null);
+      return;
+    }
+    updatePanelRect();
+  }, [open, updatePanelRect]);
+
   useEffect(() => {
     if (!open) return;
-    updatePanelRect();
     const onLayout = () => updatePanelRect();
     window.addEventListener('resize', onLayout);
     window.addEventListener('scroll', onLayout, true);
+    window.visualViewport?.addEventListener('resize', onLayout);
     return () => {
       window.removeEventListener('resize', onLayout);
       window.removeEventListener('scroll', onLayout, true);
+      window.visualViewport?.removeEventListener('resize', onLayout);
     };
   }, [open, updatePanelRect]);
 
@@ -293,17 +329,18 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const panelContent = panelMounted ? (
     <div
       ref={panelRef}
-      className={`wolf-se-autocomplete-panel${panelMatchCard ? ' wolf-se-autocomplete-panel--fixed' : ''}${panelVisible ? ' is-visible' : ' is-closing'}`}
+      className={`wolf-se-autocomplete-panel wolf-se-autocomplete-panel--portal${panelMatchCard ? ' wolf-se-autocomplete-panel--match-card' : ''}${panelRect?.flipAbove ? ' wolf-se-autocomplete-panel--above' : ''}${panelVisible ? ' is-visible' : ' is-closing'}`}
       style={
-        panelMatchCard && panelRect
+        panelRect
           ? {
               position: 'fixed',
               top: panelRect.top,
               left: panelRect.left,
               width: panelRect.width,
-              zIndex: 1200,
+              maxHeight: panelRect.maxHeight,
+              zIndex: 10050,
             }
-          : undefined
+          : { position: 'fixed', visibility: 'hidden', zIndex: 10050 }
       }
     >
       <div className="wolf-se-autocomplete-filters" role="group" aria-label={isEs ? 'Filtro categoría' : 'Category filter'}>
@@ -412,8 +449,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
         />
       </div>
 
-      {!panelMatchCard && panelContent}
-      {panelMatchCard && panelContent && typeof document !== 'undefined'
+      {panelMounted && typeof document !== 'undefined'
         ? createPortal(panelContent, document.body)
         : null}
     </div>

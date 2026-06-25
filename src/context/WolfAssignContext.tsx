@@ -1,4 +1,4 @@
-﻿import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   CoachWlProgramTemplate,
   Exercise,
@@ -163,7 +163,11 @@ interface WolfAssignContextValue {
     coachProgramId?: string,
   ) => Promise<string>;
   /** Actualiza el JSON del programa en una asignaciÃ³n (coach editando plan ya enviado). */
-  updateAssignmentProgram: (assignmentId: string, program: ProgramAssignment['program']) => void;
+  updateAssignmentProgram: (
+    assignmentId: string,
+    program: ProgramAssignment['program'],
+    editContext?: import('../models/notifications').ProgramEditContext,
+  ) => void;
   removeAssignment: (assignmentId: string) => Promise<boolean>;
   restoreAssignmentVersion: (assignmentId: string, version: number) => boolean;
   duplicateAssignment: (assignmentId: string, targetAthleteProfileId: string) => Promise<string>;
@@ -196,6 +200,7 @@ interface WolfAssignContextValue {
       name?: string;
       program?: GeneratedProgram;
       status?: import('../models/coach-architecture').CoachProgramStatus;
+      editContext?: import('../models/notifications').ProgramEditContext;
     },
   ) => Promise<import('../models/coach-architecture').CoachProgram | null>;
   deleteCoachProgram: (id: string) => Promise<boolean>;
@@ -259,6 +264,10 @@ interface WolfAssignContextValue {
   myAssignment: ProgramAssignment | undefined;
   myAssignments: ProgramAssignment[];
   assignmentsLoading: boolean;
+  planChangeNotifications: import('../models/notifications').PlanChangeNotification[];
+  unreadPlanChangeCount: number;
+  loadPlanChangeNotifications: () => Promise<void>;
+  markPlanChangeNotificationRead: (id: string) => Promise<void>;
   isTrackingPending: (key: string) => boolean;
   isTrackingFailed: (key: string) => boolean;
   setLogTrackingKey: (input: {
@@ -1498,6 +1507,10 @@ function WlTemplatesBridge({
     | 'myAssignment'
     | 'myAssignments'
     | 'assignmentsLoading'
+    | 'planChangeNotifications'
+    | 'unreadPlanChangeCount'
+    | 'loadPlanChangeNotifications'
+    | 'markPlanChangeNotificationRead'
     | 'isTrackingPending'
     | 'isTrackingFailed'
     | 'setLogTrackingKey'
@@ -1608,6 +1621,10 @@ function WolfAssignMergedProvider({
     | 'myAssignment'
     | 'myAssignments'
     | 'assignmentsLoading'
+    | 'planChangeNotifications'
+    | 'unreadPlanChangeCount'
+    | 'loadPlanChangeNotifications'
+    | 'markPlanChangeNotificationRead'
     | 'isTrackingPending'
     | 'isTrackingFailed'
     | 'setLogTrackingKey'
@@ -1666,6 +1683,10 @@ function WolfAssignMergedProvider({
     myAssignment: wl.myAssignment,
     myAssignments: wl.myAssignments,
     assignmentsLoading: wl.assignmentsLoading,
+    planChangeNotifications: wl.planChangeNotifications,
+    unreadPlanChangeCount: wl.unreadPlanChangeCount,
+    loadPlanChangeNotifications: wl.loadPlanChangeNotifications,
+    markPlanChangeNotificationRead: wl.markPlanChangeNotificationRead,
     isTrackingPending: wl.isTrackingPending,
     isTrackingFailed: wl.isTrackingFailed,
     setLogTrackingKey: wl.setLogTrackingKey,
