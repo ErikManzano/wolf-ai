@@ -219,10 +219,7 @@ export const SpreadsheetSetBlocksPanel: React.FC<SpreadsheetSetBlocksPanelProps>
                 </span>
               </th>
               <th className="wolf-se-spreadsheet-blocks__th-vol">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Volumen' : 'Volume'}</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">kg</span>
-                </span>
+                {isEs ? 'Vol. kg' : 'Vol. kg'}
               </th>
               <th className="wolf-se-spreadsheet-blocks__th-actions" aria-hidden />
             </tr>

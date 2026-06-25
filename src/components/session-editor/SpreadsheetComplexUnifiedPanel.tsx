@@ -103,23 +103,31 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
           const ex = exercises.find((e) => e.id === seg.exerciseId);
           const kg = ex ? kgForExercise(athlete, ex, row.percentage) : 0;
           return (
-            <React.Fragment key={segIndex}>
-              <td className="wolf-se-spreadsheet-blocks__reps wolf-se-spreadsheet-complex-unified__seg-cell">
-                <SegmentRepField
-                  value={row.segmentReps?.[segIndex] ?? '1'}
-                  onChange={(v) => onSegmentRepChange(setIndex, segIndex, v)}
-                  suffix={REPS_SUFFIX}
-                  aria-label={
-                    isEs
-                      ? `Reps mov. ${segIndex + 1} bloque ${setIndex + 1}`
-                      : `Mov. ${segIndex + 1} reps block ${setIndex + 1}`
-                  }
-                />
-              </td>
-              <td className="wolf-se-spreadsheet-blocks__vol wolf-se-spreadsheet-complex-unified__seg-cell wolf-se-spreadsheet-complex-unified__seg-cell--load">
-                {ex ? `${formatAthleteKg(kg)} kg` : '—'}
-              </td>
-            </React.Fragment>
+            <td
+              key={segIndex}
+              colSpan={2}
+              className="wolf-se-spreadsheet-complex-unified__seg-pair"
+            >
+              <div className="wolf-se-spreadsheet-complex-unified__seg-pair-grid">
+                <div className="wolf-se-spreadsheet-complex-unified__seg-pair-reps">
+                  <SegmentRepField
+                    value={row.segmentReps?.[segIndex] ?? '1'}
+                    onChange={(v) => onSegmentRepChange(setIndex, segIndex, v)}
+                    suffix={REPS_SUFFIX}
+                    aria-label={
+                      isEs
+                        ? `Reps mov. ${segIndex + 1} bloque ${setIndex + 1}`
+                        : `Mov. ${segIndex + 1} reps block ${setIndex + 1}`
+                    }
+                  />
+                </div>
+                <div className="wolf-se-spreadsheet-complex-unified__seg-pair-load">
+                  <span className="wolf-se-spreadsheet-complex-unified__load-value">
+                    {ex ? `${formatAthleteKg(kg)} kg` : '—'}
+                  </span>
+                </div>
+              </div>
+            </td>
           );
         })}
         <td className="wolf-se-spreadsheet-blocks__rest">
@@ -162,7 +170,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
   };
 
   return (
-    <div className={`wolf-se-spreadsheet-complex-unified${canReorder ? ' wolf-se-spreadsheet-complex-unified--sortable' : ''}`}>
+    <div className={`wolf-se-spreadsheet-blocks wolf-se-spreadsheet-complex-unified${canReorder ? ' wolf-se-spreadsheet-complex-unified--sortable' : ''}`}>
       <p className="wolf-se-spreadsheet-blocks__title">
         {isEs ? 'Prescripción del complejo' : 'Complex prescription'}
       </p>

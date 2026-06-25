@@ -5,15 +5,14 @@ export function formatRestSec(sec: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-/** Rest label with explicit min/sec units for spreadsheet presets. */
-export function formatRestLabel(sec: number, isEs: boolean): string {
+/** Rest label with compact min/sec units for spreadsheet presets (e.g. 2 m 30 s). */
+export function formatRestLabel(sec: number, _isEs?: boolean): string {
   const safe = Math.max(0, Math.round(sec));
   const minutes = Math.floor(safe / 60);
   const seconds = safe % 60;
-  const secUnit = isEs ? 'seg' : 'sec';
-  if (minutes <= 0) return `${seconds} ${secUnit}`;
-  if (seconds <= 0) return `${minutes} min`;
-  return `${minutes} min ${seconds} ${secUnit}`;
+  if (minutes <= 0) return `${seconds} s`;
+  if (seconds <= 0) return `${minutes} m`;
+  return `${minutes} m ${seconds} s`;
 }
 
 export function parseRestSec(raw: string): number | null {
