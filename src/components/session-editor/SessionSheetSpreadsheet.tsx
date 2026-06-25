@@ -21,6 +21,8 @@ export interface SessionSheetSpreadsheetProps {
   showSummary?: boolean;
   canAddExercise?: boolean;
   sortable?: boolean;
+  /** Single-line column labels (embedded program editor). */
+  compactHeaders?: boolean;
   focusBlockIndex?: number | null;
   onFocusBlockHandled?: () => void;
   onApply: (fn: () => Session) => void;
@@ -38,6 +40,7 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
   showSummary = true,
   canAddExercise = true,
   sortable = false,
+  compactHeaders = false,
   focusBlockIndex = null,
   onFocusBlockHandled,
   onApply,
@@ -97,7 +100,7 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
 
   return (
     <section
-      className={`wolf-se-spreadsheet${canSort ? ' wolf-se-spreadsheet--sortable' : ''}`}
+      className={`wolf-se-spreadsheet${canSort ? ' wolf-se-spreadsheet--sortable' : ''}${compactHeaders ? ' wolf-se-spreadsheet--compact-head' : ''}`}
       aria-label={isEs ? 'Hoja del día' : 'Day sheet'}
     >
       {(breadcrumbItems?.length || showSummary) ? (
@@ -127,28 +130,44 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
               <th className="wolf-se-spreadsheet__col-exercise">{isEs ? 'Ejercicio' : 'Exercise'}</th>
               <th className="wolf-se-spreadsheet__col-type">{isEs ? 'Tipo' : 'Type'}</th>
               <th className="wolf-se-spreadsheet__col-blocks">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Bloques' : 'Blocks'}</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'de series' : 'of sets'}</span>
-                </span>
+                {compactHeaders ? (
+                  isEs ? 'Bloques' : 'Blocks'
+                ) : (
+                  <span className="wolf-se-spreadsheet__th-stack">
+                    <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Bloques' : 'Blocks'}</span>
+                    <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'de series' : 'of sets'}</span>
+                  </span>
+                )}
               </th>
               <th className="wolf-se-spreadsheet__col-metric wolf-se-spreadsheet__col-metric--zone">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Series' : 'Sets'}</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'totales' : 'total'}</span>
-                </span>
+                {compactHeaders ? (
+                  isEs ? 'Series' : 'Sets'
+                ) : (
+                  <span className="wolf-se-spreadsheet__th-stack">
+                    <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Series' : 'Sets'}</span>
+                    <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'totales' : 'total'}</span>
+                  </span>
+                )}
               </th>
               <th className="wolf-se-spreadsheet__col-metric wolf-se-spreadsheet__col-metric--zone">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">Reps</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'totales' : 'total'}</span>
-                </span>
+                {compactHeaders ? (
+                  'Reps'
+                ) : (
+                  <span className="wolf-se-spreadsheet__th-stack">
+                    <span className="wolf-se-spreadsheet__th-primary">Reps</span>
+                    <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'totales' : 'total'}</span>
+                  </span>
+                )}
               </th>
               <th className="wolf-se-spreadsheet__col-metric wolf-se-spreadsheet__col-metric--vol wolf-se-spreadsheet__col-metric--zone">
-                <span className="wolf-se-spreadsheet__th-stack">
-                  <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Volumen' : 'Volume'}</span>
-                  <span className="wolf-se-spreadsheet__th-secondary">kg</span>
-                </span>
+                {compactHeaders ? (
+                  isEs ? 'Vol. kg' : 'Vol. kg'
+                ) : (
+                  <span className="wolf-se-spreadsheet__th-stack">
+                    <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Volumen' : 'Volume'}</span>
+                    <span className="wolf-se-spreadsheet__th-secondary">kg</span>
+                  </span>
+                )}
               </th>
               <th className="wolf-se-spreadsheet__col-actions" aria-hidden />
             </tr>

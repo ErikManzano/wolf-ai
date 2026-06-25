@@ -2481,6 +2481,10 @@ tr.is-active-week .wolf-program-matrix-week-load {
   box-shadow: none;
 }
 
+.wl-programs-embedded-plan .wolf-program-day-board {
+  overflow: visible;
+}
+
 .wolf-program-day-board > .wolf-program-nav--compact {
   flex-shrink: 0;
   margin: 0;

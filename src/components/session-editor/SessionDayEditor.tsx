@@ -38,6 +38,7 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   breadcrumbItems,
   showSummary = true,
   canAddExercise,
+  dense = false,
   sortable,
   focusBlockIndex,
   onFocusBlockHandled,
@@ -86,6 +87,7 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
       onApply={onApply}
       onAddExercise={onAddExercise}
       onReorderBlocks={onReorderBlocks}
+      compactHeaders={dense}
     />
   );
 };
