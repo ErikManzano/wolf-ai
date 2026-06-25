@@ -2217,8 +2217,15 @@
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__detail-panel {
+  margin-inline: 0;
+  max-width: none;
   background: var(--se-sheet-surface-raised);
   border-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 90%, transparent);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__wrap {
+  width: 100%;
+  max-width: none;
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__table-wrap {

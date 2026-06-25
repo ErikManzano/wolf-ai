@@ -1851,19 +1851,19 @@
   background: color-mix(in srgb, var(--color-bg-hover) 58%, var(--color-bg-panel));
 }
 
-.wolf-se-spreadsheet-blocks__table tbody tr:not(.wolf-se-spreadsheet-complex-unified__movement-row) td:first-child {
+.wolf-se-spreadsheet-blocks__table tbody tr td:first-child {
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
   border-right: none;
 }
 
-.wolf-se-spreadsheet-blocks__table tbody tr:not(.wolf-se-spreadsheet-complex-unified__movement-row) td:last-child {
+.wolf-se-spreadsheet-blocks__table tbody tr td:last-child {
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
   border-left: none;
 }
 
-.wolf-se-spreadsheet-blocks__table tbody tr:not(.wolf-se-spreadsheet-complex-unified__movement-row) td:not(:first-child):not(:last-child) {
+.wolf-se-spreadsheet-blocks__table tbody tr td:not(:first-child):not(:last-child) {
   border-left: none;
   border-right: none;
 }
@@ -2023,20 +2023,183 @@
 }
 
 .wolf-se-spreadsheet-complex-unified__wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  max-height: none;
+}
+
+.wolf-se-spreadsheet-complex-unified__movements {
+  flex-shrink: 0;
+  padding: 14px 12px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  background: color-mix(in srgb, var(--color-bg-hover) 32%, var(--color-bg-panel));
+}
+
+.wolf-se-spreadsheet-complex-unified__movements-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.wolf-se-spreadsheet-complex-unified__movements-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text-muted) 35%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet-complex-unified__add-movement {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.wolf-se-spreadsheet-complex-unified__movements-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .wolf-se-spreadsheet-complex-unified__movements-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
+  .wolf-se-spreadsheet-complex-unified__movements-grid {
+    grid-template-columns: repeat(var(--complex-seg-count, 2), minmax(0, 1fr));
+  }
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-index {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-accent) 75%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-meta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-meta--empty {
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-editor {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-editor .wolf-se-autocomplete {
+  flex: 1;
+  min-width: 0;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-editor .wolf-se-autocomplete-input-wrap {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-color: color-mix(in srgb, var(--color-border) 88%, transparent);
+  background: var(--color-bg-main);
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-card-editor .wolf-se-autocomplete-input-wrap:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #f87171 45%, var(--color-border));
+  background: color-mix(in srgb, #f87171 12%, var(--color-bg-panel));
+  color: #fca5a5;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-remove:hover:not(:disabled) {
+  border-color: #f87171;
+  background: color-mix(in srgb, #f87171 22%, var(--color-bg-panel));
+  color: #fecaca;
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-remove:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.wolf-se-spreadsheet-complex-unified__movement-remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-se-spreadsheet-complex-unified__table-scroll {
   overflow: auto;
-  max-height: min(480px, 58vh);
+  max-height: min(440px, 52vh);
+  -webkit-overflow-scrolling: touch;
 }
 
 .wolf-se-spreadsheet-complex-unified__table {
-  min-width: 920px;
+  width: 100%;
+  min-width: 680px;
 }
 
 .wolf-se-spreadsheet-complex-unified__col-reps {
-  width: 88px;
+  width: 10%;
 }
 
 .wolf-se-spreadsheet-complex-unified__col-load {
-  width: 84px;
+  width: 9%;
 }
 
 .wolf-se-spreadsheet-complex-unified__table thead tr:first-child th[rowspan] {
@@ -2083,7 +2246,7 @@
 
 .wolf-se-spreadsheet-complex-unified__seg-head-name {
   display: block;
-  max-width: 148px;
+  max-width: 100%;
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: normal;
@@ -2117,58 +2280,6 @@
 .wolf-se-spreadsheet-complex-unified__sub--load {
   border-right: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
   background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-panel));
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-row td {
-  padding: 14px 12px;
-  background: color-mix(in srgb, var(--color-bg-hover) 38%, var(--color-bg-panel));
-  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
-  border-bottom: none;
-  border-radius: 10px;
-  vertical-align: middle;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text-muted) 50%, var(--color-text-primary));
-  white-space: nowrap;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-cell {
-  border-left: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  border-right: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-bg-panel));
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-editor {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 220px;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-editor .wolf-se-autocomplete {
-  flex: 1;
-  min-width: 0;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-editor .wolf-se-autocomplete-input-wrap {
-  min-height: 40px;
-  padding: 8px 10px;
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-actions {
-  text-align: right;
-  vertical-align: middle;
-  background: color-mix(in srgb, var(--color-bg-hover) 32%, var(--color-bg-panel));
-}
-
-.wolf-se-spreadsheet-complex-unified__movement-actions .wolf-se-spreadsheet-blocks__add {
-  margin-left: auto;
-  white-space: nowrap;
 }
 
 .wolf-se-spreadsheet-complex-unified__seg-cell {
@@ -2218,9 +2329,23 @@
   color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 75%, #f4f4f5);
 }
 
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movement-cell {
-  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 6%, #16161b);
-  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 20%, var(--wl-border-subtle, #27272a));
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movements {
+  background: color-mix(in srgb, #1a1a1f 82%, var(--wl-bg-panel, #111318));
+  border-bottom-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 88%, transparent);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movement-card {
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 28%, var(--wl-border-subtle, #27272a));
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 7%, #16161b);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movement-card-index {
+  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 78%, #f4f4f5);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__movement-card-editor .wolf-se-autocomplete-input-wrap {
+  background: color-mix(in srgb, #0f0f12 88%, var(--wl-bg-panel, #111318));
+  border-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 90%, transparent);
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified__seg-cell--load {

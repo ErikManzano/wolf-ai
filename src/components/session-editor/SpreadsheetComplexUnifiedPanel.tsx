@@ -167,6 +167,72 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
         {isEs ? 'Prescripción del complejo' : 'Complex prescription'}
       </p>
       <div className="wolf-se-spreadsheet-blocks__table-wrap wolf-se-spreadsheet-complex-unified__wrap">
+        <div
+          className="wolf-se-spreadsheet-complex-unified__movements"
+          style={{ '--complex-seg-count': segments.length } as React.CSSProperties}
+        >
+          <div className="wolf-se-spreadsheet-complex-unified__movements-head">
+            <span className="wolf-se-spreadsheet-complex-unified__movements-title">
+              {isEs ? 'Movimientos del complejo' : 'Complex movements'}
+            </span>
+            <button
+              type="button"
+              className="wolf-se-spreadsheet-blocks__add wolf-se-spreadsheet-complex-unified__add-movement"
+              disabled={segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
+              onClick={onAddMovement}
+            >
+              <Plus size={14} aria-hidden />
+              {isEs ? 'Agregar movimiento' : 'Add movement'}
+            </button>
+          </div>
+          <div className="wolf-se-spreadsheet-complex-unified__movements-grid">
+            {segments.map((seg, segIndex) => {
+              const ex = exercises.find((e) => e.id === seg.exerciseId);
+              return (
+                <div
+                  key={segIndex}
+                  className="wolf-se-spreadsheet-complex-unified__movement-card"
+                >
+                  <div className="wolf-se-spreadsheet-complex-unified__movement-card-head">
+                    <span className="wolf-se-spreadsheet-complex-unified__movement-card-index">
+                      {isEs ? `Mov. ${segIndex + 1}` : `Mov. ${segIndex + 1}`}
+                    </span>
+                    {ex ? (
+                      <span className="wolf-se-spreadsheet-complex-unified__movement-card-meta" title={ex.name}>
+                        {ex.name}
+                      </span>
+                    ) : (
+                      <span className="wolf-se-spreadsheet-complex-unified__movement-card-meta wolf-se-spreadsheet-complex-unified__movement-card-meta--empty">
+                        {isEs ? 'Selecciona ejercicio' : 'Select exercise'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="wolf-se-spreadsheet-complex-unified__movement-card-editor">
+                    <ExerciseAutocomplete
+                      options={pickerOptions}
+                      value={seg.exerciseId}
+                      isEs={isEs}
+                      panelMatchCard={false}
+                      placeholder={isEs ? 'Buscar movimiento…' : 'Search movement…'}
+                      onChange={(id) => onSegmentExerciseChange(segIndex, id)}
+                    />
+                    <button
+                      type="button"
+                      className="wolf-se-spreadsheet-complex-unified__movement-remove"
+                      title={isEs ? 'Quitar movimiento' : 'Remove movement'}
+                      aria-label={isEs ? `Quitar movimiento ${segIndex + 1}` : `Remove movement ${segIndex + 1}`}
+                      disabled={segments.length <= 2}
+                      onClick={() => onRemoveMovement(segIndex)}
+                    >
+                      <Trash2 size={16} aria-hidden />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="wolf-se-spreadsheet-complex-unified__table-scroll">
         <table className="wolf-se-spreadsheet-blocks__table wolf-se-spreadsheet-complex-unified__table">
           <colgroup>
             <col className="wolf-se-spreadsheet-blocks__col-idx" />
@@ -246,52 +312,6 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
               ))}
             </tr>
           </thead>
-          <tbody>
-            <tr className="wolf-se-spreadsheet-complex-unified__movement-row">
-              <td colSpan={4} className="wolf-se-spreadsheet-complex-unified__movement-label">
-                {isEs ? 'Movimientos' : 'Movements'}
-              </td>
-              {segments.map((seg, segIndex) => (
-                <td
-                  key={segIndex}
-                  colSpan={2}
-                  className="wolf-se-spreadsheet-complex-unified__movement-cell"
-                >
-                  <div className="wolf-se-spreadsheet-complex-unified__movement-editor">
-                    <ExerciseAutocomplete
-                      options={pickerOptions}
-                      value={seg.exerciseId}
-                      isEs={isEs}
-                      compact
-                      panelMatchCard={false}
-                      placeholder={isEs ? 'Movimiento…' : 'Movement…'}
-                      onChange={(id) => onSegmentExerciseChange(segIndex, id)}
-                    />
-                    <button
-                      type="button"
-                      className="wolf-se-spreadsheet__icon-btn wolf-se-spreadsheet__icon-btn--danger"
-                      title={isEs ? 'Quitar movimiento' : 'Remove movement'}
-                      disabled={segments.length <= 2}
-                      onClick={() => onRemoveMovement(segIndex)}
-                    >
-                      <Trash2 size={14} aria-hidden />
-                    </button>
-                  </div>
-                </td>
-              ))}
-              <td colSpan={3} className="wolf-se-spreadsheet-complex-unified__movement-actions">
-                <button
-                  type="button"
-                  className="wolf-se-spreadsheet-blocks__add"
-                  disabled={segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
-                  onClick={onAddMovement}
-                >
-                  <Plus size={14} aria-hidden />
-                  {isEs ? 'Agregar movimiento' : 'Add movement'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
           {canReorder ? (
             <Reorder.Group
               as="tbody"
@@ -326,6 +346,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             </tbody>
           )}
         </table>
+        </div>
       </div>
       <button
         type="button"
