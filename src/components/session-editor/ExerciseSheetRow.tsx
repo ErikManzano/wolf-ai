@@ -81,7 +81,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   return (
     <>
       <tr
-        className={`wolf-se-spreadsheet__row wolf-se-spreadsheet__row--block${blockIndex % 2 === 1 ? ' wolf-se-spreadsheet__row--block--alt' : ''}${expanded ? ' is-expanded' : ''}`}
+        className={`wolf-se-spreadsheet__row wolf-se-spreadsheet__row--block wolf-se-spreadsheet__row--block--${blockKind}${blockIndex % 2 === 1 ? ' wolf-se-spreadsheet__row--block--alt' : ''}${expanded ? ' is-expanded' : ''}`}
         tabIndex={0}
         aria-expanded={expanded}
         onClick={(e) => {

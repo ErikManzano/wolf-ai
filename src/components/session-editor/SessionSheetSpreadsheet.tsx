@@ -236,7 +236,11 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
       </div>
 
       {canAddExercise ? (
-        <button type="button" className="wolf-se-spreadsheet__add-row" onClick={onAddExercise}>
+        <button
+          type="button"
+          className={`wolf-se-spreadsheet__add-row${compactHeaders ? ' btn-primary' : ''}`}
+          onClick={onAddExercise}
+        >
           <Plus size={16} aria-hidden />
           {isEs ? 'Agregar ejercicio' : 'Add exercise'}
         </button>

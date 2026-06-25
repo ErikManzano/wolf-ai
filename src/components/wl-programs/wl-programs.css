@@ -2104,6 +2104,7 @@
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board {
+  position: relative;
   flex: none;
   min-height: auto;
   overflow: visible;
@@ -2112,6 +2113,26 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  isolation: isolate;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board > * {
+  position: relative;
+  z-index: 1;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board__head {
@@ -2180,6 +2201,10 @@
   --se-sheet-metric-bg: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 4%, #16161b);
   --se-sheet-row-alt: color-mix(in srgb, #1a1a1f 72%, transparent);
   --se-sheet-row-hover: color-mix(in srgb, #222228 88%, transparent);
+  --se-sheet-vol-accent: #c9a86c;
+  --se-sheet-type-simple: #3b82f6;
+  --se-sheet-type-complex: #a78bfa;
+  --se-sheet-type-warmup: #f59e0b;
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__table-wrap {
@@ -2251,12 +2276,89 @@
   border-color: color-mix(in srgb, var(--wl-border-subtle, #27272a) 72%, transparent);
 }
 
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__metric--vol,
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__vol {
-  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 78%, #f4f4f5);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--se-sheet-vol-accent) 85%, #f4f4f5);
 }
 
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded td.wolf-se-spreadsheet__col-idx {
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 32%, var(--wl-border-subtle, #27272a));
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-complex-unified .wolf-se-spreadsheet-blocks__vol {
+  color: color-mix(in srgb, var(--se-sheet-vol-accent) 85%, #f4f4f5);
+}
+
+/* Expanded row — subtle type tint (simple / complex / warmup) */
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--simple td {
+  background: color-mix(in srgb, var(--se-sheet-type-simple) 6%, color-mix(in srgb, var(--color-bg-hover) 30%, var(--color-bg-panel)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--simple.wolf-se-spreadsheet__row--block--alt td {
+  background: color-mix(in srgb, var(--se-sheet-type-simple) 6%, color-mix(in srgb, var(--color-bg-hover) 36%, var(--se-sheet-row-alt)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--complex td {
+  background: color-mix(in srgb, var(--se-sheet-type-complex) 6%, color-mix(in srgb, var(--color-bg-hover) 30%, var(--color-bg-panel)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--complex.wolf-se-spreadsheet__row--block--alt td {
+  background: color-mix(in srgb, var(--se-sheet-type-complex) 6%, color-mix(in srgb, var(--color-bg-hover) 36%, var(--se-sheet-row-alt)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--warmup td {
+  background: color-mix(in srgb, var(--se-sheet-type-warmup) 6%, color-mix(in srgb, var(--color-bg-hover) 30%, var(--color-bg-panel)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--warmup.wolf-se-spreadsheet__row--block--alt td {
+  background: color-mix(in srgb, var(--se-sheet-type-warmup) 6%, color-mix(in srgb, var(--color-bg-hover) 36%, var(--se-sheet-row-alt)));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--simple td.wolf-se-spreadsheet__col-idx {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--se-sheet-type-simple) 55%, transparent);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--complex td.wolf-se-spreadsheet__col-idx {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--se-sheet-type-complex) 55%, transparent);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block.is-expanded.wolf-se-spreadsheet__row--block--warmup td.wolf-se-spreadsheet__col-idx {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--se-sheet-type-warmup) 55%, transparent);
+}
+
+/* Exercise search — compact autocomplete in spreadsheet column */
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__col-exercise .wolf-se-autocomplete-input-wrap--compact {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__col-exercise .wolf-se-autocomplete-input-wrap--compact svg {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 55%, var(--wl-text-accent, #ff6b1a));
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__col-exercise .wolf-se-autocomplete-input-wrap--compact.wolf-se-autocomplete-input-wrap--settled svg {
+  opacity: 1;
+}
+
+/* Add exercise — primary CTA (embedded only via btn-primary class) */
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary {
+  border: none;
+  border-radius: 12px;
+  background: var(--color-accent-gradient);
+  color: #fff;
+  box-shadow: 0 4px 12px var(--color-accent-glow);
+  font-weight: 700;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  background: var(--color-accent-gradient);
+  color: #fff;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary:active:not(:disabled) {
+  filter: brightness(0.95);
+  transform: translateY(0);
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board > .wolf-program-day-stats {
