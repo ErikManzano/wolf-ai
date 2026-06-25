@@ -13,8 +13,8 @@ import {
 import type { SessionPickerOption } from '../../services/exercise';
 import { blockTonnage, blockTotalSets } from './blockMetrics';
 import { blockDisplayName } from './sessionSheetUtils';
-import { formatBlockPrescriptionDisplay } from './schemeFormat';
 import { formatBlockRepsSummary } from './spreadsheetBlockFormat';
+import { BlockPrescriptionRx } from './BlockPrescriptionRx';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { SpreadsheetBlockTypeSelect } from './SpreadsheetBlockTypeSelect';
 import { ExerciseSheetExpandPanel } from './ExerciseSheetExpandPanel';
@@ -74,7 +74,6 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   const tonnage = blockTonnage(block, athlete, exercises);
   const blockCount = block.sets.length;
   const blockKind = getExerciseBlockKind(block);
-  const prescriptionDisplay = formatBlockPrescriptionDisplay(block);
   const summaryLine = isEs
     ? `${workSets} series · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`
     : `${workSets} sets · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`;
@@ -127,9 +126,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
                 }
               />
             )}
-            <span className="wolf-se-spreadsheet__exercise-rx" title={prescriptionDisplay}>
-              {prescriptionDisplay}
-            </span>
+            <BlockPrescriptionRx block={block} />
             <span className="wolf-se-spreadsheet__exercise-summary">{summaryLine}</span>
           </div>
         </td>

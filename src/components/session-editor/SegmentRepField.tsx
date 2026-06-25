@@ -1,7 +1,9 @@
 import React from 'react';
 import { parseRepTokens } from '../../services/trainingEngine';
 import { ComboNumberField } from './ComboNumberField';
+import { ComboPresetField } from './ComboPresetField';
 import { SEGMENT_REP_OPTIONS } from './repPresets';
+import { spreadsheetRepsOptions } from './spreadsheetSetFieldPresets';
 
 interface SegmentRepFieldProps {
   value: string;
@@ -25,6 +27,20 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
 }) => {
   const parsed = parseRepTokens(value);
   const numeric = parsed >= min ? Math.min(max, parsed) : min;
+
+  if (variant === 'premium') {
+    return (
+      <ComboPresetField
+        variant="premium"
+        value={numeric}
+        options={spreadsheetRepsOptions(numeric)}
+        onChange={(n) => onChange(String(n))}
+        suffix={suffix}
+        aria-label={ariaLabel}
+      />
+    );
+  }
+
   const options = SEGMENT_REP_OPTIONS.filter((n) => n >= min && n <= max);
 
   return (

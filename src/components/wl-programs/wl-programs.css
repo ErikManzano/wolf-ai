@@ -2210,10 +2210,18 @@
   background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 6%, var(--se-sheet-header-bg));
 }
 
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx {
-  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 28%, var(--wl-border-subtle, #27272a));
-  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 8%, #16161b);
-  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 75%, #f4f4f5);
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx-chip {
+  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 30%, var(--wl-border-subtle, #27272a));
+  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 9%, #16161b);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx-pct {
+  color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 82%, #f4f4f5);
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx-reps,
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx-sets {
+  color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 30%, #e4e4e7);
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__detail-panel {

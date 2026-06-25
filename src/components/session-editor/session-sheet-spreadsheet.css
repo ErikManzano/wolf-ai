@@ -306,23 +306,58 @@
 }
 
 .wolf-se-spreadsheet__exercise-rx {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  width: fit-content;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
   max-width: 100%;
-  padding: 4px 9px;
-  border-radius: 7px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-bg-hover));
-  font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
-  font-size: 0.78rem;
+  min-width: 0;
+}
+
+.wolf-se-spreadsheet__exercise-rx--empty {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in srgb, var(--color-border) 70%, transparent);
+  font-size: 0.82rem;
   font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  color: color-mix(in srgb, var(--color-accent) 78%, var(--color-text-primary));
-  word-break: break-word;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-spreadsheet__exercise-rx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+  font-size: 0.84rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.wolf-se-spreadsheet__exercise-rx-pct {
+  font-weight: 800;
+  color: color-mix(in srgb, var(--color-accent) 82%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet__exercise-rx-mul {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-text-muted) 55%, transparent);
+}
+
+.wolf-se-spreadsheet__exercise-rx-reps,
+.wolf-se-spreadsheet__exercise-rx-sets {
+  color: color-mix(in srgb, var(--color-text-muted) 18%, var(--color-text-primary));
+}
+
+.wolf-se-spreadsheet__exercise-rx-sets {
+  font-weight: 800;
 }
 
 .wolf-se-spreadsheet__exercise-summary {
