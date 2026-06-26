@@ -21,4 +21,9 @@ export type PlanChangeNotification = {
   readAt?: string | null;
   messageEs: string;
   messageEn: string;
+  /** Guardados del coach agrupados en esta notificación (autosave). */
+  editCount?: number;
+  /** Detalle legible de cambios (bullets en UI). */
+  summaryEs?: string[];
+  summaryEn?: string[];
 };

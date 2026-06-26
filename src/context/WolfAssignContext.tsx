@@ -268,6 +268,7 @@ interface WolfAssignContextValue {
   unreadPlanChangeCount: number;
   loadPlanChangeNotifications: () => Promise<void>;
   markPlanChangeNotificationRead: (id: string) => Promise<void>;
+  markAllPlanChangeNotificationsRead: () => Promise<void>;
   isTrackingPending: (key: string) => boolean;
   isTrackingFailed: (key: string) => boolean;
   setLogTrackingKey: (input: {
@@ -1511,6 +1512,7 @@ function WlTemplatesBridge({
     | 'unreadPlanChangeCount'
     | 'loadPlanChangeNotifications'
     | 'markPlanChangeNotificationRead'
+    | 'markAllPlanChangeNotificationsRead'
     | 'isTrackingPending'
     | 'isTrackingFailed'
     | 'setLogTrackingKey'
@@ -1625,6 +1627,7 @@ function WolfAssignMergedProvider({
     | 'unreadPlanChangeCount'
     | 'loadPlanChangeNotifications'
     | 'markPlanChangeNotificationRead'
+    | 'markAllPlanChangeNotificationsRead'
     | 'isTrackingPending'
     | 'isTrackingFailed'
     | 'setLogTrackingKey'
@@ -1687,6 +1690,7 @@ function WolfAssignMergedProvider({
     unreadPlanChangeCount: wl.unreadPlanChangeCount,
     loadPlanChangeNotifications: wl.loadPlanChangeNotifications,
     markPlanChangeNotificationRead: wl.markPlanChangeNotificationRead,
+    markAllPlanChangeNotificationsRead: wl.markAllPlanChangeNotificationsRead,
     isTrackingPending: wl.isTrackingPending,
     isTrackingFailed: wl.isTrackingFailed,
     setLogTrackingKey: wl.setLogTrackingKey,

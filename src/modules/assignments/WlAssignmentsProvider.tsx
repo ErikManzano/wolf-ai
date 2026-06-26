@@ -95,6 +95,8 @@ export function WlAssignmentsProvider({
   const [pendingTrackingKeys, setPendingTrackingKeys] = useState<Set<string>>(() => new Set());
   const [failedTrackingKeys, setFailedTrackingKeys] = useState<Set<string>>(() => new Set());
   const [planChangeNotifications, setPlanChangeNotifications] = useState<PlanChangeNotification[]>([]);
+  const planChangeToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPlanChangeToastRef = useRef<PlanChangeNotification | null>(null);
 
   useEffect(() => {
     setLogsRef.current = setLogs;
@@ -229,19 +231,46 @@ export function WlAssignmentsProvider({
         notification,
         ...prev.filter((n) => n.id !== notification.id),
       ]);
-      pushAlert({
-        tone: 'info',
-        title:
-          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('es')
-            ? 'Plan actualizado'
-            : 'Plan updated',
-        message:
-          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('es')
-            ? notification.messageEs
-            : notification.messageEn,
-      });
+      void loadAssignmentsFromApi();
+
+      pendingPlanChangeToastRef.current = notification;
+      if (planChangeToastTimerRef.current) clearTimeout(planChangeToastTimerRef.current);
+      planChangeToastTimerRef.current = setTimeout(() => {
+        const latest = pendingPlanChangeToastRef.current;
+        if (!latest) return;
+        const latestIsEs =
+          typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('es');
+        const latestSummary =
+          (latestIsEs ? latest.summaryEs : latest.summaryEn)?.filter(Boolean) ?? [];
+        const latestMessage =
+          latestSummary.length > 0
+            ? latestSummary.slice(0, 2).join(' · ')
+            : latestIsEs
+              ? latest.messageEs
+              : latest.messageEn;
+        const editCount = latest.editCount ?? 1;
+        pushAlert({
+          tone: 'info',
+          title: latestIsEs ? 'Plan actualizado' : 'Plan updated',
+          message:
+            editCount > 1 && latestIsEs
+              ? `${latestMessage} (${editCount} guardados)`
+              : editCount > 1
+                ? `${latestMessage} (${editCount} saves)`
+                : latestMessage,
+          durationMs: 5500,
+        });
+        pendingPlanChangeToastRef.current = null;
+      }, 1200);
     });
-  }, [apiMode, apiToken, athleteUser, pushAlert]);
+  }, [apiMode, apiToken, athleteUser, pushAlert, loadAssignmentsFromApi]);
+
+  useEffect(
+    () => () => {
+      if (planChangeToastTimerRef.current) clearTimeout(planChangeToastTimerRef.current);
+    },
+    [],
+  );
 
   const markPlanChangeNotificationRead = useCallback(
     async (id: string) => {
@@ -264,6 +293,30 @@ export function WlAssignmentsProvider({
     },
     [apiMode, apiToken],
   );
+
+  const markAllPlanChangeNotificationsRead = useCallback(async () => {
+    const unreadIds = planChangeNotifications.filter((n) => !n.readAt).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+    const now = new Date().toISOString();
+    setPlanChangeNotifications((prev) =>
+      prev.map((n) => (n.readAt ? n : { ...n, readAt: now })),
+    );
+    if (!apiMode || !apiToken) return;
+    await Promise.all(
+      unreadIds.map(async (id) => {
+        try {
+          const res = await assignmentApiFetch(`/notifications/${id}/read`, { method: 'PATCH' });
+          if (!res.ok) return;
+          const updated = (await res.json()) as PlanChangeNotification;
+          setPlanChangeNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? updated : n)),
+          );
+        } catch {
+          /* optimistic */
+        }
+      }),
+    );
+  }, [apiMode, apiToken, planChangeNotifications]);
 
   const unreadPlanChangeCount = useMemo(
     () => planChangeNotifications.filter((n) => !n.readAt).length,
@@ -729,6 +782,7 @@ export function WlAssignmentsProvider({
     unreadPlanChangeCount,
     loadPlanChangeNotifications,
     markPlanChangeNotificationRead,
+    markAllPlanChangeNotificationsRead,
   };
 
   return <WlAssignmentsContext.Provider value={value}>{children}</WlAssignmentsContext.Provider>;

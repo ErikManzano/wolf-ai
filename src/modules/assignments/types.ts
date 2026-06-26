@@ -77,6 +77,7 @@ export interface WlAssignmentsContextValue {
   unreadPlanChangeCount: number;
   loadPlanChangeNotifications: () => Promise<void>;
   markPlanChangeNotificationRead: (id: string) => Promise<void>;
+  markAllPlanChangeNotificationsRead: () => Promise<void>;
 }
 
 export type SetLogInput = {

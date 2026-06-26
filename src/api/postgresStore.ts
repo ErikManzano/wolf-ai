@@ -266,6 +266,18 @@ export class PostgresStore {
       CREATE INDEX IF NOT EXISTS plan_change_notifications_recipient_idx
       ON plan_change_notifications (recipient_user_id, read_at, changed_at DESC);
     `);
+    await this.pool.query(`
+      ALTER TABLE plan_change_notifications
+      ADD COLUMN IF NOT EXISTS edit_count INTEGER NOT NULL DEFAULT 1;
+    `);
+    await this.pool.query(`
+      ALTER TABLE plan_change_notifications
+      ADD COLUMN IF NOT EXISTS summary_es JSONB;
+    `);
+    await this.pool.query(`
+      ALTER TABLE plan_change_notifications
+      ADD COLUMN IF NOT EXISTS summary_en JSONB;
+    `);
     await this.pool.query(`ALTER TABLE assignments ADD COLUMN IF NOT EXISTS coach_program_id TEXT;`);
     await this.pool.query(`
       ALTER TABLE assignments DROP CONSTRAINT IF EXISTS assignments_athlete_profile_id_key;
@@ -1790,6 +1802,8 @@ export class PostgresStore {
   }
 
   private mapPlanChangeNotificationRow(row: Record<string, unknown>): import('../models/notifications').PlanChangeNotification {
+    const summaryEsRaw = row.summary_es;
+    const summaryEnRaw = row.summary_en;
     return {
       id: row.id as string,
       recipientUserId: row.recipient_user_id as string,
@@ -1806,6 +1820,9 @@ export class PostgresStore {
       readAt: row.read_at ? new Date(row.read_at as string).toISOString() : null,
       messageEs: row.message_es as string,
       messageEn: row.message_en as string,
+      editCount: (row.edit_count as number | null) ?? 1,
+      summaryEs: Array.isArray(summaryEsRaw) ? (summaryEsRaw as string[]) : undefined,
+      summaryEn: Array.isArray(summaryEnRaw) ? (summaryEnRaw as string[]) : undefined,
     };
   }
 
@@ -1817,8 +1834,8 @@ export class PostgresStore {
       INSERT INTO plan_change_notifications (
         id, recipient_user_id, coach_id, coach_name, coach_program_id, program_name,
         assignment_id, athlete_profile_id, week_number, day_number, day_label,
-        changed_at, read_at, message_es, message_en
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        changed_at, read_at, message_es, message_en, edit_count, summary_es, summary_en
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *;
       `,
       [
@@ -1837,8 +1854,75 @@ export class PostgresStore {
         input.readAt ?? null,
         input.messageEs,
         input.messageEn,
+        input.editCount ?? 1,
+        input.summaryEs?.length ? JSON.stringify(input.summaryEs) : null,
+        input.summaryEn?.length ? JSON.stringify(input.summaryEn) : null,
       ],
     );
+    return this.mapPlanChangeNotificationRow(result.rows[0] as Record<string, unknown>);
+  }
+
+  async findBatchablePlanChangeNotification(params: {
+    recipientUserId: string;
+    assignmentId: string;
+    weekNumber: number;
+    dayNumber: number;
+    withinMinutes?: number;
+  }): Promise<import('../models/notifications').PlanChangeNotification | null> {
+    const withinMinutes = params.withinMinutes ?? 15;
+    const result = await this.pool.query(
+      `
+      SELECT * FROM plan_change_notifications
+      WHERE recipient_user_id = $1
+        AND assignment_id = $2
+        AND week_number = $3
+        AND day_number = $4
+        AND read_at IS NULL
+        AND changed_at >= now() - ($5::int * interval '1 minute')
+      ORDER BY changed_at DESC
+      LIMIT 1;
+      `,
+      [params.recipientUserId, params.assignmentId, params.weekNumber, params.dayNumber, withinMinutes],
+    );
+    if (!result.rows[0]) return null;
+    return this.mapPlanChangeNotificationRow(result.rows[0] as Record<string, unknown>);
+  }
+
+  async updatePlanChangeNotification(
+    id: string,
+    patch: {
+      changedAt: string;
+      messageEs: string;
+      messageEn: string;
+      editCount: number;
+      summaryEs?: string[];
+      summaryEn?: string[];
+    },
+  ): Promise<import('../models/notifications').PlanChangeNotification | null> {
+    const result = await this.pool.query(
+      `
+      UPDATE plan_change_notifications
+      SET
+        changed_at = $2,
+        message_es = $3,
+        message_en = $4,
+        edit_count = $5,
+        summary_es = $6,
+        summary_en = $7
+      WHERE id = $1
+      RETURNING *;
+      `,
+      [
+        id,
+        patch.changedAt,
+        patch.messageEs,
+        patch.messageEn,
+        patch.editCount,
+        patch.summaryEs?.length ? JSON.stringify(patch.summaryEs) : null,
+        patch.summaryEn?.length ? JSON.stringify(patch.summaryEn) : null,
+      ],
+    );
+    if (!result.rows[0]) return null;
     return this.mapPlanChangeNotificationRow(result.rows[0] as Record<string, unknown>);
   }
 

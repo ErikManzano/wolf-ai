@@ -29,6 +29,7 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({
     unreadPlanChangeCount,
     loadPlanChangeNotifications,
     markPlanChangeNotificationRead,
+    markAllPlanChangeNotificationsRead,
     athleteUser,
     currentUser,
   } = useWolfAssign();
@@ -65,6 +66,10 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({
     },
     [markPlanChangeNotificationRead],
   );
+
+  const handleMarkAllRead = useCallback(() => {
+    void markAllPlanChangeNotificationsRead();
+  }, [markAllPlanChangeNotificationsRead]);
 
   if (!isAthlete) return null;
 
@@ -133,6 +138,7 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({
                 isEs={isEs}
                 compact
                 onMarkRead={handleMarkRead}
+                onMarkAllRead={handleMarkAllRead}
               />
             </div>
           </motion.div>
@@ -184,6 +190,7 @@ export const NotificationsBell: React.FC<NotificationsBellProps> = ({
                   notices={notices}
                   isEs={isEs}
                   onMarkRead={handleMarkRead}
+                  onMarkAllRead={handleMarkAllRead}
                 />
               </div>
             </motion.section>

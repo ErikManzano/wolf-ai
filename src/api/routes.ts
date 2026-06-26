@@ -38,6 +38,7 @@ import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
 import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
+import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
 import { randomUUID } from 'node:crypto';
 
 export interface MockApiState {
@@ -72,11 +73,66 @@ function createMockPlanChangeNotification(
     coachProgramId: string;
     programName: string;
     editContext: ProgramEditContext;
+    previousProgram: GeneratedProgram;
+    newProgram: GeneratedProgram;
   },
-): PlanChangeNotification {
+): PlanChangeNotification | null {
+  const resolveName = (exerciseId: string) =>
+    state.exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
+  const diff = diffProgramDay(
+    params.previousProgram,
+    params.newProgram,
+    params.editContext,
+    resolveName,
+  );
+  if (diff.linesEs.length === 0 && diff.linesEn.length === 0) return null;
+
   const coach = state.users.find((u) => u.id === params.coachId);
   const coachName = coach?.name ?? 'Coach';
   const changedAt = new Date();
+
+  const existing =
+    params.assignmentId != null
+      ? state.planChangeNotifications.find(
+          (n) =>
+            n.recipientUserId === params.recipientUserId &&
+            n.assignmentId === params.assignmentId &&
+            n.weekNumber === params.editContext.weekNumber &&
+            n.dayNumber === params.editContext.dayNumber &&
+            !n.readAt &&
+            changedAt.getTime() - new Date(n.changedAt).getTime() < 15 * 60_000,
+        )
+      : undefined;
+
+  if (existing) {
+    const summaryEs = mergePlanChangeSummaryLines(existing.summaryEs ?? [], diff.linesEs);
+    const summaryEn = mergePlanChangeSummaryLines(existing.summaryEn ?? [], diff.linesEn);
+    const editCount = (existing.editCount ?? 1) + 1;
+    const { messageEs, messageEn } = buildPlanChangeMessages({
+      programName: params.programName,
+      coachName,
+      weekNumber: params.editContext.weekNumber,
+      dayNumber: params.editContext.dayNumber,
+      dayLabel: params.editContext.dayLabel,
+      changedAt,
+      editCount,
+      summaryEs,
+      summaryEn,
+    });
+    const updated: PlanChangeNotification = {
+      ...existing,
+      changedAt: changedAt.toISOString(),
+      messageEs,
+      messageEn,
+      editCount,
+      summaryEs,
+      summaryEn,
+    };
+    const idx = state.planChangeNotifications.findIndex((n) => n.id === existing.id);
+    if (idx >= 0) state.planChangeNotifications[idx] = updated;
+    return updated;
+  }
+
   const { messageEs, messageEn } = buildPlanChangeMessages({
     programName: params.programName,
     coachName,
@@ -84,6 +140,9 @@ function createMockPlanChangeNotification(
     dayNumber: params.editContext.dayNumber,
     dayLabel: params.editContext.dayLabel,
     changedAt,
+    editCount: 1,
+    summaryEs: diff.linesEs,
+    summaryEn: diff.linesEn,
   });
   const notification: PlanChangeNotification = {
     id: `pcn-${randomUUID()}`,
@@ -101,6 +160,9 @@ function createMockPlanChangeNotification(
     readAt: null,
     messageEs,
     messageEn,
+    editCount: 1,
+    summaryEs: diff.linesEs,
+    summaryEn: diff.linesEn,
   };
   state.planChangeNotifications.unshift(notification);
   return notification;
@@ -1414,6 +1476,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       }
     }
     if (store) {
+      const previousProgram = existing.program;
       const updated = await store.updateAssignmentProgram(id, body.program);
       if (!updated) {
         res.status(404).json({ error: 'Assignment not found.' });
@@ -1429,8 +1492,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
           coachProgramId: existing.coachProgramId ?? existing.program.id,
           programName: body.program.name,
           editContext: body.editContext,
+          previousProgram,
+          newProgram: updated.program,
         });
-        notify?.('plan-change:created', notification);
+        if (notification) notify?.('plan-change:created', notification);
       }
       res.json(updated);
       return;
@@ -1461,8 +1526,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         coachProgramId: current.coachProgramId ?? current.program.id,
         programName: body.program.name,
         editContext: body.editContext,
+        previousProgram: current.program,
+        newProgram: updated.program,
       });
-      notify?.('plan-change:created', notification);
+      if (notification) notify?.('plan-change:created', notification);
     }
     res.json(updated);
   });
@@ -2383,6 +2450,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     state.coachPrograms[idx] = updated;
     if (patch.program) {
       for (const asg of state.assignments.filter((a) => a.coachProgramId === id)) {
+        const previousProgram = asg.program;
         const cloned = cloneProgramForAthlete(patch.program, asg.athleteProfileId, { name: updated.name });
         const hist: ProgramAssignmentVersion = {
           version: asg.version,
@@ -2401,8 +2469,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
             coachProgramId: id,
             programName: updated.name,
             editContext: patch.editContext,
+            previousProgram,
+            newProgram: cloned,
           });
-          notify?.('plan-change:created', notification);
+          if (notification) notify?.('plan-change:created', notification);
         }
       }
       notify?.('assignments:changed', { coachId });

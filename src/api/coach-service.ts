@@ -25,6 +25,7 @@ import {
 import type { GeneratedProgram, ProgramAssignment, ProgramAssignmentVersion, WolfUser } from '../models/training';
 import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
+import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
 import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
 
 type CoachServiceDeps = {
@@ -90,11 +91,64 @@ export class CoachService {
     coachProgramId: string;
     programName: string;
     editContext: ProgramEditContext;
+    previousProgram: GeneratedProgram;
+    newProgram: GeneratedProgram;
   }): Promise<void> {
+    const exercises = await this.store.listExercisesForCoach(params.coachId);
+    const resolveName = (exerciseId: string) =>
+      exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId;
+
+    const diff = diffProgramDay(
+      params.previousProgram,
+      params.newProgram,
+      params.editContext,
+      resolveName,
+    );
+    if (diff.linesEs.length === 0 && diff.linesEn.length === 0) return;
+
     const users = await this.store.getUsers();
     const coach = users.find((u) => u.id === params.coachId);
     const coachName = coach?.name ?? 'Coach';
     const changedAt = new Date();
+
+    const existing =
+      params.assignmentId != null
+        ? await this.store.findBatchablePlanChangeNotification({
+            recipientUserId: params.recipientUserId,
+            assignmentId: params.assignmentId,
+            weekNumber: params.editContext.weekNumber,
+            dayNumber: params.editContext.dayNumber,
+            withinMinutes: 15,
+          })
+        : null;
+
+    if (existing) {
+      const summaryEs = mergePlanChangeSummaryLines(existing.summaryEs ?? [], diff.linesEs);
+      const summaryEn = mergePlanChangeSummaryLines(existing.summaryEn ?? [], diff.linesEn);
+      const editCount = (existing.editCount ?? 1) + 1;
+      const { messageEs, messageEn } = buildPlanChangeMessages({
+        programName: params.programName,
+        coachName,
+        weekNumber: params.editContext.weekNumber,
+        dayNumber: params.editContext.dayNumber,
+        dayLabel: params.editContext.dayLabel,
+        changedAt,
+        editCount,
+        summaryEs,
+        summaryEn,
+      });
+      const updated = await this.store.updatePlanChangeNotification(existing.id, {
+        changedAt: changedAt.toISOString(),
+        messageEs,
+        messageEn,
+        editCount,
+        summaryEs,
+        summaryEn,
+      });
+      if (updated) this.onPlanChangeCreated?.(updated);
+      return;
+    }
+
     const { messageEs, messageEn } = buildPlanChangeMessages({
       programName: params.programName,
       coachName,
@@ -102,6 +156,9 @@ export class CoachService {
       dayNumber: params.editContext.dayNumber,
       dayLabel: params.editContext.dayLabel,
       changedAt,
+      editCount: 1,
+      summaryEs: diff.linesEs,
+      summaryEn: diff.linesEn,
     });
     const notification = await this.store.insertPlanChangeNotification({
       id: newId('pcn'),
@@ -118,6 +175,9 @@ export class CoachService {
       changedAt: changedAt.toISOString(),
       messageEs,
       messageEn,
+      editCount: 1,
+      summaryEs: diff.linesEs,
+      summaryEn: diff.linesEn,
     });
     this.onPlanChangeCreated?.(notification);
   }
@@ -190,6 +250,7 @@ export class CoachService {
       if (linked.length > 0) {
         await Promise.all(
           linked.map(async (asg) => {
+            const previousProgram = asg.program;
             const cloned = cloneProgramForAthlete(patch.program!, asg.athleteProfileId, {
               name: updated.name,
             });
@@ -203,6 +264,8 @@ export class CoachService {
                 coachProgramId: programId,
                 programName: updated.name,
                 editContext: input.editContext,
+                previousProgram,
+                newProgram: cloned,
               });
             }
           }),
@@ -379,6 +442,7 @@ export class CoachService {
       throw new CoachServiceError('ASSIGNMENT_NOT_FOUND', 'Assignment not found for this coach.');
     }
 
+    const previousProgram = existing.program;
     const program = cloneProgramForAthlete(input.program, existing.athleteProfileId, {
       id: existing.program.id,
       name: input.program.name,
@@ -399,6 +463,8 @@ export class CoachService {
         coachProgramId: existing.coachProgramId ?? existing.program.id,
         programName: input.program.name,
         editContext: input.editContext,
+        previousProgram,
+        newProgram: program,
       });
     }
 
