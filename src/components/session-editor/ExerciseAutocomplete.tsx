@@ -97,27 +97,36 @@ function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRec
     left = Math.max(8, window.innerWidth - width - 8);
   }
 
-  const viewportCap = Math.min(380, Math.floor(window.innerHeight * 0.52));
-  const spaceBelow = window.innerHeight - inputRect.bottom - gap;
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  const viewportCap = Math.min(380, Math.floor(viewportHeight * 0.52));
+  const minComfortable = Math.min(220, viewportCap);
+  const spaceBelow = viewportHeight - inputRect.bottom - gap;
   const spaceAbove = inputRect.top - gap;
-  const preferBelow = spaceBelow >= 140 || spaceBelow >= spaceAbove;
 
-  if (preferBelow) {
+  // Abrir hacia el lado con más espacio; si abajo queda muy justo, forzar arriba.
+  const flipAbove =
+    spaceAbove > spaceBelow ||
+    (spaceBelow < minComfortable && spaceAbove >= minComfortable);
+
+  const available = flipAbove ? spaceAbove : spaceBelow;
+  const maxHeight = Math.min(viewportCap, Math.max(160, available - 8));
+
+  if (flipAbove) {
     return {
-      top: inputRect.bottom + gap,
+      top: inputRect.top - gap,
       left,
       width,
-      maxHeight: Math.min(viewportCap, Math.max(140, spaceBelow - 8)),
-      flipAbove: false,
+      maxHeight,
+      flipAbove: true,
     };
   }
 
   return {
-    top: inputRect.top - gap,
+    top: inputRect.bottom + gap,
     left,
     width,
-    maxHeight: Math.min(viewportCap, Math.max(140, spaceAbove - 8)),
-    flipAbove: true,
+    maxHeight,
+    flipAbove: false,
   };
 }
 
@@ -256,7 +265,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       return;
     }
     updatePanelRect();
-  }, [open, updatePanelRect]);
+  }, [open, updatePanelRect, flatList.length, categoryFilter]);
 
   useEffect(() => {
     if (!open) return;
@@ -264,10 +273,12 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     window.addEventListener('resize', onLayout);
     window.addEventListener('scroll', onLayout, true);
     window.visualViewport?.addEventListener('resize', onLayout);
+    window.visualViewport?.addEventListener('scroll', onLayout);
     return () => {
       window.removeEventListener('resize', onLayout);
       window.removeEventListener('scroll', onLayout, true);
       window.visualViewport?.removeEventListener('resize', onLayout);
+      window.visualViewport?.removeEventListener('scroll', onLayout);
     };
   }, [open, updatePanelRect]);
 
