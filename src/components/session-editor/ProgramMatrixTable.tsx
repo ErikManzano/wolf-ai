@@ -10,7 +10,7 @@ import { exportElementAsPdf, exportElementAsPng, slugExportFilename } from '../.
 import { dayToneIndex, weekToneIndex } from '../../utils/matrixDayTones';
 import { formatBlockPrescription } from './schemeFormat';
 import { blockDisplayName, formatWeekTonnageLabel } from './sessionSheetUtils';
-import { matrixGridTemplate } from './programTabReorderUtils';
+import { matrixGridTemplate, matrixGridTemplateCompact } from './programTabReorderUtils';
 import './program-matrix.css';
 
 const DRAG_THRESHOLD_PX = 10;
@@ -180,6 +180,7 @@ function MatrixTableBody({
 
   const gridStyle = {
     '--matrix-grid-template': matrixGridTemplate(dayNumbers.length),
+    '--matrix-grid-template-compact': matrixGridTemplateCompact(dayNumbers.length),
     '--matrix-day-count': dayNumbers.length,
   } as CSSProperties;
 

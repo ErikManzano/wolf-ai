@@ -10,7 +10,7 @@ import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { SegmentRepField } from './SegmentRepField';
 import { DEFAULT_REST_SEC } from './setSchemeUtils';
 import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
-import { spreadsheetRestPresetOptions, spreadsheetSetsOptions } from './spreadsheetSetFieldPresets';
+import { spreadsheetRestPresetOptions, spreadsheetSetsOptions, SPREADSHEET_COMBO_MENU_CLASS } from './spreadsheetSetFieldPresets';
 import { SpreadsheetSortableSetTr, useSpreadsheetSetRows } from './spreadsheetSortable';
 
 const PCT_PRESETS = [60, 65, 70, 75, 80, 85, 90, 95, 100].map((n) => ({ value: n, label: `${n}%` }));
@@ -87,6 +87,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             aria-label={
               isEs ? `Intensidad bloque ${setIndex + 1}` : `Intensity block ${setIndex + 1}`
             }
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         <td className="wolf-se-spreadsheet-blocks__sets">
@@ -97,6 +98,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             onChange={(v) => onSetsChange(setIndex, v)}
             suffix={setsSuffix}
             aria-label={isEs ? `Series bloque ${setIndex + 1}` : `Sets block ${setIndex + 1}`}
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         {segments.map((seg, segIndex) => {
@@ -138,6 +140,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             onChange={(v) => onRestChange(setIndex, v)}
             className="wolf-se-combo-preset--rest"
             aria-label={isEs ? `Descanso bloque ${setIndex + 1}` : `Rest block ${setIndex + 1}`}
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         <td className="wolf-se-spreadsheet-blocks__vol">

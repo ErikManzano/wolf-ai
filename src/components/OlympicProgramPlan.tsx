@@ -9,6 +9,7 @@ import {
   PenLine,
   Plus,
   Redo2,
+  BarChart3,
   Table2,
   Trash2,
   Undo2,
@@ -43,8 +44,7 @@ import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramMatrixTable } from './session-editor/ProgramMatrixTable';
 import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
 import {
-  ProgramDayBoardControls,
-  type ProgramDayBoardTab,
+  ProgramStatsScopeControls,
   type ProgramStatsScope,
 } from './session-editor/ProgramDayBoardTabs';
 import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
@@ -85,6 +85,8 @@ interface OlympicProgramPlanProps {
   customizeToolbarPortalId?: string | null;
   /** Flush pending autosave (e.g. before week/day navigation). */
   onFlushAutosave?: () => void;
+  /** Coach program id — resolves assignment for execution stats on enrolled athletes. */
+  coachProgramId?: string;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -172,6 +174,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   customizeToolbarEnd,
   customizeToolbarPortalId = null,
   onFlushAutosave,
+  coachProgramId,
 }) => {
   const isEs = language === 'ES';
   const recommendedConfig = useMemo(() => {
@@ -197,9 +200,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState(1);
   const [sessionEditorView, setSessionEditorView] = useState<'sheet' | 'exercise'>('sheet');
-  const [dayBoardTab, setDayBoardTab] = useState<ProgramDayBoardTab>('session');
   const [statsScope, setStatsScope] = useState<ProgramStatsScope>('day');
-  const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table'>('editor');
+  const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table' | 'stats'>('editor');
   const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
   const navFlushEpochRef = useRef(0);
   const skipNavFlushRef = useRef(true);
@@ -222,7 +224,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const programRef = useRef(program);
   const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingHistoryRef = useRef<GeneratedProgram | null>(null);
-  const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles } =
+  const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles, assignments, completions, setLogs } =
     useWolfAssign();
 
   const sessionCatalog = useMemo<SessionCatalogProps>(
@@ -231,6 +233,25 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       pickerSingles: sessionExercisePickerSingles,
     }),
     [sessionExercisePicker, sessionExercisePickerSingles],
+  );
+
+  const statsAssignmentId = useMemo(() => {
+    if (editingAssignmentId) return editingAssignmentId;
+    if (!coachProgramId || !athleteId) return null;
+    return (
+      assignments.find(
+        (a) => a.coachProgramId === coachProgramId && a.athleteProfileId === athleteId,
+      )?.id ?? null
+    );
+  }, [editingAssignmentId, coachProgramId, athleteId, assignments]);
+
+  const statsExecutionContext = useMemo(
+    () => ({
+      assignmentId: statsAssignmentId,
+      completions,
+      setLogs,
+    }),
+    [statsAssignmentId, completions, setLogs],
   );
 
   useEffect(() => {
@@ -311,19 +332,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setSelectedDay(dayNumber);
   }, [selectedDay]);
 
-  useEffect(() => {
-    if (sessionEditorView === 'exercise' && dayBoardTab !== 'session') {
-      setDayBoardTab('session');
-    }
-  }, [sessionEditorView, dayBoardTab]);
-
-  const handleDayBoardTabChange = useCallback((tab: ProgramDayBoardTab) => {
-    setDayBoardTab(tab);
-    if (tab === 'session') {
-      setStatsScope('day');
-    }
-  }, []);
-
   const handleWeekStatsDaySelect = useCallback((dayNumber: number) => {
     navigateToDay(dayNumber);
     setStatsScope('day');
@@ -334,8 +342,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setStatsScope('week');
   }, [navigateToWeek]);
 
-  const switchCustomizeSubview = useCallback((view: 'editor' | 'table') => {
+  const switchCustomizeSubview = useCallback((view: 'editor' | 'table' | 'stats') => {
     if (view === customizeSubview) return;
+    if (view === 'editor') {
+      setSessionEditorView('sheet');
+    }
     setCustomizeSubview(view);
   }, [customizeSubview]);
 
@@ -378,7 +389,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         : 'Tap a cell to open that day in the editor',
       customizeViewLabel: isEs ? 'Vista del plan' : 'Plan view',
       customizeViewEditor: isEs ? 'Editor' : 'Editor',
-      customizeViewTable: isEs ? 'Tabla' : 'Grid',
+      customizeViewTable: isEs ? 'Tabla' : 'Table',
+      customizeViewStats: isEs ? 'Estadísticas' : 'Statistics',
       weeksRow: isEs ? 'Semanas' : 'Weeks',
       daysRow: isEs ? 'Días' : 'Days',
       addWeek: isEs ? 'Añadir semana' : 'Add week',
@@ -832,79 +844,115 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     URL.revokeObjectURL(a.href);
   }, [program]);
 
+  const customizeViewTabs = (
+    <div
+      className="wolf-program-customize-tabs"
+      role="tablist"
+      aria-label={t.customizeViewLabel}
+    >
+      <button
+        type="button"
+        role="tab"
+        id="wolf-program-tab-editor"
+        aria-selected={customizeSubview === 'editor'}
+        aria-controls="wolf-program-panel-editor"
+        className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
+        onClick={() => switchCustomizeSubview('editor')}
+      >
+        <PenLine size={14} aria-hidden />
+        {t.customizeViewEditor}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="wolf-program-tab-table"
+        aria-selected={customizeSubview === 'table'}
+        aria-controls="wolf-program-panel-table"
+        className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
+        onClick={() => switchCustomizeSubview('table')}
+      >
+        <Table2 size={14} aria-hidden />
+        {t.customizeViewTable}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="wolf-program-tab-stats"
+        aria-selected={customizeSubview === 'stats'}
+        aria-controls="wolf-program-panel-stats"
+        className={`wolf-program-customize-tab${customizeSubview === 'stats' ? ' is-active' : ''}`}
+        onClick={() => switchCustomizeSubview('stats')}
+      >
+        <BarChart3 size={14} aria-hidden />
+        {t.customizeViewStats}
+      </button>
+    </div>
+  );
+
+  const customizeHistoryActions = (
+    <div
+      className="wolf-program-customize-toolbar-actions"
+      role="group"
+      aria-label={isEs ? 'Historial de edición' : 'Edit history'}
+    >
+      <button
+        type="button"
+        className="wolf-program-history-btn"
+        disabled={!canAddDay}
+        title={t.duplicateDay}
+        aria-label={t.duplicateDay}
+        onClick={handleDuplicateDay}
+      >
+        <Copy size={15} aria-hidden />
+      </button>
+      <button
+        type="button"
+        className="wolf-program-history-btn"
+        disabled={!canUndo}
+        title={t.undoShortcut}
+        aria-label={t.undoShortcut}
+        onClick={handleUndo}
+      >
+        <Undo2 size={15} aria-hidden />
+      </button>
+      <button
+        type="button"
+        className="wolf-program-history-btn"
+        disabled={!canRedo}
+        title={t.redoShortcut}
+        aria-label={t.redoShortcut}
+        onClick={handleRedo}
+      >
+        <Redo2 size={15} aria-hidden />
+      </button>
+    </div>
+  );
+
   const customizeToolbar =
     program && showCustomize ? (
       <div
-        className={`wolf-program-customize-toolbar${toolbarPortalNode ? ' wolf-program-customize-toolbar--in-head' : ''}`}
+        className={`wolf-program-customize-toolbar${toolbarPortalNode ? ' wolf-program-customize-toolbar--in-head' : ''} wolf-program-customize-toolbar--actions-only`}
       >
-        <div
-          className="wolf-program-customize-tabs"
-          role="tablist"
-          aria-label={t.customizeViewLabel}
-        >
-          <button
-            type="button"
-            role="tab"
-            id="wolf-program-tab-editor"
-            aria-selected={customizeSubview === 'editor'}
-            aria-controls="wolf-program-panel-editor"
-            className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
-            onClick={() => switchCustomizeSubview('editor')}
-          >
-            <PenLine size={14} aria-hidden />
-            {t.customizeViewEditor}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="wolf-program-tab-table"
-            aria-selected={customizeSubview === 'table'}
-            aria-controls="wolf-program-panel-table"
-            className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
-            onClick={() => switchCustomizeSubview('table')}
-          >
-            <Table2 size={14} aria-hidden />
-            {t.customizeViewTable}
-          </button>
-        </div>
         <div className="wolf-program-customize-toolbar-end">
-          <div
-            className="wolf-program-customize-toolbar-actions"
-            role="group"
-            aria-label={isEs ? 'Historial de edición' : 'Edit history'}
-          >
-          <button
-            type="button"
-            className="wolf-program-history-btn"
-            disabled={!canAddDay}
-            title={t.duplicateDay}
-            aria-label={t.duplicateDay}
-            onClick={handleDuplicateDay}
-          >
-            <Copy size={15} aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="wolf-program-history-btn"
-            disabled={!canUndo}
-              title={t.undoShortcut}
-              aria-label={t.undoShortcut}
-              onClick={handleUndo}
-            >
-              <Undo2 size={15} aria-hidden />
-            </button>
-            <button
-              type="button"
-              className="wolf-program-history-btn"
-              disabled={!canRedo}
-              title={t.redoShortcut}
-              aria-label={t.redoShortcut}
-              onClick={handleRedo}
-            >
-              <Redo2 size={15} aria-hidden />
-            </button>
-          </div>
+          {customizeHistoryActions}
           {customizeToolbarEnd}
+        </div>
+      </div>
+    ) : null;
+
+  const planViewChrome =
+    program && showCustomize ? (
+      <div className="wolf-program-day-board__stats-chrome wolf-program-day-board__stats-chrome--layout">
+        {customizeViewTabs}
+        <div className="wolf-program-day-board__stats-chrome-end">
+          <ProgramStatsScopeControls
+            statsScope={statsScope}
+            isEs={isEs}
+            onStatsScopeChange={setStatsScope}
+            variant="toolbar"
+            disabled={customizeSubview !== 'stats'}
+          />
+          {!toolbarPortalNode ? customizeHistoryActions : null}
         </div>
       </div>
     ) : null;
@@ -1058,7 +1106,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         <div
           className={`wolf-program-customize-layout wolf-program-customize-layout--${customizeSubview}`}
         >
-          {!toolbarPortalNode ? customizeToolbar : null}
+          {planViewChrome}
 
           {customizeSubview === 'table' ? (
             <div
@@ -1087,6 +1135,96 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                 }}
                 onSwapCells={handleSwapCells}
               />
+            </div>
+          ) : customizeSubview === 'stats' ? (
+            <div
+              id="wolf-program-panel-stats"
+              role="tabpanel"
+              aria-labelledby="wolf-program-tab-stats"
+              className="wolf-program-customize-panel wolf-program-customize-panel--stats"
+            >
+              <div className="wolf-program-day-board wolf-program-day-board--stats-only">
+                <div className="wolf-program-day-board__head">
+                  <ProgramWeekDayNav
+                    density="editor"
+                    program={program}
+                    selectedWeek={selectedWeek}
+                    selectedDay={selectedDay}
+                    selectedWeekData={selectedWeekData}
+                    isEs={isEs}
+                    weekTonnages={weekTonnages}
+                    canAddWeek={canAddWeek}
+                    canAddDay={canAddDay}
+                    labels={{
+                      weeksRow: t.weeksRow,
+                      daysRow: t.daysRow,
+                      addWeek: t.addWeek,
+                      addDay: t.addDay,
+                      maxWeeks: t.maxWeeks,
+                      maxDays: t.maxDays,
+                      removeWeek: t.removeWeek,
+                      removeDay: t.removeDay,
+                    }}
+                    canRemoveWeek={canRemoveWeek}
+                    canRemoveDay={canRemoveDay}
+                    onSelectWeek={(weekNumber) => navigateToWeek(weekNumber, 1)}
+                    onSelectDay={navigateToDay}
+                    onAddWeek={handleAddWeek}
+                    onAddDay={handleAddDay}
+                    onRemoveWeek={handleRemoveWeek}
+                    onRemoveDay={handleRemoveDay}
+                    onReorderWeek={handleReorderWeek}
+                    onReorderDay={handleReorderDay}
+                  />
+                </div>
+                <div className="wolf-program-day-board__body">
+                  {daySession && statsScope === 'day' ? (
+                    <SessionDayStatsPanel
+                      key={`stats-day-${selectedWeek}-${selectedDay}`}
+                      session={daySession}
+                      athlete={athleteForEngine}
+                      exercises={motorExercises}
+                      isEs={isEs}
+                      weekNumber={selectedWeek}
+                      dayNumber={selectedDay}
+                      dayLabel={selectedDayLabel}
+                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
+                      weekData={selectedWeekData}
+                      onSelectDay={handleWeekStatsDaySelect}
+                      executionContext={statsExecutionContext}
+                      dashboard
+                    />
+                  ) : null}
+                  {statsScope === 'week' ? (
+                    <SessionWeekStatsPanel
+                      key={`stats-week-${selectedWeek}`}
+                      athlete={athleteForEngine}
+                      exercises={motorExercises}
+                      isEs={isEs}
+                      weekNumber={selectedWeek}
+                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
+                      weekData={selectedWeekData}
+                      selectedDay={selectedDay}
+                      onSelectDay={handleWeekStatsDaySelect}
+                      executionContext={statsExecutionContext}
+                      dashboard
+                    />
+                  ) : null}
+                  {statsScope === 'program' ? (
+                    <SessionProgramStatsPanel
+                      key="stats-program"
+                      program={program}
+                      athlete={athleteForEngine}
+                      exercises={motorExercises}
+                      isEs={isEs}
+                      selectedWeek={selectedWeek}
+                      onSelectWeek={handleProgramStatsWeekSelect}
+                      executionContext={statsExecutionContext}
+                      dashboard
+                    />
+                  ) : null}
+                </div>
+              </div>
             </div>
           ) : (
             <div
@@ -1130,64 +1268,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                       onRemoveDay={handleRemoveDay}
                       onReorderWeek={handleReorderWeek}
                       onReorderDay={handleReorderDay}
-                      weekHeadLeading={
-                        <ProgramDayBoardControls
-                          activeTab={dayBoardTab}
-                          statsScope={statsScope}
-                          isEs={isEs}
-                          onTabChange={handleDayBoardTabChange}
-                          onStatsScopeChange={setStatsScope}
-                        />
-                      }
                     />
                   </div>
                 ) : null}
                 <div className="wolf-program-day-board__body">
-                  {daySession && dayBoardTab === 'stats' && sessionEditorView === 'sheet' && statsScope === 'day' ? (
-                    <SessionDayStatsPanel
-                      key={`stats-day-${selectedWeek}-${selectedDay}`}
-                      session={daySession}
-                      athlete={athleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      weekNumber={selectedWeek}
-                      dayNumber={selectedDay}
-                      dayLabel={selectedDayLabel}
-                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
-                      weekData={selectedWeekData}
-                      onSelectDay={handleWeekStatsDaySelect}
-                    />
-                  ) : null}
-                  {daySession && dayBoardTab === 'stats' && sessionEditorView === 'sheet' && statsScope === 'week' ? (
-                    <SessionWeekStatsPanel
-                      key={`stats-week-${selectedWeek}`}
-                      athlete={athleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      weekNumber={selectedWeek}
-                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
-                      weekData={selectedWeekData}
-                      selectedDay={selectedDay}
-                      onSelectDay={handleWeekStatsDaySelect}
-                    />
-                  ) : null}
-                  {program && dayBoardTab === 'stats' && sessionEditorView === 'sheet' && statsScope === 'program' ? (
-                    <SessionProgramStatsPanel
-                      key="stats-program"
-                      program={program}
-                      athlete={athleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      selectedWeek={selectedWeek}
-                      onSelectWeek={handleProgramStatsWeekSelect}
-                    />
-                  ) : null}
-                  {daySession && (dayBoardTab === 'session' || sessionEditorView === 'exercise') ? (
+                  {daySession ? (
                     <div
                       key={`${selectedWeek}-${selectedDay}`}
                       id="wolf-program-day-panel-session"
-                      role="tabpanel"
-                      aria-labelledby="wolf-program-day-tab-session"
                       className="wolf-program-session-pane wolf-program-day-board__pane"
                     >
                       <OlympicSessionEditor

@@ -15,6 +15,7 @@ import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import {
   spreadsheetRepsOptions,
   spreadsheetRestPresetOptions,
+  SPREADSHEET_COMBO_MENU_CLASS,
   spreadsheetSetsOptions,
 } from './spreadsheetSetFieldPresets';
 import { SpreadsheetSortableSetTr, useSpreadsheetSetRows } from './spreadsheetSortable';
@@ -102,6 +103,7 @@ export const SpreadsheetSetBlocksPanel: React.FC<SpreadsheetSetBlocksPanelProps>
             options={PCT_PRESETS}
             onChange={(v) => onPctChange(setIndex, v)}
             aria-label={isEs ? `Intensidad bloque ${setIndex + 1}` : `Intensity block ${setIndex + 1}`}
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         <td className="wolf-se-spreadsheet-blocks__sets">
@@ -112,6 +114,7 @@ export const SpreadsheetSetBlocksPanel: React.FC<SpreadsheetSetBlocksPanelProps>
             onChange={(v) => onSetsChange(setIndex, v)}
             suffix={setsSuffix}
             aria-label={isEs ? `Series bloque ${setIndex + 1}` : `Sets block ${setIndex + 1}`}
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         <td className="wolf-se-spreadsheet-blocks__reps">
@@ -139,6 +142,7 @@ export const SpreadsheetSetBlocksPanel: React.FC<SpreadsheetSetBlocksPanelProps>
               onChange={(v) => onRepsChange(setIndex, v)}
               suffix={REPS_SUFFIX}
               aria-label={isEs ? `Reps bloque ${setIndex + 1}` : `Reps block ${setIndex + 1}`}
+              menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
             />
           )}
         </td>
@@ -150,6 +154,7 @@ export const SpreadsheetSetBlocksPanel: React.FC<SpreadsheetSetBlocksPanelProps>
             onChange={(v) => onRestChange(setIndex, v)}
             className="wolf-se-combo-preset--rest"
             aria-label={isEs ? `Descanso bloque ${setIndex + 1}` : `Rest block ${setIndex + 1}`}
+            menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
           />
         </td>
         <td className="wolf-se-spreadsheet-blocks__vol">

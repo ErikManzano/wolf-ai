@@ -3,7 +3,7 @@ import { parseRepTokens } from '../../services/trainingEngine';
 import { ComboNumberField } from './ComboNumberField';
 import { ComboPresetField } from './ComboPresetField';
 import { SEGMENT_REP_OPTIONS } from './repPresets';
-import { spreadsheetRepsOptions } from './spreadsheetSetFieldPresets';
+import { spreadsheetRepsOptions, SPREADSHEET_COMBO_MENU_CLASS } from './spreadsheetSetFieldPresets';
 
 interface SegmentRepFieldProps {
   value: string;
@@ -37,6 +37,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
         onChange={(n) => onChange(String(n))}
         suffix={suffix}
         aria-label={ariaLabel}
+        menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
       />
     );
   }

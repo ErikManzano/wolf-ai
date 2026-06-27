@@ -17,6 +17,8 @@ export interface ComboPresetFieldProps<T extends string | number> {
   variant?: 'premium';
   /** Short unit shown beside the value (e.g. series, reps). */
   suffix?: string;
+  /** Extra class on the portaled listbox (e.g. spreadsheet skin). */
+  menuClassName?: string;
 }
 
 export function ComboPresetField<T extends string | number>({
@@ -27,6 +29,7 @@ export function ComboPresetField<T extends string | number>({
   className,
   variant = 'premium',
   suffix,
+  menuClassName,
 }: ComboPresetFieldProps<T>) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -146,6 +149,7 @@ export function ComboPresetField<T extends string | number>({
         onPick={pickOption}
         onClose={close}
         onActiveIndexChange={setActiveIndex}
+        menuClassName={menuClassName}
         renderOption={(opt) => renderLabel(opt.label)}
       />
     </div>

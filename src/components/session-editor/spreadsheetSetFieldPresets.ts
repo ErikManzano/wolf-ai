@@ -46,3 +46,6 @@ export function spreadsheetRestPresetOptions(isEs: boolean): ComboPresetOption<n
     label: formatRestLabel(sec, isEs),
   }));
 }
+
+/** Clase del menú portalado para combos del spreadsheet (series, %, reps, descanso). */
+export const SPREADSHEET_COMBO_MENU_CLASS = 'wolf-se-combo-select__menu--spreadsheet';

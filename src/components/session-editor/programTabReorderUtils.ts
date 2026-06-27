@@ -65,6 +65,12 @@ export function findMoveIndices(before: string[], after: string[]): { from: numb
   return { from, to };
 }
 
+/** Desktop: columns share all available width (min 0 so grid can shrink). */
 export function matrixGridTemplate(dayCount: number) {
-  return `88px repeat(${dayCount}, minmax(100px, 128px))`;
+  return `var(--matrix-week-col, 88px) repeat(${dayCount}, minmax(0, 1fr))`;
+}
+
+/** Mobile / narrow: enforce minimum day width; table scrolls horizontally. */
+export function matrixGridTemplateCompact(dayCount: number) {
+  return `var(--matrix-week-col, 88px) repeat(${dayCount}, minmax(var(--matrix-day-min, 96px), 1fr))`;
 }

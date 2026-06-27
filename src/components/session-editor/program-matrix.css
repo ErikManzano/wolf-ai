@@ -1,6 +1,8 @@
 /* Program matrix — Wolf AI branded table (screen + export) */
 
 .wolf-program-matrix {
+  --matrix-week-col: 88px;
+  --matrix-day-min: 112px;
   --matrix-bg: #0a0c10;
   --matrix-surface: #12151c;
   --matrix-surface-2: #171b24;
@@ -417,17 +419,27 @@ tr.is-active-week .wolf-program-matrix-week-load {
   color: var(--matrix-text);
 }
 
-/* Grid matrix layout */
+/* Grid matrix layout — fluid day columns; fit all days on desktop */
+.wolf-program-matrix-scroll {
+  scroll-padding-left: var(--matrix-week-col, 88px);
+  scroll-padding-top: 2px;
+}
+
 .wolf-program-matrix-table--grid {
   display: flex;
   flex-direction: column;
-  min-width: 100%;
-  width: max-content;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .wolf-program-matrix-grid-head {
   display: grid;
   grid-template-columns: var(--matrix-grid-template);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   position: sticky;
   top: 0;
   z-index: 4;
@@ -435,19 +447,99 @@ tr.is-active-week .wolf-program-matrix-week-load {
 }
 
 .wolf-program-matrix-day-header-track {
-  grid-column: 2 / -1;
-  display: grid;
-  grid-template-columns: repeat(var(--matrix-day-count), minmax(100px, 128px));
+  display: contents;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-day-col,
+.wolf-program-matrix-table--grid .wolf-program-matrix-cell {
+  min-width: 0;
+  max-width: none;
+  width: auto;
+  overflow: hidden;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-corner,
+.wolf-program-matrix-table--grid .wolf-program-matrix-week-row {
+  width: var(--matrix-week-col, 88px);
+  min-width: var(--matrix-week-col, 88px);
+  max-width: var(--matrix-week-col, 88px);
 }
 
 .wolf-program-matrix-week-body {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .wolf-program-matrix-week-line {
   display: grid;
   grid-template-columns: var(--matrix-grid-template);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-cell-hit {
+  max-width: 100%;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-exercises {
+  max-width: 100%;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-exercise {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-exercise-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.wolf-program-matrix-table--grid .wolf-program-matrix-exercise-rx {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+  .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .wolf-program-matrix-table--grid {
+    min-width: calc(
+      var(--matrix-week-col, 88px) + var(--matrix-day-count, 1) * var(--matrix-day-min, 96px)
+    );
+  }
+
+  .wolf-program-matrix-grid-head,
+  .wolf-program-matrix-week-line {
+    grid-template-columns: var(--matrix-grid-template-compact, var(--matrix-grid-template));
+    min-width: inherit;
+  }
+
+  .wolf-program-matrix-table--grid .wolf-program-matrix-day-col,
+  .wolf-program-matrix-table--grid .wolf-program-matrix-cell {
+    min-width: var(--matrix-day-min, 96px);
+  }
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-exercise-name {
+  -webkit-line-clamp: 3;
+}
+
+.wolf-program-matrix--expanded .wolf-program-matrix-exercise-rx {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .wolf-program-matrix-table--grid .wolf-program-matrix-corner,
@@ -520,7 +612,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 .wolf-program-matrix-cell--swappable .wolf-program-matrix-cell-hit {
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 }
 
 .wolf-program-matrix-cell--swappable.is-drag-source .wolf-program-matrix-cell-hit {
@@ -556,6 +648,11 @@ tr.is-active-week .wolf-program-matrix-week-load {
 }
 
 @media (max-width: 768px) {
+  .wolf-program-matrix {
+    --matrix-week-col: 76px;
+    --matrix-day-min: 96px;
+  }
+
   .wolf-program-matrix-toolbar {
     flex-wrap: wrap;
     justify-content: flex-end;

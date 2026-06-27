@@ -1,15 +1,22 @@
 import React, { useMemo } from 'react';
 import type { Athlete, Exercise, GeneratedProgram } from '../../models/training';
-import { formatWeekTonnageLabel } from './sessionSheetUtils';
 import { computeProgramAggregateMetrics } from './programAggregateStats';
+import { sessionIntensityRange } from './programStatsVerdict';
 import {
-  buildStandardKpiChips,
+  buildDayKpiCards,
+  ProgramStatsDashboardLayout,
   ProgramStatsDataTable,
-  ProgramStatsHeader,
-  ProgramStatsKpiChips,
+  ProgramStatsDayCards,
+  ProgramStatsDetailSection,
+  ProgramStatsDonutChart,
+  ProgramStatsKpiGrid,
   ProgramStatsPurposeBlock,
-  ProgramStatsWeekVolumeChart,
 } from './programStatsShared';
+import {
+  computeProgramExecution,
+  type SessionExecutionContext,
+} from './programExecutionStats';
+import { sessionPurposeTonnageBreakdown } from './sessionSummaryMetrics';
 
 export interface SessionProgramStatsPanelProps {
   program: GeneratedProgram;
@@ -18,6 +25,9 @@ export interface SessionProgramStatsPanelProps {
   isEs: boolean;
   selectedWeek: number;
   onSelectWeek?: (weekNumber: number) => void;
+  executionContext?: SessionExecutionContext;
+  /** GA-style viewport grid — all widgets visible without page scroll. */
+  dashboard?: boolean;
 }
 
 export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> = ({
@@ -27,112 +37,137 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
   isEs,
   selectedWeek,
   onSelectWeek,
+  executionContext,
+  dashboard = false,
 }) => {
   const metrics = useMemo(
-    () => computeProgramAggregateMetrics(program, athlete, exercises, isEs, 16),
+    () => computeProgramAggregateMetrics(program, athlete, exercises, isEs, 6),
     [program, athlete, exercises, isEs],
   );
 
-  const programTitle = program.name?.trim() || (isEs ? 'Programa' : 'Program');
+  const execution = useMemo(
+    () => (executionContext ? computeProgramExecution(program, executionContext) : null),
+    [executionContext, program],
+  );
 
-  const weekBars = useMemo(
+  const weekCards = useMemo(
     () =>
       metrics.weekRows.map((row) => ({
         dayNumber: row.weekNumber,
         label: row.label,
         tonnage: row.tonnage,
+        exerciseCount: row.dayCount,
         isSelected: row.weekNumber === selectedWeek,
+        executionStatus: 'none' as const,
       })),
     [metrics.weekRows, selectedWeek],
   );
 
-  const kpiChips = buildStandardKpiChips(isEs, {
+  const intensityRange = useMemo(() => {
+    const blocks = program.weeks.flatMap((w) => w.days.flatMap((d) => d.session.exercises));
+    return sessionIntensityRange(blocks);
+  }, [program]);
+
+  const purposeTonnage = useMemo(() => {
+    const blocks = program.weeks.flatMap((w) => w.days.flatMap((d) => d.session.exercises));
+    return sessionPurposeTonnageBreakdown(blocks, athlete, exercises);
+  }, [program, athlete, exercises]);
+
+  const kpiCards = buildDayKpiCards(isEs, {
+    tonnage: metrics.tonnage,
+    weekSharePct: 0,
+    avgPct: metrics.avgPct,
+    intensityMin: intensityRange.min,
+    intensityMax: intensityRange.max,
     sets: metrics.sets,
     reps: metrics.reps,
-    avgPct: metrics.avgPct,
-    minutes: metrics.minutes,
-    dayCount: metrics.sessionCount,
+    exerciseCount: metrics.exerciseVolumes.length,
+    execution: execution
+      ? {
+          completedSets: execution.completedSets,
+          prescribedSets: execution.prescribedSets,
+          completionPct: execution.completionPct,
+        }
+      : null,
   });
 
-  kpiChips.push({
-    id: 'weeks',
-    label: `${metrics.weekCount} ${isEs ? (metrics.weekCount === 1 ? 'semana' : 'semanas') : metrics.weekCount === 1 ? 'week' : 'weeks'}`,
-  });
+  kpiCards[3] = {
+    ...kpiCards[3]!,
+    label: isEs ? 'Semanas' : 'Weeks',
+    value: String(metrics.weekCount),
+    sub: isEs ? `${metrics.sessionCount} sesiones` : `${metrics.sessionCount} sessions`,
+    accent: 'exercises',
+  };
 
   return (
     <section
       id="wolf-program-day-panel-stats"
       role="tabpanel"
-      aria-labelledby="wolf-program-day-tab-stats"
-      className="wolf-program-day-stats wolf-program-day-stats--program wolf-program-day-board__pane"
+      aria-labelledby="wolf-program-tab-stats"
+      className={`wolf-program-day-stats wolf-program-day-stats--program wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
     >
-      <ProgramStatsHeader
-        eyebrow={isEs ? 'Resumen del programa' : 'Program summary'}
-        title={programTitle}
-        metrics={[
-          {
-            label: isEs ? 'Volumen total' : 'Total volume',
-            value: formatWeekTonnageLabel(metrics.tonnage, isEs),
-          },
-          {
-            label: isEs ? 'Semanas' : 'Weeks',
-            value: metrics.weekCount,
-          },
-          {
-            label: isEs ? 'Sesiones' : 'Sessions',
-            value: metrics.sessionCount,
-          },
-        ]}
-      />
-
-      <ProgramStatsKpiChips chips={kpiChips} />
-
-      <ProgramStatsPurposeBlock purpose={metrics.purpose} avgPct={metrics.avgPct} isEs={isEs} />
-
-      <ProgramStatsWeekVolumeChart
-        days={weekBars}
-        isEs={isEs}
-        title={isEs ? 'Volumen por semana' : 'Volume by week'}
-        onSelectDay={onSelectWeek}
-      />
-
-      <ProgramStatsDataTable
-        title={isEs ? 'Detalle por semana' : 'Breakdown by week'}
-        columns={[
-          { key: 'week', label: isEs ? 'Semana' : 'Week' },
-          { key: 'volume', label: isEs ? 'Volumen' : 'Volume', align: 'right' },
-          { key: 'days', label: isEs ? 'Días' : 'Days', align: 'right' },
-          { key: 'sets', label: isEs ? 'Series' : 'Sets', align: 'right' },
-          { key: 'reps', label: 'Reps', align: 'right' },
-          { key: 'pct', label: '% 1RM', align: 'right' },
-          { key: 'share', label: isEs ? '% prog.' : '% prog', align: 'right' },
-        ]}
-        rows={metrics.weekRows.map((row) => ({
-          key: String(row.weekNumber),
-          selected: row.weekNumber === selectedWeek,
-          cells: [
-            row.label,
-            `${row.tonnage.toLocaleString()} kg`,
-            row.dayCount,
-            row.sets,
-            row.reps,
-            `${row.avgPct}%`,
-            `${row.sharePct}%`,
-          ],
-        }))}
-      />
-
-      <ProgramStatsDataTable
-        title={isEs ? 'Top ejercicios del programa' : 'Top exercises in program'}
-        columns={[
-          { key: 'exercise', label: isEs ? 'Ejercicio' : 'Exercise' },
-          { key: 'volume', label: isEs ? 'Volumen' : 'Volume', align: 'right' },
-          { key: 'pct', label: isEs ? '% programa' : '% of program', align: 'right' },
-        ]}
-        rows={metrics.exerciseVolumes.map((row, index) => ({
-          key: `${row.label}-${index}`,
-          cells: [row.label, `${row.tonnage.toLocaleString()} kg`, `${row.pct}%`],
-        }))}
+      <ProgramStatsDashboardLayout
+        dashboard={dashboard}
+        kpis={<ProgramStatsKpiGrid cards={kpiCards} />}
+        charts={
+          <>
+            <ProgramStatsDonutChart
+              title={isEs ? 'Volumen por ejercicio (programa)' : 'Volume by exercise (program)'}
+              centerLabel={`${metrics.tonnage.toLocaleString()} kg`}
+              slices={metrics.exerciseVolumes}
+              isEs={isEs}
+              maxSlices={dashboard ? 6 : undefined}
+            />
+            <ProgramStatsPurposeBlock
+              purpose={metrics.purpose}
+              purposeTonnage={purposeTonnage}
+              avgPct={metrics.avgPct}
+              isEs={isEs}
+              title={
+                isEs ? 'Distribución por intensidad (programa)' : 'Intensity distribution (program)'
+              }
+            />
+          </>
+        }
+        timeline={
+          <ProgramStatsDayCards
+            title={isEs ? 'Volumen por semana' : 'Volume by week'}
+            days={weekCards}
+            isEs={isEs}
+            onSelectDay={onSelectWeek}
+          />
+        }
+        detail={
+          metrics.weekRows.length > 0 ? (
+            <ProgramStatsDetailSection title={isEs ? 'Detalle por semana' : 'Breakdown by week'}>
+              <ProgramStatsDataTable
+                title=""
+                columns={[
+                  { key: 'week', label: isEs ? 'Semana' : 'Week' },
+                  { key: 'volume', label: isEs ? 'Volumen' : 'Volume', align: 'right' },
+                  { key: 'days', label: isEs ? 'Días' : 'Days', align: 'right' },
+                  { key: 'sets', label: isEs ? 'Series' : 'Sets', align: 'right' },
+                  { key: 'reps', label: 'Reps', align: 'right' },
+                  { key: 'pct', label: '% 1RM', align: 'right' },
+                  { key: 'share', label: isEs ? '% prog.' : '% prog', align: 'right' },
+                ]}
+                rows={metrics.weekRows.map((row) => ({
+                  key: String(row.weekNumber),
+                  selected: row.weekNumber === selectedWeek,
+                  cells: [
+                    row.label,
+                    `${row.tonnage.toLocaleString()} kg`,
+                    row.dayCount,
+                    row.sets,
+                    row.reps,
+                    `${row.avgPct}%`,
+                    `${row.sharePct}%`,
+                  ],
+                }))}
+              />
+            </ProgramStatsDetailSection>
+          ) : null
+        }
       />
     </section>
   );

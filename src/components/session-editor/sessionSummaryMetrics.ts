@@ -28,6 +28,29 @@ export function sessionPurposeBreakdown(blocks: SessionExerciseBlock[]): Session
   return { ...counts, total };
 }
 
+export function sessionPurposeTonnageBreakdown(
+  blocks: SessionExerciseBlock[],
+  athlete: Athlete,
+  exercises: Exercise[],
+): Record<SetPurpose, number> {
+  const tonnage: Record<SetPurpose, number> = { technique: 0, work: 0, intensity: 0 };
+  for (const block of blocks) {
+    const blockTotal = blockTonnage(block, athlete, exercises);
+    const blockSets = blockTotalSets(block);
+    if (blockTotal <= 0 || blockSets <= 0) continue;
+    const tonnagePerSet = blockTotal / blockSets;
+    for (const row of block.sets) {
+      const purpose = purposeForScheme(row);
+      tonnage[purpose] += tonnagePerSet * row.sets;
+    }
+  }
+  return {
+    technique: Math.round(tonnage.technique),
+    work: Math.round(tonnage.work),
+    intensity: Math.round(tonnage.intensity),
+  };
+}
+
 export function purposePct(breakdown: SessionPurposeBreakdown, purpose: SetPurpose): number {
   if (breakdown.total <= 0) return 0;
   return Math.round((breakdown[purpose] / breakdown.total) * 100);

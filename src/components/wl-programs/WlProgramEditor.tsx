@@ -418,6 +418,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 onProgramNameChange={handleProgramTitleChange}
                 customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
                 customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
+                coachProgramId={programId}
               />
             )}
           </div>
