@@ -1175,6 +1175,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     onRemoveDay={handleRemoveDay}
                     onReorderWeek={handleReorderWeek}
                     onReorderDay={handleReorderDay}
+                    statsContext={statsScope}
                   />
                 </div>
                 <div className="wolf-program-day-board__body">

@@ -2118,8 +2118,115 @@
   min-width: 0;
 }
 
+@media (max-width: 900px) {
+  .wolf-program-day-board__stats-chrome {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .wolf-program-day-board__stats-chrome .wolf-program-customize-tabs {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .wolf-program-day-board__stats-chrome-end {
+    flex: 1 1 100%;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .wolf-program-day-board__stats-chrome .wolf-program-stats-scope-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .wolf-program-day-board__stats-chrome .wolf-program-customize-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 6px;
+    font-size: 0.68rem;
+  }
+
+  .wolf-program-day-board__stats-chrome .wolf-program-customize-tab svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .wolf-program-day-board__stats-chrome-end {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wolf-program-day-board__stats-chrome .wolf-program-stats-scope {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .wolf-program-day-board__stats-chrome .wolf-program-stats-scope__btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 0.66rem;
+  }
+}
+
 .wolf-program-day-board--stats-only .wolf-program-day-board__head {
   flex-shrink: 0;
+  position: relative;
+  top: auto;
+}
+
+.wolf-program-nav--stats.wolf-program-nav--compact {
+  border-bottom: none;
+  background: transparent;
+}
+
+.wolf-program-nav--stats .wolf-program-nav-compact {
+  gap: 0;
+}
+
+.wolf-program-nav--stats .wolf-program-nav-section--weeks {
+  border-bottom: none;
+}
+
+.wolf-program-nav--stats .wolf-week-carousel {
+  padding: 2px 4px;
+  gap: 3px;
+  border-bottom: none;
+}
+
+.wolf-program-nav--stats .wolf-week-carousel__arrow {
+  min-height: 30px;
+  width: 24px;
+  flex-basis: 24px;
+}
+
+.wolf-program-nav--stats .wolf-week-tab-card {
+  min-height: 30px;
+  padding: 4px 6px;
+}
+
+.wolf-program-nav--stats .wolf-program-nav-section--days {
+  border-top: 1px solid color-mix(in srgb, var(--wl-border-subtle, #27272a) 80%, transparent);
+}
+
+.wolf-program-nav--stats .wolf-day-tabs-strip {
+  padding: 3px 4px 4px;
+}
+
+.wolf-program-nav--stats .wolf-day-tab,
+.wolf-program-nav--stats .wolf-day-tab.active {
+  min-height: 26px;
+  padding: 2px 4px;
+  font-size: 0.66rem;
 }
 
 .wolf-program-day-board--stats-only .wolf-program-day-board__body {

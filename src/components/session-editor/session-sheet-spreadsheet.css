@@ -1465,20 +1465,25 @@
   min-width: 0;
 }
 
-/* Dashboard — GA-style grid; scroll inside panel to reach all sections */
+/* Dashboard — GA-style grid, fully responsive */
 .wolf-program-day-stats--dashboard {
   flex: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   min-height: auto;
   height: auto;
   margin-bottom: 0;
-  padding: 8px 4px 12px;
-  overflow: visible;
+  padding: clamp(6px, 1.2vw, 12px) clamp(4px, 1vw, 10px);
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__dashboard--viewport {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(8px, 1.5vw, 14px);
+  width: 100%;
   min-width: 0;
   height: auto;
   overflow: visible;
@@ -1486,50 +1491,93 @@
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__row {
   flex-shrink: 0;
+  width: 100%;
   min-width: 0;
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__row--charts {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-  gap: 12px;
+  gap: clamp(8px, 1.2vw, 14px);
   align-items: stretch;
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: clamp(6px, 1vw, 12px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-card {
   min-height: unset;
+  min-width: 0;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-value {
+  font-size: clamp(0.95rem, 1.6vw, 1.35rem);
+  overflow-wrap: anywhere;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-sub {
+  overflow-wrap: anywhere;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-card,
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__purpose-row--dashboard,
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__day-cards {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-card,
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__purpose-row--dashboard {
-  padding: 12px 14px;
-  min-width: 0;
+  padding: clamp(10px, 1.2vw, 14px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-body {
+  display: flex;
   align-items: center;
+  gap: clamp(10px, 1.5vw, 18px);
+  min-width: 0;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__donut {
+  width: clamp(88px, 12vw, 132px);
+  height: clamp(88px, 12vw, 132px);
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-hole {
+  width: clamp(54px, 7.5vw, 82px);
+  height: clamp(54px, 7.5vw, 82px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-legend {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 14px;
+  gap: 6px clamp(8px, 1.2vw, 14px);
   align-content: start;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-name,
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-meta {
+  min-width: 0;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__purpose-cols {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 12px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-cards {
-  padding: 10px 12px;
+  padding: clamp(8px, 1vw, 12px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-cards-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 88px), 1fr));
+  gap: clamp(6px, 1vw, 10px);
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-card {
@@ -1537,39 +1585,99 @@
   max-width: none;
 }
 
-.wolf-program-day-stats--dashboard .wolf-program-day-stats__footer-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(210px, 0.38fr);
-  gap: 10px;
-  align-items: stretch;
+.wolf-program-day-board--stats-only .wolf-program-day-board__body:has(.wolf-program-day-stats--dashboard) {
+  overflow-x: clip;
+  overflow-y: visible;
+  padding: 0 clamp(6px, 1.2vw, 12px) 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.wolf-program-day-stats--dashboard .wolf-program-day-stats__summary-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px 12px;
-}
-
-@media (max-width: 1100px) {
-  .wolf-program-day-stats--dashboard .wolf-program-day-stats__row--charts {
-    grid-template-columns: 1fr;
-  }
-
-  .wolf-program-day-stats--dashboard .wolf-program-day-stats__summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .wolf-program-day-stats--dashboard .wolf-program-day-stats__footer-row {
-    grid-template-columns: 1fr;
-  }
-
+/* Tablet landscape / small desktop */
+@media (max-width: 1280px) {
   .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.wolf-program-day-board--stats-only .wolf-program-day-board__body:has(.wolf-program-day-stats--dashboard) {
-  overflow: visible;
-  padding: 0 10px 12px;
+/* Tablet portrait */
+@media (max-width: 960px) {
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__row--charts {
+    grid-template-columns: 1fr;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-body {
+    flex-wrap: wrap;
+  }
+}
+
+/* Large phone / narrow tablet */
+@media (max-width: 720px) {
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut {
+    margin-inline: auto;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__donut-legend {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__purpose-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-cards-list {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-card {
+    flex: 0 0 min(42vw, 148px);
+    scroll-snap-align: start;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__section-label {
+    font-size: 0.62rem;
+  }
+}
+
+/* Phone */
+@media (max-width: 480px) {
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-top {
+    gap: 6px;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-spark {
+    width: 40px;
+    height: 24px;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__purpose-col-pct {
+    font-size: 1rem;
+  }
+
+  .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-card {
+    flex-basis: min(72vw, 160px);
+  }
 }
 
 .wolf-program-day-stats__row--charts {

@@ -15,6 +15,8 @@ import {
   syncWeekRows,
 } from './programTabReorderUtils';
 
+import type { ProgramStatsScope } from './ProgramDayBoardTabs';
+
 export interface ProgramWeekDayNavProps {
   program: GeneratedProgram;
   selectedWeek: number;
@@ -48,6 +50,8 @@ export interface ProgramWeekDayNavProps {
   weekHeadLeading?: React.ReactNode;
   /** Tighter chrome for embedded program editor — more room for the exercise sheet. */
   density?: 'default' | 'editor';
+  /** Minimal picker for stats dashboard — hides editors chrome and day row unless scope is day. */
+  statsContext?: ProgramStatsScope;
 }
 
 function scrollActiveIntoView(
@@ -258,17 +262,20 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   onReorderDay,
   weekHeadLeading,
   density = 'default',
+  statsContext,
 }) => {
   const reduceMotion = useReducedMotion();
   const isEditorDensity = density === 'editor';
+  const isStatsNav = statsContext != null;
+  const showDayNav = !isStatsNav || statsContext === 'day';
   const hideWeekContext = isEditorDensity && Boolean(weekHeadLeading);
   const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStripRef = useRef<HTMLDivElement>(null);
   const dayWeekRef = useRef(selectedWeek);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
 
-  const canReorderWeeks = Boolean(onReorderWeek) && program.weeks.length > 1;
-  const canReorderDays = Boolean(onReorderDay) && (selectedWeekData?.days.length ?? 0) > 1;
+  const canReorderWeeks = !isStatsNav && Boolean(onReorderWeek) && program.weeks.length > 1;
+  const canReorderDays = !isStatsNav && Boolean(onReorderDay) && (selectedWeekData?.days.length ?? 0) > 1;
 
   const [weekRows, setWeekRows] = useState<WeekRow[]>(() => syncWeekRows(program.weeks, []));
   const [dayRows, setDayRows] = useState<DayRow[]>(() =>
@@ -416,7 +423,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 
   return (
     <div
-      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}`}
+      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}`}
     >
       <ConfirmationModal
         open={pendingConfirm != null}
@@ -430,19 +437,21 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
       />
       <div className="wolf-program-nav-compact">
         <div className="wolf-program-nav-section wolf-program-nav-section--weeks">
-          <NavSectionHead
-            title={selectedWeekTitle}
-            meta={selectedWeekMeta}
-            leading={weekHeadLeading}
-            hideContext={hideWeekContext}
-            canRemove={canRemoveWeek}
-            removeLabel={labels.removeWeek}
-            onRemove={
-              canRemoveWeek && onRemoveWeek
-                ? () => requestRemoveWeek(selectedWeek)
-                : undefined
-            }
-          />
+          {!isStatsNav ? (
+            <NavSectionHead
+              title={selectedWeekTitle}
+              meta={selectedWeekMeta}
+              leading={weekHeadLeading}
+              hideContext={hideWeekContext}
+              canRemove={canRemoveWeek}
+              removeLabel={labels.removeWeek}
+              onRemove={
+                canRemoveWeek && onRemoveWeek
+                  ? () => requestRemoveWeek(selectedWeek)
+                  : undefined
+              }
+            />
+          ) : null}
 
         <div className="wolf-week-select-mobile">
           <div className="wolf-week-select-mobile__row">
@@ -512,16 +521,18 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             </Reorder.Group>
           </div>
 
-          <button
-            type="button"
-            className="wolf-week-tab-add wolf-week-tab-add--pinned"
-            onClick={onAddWeek}
-            disabled={!canAddWeek}
-            title={canAddWeek ? labels.addWeek : labels.maxWeeks}
-            aria-label={labels.addWeek}
-          >
-            <Plus size={16} strokeWidth={2.25} aria-hidden />
-          </button>
+          {!isStatsNav ? (
+            <button
+              type="button"
+              className="wolf-week-tab-add wolf-week-tab-add--pinned"
+              onClick={onAddWeek}
+              disabled={!canAddWeek}
+              title={canAddWeek ? labels.addWeek : labels.maxWeeks}
+              aria-label={labels.addWeek}
+            >
+              <Plus size={16} strokeWidth={2.25} aria-hidden />
+            </button>
+          ) : null}
 
           <button
             type="button"
@@ -535,6 +546,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         </div>
         </div>
 
+        {showDayNav ? (
         <section
           className="wolf-program-nav-section wolf-program-nav-section--days"
           aria-label={labels.daysRow}
@@ -542,14 +554,16 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
           role="tabpanel"
           aria-labelledby={`wolf-week-tab-${selectedWeek}`}
         >
-          <NavSectionHead
-            title={selectedDayTitle}
-            canRemove={canRemoveDay}
-            removeLabel={labels.removeDay}
-            onRemove={
-              canRemoveDay && onRemoveDay ? () => requestRemoveDay(selectedDay) : undefined
-            }
-          />
+          {!isStatsNav ? (
+            <NavSectionHead
+              title={selectedDayTitle}
+              canRemove={canRemoveDay}
+              removeLabel={labels.removeDay}
+              onRemove={
+                canRemoveDay && onRemoveDay ? () => requestRemoveDay(selectedDay) : undefined
+              }
+            />
+          ) : null}
           <div className="wolf-day-tabs-section">
           <div className="wolf-day-tabs-strip" ref={dayStripRef}>
             <Reorder.Group
@@ -572,17 +586,19 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                 />
               ))}
             </Reorder.Group>
-            <button
-              type="button"
-              className="wolf-day-tab-add"
-              onClick={onAddDay}
-              disabled={!canAddDay}
-              title={canAddDay ? labels.addDay : labels.maxDays}
-              aria-label={labels.addDay}
-            >
-              <Plus size={16} strokeWidth={2.25} aria-hidden />
-            </button>
-            {isEditorDensity && canRemoveDay && onRemoveDay ? (
+            {!isStatsNav ? (
+              <button
+                type="button"
+                className="wolf-day-tab-add"
+                onClick={onAddDay}
+                disabled={!canAddDay}
+                title={canAddDay ? labels.addDay : labels.maxDays}
+                aria-label={labels.addDay}
+              >
+                <Plus size={16} strokeWidth={2.25} aria-hidden />
+              </button>
+            ) : null}
+            {!isStatsNav && isEditorDensity && canRemoveDay && onRemoveDay ? (
               <button
                 type="button"
                 className="wolf-program-nav-day-remove wolf-program-nav-day-remove--strip"
@@ -596,6 +612,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
           </div>
           </div>
         </section>
+        ) : null}
       </div>
     </div>
   );

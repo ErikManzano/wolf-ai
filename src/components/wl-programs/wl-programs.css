@@ -2506,14 +2506,6 @@
     z-index: 4;
     background: var(--wl-surface-board, #111318);
   }
-
-  .wl-programs-embedded-plan .wolf-program-day-board--stats-only .wolf-program-day-board__head {
-    position: sticky;
-    top: 53px;
-    z-index: 3;
-    background: var(--wl-surface-board, #111318);
-    border-bottom: 1px solid var(--wl-border-subtle, #27272a);
-  }
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome--layout {
@@ -2526,6 +2518,16 @@
 
 .wl-programs-embedded-plan .wolf-program-customize-layout:has(.wolf-program-day-board__stats-chrome--layout) {
   gap: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--stats-only .wolf-program-day-board__head {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--wl-border-subtle, #27272a);
+  background: var(--wl-surface-board, #111318);
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--stats-only .wolf-program-nav--stats {
+  margin: 0;
 }
 
 .wl-programs-embedded-plan .wolf-program-customize-layout--stats:has(.wolf-program-day-board__stats-chrome--layout) .wolf-program-day-board--stats-only {
@@ -2543,31 +2545,45 @@
     );
 }
 
-.wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+.wl-programs-embedded-plan .wolf-program-day-stats--dashboard {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-card {
   min-height: unset;
 }
 
-.wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__row--charts {
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 10px;
+.wl-programs-embedded-plan .wolf-program-customize-layout--stats {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
-.wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__footer-row {
-  grid-template-columns: minmax(0, 1.65fr) minmax(210px, 0.4fr);
+.wl-programs-embedded-plan .wolf-program-customize-panel--stats,
+.wl-programs-embedded-plan .wolf-program-day-board--stats-only,
+.wl-programs-embedded-plan .wolf-program-day-board--stats-only .wolf-program-day-board__body {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__summary-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
+@media (max-width: 1024px) {
+  .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome--layout {
+    border-radius: 8px 8px 0 0;
+  }
 
-.wl-programs-embedded-plan .wolf-program-day-stats--dashboard .wolf-program-day-stats__status--compact {
-  flex-direction: row;
-  align-items: flex-start;
+  .wl-programs-embedded-plan .wolf-program-customize-layout--stats:has(.wolf-program-day-board__stats-chrome--layout) .wolf-program-day-board--stats-only {
+    border-radius: 0 0 8px 8px;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-nav--stats .wolf-week-carousel__viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (min-width: 1025px) {
