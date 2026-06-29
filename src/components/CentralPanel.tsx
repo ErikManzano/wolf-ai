@@ -4,8 +4,8 @@ import './SuperDashboard.css';
 import '../styles/interactive.css';
 import {
   ChevronRight, Settings2, SlidersHorizontal, Share, Download, GripVertical, Plus,
-  LayoutDashboard, Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp, Award,
-  BarChart3, Clock, Users, Search, Info, ShieldCheck,
+  Dumbbell, Calendar as CalendarIcon, ArrowLeft, TrendingUp,
+  Users, Search, Info, ShieldCheck,
   Save, X, BookMarked, Layers, MoveDiagonal
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
@@ -16,8 +16,8 @@ import { WL_PROGRAMS_FOCUS_KEY } from './wl-programs/WlProgramsHub';
 import CoachExerciseLibrary from './CoachExerciseLibrary';
 import PraxiogramsPanel from './praxiogram/PraxiogramsPanel';
 import AthleteDashboard from './athlete-dashboard/AthleteDashboard';
+import CoachDashboard from './coach-dashboard/CoachDashboard';
 import AthleteTrainingView from './AthleteTrainingView';
-import PerformanceStatsHistory from './PerformanceStatsHistory';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { appAthleteIdForWlProfile } from '../utils/wlStatsBridge';
 import {
@@ -66,7 +66,9 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     deleteUser,
     assignments: wlProgramAssignments,
     completions,
+    setLogs,
     wlAthletes,
+    motorExercises,
     updateWlAthlete,
     deleteWlAthlete,
     reloadWlAthletesFromApi,
@@ -678,387 +680,30 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     );
   };
 
-  const renderDashboard = () => {
-    const d = dashboardData;
-    const { tmplLog, wlAtt } = d;
-    const attendanceSub =
-      tmplLog.total > 0 && wlAtt.total > 0
-        ? isEs
-          ? `Plantilla ${tmplLog.pct}% Â· Motor WL ${wlAtt.pct}%`
-          : `Template ${tmplLog.pct}% Â· WL engine ${wlAtt.pct}%`
-        : tmplLog.total > 0
-          ? isEs
-            ? `Plantilla: ${tmplLog.done}/${tmplLog.total} bloques`
-            : `Template: ${tmplLog.done}/${tmplLog.total} blocks`
-          : wlAtt.total > 0
-            ? isEs
-              ? `Sesiones WL: ${wlAtt.done}/${wlAtt.total}`
-              : `WL sessions: ${wlAtt.done}/${wlAtt.total}`
-            : isEs
-              ? 'Sin registros aÃºn'
-              : 'No logs yet';
-
-    const alertAccent = (s: DashboardAlert['severity']) =>
-      s === 'danger' ? 'var(--color-danger)' : s === 'warning' ? 'var(--color-warning)' : 'var(--color-accent)';
-
-    const tmplPct = tmplLog.total > 0 ? tmplLog.pct : 0;
-    const wlPctRow = wlAtt.total > 0 ? wlAtt.pct : 0;
-    const adherenceRows = [
-      {
-        key: 'tpl',
-        label: isEs ? 'Plan plantilla (bloques registrados)' : 'Template plan (blocks logged)',
-        pct: tmplPct,
-        color: 'var(--color-accent)',
-      },
-      {
-        key: 'wl',
-        label: isEs ? 'Motor WL (sesiones completadas)' : 'WL engine (sessions completed)',
-        pct: wlPctRow,
-        color: 'var(--color-success)',
-      },
-    ];
-
-    const lastIntake = d.latestIntake;
-
-    return (
-      <div className="mock-view super-dashboard">
-        <header className="sd-hero" aria-labelledby="sd-main-title">
-          <div className="sd-hero__inner">
-            <div className="sd-hero__titles">
-              <p className="sd-hero__eyebrow">{isEs ? 'Resumen operativo' : 'Operations overview'}</p>
-              <h1 id="sd-main-title" className="sd-hero__title">
-                {isEs ? 'Dashboard & rendimiento' : 'Dashboard & performance'}
-              </h1>
-              <p className="sd-hero__sub">
-                {isEs
-                  ? 'Asignaciones, adherencia, alertas e historial de Stats/PRs en un solo panel â€” optimizado para mÃ³vil y escritorio.'
-                  : 'Assignments, adherence, alerts, and Stats/PR history in one panel â€” tuned for mobile and desktop.'}
-              </p>
-            </div>
-            <div className="sd-hero__actions">
-              <button type="button" className="sd-btn sd-btn--ghost" title={isEs ? 'PrÃ³ximamente' : 'Coming soon'} disabled>
-                <Download size={16} aria-hidden />
-                {isEs ? 'Exportar' : 'Export'}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {d.athleteViewRestricted ? (
-          <div className="sd-banner" role="status">
-            {isEs
-              ? 'Tu usuario atleta no estÃ¡ enlazado a un perfil de datos (Stats/plantilla). Contacta al coach.'
-              : 'Your athlete account is not linked to a data profile. Ask your coach to link linkedAthleteId.'}
-          </div>
-        ) : null}
-
-        <section className="sd-kpi-grid" aria-label={isEs ? 'Indicadores clave' : 'Key metrics'}>
-          <article className="sd-kpi">
-            <div className="sd-kpi__icon">
-              <LayoutDashboard size={28} color="var(--color-accent)" aria-hidden />
-            </div>
-            <h3 className="sd-kpi__label">{isEs ? 'Atletas en roster' : 'Roster athletes'}</h3>
-            <p className="sd-kpi__value">{d.rosterCount}</p>
-            <p className="sd-kpi__hint">
-              {isEs
-                ? `${d.assignedAthleteCount} con programa plantilla`
-                : `${d.assignedAthleteCount} with template program`}
-            </p>
-          </article>
-          <article className="sd-kpi">
-            <div className="sd-kpi__icon">
-              <Award size={28} color="var(--color-success)" aria-hidden />
-            </div>
-            <h3 className="sd-kpi__label">{isEs ? 'PRs nuevos (semana)' : 'New PRs (week)'}</h3>
-            <p className="sd-kpi__value">{d.prsWeek}</p>
-            <p className="sd-kpi__hint">
-              {isEs ? `${d.intakesWeek} envÃ­os Stats esta semana` : `${d.intakesWeek} Stats submissions this week`}
-            </p>
-          </article>
-          <article className="sd-kpi">
-            <div className="sd-kpi__icon">
-              <Clock size={28} color="var(--color-warning)" aria-hidden />
-            </div>
-            <h3 className="sd-kpi__label">{isEs ? 'Asistencia / registro' : 'Attendance / logging'}</h3>
-            <p className="sd-kpi__value">{d.attendancePct}%</p>
-            <p className="sd-kpi__hint">{attendanceSub}</p>
-          </article>
-          <article className="sd-kpi">
-            <div className="sd-kpi__icon">
-              <BarChart3 size={28} color="var(--color-accent)" aria-hidden />
-            </div>
-            <h3 className="sd-kpi__label">{isEs ? 'Stats / planes WL' : 'Stats / WL plans'}</h3>
-            <p className="sd-kpi__value">{d.intakesTotal}</p>
-            <p className="sd-kpi__hint">
-              {isEs ? `${d.wlPlanCount} planes motor` : `${d.wlPlanCount} WL engine plans`}
-            </p>
-          </article>
-        </section>
-
-        <section className="sd-section" aria-labelledby="sd-alerts-title">
-          <div className="sd-section__head">
-            <h2 id="sd-alerts-title" className="sd-section__title">
-              {isEs ? 'Alertas' : 'Alerts'}
-            </h2>
-          </div>
-          {d.alerts.length === 0 ? (
-            <div className="sd-alert sd-alert--ok">
-              <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
-                {isEs ? 'Sin alertas segÃºn los datos actuales.' : 'No alerts for the current data.'}
-              </p>
-            </div>
-          ) : (
-            <div className="sd-alert-list">
-              {d.alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="sd-alert"
-                  style={{ borderLeft: `4px solid ${alertAccent(alert.severity)}` }}
-                >
-                  <div className="sd-alert__body">
-                    <h4>{alert.title}</h4>
-                    <p>{alert.description}</p>
-                  </div>
-                  <button type="button" className="btn-outline" onClick={() => handleDashboardNavigate(alert)}>
-                    {alert.actionLabel}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section id="sd-performance" className="sd-section" aria-labelledby="sd-perf-title">
-          <div className="sd-section__head">
-            <div>
-              <h2 id="sd-perf-title" className="sd-section__title">
-                {isEs ? 'Rendimiento & evoluciÃ³n' : 'Performance & trends'}
-              </h2>
-              <p className="sd-section__desc">
-                {isEs
-                  ? 'Volumen relativo (Snatch + C&J por envÃ­o), adherencia por canal y detalle completo abajo.'
-                  : 'Relative volume (Snatch + C&J per submission), adherence by channel, and full detail below.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="sd-insights">
-            <div className="sd-insight">
-              <h3>
-                <TrendingUp size={18} color="var(--color-success)" aria-hidden />
-                {isEs ? 'Volumen relativo (Ãºltimos envÃ­os)' : 'Relative volume (recent submissions)'}
-              </h3>
-              {d.volumeSpark.length === 0 ? (
-                <p className="sd-insight__hint" style={{ margin: 0 }}>
-                  {isEs ? 'Sin envÃ­os Stats aÃºn.' : 'No Stats submissions yet.'}
-                </p>
-              ) : (
-                <>
-                  <div className="sd-spark" role="img" aria-label={isEs ? 'Mini grÃ¡fico de volumen' : 'Volume mini-chart'}>
-                    {d.volumeSpark.map((b) => (
-                      <div key={b.id} className="sd-spark__bar">
-                        <div className="sd-spark__fill" style={{ height: `${Math.max(8, b.h)}%` }} title={`${b.label}`} />
-                        <span className="sd-spark__label">{b.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="sd-insight__hint">
-                    {isEs ? 'Altura âˆ Snatch + C&J (Ãºltimos 8 registros).' : 'Height âˆ Snatch + C&J (last 8 records).'}
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="sd-insight">
-              <h3>
-                <BarChart3 size={18} color="var(--color-warning)" aria-hidden />
-                {isEs ? 'Adherencia por canal' : 'Adherence by channel'}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {adherenceRows.map((row) => (
-                  <div key={row.key}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                      <span>{row.label}</span>
-                      <span>{row.pct}%</span>
-                    </div>
-                    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${row.pct}%`, height: '100%', backgroundColor: row.color, maxWidth: '100%' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="sd-insight__hint">
-                {isEs ? 'Basado en bloques logueados y sesiones WL marcadas.' : 'Based on logged blocks and marked WL sessions.'}
-              </p>
-            </div>
-
-            <div className="sd-insight">
-              <h3>
-                <Award size={18} color="var(--color-accent)" aria-hidden />
-                {isEs ? 'Ãšltimo envÃ­o Stats' : 'Latest Stats entry'}
-              </h3>
-              {!lastIntake ? (
-                <p className="sd-insight__hint" style={{ margin: 0 }}>
-                  {isEs ? 'Sin datos.' : 'No data.'}
-                </p>
-              ) : (
-                <div className="sd-pr-mini">
-                  <div className="sd-pr-mini__cell">
-                    <span>Snatch</span>
-                    <p>{lastIntake.responses.snatch} kg</p>
-                  </div>
-                  <div className="sd-pr-mini__cell">
-                    <span>C&J</span>
-                    <p>{lastIntake.responses.cleanJerk} kg</p>
-                  </div>
-                  <p className="sd-pr-mini__meta">
-                    {(d.latestIntakeAthleteName ? `${d.latestIntakeAthleteName} Â· ` : '') + lastIntake.date}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="sd-perf-embed">
-            <PerformanceStatsHistory
-              language={language}
-              persona={persona}
-              linkedWlAthleteId={athleteUser?.linkedAthleteId}
-              intakes={intakes}
-              appAthletes={athletes}
-              embedded
-            />
-          </div>
-        </section>
-
-        <section className="sd-section" aria-labelledby="sd-tpl-title">
-          <div className="sd-section__head">
-            <h2 id="sd-tpl-title" className="sd-section__title">
-              {isEs ? 'Programas plantilla' : 'Template programs'}
-            </h2>
-          </div>
-          <div className="sd-table-shell">
-            <div className="sd-table-scroll">
-              <table className="sd-table exercise-table">
-                <thead>
-                  <tr>
-                    <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                    <th>{isEs ? 'Programa' : 'Program'}</th>
-                    <th>{isEs ? 'Inicio' : 'Start'}</th>
-                    <th>{isEs ? 'Adherencia' : 'Adherence'}</th>
-                    <th className="sd-table__actions" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {d.appRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ color: 'var(--color-text-muted)', padding: '16px' }}>
-                        {isEs ? 'No hay asignaciones. Asigna desde Atletas.' : 'No assignments. Assign from Athletes.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    d.appRows.map((row) => (
-                      <tr key={`${row.athleteId}-${row.programId}`}>
-                        <td style={{ fontWeight: 600 }}>{row.athleteName}</td>
-                        <td>
-                          {row.programName}
-                          {row.hasPersonalizedCopy ? (
-                            <span className="badge" style={{ marginLeft: '8px', fontSize: '0.65rem', background: 'var(--color-accent-glow)' }}>
-                              PERS
-                            </span>
-                          ) : null}
-                        </td>
-                        <td>{row.startDate}</td>
-                        <td>
-                          {row.exerciseSlots > 0 ? `${row.completionPct}% (${row.exercisesLogged}/${row.exerciseSlots})` : 'â€”'}
-                        </td>
-                        <td className="sd-table__actions">
-                          <button
-                            type="button"
-                            className="btn-outline"
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            onClick={() => {
-                              setActiveAthleteId(row.athleteId);
-                              setActiveView('athletes');
-                            }}
-                          >
-                            {isEs ? 'Atletas' : 'Athletes'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section className="sd-section" aria-labelledby="sd-wl-title">
-          <div className="sd-section__head">
-            <h2 id="sd-wl-title" className="sd-section__title">
-              {isEs ? 'Planes motor (WL)' : 'WL engine plans'}
-            </h2>
-          </div>
-          <div className="sd-table-shell">
-            <div className="sd-table-scroll">
-              <table className="sd-table exercise-table">
-                <thead>
-                  <tr>
-                    <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                    <th>{isEs ? 'Plan' : 'Plan'}</th>
-                    <th>{isEs ? 'Asignado' : 'Assigned'}</th>
-                    <th>{isEs ? 'Sesiones' : 'Sessions'}</th>
-                    <th className="sd-table__actions" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {d.wlRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ color: 'var(--color-text-muted)', padding: '16px' }}>
-                        {isEs ? 'No hay planes WL asignados.' : 'No WL engine plans assigned.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    d.wlRows.map((row) => (
-                      <tr key={row.assignmentId}>
-                        <td style={{ fontWeight: 600 }}>{row.athleteName}</td>
-                        <td>{row.programName}</td>
-                        <td>{row.assignedAt}</td>
-                        <td>
-                          {row.sessionSlots > 0
-                            ? `${row.completionPct}% (${row.sessionsDone}/${row.sessionSlots})`
-                            : 'â€”'}
-                        </td>
-                        <td className="sd-table__actions">
-                          <button
-                            type="button"
-                            className="btn-outline"
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            onClick={() => {
-                              try {
-                                const focusId = row.coachProgramId ?? row.assignmentId;
-                                sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, focusId);
-                              } catch {
-                                /* ignore */
-                              }
-                              setActiveView('programs');
-                            }}
-                          >
-                            {isEs ? 'Programas' : 'Programs'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  };
+  const renderDashboard = () => (
+    <CoachDashboard
+      language={language}
+      persona={persona}
+      intakes={intakes}
+      appAthletes={athletes}
+      wlProgramAssignments={wlProgramAssignments}
+      completions={completions}
+      setLogs={setLogs}
+      wlAthletes={wlAthletes}
+      motorExercises={motorExercises}
+      alerts={dashboardData.alerts}
+      onAlertNavigate={handleDashboardNavigate}
+      onOpenPrograms={(coachProgramId) => {
+        try {
+          if (coachProgramId) sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, coachProgramId);
+        } catch {
+          /* ignore */
+        }
+        setActiveView('programs');
+      }}
+      onOpenAthletes={() => setActiveView('athletes')}
+    />
+  );
 
   const renderPlaceholder = (title: string, icon: React.ReactNode) => (
     <div className="mock-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>

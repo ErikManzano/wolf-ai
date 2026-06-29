@@ -2724,20 +2724,49 @@
   min-width: 0;
 }
 
-.wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
-  overflow: auto;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-x pan-y;
-}
-
 @media (min-width: 1024px) {
   .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
     overflow-x: hidden;
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
+  }
+}
+
+@media (max-width: 1023px) {
+  .wl-programs-embedded-plan .wolf-program-customize-layout--table,
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    flex: none;
+    min-height: auto;
+    max-height: none;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
   }
 }
 
@@ -4660,6 +4689,21 @@
   .wl-programs-embedded-plan .wolf-se-spreadsheet__table-wrap {
     overflow-x: auto;
     max-width: 100%;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-layout--table,
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table,
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded,
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
+    overflow: visible;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
   }
 
   .wl-programs-embedded-plan .wolf-program-nav--compact,

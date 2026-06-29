@@ -518,6 +518,21 @@ tr.is-active-week .wolf-program-matrix-week-load {
     );
   }
 
+  .wolf-program-matrix--expanded {
+    overflow: visible;
+  }
+
+  .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    max-height: none;
+    flex: none;
+    min-height: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+
   .wolf-program-matrix-grid-head,
   .wolf-program-matrix-week-line {
     grid-template-columns: var(--matrix-grid-template-compact, var(--matrix-grid-template));
