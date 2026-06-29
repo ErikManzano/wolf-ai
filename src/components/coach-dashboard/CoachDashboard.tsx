@@ -14,27 +14,21 @@ import type {
   ProgramAssignment,
   SessionCompletion,
   SetCompletionLog,
-  WolfAppRole,
 } from '../../models/training';
 import type { DashboardAlert } from '../../utils/dashboardStats';
 import {
   buildCoachDashboardModel,
   type CoachDashboardScope,
 } from '../../utils/coachDashboardStats';
-import PerformanceStatsHistory from '../PerformanceStatsHistory';
 import {
-  ProgramStatsDonutChart,
-  ProgramStatsWeekVolumeChart,
   type ProgramStatsKpiCard,
   ProgramStatsKpiGrid,
 } from '../session-editor/programStatsShared';
-import '../SuperDashboard.css';
 import './coach-dashboard.css';
 import '../session-editor/session-sheet-spreadsheet.css';
 
 export interface CoachDashboardProps {
   language: 'ES' | 'EN';
-  persona: WolfAppRole;
   intakes: IntakeData[];
   appAthletes: AppAthlete[];
   wlProgramAssignments: ProgramAssignment[];
@@ -72,13 +66,6 @@ function formatTrend(delta: number | null, isEs: boolean, unit?: string): string
   return `${sign} ${abs} ${suffix}`;
 }
 
-function formatLoadTrend(pct: number | null, isEs: boolean): string | undefined {
-  if (pct == null) return undefined;
-  if (pct === 0) return isEs ? '— vs periodo anterior' : '— vs prior period';
-  const sign = pct > 0 ? '↑' : '↓';
-  return `${sign} ${Math.abs(pct)}% ${isEs ? 'vs periodo anterior' : 'vs prior period'}`;
-}
-
 function athleteInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
@@ -88,7 +75,6 @@ function athleteInitials(name: string): string {
 
 const CoachDashboard: React.FC<CoachDashboardProps> = ({
   language,
-  persona,
   intakes,
   appAthletes,
   wlProgramAssignments,
@@ -104,7 +90,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
   const isEs = language === 'ES';
   const [scope, setScope] = useState<CoachDashboardScope>('week');
   const [refDate, setRefDate] = useState(() => new Date());
-  const [historyOpen, setHistoryOpen] = useState(false);
 
   const model = useMemo(
     () =>
@@ -145,24 +130,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
       return d;
     });
   };
-
-  const loadTitle =
-    scope === 'today'
-      ? isEs
-        ? 'Carga del día'
-        : 'Daily load'
-      : scope === 'week'
-        ? isEs
-          ? 'Carga total semanal'
-          : 'Total weekly load'
-        : isEs
-          ? 'Carga del mes'
-          : 'Monthly load';
-
-  const loadCenter =
-    model.weeklyLoadTotalKg >= 1000
-      ? `${(model.weeklyLoadTotalKg / 1000).toFixed(1)} t`
-      : `${model.weeklyLoadTotalKg.toLocaleString()} kg`;
 
   const kpiCards: ProgramStatsKpiCard[] = [
     {
@@ -218,12 +185,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     },
   ];
 
-  const donutSlices = model.stimulusSlices.map((slice) => ({
-    label: slice.label,
-    tonnage: slice.tonnage,
-    pct: slice.pct,
-  }));
-
   const scopeTabs: { id: CoachDashboardScope; label: string }[] = [
     { id: 'today', label: isEs ? 'Hoy' : 'Today' },
     { id: 'week', label: isEs ? 'Semana' : 'Week' },
@@ -265,232 +226,160 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
         <ProgramStatsKpiGrid cards={kpiCards} />
       </div>
 
-      <div className="cd-analytics-grid">
-        <section className="cd-panel cd-panel--chart">
-          <div className="cd-panel__head">
-            <div>
-              <h2 className="cd-panel__title">{loadTitle}</h2>
-              <p className="cd-panel__metric">
-                <strong>{loadCenter}</strong>
-                {model.weeklyLoadTrendPct != null ? (
-                  <span
-                    className={`cd-panel__trend${
-                      model.weeklyLoadTrendPct >= 0 ? ' cd-panel__trend--up' : ' cd-panel__trend--down'
-                    }`}
-                  >
-                    {formatLoadTrend(model.weeklyLoadTrendPct, isEs)}
-                  </span>
-                ) : null}
-              </p>
-            </div>
-          </div>
-          <div className="wolf-program-day-stats wolf-program-day-stats--dashboard">
-            {model.weeklyLoad.some((d) => d.tonnage > 0) ? (
-              <ProgramStatsWeekVolumeChart
-                title=""
-                days={model.weeklyLoad}
-                isEs={isEs}
-              />
-            ) : (
-              <p className="cd-empty-hint">
-                {isEs ? 'Sin carga registrada en este periodo.' : 'No load logged in this period.'}
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="cd-panel">
-          <div className="wolf-program-day-stats wolf-program-day-stats--dashboard">
-            {donutSlices.length > 0 ? (
-              <ProgramStatsDonutChart
-                title={isEs ? 'Distribución de estímulo' : 'Stimulus distribution'}
-                centerLabel={loadCenter}
-                centerSub={isEs ? 'tonelaje' : 'tonnage'}
-                slices={donutSlices}
-                isEs={isEs}
-              />
-            ) : (
-              <>
-                <h2 className="cd-panel__title">{isEs ? 'Distribución de estímulo' : 'Stimulus distribution'}</h2>
-                <p className="cd-empty-hint">
-                  {isEs ? 'Registra series en el motor WL para ver el reparto.' : 'Log sets in the WL engine to see distribution.'}
-                </p>
-              </>
-            )}
-          </div>
-        </section>
-      </div>
-
-      <div className="cd-split-grid">
-        <section className="cd-panel" aria-labelledby="cd-athletes-title">
+      <div className="cd-quad-grid">
+        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-athletes-title">
           <div className="cd-panel__head">
             <h2 id="cd-athletes-title" className="cd-panel__title">
-              <Users size={18} aria-hidden />
+              <Users size={16} aria-hidden />
               {isEs ? 'Estado de atletas' : 'Athlete status'}
             </h2>
             <button type="button" className="cd-link-btn" onClick={onOpenAthletes}>
               {isEs ? 'Ver todos' : 'View all'}
             </button>
           </div>
-          <div className="cd-table-shell">
-            {model.athleteRows.length === 0 ? (
-              <p className="cd-empty-hint">{isEs ? 'No hay asignaciones WL.' : 'No WL assignments.'}</p>
-            ) : (
-              <table className="cd-athlete-table">
-                <thead>
-                  <tr>
-                    <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                    <th>{isEs ? 'Programa' : 'Program'}</th>
-                    <th>{isEs ? 'Semana' : 'Week'}</th>
-                    <th>%</th>
-                    <th>{isEs ? 'Estado' : 'Status'}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {model.athleteRows.slice(0, 8).map((row) => (
-                    <tr key={row.assignmentId}>
-                      <td>
-                        <div className="cd-athlete-cell">
-                          <span className="cd-avatar" aria-hidden>
-                            {athleteInitials(row.athleteName)}
-                          </span>
-                          <span>{row.athleteName}</span>
-                        </div>
-                      </td>
-                      <td>{row.programName}</td>
-                      <td>{row.weekLabel}</td>
-                      <td>{row.completionPct}%</td>
-                      <td>
-                        <span className={`cd-status cd-status--${row.status}`}>{row.statusLabel}</span>
-                      </td>
+          <div className="cd-panel__body">
+            <div className="cd-table-shell">
+              {model.athleteRows.length === 0 ? (
+                <p className="cd-empty-hint">{isEs ? 'No hay asignaciones WL.' : 'No WL assignments.'}</p>
+              ) : (
+                <table className="cd-athlete-table">
+                  <thead>
+                    <tr>
+                      <th>{isEs ? 'Atleta' : 'Athlete'}</th>
+                      <th>{isEs ? 'Programa' : 'Program'}</th>
+                      <th>{isEs ? 'Progreso' : 'Progress'}</th>
+                      <th>{isEs ? 'Estado' : 'Status'}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {model.athleteRows.map((row) => (
+                      <tr key={row.assignmentId}>
+                        <td>
+                          <div className="cd-athlete-cell">
+                            <span className="cd-avatar" aria-hidden>
+                              {athleteInitials(row.athleteName)}
+                            </span>
+                            <span className="cd-athlete-name">{row.athleteName}</span>
+                          </div>
+                        </td>
+                        <td className="cd-col-program" title={row.programName}>
+                          {row.programName}
+                        </td>
+                        <td className="cd-col-progress">
+                          <span className="cd-week-pill">{row.weekLabel}</span>
+                          <span className="cd-pct-pill">{row.completionPct}%</span>
+                        </td>
+                        <td>
+                          <span className={`cd-status cd-status--${row.status}`}>{row.statusLabel}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-alerts-title">
+          <div className="cd-panel__head">
+            <h2 id="cd-alerts-title" className="cd-panel__title">
+              <Bell size={16} aria-hidden />
+              {isEs ? 'Alertas inteligentes' : 'Smart alerts'}
+            </h2>
+          </div>
+          <div className="cd-panel__body">
+            {model.alerts.length === 0 ? (
+              <div className="cd-alert cd-alert--ok">
+                <p>{isEs ? 'Sin alertas según los datos actuales.' : 'No alerts for the current data.'}</p>
+              </div>
+            ) : (
+              <ul className="cd-alert-feed">
+                {model.alerts.map((alert) => (
+                  <li key={alert.id} className="cd-alert-item">
+                    <span className="cd-alert-item__dot" style={{ background: alertAccent(alert.severity) }} aria-hidden />
+                    <div className="cd-alert-item__body">
+                      <strong>{alert.title}</strong>
+                      <p>{alert.description}</p>
+                    </div>
+                    <button type="button" className="cd-link-btn cd-link-btn--compact" onClick={() => onAlertNavigate(alert)}>
+                      {alert.actionLabel}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </section>
 
-        <section className="cd-panel" aria-labelledby="cd-alerts-title">
-          <div className="cd-panel__head">
-            <h2 id="cd-alerts-title" className="cd-panel__title">
-              <Bell size={18} aria-hidden />
-              {isEs ? 'Alertas inteligentes' : 'Smart alerts'}
-            </h2>
-          </div>
-          {model.alerts.length === 0 ? (
-            <div className="cd-alert cd-alert--ok">
-              <p>{isEs ? 'Sin alertas según los datos actuales.' : 'No alerts for the current data.'}</p>
-            </div>
-          ) : (
-            <ul className="cd-alert-feed">
-              {model.alerts.slice(0, 6).map((alert) => (
-                <li key={alert.id} className="cd-alert-item">
-                  <span className="cd-alert-item__dot" style={{ background: alertAccent(alert.severity) }} aria-hidden />
-                  <div className="cd-alert-item__body">
-                    <strong>{alert.title}</strong>
-                    <p>{alert.description}</p>
-                  </div>
-                  <button type="button" className="cd-link-btn" onClick={() => onAlertNavigate(alert)}>
-                    {alert.actionLabel}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
-
-      <div className="cd-split-grid">
-        <section className="cd-panel" aria-labelledby="cd-programs-title">
+        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-programs-title">
           <div className="cd-panel__head">
             <h2 id="cd-programs-title" className="cd-panel__title">
-              <ClipboardList size={18} aria-hidden />
+              <ClipboardList size={16} aria-hidden />
               {isEs ? 'Programas activos' : 'Active programs'}
             </h2>
             <button type="button" className="cd-link-btn" onClick={() => onOpenPrograms()}>
               {isEs ? 'Ver todos' : 'View all'}
             </button>
           </div>
-          {model.activePrograms.length === 0 ? (
-            <p className="cd-empty-hint">{isEs ? 'Sin programas asignados.' : 'No assigned programs.'}</p>
-          ) : (
-            <ul className="cd-program-list">
-              {model.activePrograms.slice(0, 6).map((prog) => (
-                <li key={prog.programName} className="cd-program-item">
-                  <div className="cd-program-item__head">
-                    <strong>{prog.programName}</strong>
-                    <span>{prog.weekLabel}</span>
-                  </div>
-                  <div className="cd-progress" aria-hidden>
-                    <span className="cd-progress__fill" style={{ width: `${prog.completionPct}%` }} />
-                  </div>
-                  <div className="cd-program-item__meta">
-                    <span>{prog.completionPct}%</span>
-                    <span>
-                      {prog.athleteCount} {isEs ? (prog.athleteCount === 1 ? 'atleta' : 'atletas') : prog.athleteCount === 1 ? 'athlete' : 'athletes'}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="cd-panel__body">
+            {model.activePrograms.length === 0 ? (
+              <p className="cd-empty-hint">{isEs ? 'Sin programas asignados.' : 'No assigned programs.'}</p>
+            ) : (
+              <ul className="cd-program-list">
+                {model.activePrograms.map((prog) => (
+                  <li key={prog.programName} className="cd-program-item">
+                    <div className="cd-program-item__head">
+                      <strong title={prog.programName}>{prog.programName}</strong>
+                      <span className="cd-program-item__stats">
+                        <span>{prog.weekLabel}</span>
+                        <span>{prog.completionPct}%</span>
+                      </span>
+                    </div>
+                    <div className="cd-progress" aria-hidden>
+                      <span className="cd-progress__fill" style={{ width: `${prog.completionPct}%` }} />
+                    </div>
+                    <div className="cd-program-item__meta">
+                      <span>
+                        {prog.athleteCount}{' '}
+                        {isEs ? (prog.athleteCount === 1 ? 'atleta' : 'atletas') : prog.athleteCount === 1 ? 'athlete' : 'athletes'}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
 
-        <section className="cd-panel" aria-labelledby="cd-activity-title">
+        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-activity-title">
           <div className="cd-panel__head">
             <h2 id="cd-activity-title" className="cd-panel__title">
-              <AlertTriangle size={18} aria-hidden />
+              <AlertTriangle size={16} aria-hidden />
               {isEs ? 'Actividad reciente' : 'Recent activity'}
             </h2>
           </div>
-          {model.recentActivity.length === 0 ? (
-            <p className="cd-empty-hint">{isEs ? 'Sin actividad registrada aún.' : 'No activity logged yet.'}</p>
-          ) : (
-            <ul className="cd-activity-feed">
-              {model.recentActivity.map((item) => (
-                <li key={item.id} className={`cd-activity-item cd-activity-item--${item.kind}`}>
-                  <span className="cd-activity-item__icon" aria-hidden />
-                  <div className="cd-activity-item__body">
-                    <p>
-                      <strong>{item.athleteName}</strong> {item.label}
-                    </p>
-                    <time dateTime={item.at}>{formatRelativeTime(item.at, isEs)}</time>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="cd-panel__body">
+            {model.recentActivity.length === 0 ? (
+              <p className="cd-empty-hint">{isEs ? 'Sin actividad registrada aún.' : 'No activity logged yet.'}</p>
+            ) : (
+              <ul className="cd-activity-feed">
+                {model.recentActivity.map((item) => (
+                  <li key={item.id} className={`cd-activity-item cd-activity-item--${item.kind}`}>
+                    <span className="cd-activity-item__dot" aria-hidden />
+                    <div className="cd-activity-item__body">
+                      <p>
+                        <strong>{item.athleteName}</strong> {item.label}
+                      </p>
+                      <time dateTime={item.at}>{formatRelativeTime(item.at, isEs)}</time>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
       </div>
-
-      <section className="cd-panel cd-panel--history">
-        <button
-          type="button"
-          className="cd-history-toggle"
-          aria-expanded={historyOpen}
-          onClick={() => setHistoryOpen((v) => !v)}
-        >
-          {historyOpen
-            ? isEs
-              ? 'Ocultar historial Stats / PRs'
-              : 'Hide Stats / PR history'
-            : isEs
-              ? 'Ver historial Stats / PRs completo'
-              : 'View full Stats / PR history'}
-        </button>
-        {historyOpen ? (
-          <div className="sd-perf-embed">
-            <PerformanceStatsHistory
-              language={language}
-              persona={persona}
-              intakes={intakes}
-              appAthletes={appAthletes}
-              embedded
-            />
-          </div>
-        ) : null}
-      </section>
     </div>
   );
 };

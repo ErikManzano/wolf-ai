@@ -683,7 +683,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
   const renderDashboard = () => (
     <CoachDashboard
       language={language}
-      persona={persona}
       intakes={intakes}
       appAthletes={athletes}
       wlProgramAssignments={wlProgramAssignments}
