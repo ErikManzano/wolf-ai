@@ -100,14 +100,26 @@ export function normalizeExercise(raw: Record<string, unknown>): Exercise {
   return ex;
 }
 
-/** Built-ins first; coach rows override by id if duplicated. */
+function nameCategoryKey(exercise: Exercise): string {
+  return `${exercise.category}|${exercise.name.trim().toLowerCase()}`;
+}
+
+/** Built-ins first; coach rows override by id if duplicated. Skips extension rows with same name+category. */
 export function mergeExerciseCatalog(builtIns: Exercise[], coachRows: Exercise[]): Exercise[] {
   const byId = new Map<string, Exercise>();
+  const byNameCategory = new Map<string, string>();
   for (const e of builtIns) {
-    byId.set(e.id, normalizeExercise({ ...e } as unknown as Record<string, unknown>));
+    const norm = normalizeExercise({ ...e } as unknown as Record<string, unknown>);
+    byId.set(norm.id, norm);
+    byNameCategory.set(nameCategoryKey(norm), norm.id);
   }
   for (const e of coachRows) {
-    byId.set(e.id, normalizeExercise({ ...e } as unknown as Record<string, unknown>));
+    const norm = normalizeExercise({ ...e } as unknown as Record<string, unknown>);
+    const key = nameCategoryKey(norm);
+    const existingId = byNameCategory.get(key);
+    if (existingId && existingId !== norm.id) continue;
+    byId.set(norm.id, norm);
+    byNameCategory.set(key, norm.id);
   }
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 }

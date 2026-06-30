@@ -77,6 +77,21 @@ interface PanelRect {
   flipAbove: boolean;
 }
 
+function collectScrollTargets(anchor: HTMLElement | null): (HTMLElement | Window)[] {
+  const targets: (HTMLElement | Window)[] = [];
+  let el = anchor?.parentElement ?? null;
+  while (el) {
+    const style = getComputedStyle(el);
+    const overflow = `${style.overflow} ${style.overflowY} ${style.overflowX}`;
+    if (/(auto|scroll|overlay)/.test(overflow)) {
+      targets.push(el);
+    }
+    el = el.parentElement;
+  }
+  targets.push(window);
+  return targets;
+}
+
 function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRect {
   const gap = 6;
   const inputRect = input.getBoundingClientRect();
@@ -183,12 +198,23 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   );
 
   const displayList = useMemo(() => {
+    const mergeUnique = (items: SessionPickerOption[]) => {
+      const seen = new Set<string>();
+      const out: SessionPickerOption[] = [];
+      for (const item of items) {
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        out.push(item);
+      }
+      return out;
+    };
+
     if (!query.trim() && recentOptions.length > 0) {
       const recentIdsSet = new Set(recentOptions.map((o) => o.id));
       const rest = suggestions.filter((o) => !recentIdsSet.has(o.id));
-      return [...recentOptions, ...rest].slice(0, 24);
+      return mergeUnique([...recentOptions, ...rest]).slice(0, 24);
     }
-    return suggestions;
+    return mergeUnique(suggestions);
   }, [query, recentOptions, suggestions]);
 
   const groupedSections = useMemo(() => {
@@ -269,16 +295,26 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   useEffect(() => {
     if (!open) return;
-    const onLayout = () => updatePanelRect();
+    let frame = 0;
+    const onLayout = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => updatePanelRect());
+    };
+    const scrollTargets = collectScrollTargets(inputRef.current);
     window.addEventListener('resize', onLayout);
-    window.addEventListener('scroll', onLayout, true);
     window.visualViewport?.addEventListener('resize', onLayout);
     window.visualViewport?.addEventListener('scroll', onLayout);
+    for (const target of scrollTargets) {
+      target.addEventListener('scroll', onLayout, { passive: true });
+    }
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener('resize', onLayout);
-      window.removeEventListener('scroll', onLayout, true);
       window.visualViewport?.removeEventListener('resize', onLayout);
       window.visualViewport?.removeEventListener('scroll', onLayout);
+      for (const target of scrollTargets) {
+        target.removeEventListener('scroll', onLayout);
+      }
     };
   }, [open, updatePanelRect]);
 

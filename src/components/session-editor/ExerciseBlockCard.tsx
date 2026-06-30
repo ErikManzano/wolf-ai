@@ -109,6 +109,7 @@ export interface ExerciseBlockCardProps {
   defaultComplexSecondId: string;
   defaultExtraSegmentId: string;
   layout?: 'default' | 'embedded';
+  mode?: 'full' | 'setsOnly';
 }
 
 function blockTitle(
@@ -139,9 +140,11 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   defaultComplexSecondId,
   defaultExtraSegmentId,
   layout = 'default',
+  mode = 'full',
 }) => {
   const apply = onApply;
   const isEmbedded = layout === 'embedded';
+  const setsOnly = mode === 'setsOnly';
   const filteredPicker = catalog.pickerOptions;
   const filteredPickerSingles = catalog.pickerSingles;
 
@@ -156,14 +159,17 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   }, [session.exercises, catalog.recentIds]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const showMovementZone = !isMobile || isEmbedded;
-  const showMobileMovementInConfig = isMobile && !isEmbedded;
+  const isCoachMobile = useMediaQuery('(max-width: 1024px)');
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
   const atMaxComplexSegments = segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS;
   const isWarmup = block.countsTowardTechnicalNBL === false;
+
+  const showMovementZone = !setsOnly && (!isMobile || isEmbedded);
+  const showMobileMovementInConfig = !setsOnly && isMobile && !isEmbedded;
+  const showEmbeddedMovementPicker = !setsOnly && isEmbedded && isCoachMobile && !isComplex;
 
   const blockKind = isWarmup ? 'warmup' : isComplex ? 'complex' : 'single';
   const title = blockTitle(block, isComplex, segments, exercises);
@@ -389,7 +395,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
           ) : null}
 
-          {showMovementZone && !isComplex ? (
+          {showMovementZone && !isComplex && !showEmbeddedMovementPicker ? (
             <div className="wolf-se-block-zone wolf-se-block-zone--movement">
               {integratedMovementHeader ? (
                 <div className="wolf-se-movement-zone-top">
@@ -424,6 +430,35 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             </div>
           ) : null}
 
+          {showEmbeddedMovementPicker ? (
+            <div className="wolf-se-block-zone wolf-se-block-zone--movement">
+              <section className="wolf-se-config-section wolf-se-config-section--movement wolf-se-config-section--inline">
+                <h4 className="wolf-se-config-title">{isEs ? 'Movimiento' : 'Movement'}</h4>
+                <button
+                  type="button"
+                  className="wolf-se-btn wolf-se-btn--outline wolf-se-movement-pick-btn"
+                  onClick={() => setPickerOpen(true)}
+                >
+                  {exerciseName(exercises, block.exerciseId)}
+                </button>
+              </section>
+              <ExercisePickerSheet
+                open={pickerOpen}
+                onClose={() => setPickerOpen(false)}
+                options={filteredPicker}
+                value={block.exerciseId}
+                isEs={isEs}
+                recentIds={recentExerciseIds}
+                keepOpenOnSelect={false}
+                onChange={(id) => {
+                  apply(() => setBlockExercise(session, bi, id, athlete, exercises));
+                  setPickerOpen(false);
+                }}
+              />
+            </div>
+          ) : null}
+
+          {!setsOnly ? (
           <div className="wolf-se-block-zone wolf-se-block-zone--config">
             <BlockZoneHeader
               icon={Settings2}
@@ -511,6 +546,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             ) : null}
             </div>
           </div>
+          ) : null}
 
           <div className="wolf-se-block-zone wolf-se-block-zone--sets">
           <div className="wolf-se-block-layout__sets">

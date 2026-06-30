@@ -1,0 +1,239 @@
+.wolf-se-exercise-sets-coach {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 8px;
+}
+
+.wolf-se-exercise-sets-coach__head {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0 2px;
+  flex-shrink: 0;
+}
+
+.wolf-se-exercise-sets-coach__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-se-exercise-sets-coach__menu-spacer {
+  opacity: 0.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.wolf-se-exercise-sets-coach__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.wolf-se-exercise-sets-coach__footer {
+  flex-shrink: 0;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.wolf-se-coach-block-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #f97316;
+  background: transparent;
+  color: #f97316;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wolf-se-coach-block-add:active {
+  background: rgba(249, 115, 22, 0.08);
+}
+
+/* SetsTable coach mobile overrides */
+.wolf-se-sets-section--coach-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.wolf-se-coach-block-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+
+.wolf-se-coach-block-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.wolf-se-coach-block-tabs__tab {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, #f97316 45%, var(--color-border));
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.wolf-se-coach-block-tabs__tab.is-active {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--color-text-primary);
+}
+
+.wolf-se-coach-blocks-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: var(--color-bg-panel, #18181b);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.wolf-se-coach-set-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: var(--color-bg-panel, #18181b);
+}
+
+.wolf-se-coach-set-block__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wolf-se-coach-set-block__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.wolf-se-coach-set-block__purpose {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.wolf-se-coach-set-block__purpose--technique {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+.wolf-se-coach-set-block__purpose--work {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.wolf-se-coach-set-block__purpose--intensity {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+}
+
+.wolf-se-coach-set-block__purpose-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.wolf-se-coach-set-block__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.wolf-se-coach-set-block__field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.wolf-se-coach-set-block__field:last-of-type {
+  border-bottom: none;
+}
+
+.wolf-se-coach-set-block__field-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-set-block__field-value {
+  min-width: 72px;
+}
+
+.wolf-se-coach-set-block__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.wolf-se-coach-set-block__rest {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-set-block__load {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--color-text-primary);
+}
+
+.wolf-se-sets-section--coach-mobile .wolf-se-premium-set-card {
+  display: none;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus .wolf-se-exercise-sets-coach {
+  flex: 1;
+  min-height: 0;
+}

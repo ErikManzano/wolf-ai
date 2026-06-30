@@ -1,5 +1,6 @@
 import type { SessionExerciseBlock, SetScheme } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
+import { formatRestSec } from './setSchemeUtils';
 
 export function blockUsesComplexReps(block: SessionExerciseBlock): boolean {
   if (normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length)) return true;
@@ -35,6 +36,48 @@ export function formatAthleteSetRxLabel(row: SetScheme, isComplex: boolean): str
 export function formatSetSchemeDisplayRow(row: SetScheme, isComplex: boolean): string {
   const reps = formatSchemeRepsToken(row, isComplex);
   return `${row.percentage}%×${reps}×${row.sets}`;
+}
+
+/** Prescripción legible en cards mobile coach: 70% - 3x3 */
+export function formatBlockPrescriptionCoachMobile(block: SessionExerciseBlock): string {
+  const isComplex = blockUsesComplexReps(block);
+  if (!block.sets.length) return '—';
+
+  const formatRow = (row: SetScheme) => {
+    const reps = formatSchemeRepsToken(row, isComplex);
+    if (row.percentage > 0) {
+      return `${row.percentage}% - ${row.sets}x${reps}`;
+    }
+    return `${row.sets}x${reps}`;
+  };
+
+  if (block.sets.length === 1) return formatRow(block.sets[0]!);
+  return block.sets.map(formatRow).join(' · ');
+}
+
+/** Tab de bloque en editor coach: 70% - 3 - 3 */
+export function formatSetSchemeCoachTab(row: SetScheme, isComplex: boolean): string {
+  const reps = formatSchemeRepsToken(row, isComplex);
+  return `${row.percentage}% - ${row.sets} - ${reps}`;
+}
+
+/** Línea principal en resumen de bloque: 70% 3 x 3 */
+export function formatSetSchemeCoachOverviewPrimary(row: SetScheme, isComplex: boolean): string {
+  const reps = formatSchemeRepsToken(row, isComplex);
+  if (row.percentage > 0) {
+    return `${row.percentage}% ${row.sets} x ${reps}`;
+  }
+  return `${row.sets} x ${reps}`;
+}
+
+/** Línea secundaria en resumen de bloque: 2 x 3, 2:30 */
+export function formatSetSchemeCoachOverviewSecondary(
+  row: SetScheme,
+  isComplex: boolean,
+  restSec: number,
+): string {
+  const reps = formatSchemeRepsToken(row, isComplex);
+  return `${row.sets} x ${reps}, ${formatRestSec(restSec)}`;
 }
 
 /** Prescripción legible del bloque, p. ej. 70%×3×3 · 80%×2×3 */

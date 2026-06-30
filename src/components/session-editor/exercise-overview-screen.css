@@ -1,0 +1,281 @@
+.wolf-se-exercise-overview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 10px;
+}
+
+.wolf-se-exercise-overview__head {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0 2px;
+}
+
+.wolf-se-exercise-overview__back,
+.wolf-se-exercise-overview__menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-primary, #fafafa);
+  cursor: pointer;
+}
+
+.wolf-se-exercise-overview__menu-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-se-exercise-overview__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-se-exercise-overview__menu-spacer {
+  opacity: 0.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.wolf-se-exercise-overview__tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.wolf-se-exercise-overview__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  border: 1px solid transparent;
+}
+
+.wolf-se-exercise-overview__tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.wolf-se-exercise-overview__tag--technique {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.wolf-se-exercise-overview__tag--technique .wolf-se-exercise-overview__tag-dot {
+  background: #3b82f6;
+}
+
+.wolf-se-exercise-overview__tag--work {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #86efac;
+}
+
+.wolf-se-exercise-overview__tag--work .wolf-se-exercise-overview__tag-dot {
+  background: #22c55e;
+}
+
+.wolf-se-exercise-overview__tag--intensity {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.35);
+  color: #fdba74;
+}
+
+.wolf-se-exercise-overview__tag--intensity .wolf-se-exercise-overview__tag-dot {
+  background: #f97316;
+}
+
+.wolf-se-exercise-overview__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wolf-se-exercise-overview__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wolf-se-exercise-overview__tabs {
+  padding: 0 2px;
+}
+
+.wolf-se-exercise-overview__blocks-count {
+  margin-top: -2px;
+}
+
+.wolf-se-coach-set-block--panel {
+  gap: 14px;
+  padding: 16px;
+  border-color: color-mix(in srgb, #f97316 22%, var(--color-border));
+}
+
+.wolf-se-coach-set-block__fields--panel {
+  gap: 4px;
+}
+
+.wolf-se-coach-set-block__field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: none;
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__field--wide {
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__field-value {
+  min-width: 0;
+  width: 100%;
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__field-value--rest {
+  max-width: 140px;
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-combo-select,
+.wolf-se-coach-set-block--panel .wolf-se-combo-preset {
+  min-height: 44px;
+  width: 100%;
+}
+
+.wolf-se-coach-set-block__rest--muted {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__footer {
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+.wolf-se-coach-set-block--panel .wolf-se-coach-set-block__load {
+  font-size: 1.05rem;
+  color: #f97316;
+}
+
+.wolf-se-exercise-overview__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 20px 12px;
+}
+
+.wolf-se-exercise-overview__summary {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 95%, transparent);
+}
+
+.wolf-se-exercise-overview__summary-title {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-exercise-overview__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  text-align: center;
+}
+
+.wolf-se-exercise-overview__summary-grid dt {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-exercise-overview__summary-grid dd {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: var(--color-text-primary);
+}
+
+.wolf-se-exercise-overview__summary-vol {
+  color: #f97316 !important;
+}
+
+.wolf-se-exercise-overview__footer {
+  flex-shrink: 0;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.wolf-se-exercise-overview__footer .wolf-se-coach-block-add {
+  width: 100%;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus .wolf-se-exercise-overview {
+  min-height: 0;
+  flex: 1;
+  max-height: 100%;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus .wolf-program-day-board__body {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board--exercise-focus .wolf-session-editor--mobile-coach {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

@@ -10,6 +10,8 @@ interface StickySessionActionsProps {
   syncPending: boolean;
   canAddExercise: boolean;
   onAddExercise: () => void;
+  addLabel?: string;
+  hideMetrics?: boolean;
 }
 
 export const StickySessionActions: React.FC<StickySessionActionsProps> = (props) => {

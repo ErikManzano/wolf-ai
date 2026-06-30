@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, GripVertical, Plus, Trash2 } from 'lucide-react';
-import type { Exercise, Session, SessionExerciseBlock } from '../../models/training';
-import { blockTotalReps, sessionTotalReps } from './blockMetrics';
+import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
+import { blockTotalReps, blockTonnage, sessionTotalReps } from './blockMetrics';
 import { formatBlockPrescription } from './schemeFormat';
 import { blockDisplayName } from './sessionSheetUtils';
 import { AppBreadcrumb, type AppBreadcrumbItem } from '../wl-shared/AppBreadcrumb';
@@ -11,11 +11,13 @@ import '../wl-shared/app-breadcrumb.css';
 interface SessionSheetOverviewProps {
   session: Session;
   exercises: Exercise[];
+  athlete?: Athlete;
   isEs: boolean;
   breadcrumbItems?: AppBreadcrumbItem[];
   canAddExercise?: boolean;
   dense?: boolean;
   hideHead?: boolean;
+  showTonnage?: boolean;
   sortable?: boolean;
   onSelectBlock?: (index: number) => void;
   onAddExercise?: () => void;
@@ -51,6 +53,8 @@ interface SortableSheetRowProps {
   dense: boolean;
   isEs: boolean;
   blockReps: number;
+  blockTonnageKg?: number;
+  showTonnage?: boolean;
   onSelectBlock?: (index: number) => void;
   onRemoveBlock?: (index: number) => void;
   onMoveBlockUp?: (index: number) => void;
@@ -63,8 +67,10 @@ function SheetExerciseRowButton({
   name,
   prescription,
   blockReps,
+  blockTonnageKg,
   dense,
   isEs,
+  showTonnage,
   onClick,
   onPointerDown,
 }: {
@@ -72,8 +78,10 @@ function SheetExerciseRowButton({
   name: string;
   prescription: string;
   blockReps: number;
+  blockTonnageKg?: number;
   dense: boolean;
   isEs: boolean;
+  showTonnage?: boolean;
   onClick?: () => void;
   onPointerDown?: (event: React.PointerEvent<HTMLButtonElement>) => void;
 }) {
@@ -92,10 +100,18 @@ function SheetExerciseRowButton({
         </code>
       </span>
       <span
-        className="wolf-se-sheet-row-reps"
-        aria-label={isEs ? `${blockReps} repeticiones` : `${blockReps} reps`}
+        className={`wolf-se-sheet-row-reps${showTonnage ? ' wolf-se-sheet-row-tonnage' : ''}`}
+        aria-label={
+          showTonnage && blockTonnageKg != null
+            ? isEs
+              ? `${blockTonnageKg} kilogramos`
+              : `${blockTonnageKg} kilograms`
+            : isEs
+              ? `${blockReps} repeticiones`
+              : `${blockReps} reps`
+        }
       >
-        {blockReps}
+        {showTonnage && blockTonnageKg != null ? `${blockTonnageKg} kg` : blockReps}
       </span>
       <ChevronRight size={dense ? 14 : 16} className="wolf-se-sheet-row-chevron" aria-hidden />
     </button>
@@ -107,11 +123,13 @@ function SheetColumnHead({
   isEs,
   sortable,
   showActionsSpacer,
+  showTonnage,
 }: {
   dense: boolean;
   isEs: boolean;
   sortable: boolean;
   showActionsSpacer: boolean;
+  showTonnage?: boolean;
 }) {
   return (
     <div
@@ -125,7 +143,7 @@ function SheetColumnHead({
           {isEs ? 'Ejercicio' : 'Exercise'}
         </span>
         <span className="wolf-se-sheet-col-head-cell wolf-se-sheet-col-head-cell--reps">
-          {isEs ? 'Reps' : 'Reps'}
+          {showTonnage ? (isEs ? 'Vol.' : 'Vol.') : isEs ? 'Reps' : 'Reps'}
         </span>
         <span className="wolf-se-sheet-col-head-cell wolf-se-sheet-col-head-cell--chev" />
       </div>
@@ -157,6 +175,8 @@ const SortableSheetRow: React.FC<SortableSheetRowProps> = ({
   dense,
   isEs,
   blockReps,
+  blockTonnageKg,
+  showTonnage,
   onSelectBlock,
   onRemoveBlock,
   onMoveBlockUp,
@@ -213,8 +233,10 @@ const SortableSheetRow: React.FC<SortableSheetRowProps> = ({
         name={name}
         prescription={prescription}
         blockReps={blockReps}
+        blockTonnageKg={blockTonnageKg}
         dense={dense}
         isEs={isEs}
+        showTonnage={showTonnage}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onSelectBlock?.(index)}
       />
@@ -266,11 +288,13 @@ const SortableSheetRow: React.FC<SortableSheetRowProps> = ({
 export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
   session,
   exercises,
+  athlete,
   isEs,
   breadcrumbItems,
   canAddExercise = false,
   dense = false,
   hideHead = false,
+  showTonnage = false,
   sortable = false,
   onSelectBlock,
   onAddExercise,
@@ -305,6 +329,11 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
 
   const totalReps = useMemo(() => sessionTotalReps(session.exercises), [session.exercises]);
   const showActionsSpacer = Boolean(onRemoveBlock);
+  const tonnageForBlock = useCallback(
+    (block: SessionExerciseBlock) =>
+      showTonnage && athlete ? blockTonnage(block, athlete, exercises) : undefined,
+    [athlete, exercises, showTonnage],
+  );
 
   return (
     <section
@@ -352,6 +381,7 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
             isEs={isEs}
             sortable={canSort}
             showActionsSpacer={showActionsSpacer}
+            showTonnage={showTonnage}
           />
           {canSort ? (
           <Reorder.Group
@@ -370,6 +400,8 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
                 dense={dense}
                 isEs={isEs}
                 blockReps={blockTotalReps(row.block)}
+                blockTonnageKg={tonnageForBlock(row.block)}
+                showTonnage={showTonnage}
                 onSelectBlock={onSelectBlock}
                 onRemoveBlock={onRemoveBlock}
                 onMoveBlockUp={onMoveBlockUp}
@@ -384,6 +416,7 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
               const prescription = formatBlockPrescription(block);
               const name = blockDisplayName(block, exercises);
               const blockReps = blockTotalReps(block);
+              const blockTonnageKg = tonnageForBlock(block);
               const showReorderButtons =
                 !dense &&
                 session.exercises.length > 1 &&
@@ -400,8 +433,10 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
                       name={name}
                       prescription={prescription}
                       blockReps={blockReps}
+                      blockTonnageKg={blockTonnageKg}
                       dense={dense}
                       isEs={isEs}
+                      showTonnage={showTonnage}
                       onClick={() => onSelectBlock?.(i)}
                     />
                     {showReorderButtons ? (
@@ -455,7 +490,15 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
         </>
       ) : (
         <div className="wolf-se-sheet-empty">
-          <p>{isEs ? 'Sin ejercicios en esta sesión.' : 'No exercises in this session yet.'}</p>
+          <p>
+            {dense
+              ? isEs
+                ? 'Aún no hay ejercicios en este día'
+                : 'No exercises in this day yet'
+              : isEs
+                ? 'Sin ejercicios en esta sesión.'
+                : 'No exercises in this session yet.'}
+          </p>
         </div>
       )}
 

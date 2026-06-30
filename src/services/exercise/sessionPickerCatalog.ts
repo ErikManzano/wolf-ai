@@ -240,11 +240,45 @@ export function pickerOptionsFromIds(
   return out;
 }
 
+function pickerOptionRank(opt: SessionPickerOption): number {
+  let rank = 0;
+  if (opt.lifecycleStatus === 'official') rank += 1000;
+  else if (opt.lifecycleStatus === 'coach_modified') rank += 500;
+  else if (opt.lifecycleStatus === 'experimental') rank += 200;
+  if (/^ex-\d{3}$/.test(opt.id)) rank += 100;
+  else if (opt.id.startsWith('ex-') && !opt.id.startsWith('ex-wl-')) rank += 80;
+  if (opt.kind === 'single') rank += 10;
+  return rank;
+}
+
+/** Collapse duplicate catalog rows (legacy 37 + Bulgarian seed often share the same display name). */
+export function dedupePickerOptions(options: SessionPickerOption[]): SessionPickerOption[] {
+  const byId = new Map<string, SessionPickerOption>();
+  for (const opt of options) {
+    const prev = byId.get(opt.id);
+    if (!prev || pickerOptionRank(opt) > pickerOptionRank(prev)) {
+      byId.set(opt.id, opt);
+    }
+  }
+  const idDeduped = options.filter((opt) => byId.get(opt.id) === opt);
+
+  const bestByName = new Map<string, SessionPickerOption>();
+  for (const opt of idDeduped) {
+    const key = `${opt.category}|${opt.name.trim().toLowerCase()}`;
+    const prev = bestByName.get(key);
+    if (!prev || pickerOptionRank(opt) > pickerOptionRank(prev)) {
+      bestByName.set(key, opt);
+    }
+  }
+  const kept = new Set(bestByName.values());
+  return idDeduped.filter((opt) => kept.has(opt));
+}
+
 export function mergedViewsToPickerOptions(
   merged: MergedDefinitionView[],
   taxonomy: ExerciseTaxonomyBundle,
 ): SessionPickerOption[] {
-  return merged
+  const mapped = merged
     .filter((d) => !d.hiddenByCoach && d.lifecycleStatus !== 'deprecated')
     .map((def) => {
       const legacy = toLegacyExercise(def, taxonomy);
@@ -261,6 +295,7 @@ export function mergedViewsToPickerOptions(
         catalogGroup,
       };
     });
+  return dedupePickerOptions(mapped);
 }
 
 export type SessionPickerBlockKind = 'single' | 'complexSegment';

@@ -4670,6 +4670,36 @@
     display: none !important;
   }
 
+  .wl-programs-editor .wolf-session-editor--mobile-coach .wolf-se-sticky-bar {
+    display: block !important;
+    position: sticky;
+    left: auto;
+    right: auto;
+    bottom: 0;
+    z-index: 12;
+    padding:
+      10px max(12px, var(--safe-right))
+      calc(10px + env(safe-area-inset-bottom, 0px))
+      max(12px, var(--safe-left));
+    border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+    background: var(--color-bg-main, #0f1115);
+  }
+
+  .wl-programs-editor .wolf-session-editor--mobile-coach.wolf-session-editor--mobile-sticky {
+    padding-bottom: 0;
+  }
+
+  .wl-programs-editor .wolf-se-sticky-bar--cta-only .wolf-se-sticky-inner {
+    display: block;
+  }
+
+  .wl-programs-editor .wolf-se-sticky-bar--cta-only .wolf-se-btn--block {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+
   .wl-programs-editor .wolf-session-editor--embedded.wolf-session-editor--mobile-sticky {
     padding-bottom: 0;
   }

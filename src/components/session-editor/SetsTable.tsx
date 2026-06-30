@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { Clock, ChevronDown, Copy, GripVertical, ListOrdered, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
@@ -25,7 +25,10 @@ import {
   DEFAULT_REST_SEC,
   formatRestSec,
 } from './setSchemeUtils';
+import { CoachSetBlockEditor } from './CoachSetBlockEditor';
+import { formatSetSchemeCoachTab, blockUsesComplexReps } from './schemeFormat';
 import './set-rows.css';
+import './exercise-sets-coach-screen.css';
 
 const PCT_PRESETS_LIST = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 120] as const;
 const REP_PRESETS_LIST = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20] as const;
@@ -82,6 +85,8 @@ interface SetsTableProps {
   onDuplicateSet: (setIndex: number) => void;
   onRemoveSet: (setIndex: number) => void;
   onReorderSets?: (fromIndex: number, toIndex: number) => void;
+  /** Editor mobile coach — tabs y campos según mockup */
+  coachMobile?: boolean;
 }
 
 function PremiumSetsSummary({
@@ -685,9 +690,21 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onDuplicateSet,
   onRemoveSet,
   onReorderSets,
+  coachMobile = false,
 }) => {
   const canReorderSets = Boolean(onReorderSets) && block.sets.length > 1;
   const [setRows, setSetRows] = useState<SortableSetRow[]>(() => rowsFromSchemes(block.sets));
+  const [activeBlockTab, setActiveBlockTab] = useState(0);
+  const prevSetCountRef = useRef(block.sets.length);
+
+  useEffect(() => {
+    if (block.sets.length > prevSetCountRef.current) {
+      setActiveBlockTab(block.sets.length - 1);
+    } else {
+      setActiveBlockTab((prev) => Math.min(prev, Math.max(0, block.sets.length - 1)));
+    }
+    prevSetCountRef.current = block.sets.length;
+  }, [block.sets.length]);
 
   useEffect(() => {
     setSetRows((prev) => {
@@ -714,6 +731,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   const isPhone = useMediaQuery('(max-width: 767px)');
   const isTightViewport = useMediaQuery('(max-width: 1100px)');
   const isPremiumMobile = useMediaQuery('(max-width: 899px)');
+  const useBlockTabs =
+    coachMobile || (layout === 'embedded' && isPremiumMobile && block.sets.length > 1);
   const useInlineCards = layout !== 'embedded' && isTightViewport;
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
@@ -765,17 +784,115 @@ export const SetsTable: React.FC<SetsTableProps> = ({
 
     if (layout === 'embedded') {
       const canDuplicate = block.sets.length < WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK;
+      const isComplexReps = blockUsesComplexReps(block);
+
+      if (coachMobile) {
+        const activeScheme = block.sets[activeBlockTab];
+        const kg =
+          ex && activeScheme ? kgForExercise(athlete, ex, activeScheme.percentage) : '—';
+        return (
+          <section className="wolf-se-sets-section wolf-se-sets-section--coach-mobile">
+            {block.sets.length > 0 ? (
+              <>
+                <div className="wolf-se-coach-block-tabs" role="tablist" aria-label={isEs ? 'Bloques' : 'Blocks'}>
+                  {block.sets.map((scheme, si) => (
+                    <button
+                      key={si}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeBlockTab === si}
+                      className={`wolf-se-coach-block-tabs__tab${activeBlockTab === si ? ' is-active' : ''}`}
+                      onClick={() => setActiveBlockTab(si)}
+                    >
+                      {formatSetSchemeCoachTab(scheme, isComplexReps)}
+                    </button>
+                  ))}
+                </div>
+                <div className="wolf-se-coach-blocks-select" aria-hidden>
+                  {block.sets.length} {isEs ? 'bloques' : 'blocks'}
+                  <ChevronDown size={16} />
+                </div>
+                {activeScheme ? (
+                  <CoachSetBlockEditor
+                    scheme={activeScheme}
+                    setIndex={activeBlockTab}
+                    kg={kg}
+                    isEs={isEs}
+                    onPctChange={(v) => onPctChange(activeBlockTab, v)}
+                    onRepsChange={(v) => onRepsChange(activeBlockTab, v)}
+                    onSetsChange={(v) => onSetsChange(activeBlockTab, v)}
+                    onRestChange={(v) => onRestChange(activeBlockTab, v)}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <p className="wolf-se-coach-set-block__empty">
+                {isEs ? 'Sin bloques — añade uno abajo' : 'No blocks — add one below'}
+              </p>
+            )}
+          </section>
+        );
+      }
+
+      const visibleSetRows = useBlockTabs
+        ? setRows.filter((_, si) => si === activeBlockTab)
+        : setRows;
+      const renderPremiumCard = (sortableRow: SortableSetRow, si: number, canReorder: boolean) => {
+        const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
+        return (
+          <PremiumSetMobileCard
+            key={sortableRow.id}
+            sortableRow={sortableRow}
+            setIndex={si}
+            kg={kg}
+            isEs={isEs}
+            canRemove={block.sets.length > 1}
+            canDuplicate={canDuplicate}
+            canReorder={canReorder}
+            onPctChange={(v) => onPctChange(si, v)}
+            onRepsChange={(v) => onRepsChange(si, v)}
+            onSetsChange={(v) => onSetsChange(si, v)}
+            onRestChange={(v) => onRestChange(si, v)}
+            onDuplicate={() => onDuplicateSet(si)}
+            onRemove={() => onRemoveSet(si)}
+          />
+        );
+      };
       return (
-        <section className={`${sectionClass} wolf-se-sets-section--premium`} onKeyDown={onEnter}>
+        <section className={`${sectionClass} wolf-se-sets-section--premium${useBlockTabs ? ' wolf-se-sets-section--block-tabs' : ''}`} onKeyDown={onEnter}>
           <div className="wolf-se-sets-premium__head">
             <h4 className="wolf-se-sets-premium__title">
               <ListOrdered size={16} strokeWidth={2.25} aria-hidden />
               {isEs ? 'Esquema de series' : 'Set scheme'}
             </h4>
+            {useBlockTabs ? (
+              <span className="wolf-se-block-tabs__meta">
+                {block.sets.length} {isEs ? 'bloques' : 'blocks'}
+              </span>
+            ) : null}
           </div>
 
+          {useBlockTabs ? (
+            <div className="wolf-se-block-tabs" role="tablist" aria-label={isEs ? 'Bloques' : 'Blocks'}>
+              {block.sets.map((scheme, si) => (
+                <button
+                  key={si}
+                  type="button"
+                  role="tab"
+                  id={`wolf-se-block-tab-${si}`}
+                  aria-selected={activeBlockTab === si}
+                  aria-controls={`wolf-se-block-panel-${si}`}
+                  className={`wolf-se-block-tabs__tab${activeBlockTab === si ? ' is-active' : ''}`}
+                  onClick={() => setActiveBlockTab(si)}
+                >
+                  {scheme.percentage}% · {scheme.sets}×{scheme.reps}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           {isPremiumMobile ? (
-            canReorderSets ? (
+            canReorderSets && !useBlockTabs ? (
               <Reorder.Group
                 as="div"
                 axis="y"
@@ -783,50 +900,18 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                 onReorder={handleSetRowsReorder}
                 className="wolf-se-sets-premium__cards wolf-se-sets-premium__cards--sortable"
               >
-                {setRows.map((sortableRow, si) => {
-                  const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
-                  return (
-                    <PremiumSetMobileCard
-                      key={sortableRow.id}
-                      sortableRow={sortableRow}
-                      setIndex={si}
-                      kg={kg}
-                      isEs={isEs}
-                      canRemove={block.sets.length > 1}
-                      canDuplicate={canDuplicate}
-                      canReorder
-                      onPctChange={(v) => onPctChange(si, v)}
-                      onRepsChange={(v) => onRepsChange(si, v)}
-                      onSetsChange={(v) => onSetsChange(si, v)}
-                      onRestChange={(v) => onRestChange(si, v)}
-                      onDuplicate={() => onDuplicateSet(si)}
-                      onRemove={() => onRemoveSet(si)}
-                    />
-                  );
-                })}
+                {setRows.map((sortableRow, si) => renderPremiumCard(sortableRow, si, true))}
               </Reorder.Group>
             ) : (
-              <div className="wolf-se-sets-premium__cards">
-                {setRows.map((sortableRow, si) => {
-                  const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
-                  return (
-                    <PremiumSetMobileCard
-                      key={sortableRow.id}
-                      sortableRow={sortableRow}
-                      setIndex={si}
-                      kg={kg}
-                      isEs={isEs}
-                      canRemove={block.sets.length > 1}
-                      canDuplicate={canDuplicate}
-                      canReorder={false}
-                      onPctChange={(v) => onPctChange(si, v)}
-                      onRepsChange={(v) => onRepsChange(si, v)}
-                      onSetsChange={(v) => onSetsChange(si, v)}
-                      onRestChange={(v) => onRestChange(si, v)}
-                      onDuplicate={() => onDuplicateSet(si)}
-                      onRemove={() => onRemoveSet(si)}
-                    />
-                  );
+              <div
+                className="wolf-se-sets-premium__cards"
+                id={useBlockTabs ? `wolf-se-block-panel-${activeBlockTab}` : undefined}
+                role={useBlockTabs ? 'tabpanel' : undefined}
+                aria-labelledby={useBlockTabs ? `wolf-se-block-tab-${activeBlockTab}` : undefined}
+              >
+                {visibleSetRows.map((sortableRow) => {
+                  const si = setRows.findIndex((row) => row.id === sortableRow.id);
+                  return renderPremiumCard(sortableRow, si, false);
                 })}
               </div>
             )
@@ -911,10 +996,12 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             onClick={onAddSet}
           >
             <Plus size={16} strokeWidth={2.25} aria-hidden />
-            {isEs ? 'Agregar serie' : 'Add set'}
+            {layout === 'embedded' ? (isEs ? 'Agregar bloque' : 'Add block') : isEs ? 'Agregar serie' : 'Add set'}
           </button>
 
-          <PremiumSetsSummary block={block} athlete={athlete} exercises={exercises} isEs={isEs} />
+          {!useBlockTabs ? (
+            <PremiumSetsSummary block={block} athlete={athlete} exercises={exercises} isEs={isEs} />
+          ) : null}
         </section>
       );
     }

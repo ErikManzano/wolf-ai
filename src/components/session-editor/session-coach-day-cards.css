@@ -1,0 +1,233 @@
+.wolf-se-coach-day {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.wolf-se-coach-day__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 2px 4px;
+}
+
+.wolf-se-coach-day__eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-day__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 750;
+  line-height: 1.25;
+  color: var(--color-text-primary, #f4f4f5);
+}
+
+.wolf-se-coach-day__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wolf-se-coach-day__list--sortable {
+  gap: 10px;
+}
+
+.wolf-se-coach-day-card-item {
+  list-style: none;
+}
+
+.wolf-se-coach-day-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  background: var(--color-bg-panel, #18181b);
+  overflow: hidden;
+}
+
+.wolf-se-coach-day-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--wolf-se-coach-accent, #f97316);
+}
+
+.wolf-se-coach-day-card--orange {
+  --wolf-se-coach-accent: #f97316;
+}
+
+.wolf-se-coach-day-card--blue {
+  --wolf-se-coach-accent: #38bdf8;
+}
+
+.wolf-se-coach-day-card--amber {
+  --wolf-se-coach-accent: #fbbf24;
+}
+
+.wolf-se-coach-day-card--violet {
+  --wolf-se-coach-accent: #a78bfa;
+}
+
+.wolf-se-coach-day-card__drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  touch-action: none;
+  cursor: grab;
+}
+
+.wolf-se-coach-day-card__tap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px 12px 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wolf-se-coach-day-card__tap:active {
+  background: color-mix(in srgb, var(--color-bg-hover) 60%, transparent);
+}
+
+.wolf-se-coach-day-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  border: 1px solid color-mix(in srgb, var(--wolf-se-coach-accent) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--wolf-se-coach-accent) 12%, var(--color-bg-secondary, #111));
+  color: var(--wolf-se-coach-accent);
+}
+
+.wolf-se-coach-day-card__icon--complex {
+  color: #38bdf8;
+  border-color: color-mix(in srgb, #38bdf8 35%, var(--color-border));
+  background: color-mix(in srgb, #38bdf8 12%, var(--color-bg-secondary, #111));
+}
+
+.wolf-se-coach-day-card__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wolf-se-coach-day-card__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wolf-se-coach-day-card__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary, #fafafa);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-se-coach-day-card__chev {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  opacity: 0.85;
+}
+
+.wolf-se-coach-day-card__bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wolf-se-coach-day-card__rx {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-text-secondary, #a1a1aa);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-se-coach-day-card__vol {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-day-card__vol--on {
+  color: var(--wolf-se-coach-accent);
+}
+
+.wolf-se-coach-day__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 36px 16px 28px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 80%, transparent);
+}
+
+.wolf-se-coach-day__empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
+}
+
+.wolf-se-coach-day__empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  max-width: 22ch;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--mobile-coach .wolf-se-coach-day {
+  padding: 0;
+}
+
+.wl-programs-embedded-plan .wolf-program-day-board .wolf-se-coach-day__list {
+  padding-bottom: 4px;
+}

@@ -39,7 +39,7 @@ import {
 } from '../services/programDraftStore';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { useProgramHistory } from '../hooks/useProgramHistory';
-import OlympicSessionEditor from './OlympicSessionEditor';
+import OlympicSessionEditor, { type SessionEditorView } from './OlympicSessionEditor';
 import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramMatrixTable } from './session-editor/ProgramMatrixTable';
 import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
@@ -199,7 +199,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     : setPlanNameInternal;
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState(1);
-  const [sessionEditorView, setSessionEditorView] = useState<'sheet' | 'exercise'>('sheet');
+  const [sessionEditorView, setSessionEditorView] = useState<SessionEditorView>('sheet');
   const [statsScope, setStatsScope] = useState<ProgramStatsScope>('day');
   const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table' | 'stats'>('editor');
   const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
@@ -1235,7 +1235,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               className="wolf-program-customize-panel wolf-program-customize-panel--editor"
             >
               <div
-                className={`wolf-program-day-board${sessionEditorView === 'exercise' ? ' wolf-program-day-board--exercise-focus' : ''}`}
+                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}`}
               >
                 {sessionEditorView === 'sheet' ? (
                   <div className="wolf-program-day-board__head">

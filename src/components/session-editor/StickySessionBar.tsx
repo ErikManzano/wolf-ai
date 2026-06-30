@@ -9,6 +9,8 @@ interface StickySessionBarProps {
   syncPending: boolean;
   canAddExercise: boolean;
   onAddExercise: () => void;
+  addLabel?: string;
+  hideMetrics?: boolean;
 }
 
 export const StickySessionBar: React.FC<StickySessionBarProps> = ({
@@ -18,14 +20,17 @@ export const StickySessionBar: React.FC<StickySessionBarProps> = ({
   syncPending,
   canAddExercise,
   onAddExercise,
+  addLabel,
+  hideMetrics = false,
 }) => {
   const savedLabel = draftSavedAt
     ? new Date(draftSavedAt).toLocaleTimeString(isEs ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' })
     : null;
 
   return (
-    <div className="wolf-se-sticky-bar" role="status" aria-live="polite">
+    <div className={`wolf-se-sticky-bar${hideMetrics ? ' wolf-se-sticky-bar--cta-only' : ''}`} role="status" aria-live="polite">
       <div className="wolf-se-sticky-inner">
+        {hideMetrics ? null : (
         <div>
           <p className="wolf-se-sticky-metrics">
             {session.load} kg · K {session.kValue.toFixed(1)}
@@ -49,9 +54,10 @@ export const StickySessionBar: React.FC<StickySessionBarProps> = ({
             )}
           </p>
         </div>
-        <button type="button" className="wolf-se-btn wolf-se-btn--primary wolf-se-btn--sm" disabled={!canAddExercise} onClick={onAddExercise}>
+        )}
+        <button type="button" className={`wolf-se-btn wolf-se-btn--primary wolf-se-btn--sm${hideMetrics ? ' wolf-se-btn--block' : ''}`} disabled={!canAddExercise} onClick={onAddExercise}>
           <Plus size={16} />
-          {isEs ? 'Ejercicio' : 'Exercise'}
+          {addLabel ?? (isEs ? 'Ejercicio' : 'Exercise')}
         </button>
       </div>
     </div>

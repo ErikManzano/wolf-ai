@@ -2,6 +2,7 @@ import React from 'react';
 import type { Athlete, Exercise, Session } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { SessionCoachDayCards } from './SessionCoachDayCards';
 import { SessionSheetMobileCards } from './SessionSheetMobileCards';
 import { SessionSheetSpreadsheet } from './SessionSheetSpreadsheet';
 import type { AppBreadcrumbItem } from '../wl-shared/AppBreadcrumb';
@@ -17,6 +18,9 @@ export interface SessionDayEditorProps {
   showSummary?: boolean;
   canAddExercise?: boolean;
   dense?: boolean;
+  embedded?: boolean;
+  dayNumber?: number;
+  dayLabel?: string;
   sortable?: boolean;
   focusBlockIndex?: number | null;
   onFocusBlockHandled?: () => void;
@@ -39,15 +43,37 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   showSummary = true,
   canAddExercise,
   dense = false,
+  embedded = false,
+  dayNumber,
+  dayLabel,
   sortable,
   focusBlockIndex,
   onFocusBlockHandled,
   onApply,
+  onSelectBlock,
   onAddExercise,
   onReorderBlocks,
   onRemoveBlock,
+  onMoveBlockUp: _onMoveBlockUp,
+  onMoveBlockDown: _onMoveBlockDown,
 }) => {
   const isMobile = useMediaQuery('(max-width: 1024px)');
+
+  if (isMobile && embedded) {
+    return (
+      <SessionCoachDayCards
+        session={session}
+        athlete={athlete}
+        exercises={exercises}
+        isEs={isEs}
+        dayNumber={dayNumber}
+        dayLabel={dayLabel}
+        sortable={sortable}
+        onSelectBlock={onSelectBlock}
+        onReorderBlocks={onReorderBlocks}
+      />
+    );
+  }
 
   if (isMobile) {
     return (

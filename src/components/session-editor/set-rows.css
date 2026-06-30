@@ -1904,3 +1904,82 @@ button.wolf-se-combo-preset__trigger {
   }
 }
 
+.wolf-se-block-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.wolf-se-block-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.wolf-se-block-tabs__tab {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wolf-se-block-tabs__tab.is-active {
+  border-color: rgba(249, 115, 22, 0.55);
+  background: rgba(249, 115, 22, 0.14);
+  color: var(--color-text-main);
+}
+
+.wolf-se-block-tabs__meta {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wolf-se-sets-section--block-tabs .wolf-se-sets-premium__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wolf-se-exercise-head--sets {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.wolf-se-exercise-head__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-se-sheet-row-tonnage {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--color-text-main);
+}
+
+.wolf-se-sticky-bar--cta-only .wolf-se-sticky-inner {
+  display: block;
+}
+
+.wolf-se-sticky-bar--cta-only .wolf-se-btn--block {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+}
+

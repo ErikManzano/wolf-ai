@@ -98,7 +98,7 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.preventDefault();
           }}
-          placeholder={isEs ? 'Buscar: pull, snatch, G4…' : 'Search: pull, snatch, G4…'}
+          placeholder={isEs ? 'Buscar ejercicio' : 'Search exercise'}
           aria-label={isEs ? 'Buscar ejercicio' : 'Search exercise'}
         />
       </div>
