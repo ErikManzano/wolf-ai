@@ -3,11 +3,15 @@ import { StickySessionBar } from '../../session-editor/StickySessionBar';
 import type { Session } from '../../../models/training';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 
+import type { ProgramSyncState } from '../../wl-programs/programSync';
+
 interface StickySessionActionsProps {
   session: Session;
   isEs: boolean;
   draftSavedAt: string | null;
   syncPending: boolean;
+  saveState?: ProgramSyncState;
+  onRetrySave?: () => void;
   canAddExercise: boolean;
   onAddExercise: () => void;
   addLabel?: string;

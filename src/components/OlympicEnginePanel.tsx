@@ -12,7 +12,7 @@ import { K_VALUE_RANGES } from '../models/training';
 import { useAppContext } from '../context/AppContext';
 import OlympicProgramPlan from './OlympicProgramPlan';
 import { useWolfAssign } from '../context/WolfAssignContext';
-import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
+import { useDebouncedCallbackWithControls } from '../hooks/useDebouncedCallback';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake, parseIntakeDeadlift } from '../utils/wlStatsBridge';
 import WlAssignmentManagement, { WL_MANAGE_FOCUS_KEY } from './wl-management/WlAssignmentManagement';
 import { CompactWizardBar } from './mobile-wl/navigation/CompactWizardBar';
@@ -142,17 +142,34 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
     }
   }, [assignments, athleteId, editingAssignmentId]);
 
-  const debouncedAssignmentSync = useDebouncedCallback(
-    (assignmentId: string, p: GeneratedProgram, editContext?: import('../models/notifications').ProgramEditContext) => {
-      updateAssignmentProgram(assignmentId, p, editContext);
-    },
-    600,
-  );
+  const { run: debouncedAssignmentSync, flush: flushAssignmentSync, cancel: cancelAssignmentSync } =
+    useDebouncedCallbackWithControls(
+      (assignmentId: string, p: GeneratedProgram, editContext?: import('../models/notifications').ProgramEditContext) => {
+        updateAssignmentProgram(assignmentId, p, editContext);
+      },
+      600,
+    );
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushAssignmentSync();
+    };
+    const onBeforeUnload = () => flushAssignmentSync();
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      flushAssignmentSync();
+      cancelAssignmentSync();
+    };
+  }, [flushAssignmentSync, cancelAssignmentSync]);
 
   const handleProgramChange = useCallback(
     (p: GeneratedProgram | null, editContext?: import('../models/notifications').ProgramEditContext) => {
       setProgram(p);
       if (!p) {
+        cancelAssignmentSync();
         editingAssignmentRef.current = null;
         setEditingAssignmentId(null);
         try {
@@ -173,7 +190,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
         /* ignore */
       }
     },
-    [debouncedAssignmentSync],
+    [debouncedAssignmentSync, cancelAssignmentSync],
   );
 
   const onNewProgramGenerated = useCallback(() => {
@@ -551,6 +568,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
               primaryGoal={goal}
               program={program}
               onProgramChange={handleProgramChange}
+              onFlushAutosave={flushAssignmentSync}
               skipLocalDraftPersistence={Boolean(editingAssignmentId)}
               editingAssignmentId={editingAssignmentId}
               onProgramGenerated={onNewProgramGenerated}

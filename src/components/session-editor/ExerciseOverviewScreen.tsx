@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ChevronDown, MoreVertical, Plus } from 'lucide-react';
-import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
+import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
+import type { SessionApplyFn } from './types';
 import {
   addSetToBlock,
   updateSetSchemeField,
@@ -23,12 +24,11 @@ import './exercise-sets-coach-screen.css';
 export interface ExerciseOverviewScreenProps {
   block: SessionExerciseBlock;
   blockIndex: number;
-  session: Session;
   athlete: Athlete;
   exercises: Exercise[];
   isEs: boolean;
   totalBlocks: number;
-  onApply: (fn: () => Session) => void;
+  onApply: SessionApplyFn;
   onBack: () => void;
   onRemoveBlock?: () => void;
   initialExpandedSetIndex?: number | null;
@@ -49,7 +49,6 @@ function blockTitle(
 export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   block,
   blockIndex: bi,
-  session,
   athlete,
   exercises,
   isEs,
@@ -94,7 +93,7 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
     catalogEx && activeScheme ? kgForExercise(athlete, catalogEx, activeScheme.percentage) : '—';
 
   const handleAddBlock = () => {
-    apply(() => addSetToBlock(session, bi, athlete, exercises));
+    apply((current) => addSetToBlock(current, bi, athlete, exercises));
   };
 
   return (
@@ -163,23 +162,23 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
               isEs={isEs}
               variant="panel"
               onPctChange={(v) =>
-                apply(() =>
-                  updateSetSchemeField(session, bi, activeSetIndex, 'percentage', v, athlete, exercises),
+                apply((current) =>
+                  updateSetSchemeField(current, bi, activeSetIndex, 'percentage', v, athlete, exercises),
                 )
               }
               onRepsChange={(v) =>
-                apply(() =>
-                  updateSetSchemeField(session, bi, activeSetIndex, 'reps', v, athlete, exercises),
+                apply((current) =>
+                  updateSetSchemeField(current, bi, activeSetIndex, 'reps', v, athlete, exercises),
                 )
               }
               onSetsChange={(v) =>
-                apply(() =>
-                  updateSetSchemeField(session, bi, activeSetIndex, 'sets', v, athlete, exercises),
+                apply((current) =>
+                  updateSetSchemeField(current, bi, activeSetIndex, 'sets', v, athlete, exercises),
                 )
               }
               onRestChange={(v) =>
-                apply(() =>
-                  updateSetSchemeField(session, bi, activeSetIndex, 'restSec', v, athlete, exercises),
+                apply((current) =>
+                  updateSetSchemeField(current, bi, activeSetIndex, 'restSec', v, athlete, exercises),
                 )
               }
             />

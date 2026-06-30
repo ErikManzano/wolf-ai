@@ -87,6 +87,12 @@ interface OlympicProgramPlanProps {
   onFlushAutosave?: () => void;
   /** Coach program id — resolves assignment for execution stats on enrolled athletes. */
   coachProgramId?: string;
+  /** API autosave state (WlProgramEditor). */
+  programSyncState?: import('./wl-programs/programSync').ProgramSyncState;
+  lastSavedAt?: string | null;
+  onRetryProgramSave?: () => void;
+  /** Sync block-count baseline when coach switches week/day (autosave). */
+  onActiveDayContext?: (ctx: { weekNumber: number; dayNumber: number }) => void;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -175,6 +181,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   customizeToolbarPortalId = null,
   onFlushAutosave,
   coachProgramId,
+  programSyncState,
+  lastSavedAt = null,
+  onRetryProgramSave,
+  onActiveDayContext,
 }) => {
   const isEs = language === 'ES';
   const recommendedConfig = useMemo(() => {
@@ -217,11 +227,20 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   useEffect(() => {
     setSessionEditorView('sheet');
   }, [selectedWeek, selectedDay]);
+
+  useEffect(() => {
+    if (!program || !onActiveDayContext) return;
+    onActiveDayContext({ weekNumber: selectedWeek, dayNumber: selectedDay });
+  }, [program, selectedWeek, selectedDay, onActiveDayContext]);
   const [assignFlash, setAssignFlash] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [syncPending, setSyncPending] = useState(false);
   const programRef = useRef(program);
+  const selectedWeekRef = useRef(selectedWeek);
+  const selectedDayRef = useRef(selectedDay);
+  selectedWeekRef.current = selectedWeek;
+  selectedDayRef.current = selectedDay;
   const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingHistoryRef = useRef<GeneratedProgram | null>(null);
   const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles, assignments, completions, setLogs } =
@@ -643,10 +662,17 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       const current = programRef.current;
       if (!current) return;
       const refreshed = refreshSession(s, athleteForEngine, motorExercises);
-      applyProgramUpdate(replaceProgramSession(current, selectedWeek, selectedDay, refreshed));
+      applyProgramUpdate(
+        replaceProgramSession(current, selectedWeekRef.current, selectedDayRef.current, refreshed),
+      );
     },
-    [selectedWeek, selectedDay, applyProgramUpdate, athleteForEngine, motorExercises],
+    [applyProgramUpdate, athleteForEngine, motorExercises],
   );
+
+  const sessionSaveState = skipLocalDraftPersistence && programSyncState ? programSyncState : null;
+  const sessionSavedAt = skipLocalDraftPersistence ? lastSavedAt : draftSavedAt;
+  const sessionSyncPending =
+    sessionSaveState === 'saving' || sessionSaveState === 'pending' || (!sessionSaveState && syncPending);
 
   useEffect(() => {
     if (!program?.weeks.length) return;
@@ -1286,8 +1312,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         catalog={sessionCatalog}
                         isEs={isEs}
                         onChange={handleSessionEdit}
-                        draftSavedAt={draftSavedAt}
-                        syncPending={syncPending}
+                        draftSavedAt={sessionSavedAt}
+                        syncPending={sessionSyncPending}
+                        saveState={sessionSaveState ?? undefined}
+                        onRetrySave={onRetryProgramSave}
+                        onFlushAutosave={onFlushAutosave}
                         dayLabel={selectedDayLabel}
                         weekNumber={selectedWeek}
                         dayNumber={selectedDay}

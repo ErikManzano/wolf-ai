@@ -15,6 +15,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
+import { countBlocksInProgramDay, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
 import '../wl-shared/app-breadcrumb.css';
@@ -41,10 +42,8 @@ const REFERENCE_ATHLETE: Athlete = {
 };
 
 const PLAN_TITLE_MAX_LEN = WL_EDITOR_TITLE_MAX_LEN;
-const PROGRAM_AUTOSAVE_MS = 900;
+const PROGRAM_AUTOSAVE_MS = 600;
 const WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID = 'wl-program-editor-toolbar-anchor';
-
-type ProgramSyncState = 'saved' | 'pending' | 'saving';
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
@@ -66,6 +65,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   );
   const [program, setProgram] = useState<GeneratedProgram | null>(coachProgram?.program ?? null);
   const [syncState, setSyncState] = useState<ProgramSyncState>('saved');
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [createActions, setCreateActions] = useState<OlympicProgramPlanCreateActions | null>(null);
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
@@ -73,6 +73,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const dirtyRef = useRef(false);
   const saveSeqRef = useRef(0);
   const editContextRef = useRef<import('../../models/notifications').ProgramEditContext | undefined>(undefined);
+  const sessionBlockCountRef = useRef<number | null>(null);
 
   useEffect(() => {
     programRef.current = program;
@@ -159,9 +160,14 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       if (seq !== saveSeqRef.current) return;
       setSyncState('saving');
       try {
-        await updateCoachProgram(programId, { program: p, editContext: editContextRef.current });
+        const saved = await updateCoachProgram(programId, { program: p, editContext: editContextRef.current });
         if (seq !== saveSeqRef.current) return;
+        if (!saved) {
+          setSyncState('pending');
+          return;
+        }
         dirtyRef.current = false;
+        setLastSavedAt(new Date().toISOString());
         setSyncState('saved');
       } catch {
         if (seq === saveSeqRef.current) {
@@ -201,17 +207,52 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       if (!p) {
         dirtyRef.current = false;
         cancelAutosave();
+        sessionBlockCountRef.current = null;
         setProgram(null);
         setSyncState('saved');
         return;
       }
       if (editContext) editContextRef.current = editContext;
+      const ctx = editContext ?? editContextRef.current;
+      const blockCount =
+        ctx != null ? countBlocksInProgramDay(p, ctx.weekNumber, ctx.dayNumber) : null;
+      const prevCount = sessionBlockCountRef.current;
+      const structural =
+        blockCount != null && prevCount != null && blockCount !== prevCount;
+      if (blockCount != null) sessionBlockCountRef.current = blockCount;
+
       dirtyRef.current = true;
       setSyncState('pending');
       setProgram(p);
+
+      if (structural) {
+        cancelAutosave();
+        saveSeqRef.current += 1;
+        const seq = saveSeqRef.current;
+        void persistProgram(p, seq);
+        return;
+      }
       debouncedSave(p);
     },
-    [debouncedSave, cancelAutosave],
+    [debouncedSave, cancelAutosave, persistProgram],
+  );
+
+  const handleRetrySave = useCallback(() => {
+    const latest = programRef.current;
+    if (!latest) return;
+    cancelAutosave();
+    saveSeqRef.current += 1;
+    const seq = saveSeqRef.current;
+    void persistProgram(latest, seq);
+  }, [cancelAutosave, persistProgram]);
+
+  const handleActiveDayContext = useCallback(
+    (ctx: { weekNumber: number; dayNumber: number }) => {
+      const p = programRef.current;
+      if (!p) return;
+      sessionBlockCountRef.current = countBlocksInProgramDay(p, ctx.weekNumber, ctx.dayNumber);
+    },
+    [],
   );
 
   const handlePublish = async () => {
@@ -255,7 +296,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     }
     if (syncState === 'saving') return isEs ? 'Guardando…' : 'Saving…';
     if (syncState === 'pending') {
-      return isEs ? 'Los cambios se guardan al pausar la edición.' : 'Changes save when you pause editing.';
+      return isEs ? 'Guardando al pausar…' : 'Saves when you pause editing.';
     }
     if (enrolledCount > 0) {
       return isEs
@@ -419,6 +460,10 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
                 customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
                 coachProgramId={programId}
+                programSyncState={syncState}
+                lastSavedAt={lastSavedAt}
+                onRetryProgramSave={handleRetrySave}
+                onActiveDayContext={handleActiveDayContext}
               />
             )}
           </div>

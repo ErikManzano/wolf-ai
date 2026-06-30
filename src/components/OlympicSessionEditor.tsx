@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
-import type { SessionCatalogProps } from './session-editor/types';
+import type { SessionApplyFn, SessionCatalogProps } from './session-editor/types';
 import { addExerciseBlock, moveExerciseBlock, removeExerciseBlock, setExerciseBlockOrder, WL_SESSION_LIMITS } from '../services/sessionMutations';
 import { normalizeBlockType } from '../services/trainingEngine';
 import { BlockKindBadges, ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
@@ -51,6 +51,9 @@ interface OlympicSessionEditorProps {
   hideSheetList?: boolean;
   /** Notifies parent when switching between day sheet and exercise editor. */
   onViewChange?: (view: SessionEditorView) => void;
+  saveState?: import('./wl-programs/programSync').ProgramSyncState;
+  onRetrySave?: () => void;
+  onFlushAutosave?: () => void;
 }
 
 const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
@@ -69,6 +72,9 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   initialBlockIndex = null,
   hideSheetList = false,
   onViewChange,
+  saveState,
+  onRetrySave,
+  onFlushAutosave,
 }) => {
   const [view, setView] = useState<SessionEditorView>('sheet');
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
@@ -115,9 +121,14 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 
   const canAddExercise = session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION;
 
-  const apply = useCallback(
-    (fn: () => Session) => {
-      onChange(fn());
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+
+  const apply = useCallback<SessionApplyFn>(
+    (fn) => {
+      const next = fn(sessionRef.current);
+      sessionRef.current = next;
+      onChange(next);
     },
     [onChange],
   );
@@ -137,67 +148,69 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
       setPickerOpen(true);
       return;
     }
-    apply(() => {
-      const next = addExerciseBlock(session, '', athlete, exercises);
+    apply((current) => {
+      const next = addExerciseBlock(current, '', athlete, exercises);
       setFocusBlockIndex(next.exercises.length - 1);
       return next;
     });
-  }, [apply, session, exercises, athlete, useMobileCoachFlow]);
+  }, [apply, athlete, exercises, useMobileCoachFlow]);
 
   const handlePickerSelect = useCallback(
     (exerciseId: string) => {
       setPickerOpen(false);
-      apply(() => {
-        const next = addExerciseBlock(session, exerciseId, athlete, exercises);
-        const newIndex = next.exercises.length - 1;
-        setEditingBlockIndex(newIndex);
-        setOverviewExpandSetIndex(0);
-        setEditorView('exerciseOverview');
+      let newIndex = 0;
+      apply((current) => {
+        const next = addExerciseBlock(current, exerciseId, athlete, exercises);
+        newIndex = next.exercises.length - 1;
         return next;
       });
+      setEditingBlockIndex(newIndex);
+      setOverviewExpandSetIndex(0);
+      setEditorView('exerciseOverview');
     },
-    [apply, session, athlete, exercises, setEditorView],
+    [apply, athlete, exercises, setEditorView],
   );
 
   const handleReorderBlocks = useCallback(
     (orderedBlocks: Session['exercises']) => {
-      apply(() => setExerciseBlockOrder(session, orderedBlocks, athlete, exercises));
+      apply((current) => setExerciseBlockOrder(current, orderedBlocks, athlete, exercises));
     },
-    [apply, session, exercises, athlete],
+    [apply, exercises, athlete],
   );
 
   const handleRemoveBlock = useCallback(
     (index: number) => {
-      apply(() => removeExerciseBlock(session, index, athlete, exercises));
+      apply((current) => removeExerciseBlock(current, index, athlete, exercises));
       if (editingBlockIndex === index) {
         setEditingBlockIndex(null);
         setEditorView('sheet');
       }
     },
-    [apply, session, exercises, athlete, editingBlockIndex, setEditorView],
+    [apply, exercises, athlete, editingBlockIndex, setEditorView],
   );
 
   const handleMoveBlockUp = useCallback(
     (index: number) => {
       if (index <= 0) return;
-      apply(() => moveExerciseBlock(session, index, index - 1, athlete, exercises));
+      apply((current) => moveExerciseBlock(current, index, index - 1, athlete, exercises));
     },
-    [apply, session, exercises, athlete],
+    [apply, exercises, athlete],
   );
 
   const handleMoveBlockDown = useCallback(
     (index: number) => {
-      if (index >= session.exercises.length - 1) return;
-      apply(() => moveExerciseBlock(session, index, index + 1, athlete, exercises));
+      if (index >= sessionRef.current.exercises.length - 1) return;
+      apply((current) => moveExerciseBlock(current, index, index + 1, athlete, exercises));
     },
-    [apply, session, exercises, athlete],
+    [apply, exercises, athlete],
   );
 
   const backToSheet = useCallback(() => {
     setEditorView('sheet');
     setEditingBlockIndex(null);
     setOverviewExpandSetIndex(null);
-  }, [setEditorView]);
+    onFlushAutosave?.();
+  }, [setEditorView, onFlushAutosave]);
 
   const weekCrumb =
     weekNumber != null ? (isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`) : isEs ? 'Semana' : 'Week';
@@ -294,7 +307,6 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
         <ExerciseOverviewScreen
           block={editingBlock}
           blockIndex={editingBlockIndex}
-          session={session}
           athlete={athlete}
           exercises={exercises}
           isEs={isEs}
@@ -385,6 +397,8 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
         isEs={isEs}
         draftSavedAt={draftSavedAt}
         syncPending={syncPending}
+        saveState={saveState}
+        onRetrySave={onRetrySave}
         canAddExercise={showStickyAdd}
         onAddExercise={handleAddExercise}
         addLabel={useMobileCoachFlow ? (isEs ? 'Agregar ejercicio' : 'Add exercise') : undefined}
