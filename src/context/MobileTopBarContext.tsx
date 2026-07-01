@@ -19,6 +19,10 @@ export type MobileTopBarConfig = {
   belowTitle?: ReactNode;
   /** Fixed strip directly under the mobile header (outside scroll containers). */
   pinnedBelowHeader?: ReactNode;
+  /** Extra actions in the header row (e.g. program editor ⋮ menu). */
+  headerActions?: ReactNode;
+  /** Hide wolf brand icon when a custom back/title layout is used. */
+  hideBrandIcon?: boolean;
   /** Disables edge-swipe sidebar when nested editor/detail is open. */
   lockEdgeSwipe?: boolean;
 };

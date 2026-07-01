@@ -186,7 +186,7 @@ const SortableSheetRow: React.FC<SortableSheetRowProps> = ({
   const dragControls = useDragControls();
   const { block } = row;
   const prescription = formatBlockPrescription(block);
-  const name = blockDisplayName(block, exercises);
+  const name = blockDisplayName(block, exercises, isEs);
 
   const startDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -414,7 +414,7 @@ export const SessionSheetOverview: React.FC<SessionSheetOverviewProps> = ({
           <ol className="wolf-se-sheet-rows">
             {session.exercises.map((block, i) => {
               const prescription = formatBlockPrescription(block);
-              const name = blockDisplayName(block, exercises);
+              const name = blockDisplayName(block, exercises, isEs);
               const blockReps = blockTotalReps(block);
               const blockTonnageKg = tonnageForBlock(block);
               const showReorderButtons =

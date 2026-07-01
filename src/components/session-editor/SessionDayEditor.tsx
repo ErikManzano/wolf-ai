@@ -31,6 +31,10 @@ export interface SessionDayEditorProps {
   onRemoveBlock?: (index: number) => void;
   onMoveBlockUp?: (index: number) => void;
   onMoveBlockDown?: (index: number) => void;
+  onDuplicateDay?: () => void;
+  canDuplicateDay?: boolean;
+  onChangeExercise?: (index: number) => void;
+  onDuplicateBlock?: (index: number) => void;
 }
 
 export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
@@ -54,8 +58,12 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   onAddExercise,
   onReorderBlocks,
   onRemoveBlock,
-  onMoveBlockUp: _onMoveBlockUp,
-  onMoveBlockDown: _onMoveBlockDown,
+  onMoveBlockUp,
+  onMoveBlockDown,
+  onDuplicateDay,
+  canDuplicateDay,
+  onChangeExercise,
+  onDuplicateBlock,
 }) => {
   const isMobile = useMediaQuery('(max-width: 1024px)');
 
@@ -71,6 +79,15 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
         sortable={sortable}
         onSelectBlock={onSelectBlock}
         onReorderBlocks={onReorderBlocks}
+        onDuplicateDay={onDuplicateDay}
+        canDuplicateDay={canDuplicateDay}
+        canAddExercise={canAddExercise}
+        onAddExercise={onAddExercise}
+        onRemoveBlock={onRemoveBlock}
+        onDuplicateBlock={onDuplicateBlock}
+        onMoveBlockUp={onMoveBlockUp}
+        onMoveBlockDown={onMoveBlockDown}
+        onChangeExercise={onChangeExercise}
       />
     );
   }

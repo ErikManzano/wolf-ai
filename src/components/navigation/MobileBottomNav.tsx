@@ -69,7 +69,7 @@ export function MobileBottomNav({
               onClick={() => onNavigate(item.id)}
             >
               <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
-                <Icon size={isCenter ? 24 : 19} strokeWidth={active ? 2.35 : 2} />
+                <Icon size={isCenter ? 26 : 22} strokeWidth={isCenter ? 2.35 : 1.85} />
               </span>
               <span className="mobile-bottom-nav__label">{label}</span>
             </button>
@@ -85,7 +85,7 @@ export function MobileBottomNav({
             onClick={onOpenMore}
           >
             <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
-              <MOBILE_MORE_ITEM.icon size={19} strokeWidth={moreActive ? 2.35 : 2} />
+              <MOBILE_MORE_ITEM.icon size={22} strokeWidth={moreActive ? 2.1 : 1.85} />
             </span>
             <span className="mobile-bottom-nav__label">
               {isEs ? MOBILE_MORE_ITEM.labelEs : MOBILE_MORE_ITEM.labelEn}

@@ -1,0 +1,122 @@
+.wolf-se-coach-stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-day-card,
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-card {
+  transition:
+    border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-day-card__tap:active,
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-card__tap:active {
+  transform: scale(0.985);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-mobile-row,
+.wolf-session-editor--mobile-coach .wolf-se-coach-mobile-metric--editable {
+  transition:
+    border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-mobile-row:active,
+.wolf-session-editor--mobile-coach .wolf-se-coach-mobile-metric--editable:active {
+  transform: scale(0.99);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-card__chev {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__tag {
+  animation: wolf-se-coach-tag-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__blocks-stack > *:nth-child(1) .wolf-se-exercise-overview__tag {
+  animation-delay: 0.02s;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__blocks-stack > *:nth-child(2) .wolf-se-exercise-overview__tag {
+  animation-delay: 0.06s;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__summary {
+  animation: wolf-se-coach-fade-up 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-add {
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-add:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__back,
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__menu-btn {
+  transition:
+    background 0.18s ease,
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__back:active,
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__menu-btn:active {
+  transform: scale(0.94);
+}
+
+.wolf-session-editor--mobile-coach .wolf-se-coach-block-card__editor {
+  overflow: hidden;
+}
+
+@keyframes wolf-se-coach-tag-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes wolf-se-coach-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wolf-session-editor--mobile-coach .wolf-se-coach-day-card,
+  .wolf-session-editor--mobile-coach .wolf-se-coach-block-card,
+  .wolf-session-editor--mobile-coach .wolf-se-coach-mobile-row,
+  .wolf-session-editor--mobile-coach .wolf-se-coach-mobile-metric--editable,
+  .wolf-session-editor--mobile-coach .wolf-se-coach-block-card__chev,
+  .wolf-session-editor--mobile-coach .wolf-se-coach-block-add,
+  .wolf-session-editor--mobile-coach .wolf-se-exercise-overview__back,
+  .wolf-session-editor--mobile-coach .wolf-se-exercise-overview__menu-btn {
+    transition: none;
+  }
+
+  .wolf-session-editor--mobile-coach .wolf-se-exercise-overview__tag,
+  .wolf-session-editor--mobile-coach .wolf-se-exercise-overview__summary {
+    animation: none;
+  }
+}

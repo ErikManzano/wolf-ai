@@ -136,6 +136,9 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
         value={display}
         onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ''))}
         onFocus={() => isPremium && setOpen(true)}
+        onClick={() => {
+          if (isPremium) setOpen(true);
+        }}
         onBlur={() => {
           if (skipBlurCommitRef.current) {
             skipBlurCommitRef.current = false;

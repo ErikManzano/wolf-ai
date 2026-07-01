@@ -15,6 +15,7 @@ export interface WlEditorTitleFieldProps {
   required?: boolean;
   readOnly?: boolean;
   className?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 export const WlEditorTitleField: React.FC<WlEditorTitleFieldProps> = ({
@@ -28,6 +29,7 @@ export const WlEditorTitleField: React.FC<WlEditorTitleFieldProps> = ({
   required = false,
   readOnly = false,
   className,
+  inputRef,
 }) => {
   const fieldId = useId();
   const [touched, setTouched] = useState(false);
@@ -63,6 +65,7 @@ export const WlEditorTitleField: React.FC<WlEditorTitleFieldProps> = ({
       >
         <Pencil size={17} strokeWidth={2.1} className="wl-editor-title-icon" aria-hidden />
         <input
+          ref={inputRef}
           id={fieldId}
           type="text"
           className="wl-editor-title-input"

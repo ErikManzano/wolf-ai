@@ -57,7 +57,7 @@ export function MobileTopBar({
 
   return (
     <>
-    <div className={`mobile-header${config?.belowTitle ? ' mobile-header--inline-plan' : ''}`}>
+    <div className={`mobile-header${config?.belowTitle ? ' mobile-header--stacked' : ''}`}>
       <div className="mobile-header-brand" aria-live="polite">
         {back ? (
           <button
@@ -69,15 +69,18 @@ export function MobileTopBar({
             <ArrowLeft size={22} strokeWidth={2} aria-hidden />
           </button>
         ) : null}
-        <WolfHeaderIcon />
-        <div className="mobile-header-brand-copy">
+        {config?.hideBrandIcon ? null : <WolfHeaderIcon />}
+        <div className={`mobile-header-brand-copy${config?.belowTitle ? ' mobile-header-brand-copy--stacked' : ''}`}>
           <div className="mobile-header-title">{title}</div>
           {config?.belowTitle ? (
-            <div className="mobile-header-inline-slot">{config.belowTitle}</div>
+            <div className="mobile-header-below-title">{config.belowTitle}</div>
           ) : null}
         </div>
       </div>
       <div className="mobile-header-actions">
+        {config?.headerActions ? (
+          <div className="mobile-header-custom-actions">{config.headerActions}</div>
+        ) : null}
         <NotificationsBell
           variant="mobile"
           isEs={isEs}

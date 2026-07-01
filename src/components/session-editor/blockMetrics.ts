@@ -1,5 +1,8 @@
-import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
+import type { Athlete, Exercise, Session, SessionExerciseBlock, SetScheme } from '../../models/training';
+import { evaluateSession } from '../../services/sessionEvaluator';
 import { normalizeBlockType, parseRepTokens, repsPerRoundForScheme, resolveBaseOneRm } from '../../services/trainingEngine';
+import { DEFAULT_TARGET_RIR } from './setSchemeUtils';
+import { evaluateDayVerdict } from './programStatsVerdict';
 export function exerciseName(exercises: Exercise[], id: string): string {
   return findCatalogExercise(exercises, id)?.name ?? id;
 }
@@ -72,6 +75,33 @@ export function blockTonnage(block: SessionExerciseBlock, athlete: Athlete, exer
     total += (row.percentage / 100) * oneRm * row.reps * row.sets;
   }
   return Math.round(total);
+}
+
+export function schemeRowTonnage(
+  row: SetScheme,
+  block: SessionExerciseBlock,
+  athlete: Athlete,
+  exercises: Exercise[],
+): number {
+  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  if (isComplex && block.segments?.length) {
+    let total = 0;
+    const rounds = row.sets;
+    for (let si = 0; si < block.segments.length; si++) {
+      const seg = block.segments[si];
+      if (!seg) continue;
+      const ex = findCatalogExercise(exercises, seg.exerciseId);
+      if (!ex) continue;
+      const kg = (row.percentage / 100) * resolveBaseOneRm(ex, athlete);
+      const reps = parseRepTokens(row.segmentReps?.[si] ?? '0');
+      total += kg * reps * rounds;
+    }
+    return Math.round(total);
+  }
+  const ex = findCatalogExercise(exercises, block.exerciseId);
+  if (!ex) return 0;
+  const oneRm = resolveBaseOneRm(ex, athlete);
+  return Math.round((row.percentage / 100) * oneRm * row.reps * row.sets);
 }
 
 export function blockAvgIntensity(block: SessionExerciseBlock): number {
@@ -166,3 +196,43 @@ export function sequenceLabel(block: SessionExerciseBlock, exercises: Exercise[]
 }
 
 export const PCT_PRESETS = [70, 75, 80, 85, 90] as const;
+
+/** Estimated RPE from prescribed target RIR (weighted by sets). */
+export function estimateBlockRpe(block: SessionExerciseBlock): number | null {
+  if (!block.sets.length) return null;
+  let weighted = 0;
+  let sets = 0;
+  for (const row of block.sets) {
+    const rir = row.targetRir ?? DEFAULT_TARGET_RIR;
+    const rpe = Math.min(10, Math.max(6, 10 - rir));
+    weighted += rpe * row.sets;
+    sets += row.sets;
+  }
+  if (!sets) return null;
+  return Math.round(weighted / sets);
+}
+
+export type SessionFatigueTier = 'low' | 'medium' | 'high';
+
+export function sessionFatigueTier(
+  session: Session,
+  athlete: Athlete,
+  exercises: Exercise[],
+): SessionFatigueTier {
+  const verdict = evaluateDayVerdict(session, athlete, exercises, true);
+  if (verdict.tone === 'heavy' || verdict.tone === 'intense') return 'high';
+  if (verdict.tone === 'light' || verdict.tone === 'empty') return 'low';
+  const evaluation = evaluateSession(session, athlete, exercises);
+  if (evaluation.status === 'overtrained') return 'high';
+  if (evaluation.status === 'undertrained') return 'low';
+  return 'medium';
+}
+
+export function sessionFatigueLabel(
+  tier: SessionFatigueTier,
+  isEs: boolean,
+): string {
+  if (tier === 'high') return isEs ? 'Alta' : 'High';
+  if (tier === 'low') return isEs ? 'Baja' : 'Low';
+  return isEs ? 'Media' : 'Medium';
+}

@@ -38,6 +38,7 @@ import {
   saveProgramEditDraft,
 } from '../services/programDraftStore';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useProgramHistory } from '../hooks/useProgramHistory';
 import OlympicSessionEditor, { type SessionEditorView } from './OlympicSessionEditor';
 import type { SessionCatalogProps } from './session-editor/types';
@@ -93,6 +94,10 @@ interface OlympicProgramPlanProps {
   onRetryProgramSave?: () => void;
   /** Sync block-count baseline when coach switches week/day (autosave). */
   onActiveDayContext?: (ctx: { weekNumber: number; dayNumber: number }) => void;
+  /** Pin Editor/Table/Stats tabs in the mobile top bar (WlProgramEditor). */
+  onMobilePinnedChrome?: (node: React.ReactNode) => void;
+  /** Expose program editor actions for the mobile header ⋮ menu. */
+  onMobileProgramActionsChange?: (actions: import('./wl-programs/WlProgramEditorHeaderMenu').WlProgramEditorMobileActions | null) => void;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -185,8 +190,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   lastSavedAt = null,
   onRetryProgramSave,
   onActiveDayContext,
+  onMobilePinnedChrome,
+  onMobileProgramActionsChange,
 }) => {
   const isEs = language === 'ES';
+  const isMobileLayout = useMediaQuery('(max-width: 1024px)');
+  const pinTabsInTopBar = Boolean(onMobilePinnedChrome) && isMobileLayout;
   const recommendedConfig = useMemo(() => {
     if (athleteForEngine.level === 'advanced') return { weeks: 12 as const, days: 5 as const };
     if (athleteForEngine.level === 'intermediate') return { weeks: 8 as const, days: 4 as const };
@@ -870,49 +879,60 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     URL.revokeObjectURL(a.href);
   }, [program]);
 
-  const customizeViewTabs = (
-    <div
-      className="wolf-program-customize-tabs"
-      role="tablist"
-      aria-label={t.customizeViewLabel}
-    >
-      <button
-        type="button"
-        role="tab"
-        id="wolf-program-tab-editor"
-        aria-selected={customizeSubview === 'editor'}
-        aria-controls="wolf-program-panel-editor"
-        className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
-        onClick={() => switchCustomizeSubview('editor')}
+  const customizeViewTabs = useMemo(
+    () => (
+      <div
+        className={`wolf-program-customize-tabs${pinTabsInTopBar ? ' wolf-program-customize-tabs--pinned' : ''}`}
+        role="tablist"
+        aria-label={t.customizeViewLabel}
       >
-        <PenLine size={14} aria-hidden />
-        {t.customizeViewEditor}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        id="wolf-program-tab-table"
-        aria-selected={customizeSubview === 'table'}
-        aria-controls="wolf-program-panel-table"
-        className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
-        onClick={() => switchCustomizeSubview('table')}
-      >
-        <Table2 size={14} aria-hidden />
-        {t.customizeViewTable}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        id="wolf-program-tab-stats"
-        aria-selected={customizeSubview === 'stats'}
-        aria-controls="wolf-program-panel-stats"
-        className={`wolf-program-customize-tab${customizeSubview === 'stats' ? ' is-active' : ''}`}
-        onClick={() => switchCustomizeSubview('stats')}
-      >
-        <BarChart3 size={14} aria-hidden />
-        {t.customizeViewStats}
-      </button>
-    </div>
+        <button
+          type="button"
+          role="tab"
+          id="wolf-program-tab-editor"
+          aria-selected={customizeSubview === 'editor'}
+          aria-controls="wolf-program-panel-editor"
+          className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
+          onClick={() => switchCustomizeSubview('editor')}
+        >
+          <PenLine size={14} aria-hidden />
+          {t.customizeViewEditor}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="wolf-program-tab-table"
+          aria-selected={customizeSubview === 'table'}
+          aria-controls="wolf-program-panel-table"
+          className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
+          onClick={() => switchCustomizeSubview('table')}
+        >
+          <Table2 size={14} aria-hidden />
+          {t.customizeViewTable}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="wolf-program-tab-stats"
+          aria-selected={customizeSubview === 'stats'}
+          aria-controls="wolf-program-panel-stats"
+          className={`wolf-program-customize-tab${customizeSubview === 'stats' ? ' is-active' : ''}`}
+          onClick={() => switchCustomizeSubview('stats')}
+        >
+          <BarChart3 size={14} aria-hidden />
+          {t.customizeViewStats}
+        </button>
+      </div>
+    ),
+    [
+      pinTabsInTopBar,
+      customizeSubview,
+      switchCustomizeSubview,
+      t.customizeViewEditor,
+      t.customizeViewTable,
+      t.customizeViewStats,
+      t.customizeViewLabel,
+    ],
   );
 
   const customizeHistoryActions = (
@@ -967,9 +987,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     ) : null;
 
   const planViewChrome =
-    program && showCustomize ? (
+    program && showCustomize && !(pinTabsInTopBar && customizeSubview !== 'stats') ? (
       <div className="wolf-program-day-board__stats-chrome wolf-program-day-board__stats-chrome--layout">
-        {customizeViewTabs}
+        {pinTabsInTopBar ? null : customizeViewTabs}
         <div className="wolf-program-day-board__stats-chrome-end">
           <ProgramStatsScopeControls
             statsScope={statsScope}
@@ -982,6 +1002,40 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         </div>
       </div>
     ) : null;
+
+  useEffect(() => {
+    if (!onMobilePinnedChrome) return;
+    onMobilePinnedChrome(pinTabsInTopBar && showCustomize && program ? customizeViewTabs : null);
+    return () => onMobilePinnedChrome(null);
+  }, [onMobilePinnedChrome, pinTabsInTopBar, showCustomize, program, customizeSubview, customizeViewTabs]);
+
+  useEffect(() => {
+    if (!onMobileProgramActionsChange) return;
+    if (!pinTabsInTopBar || !showCustomize || !program) {
+      onMobileProgramActionsChange(null);
+      return;
+    }
+    onMobileProgramActionsChange({
+      onDuplicateDay: handleDuplicateDay,
+      canDuplicateDay: canAddDay,
+      onUndo: handleUndo,
+      onRedo: handleRedo,
+      canUndo,
+      canRedo,
+    });
+    return () => onMobileProgramActionsChange(null);
+  }, [
+    onMobileProgramActionsChange,
+    pinTabsInTopBar,
+    showCustomize,
+    program,
+    handleDuplicateDay,
+    canAddDay,
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo,
+  ]);
 
   const customizeToolbarPortaled =
     toolbarPortalNode && customizeToolbar ? createPortal(customizeToolbar, toolbarPortalNode) : null;
@@ -1322,6 +1376,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         dayNumber={selectedDay}
                         embedded
                         onViewChange={setSessionEditorView}
+                        onDuplicateDay={handleDuplicateDay}
+                        canDuplicateDay={canAddDay}
                       />
                     </div>
                   ) : null}

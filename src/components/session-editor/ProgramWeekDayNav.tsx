@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import ConfirmationModal from '../ConfirmationModal';
 import { formatWeekTonnageLabel } from './sessionSheetUtils';
@@ -407,10 +407,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
       })
     : null;
 
-  const weekOptionLabel = (n: number, tonnage: number) => {
-    const load = formatWeekTonnageLabel(tonnage, isEs);
-    return isEs ? `Semana - ${n} · ${load}` : `Week - ${n} · ${load}`;
-  };
+  const weekOptionLabel = (n: number) => (isEs ? `Semana ${n}` : `Week ${n}`);
 
   const selectedDayRow = dayRows.find((row) => row.dayNumber === selectedDay);
   const selectedDayTitle = selectedDayRow
@@ -419,7 +416,8 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
       ? `Día ${selectedDay}`
       : `Day ${selectedDay}`;
   const selectedWeekTitle = isEs ? `Semana ${selectedWeek}` : `Week ${selectedWeek}`;
-  const selectedWeekMeta = formatWeekTonnageLabel(weekTonnages[selectedWeek] ?? 0, isEs);
+  const selectedWeekVolume = formatWeekTonnageLabel(weekTonnages[selectedWeek] ?? 0, isEs);
+  const hideMobileWeekHead = isEditorDensity;
 
   return (
     <div
@@ -437,10 +435,10 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
       />
       <div className="wolf-program-nav-compact">
         <div className="wolf-program-nav-section wolf-program-nav-section--weeks">
-          {!isStatsNav ? (
+          {!isStatsNav && !hideMobileWeekHead ? (
             <NavSectionHead
               title={selectedWeekTitle}
-              meta={selectedWeekMeta}
+              meta={selectedWeekVolume}
               leading={weekHeadLeading}
               hideContext={hideWeekContext}
               canRemove={canRemoveWeek}
@@ -455,8 +453,11 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 
         <div className="wolf-week-select-mobile">
           <div className="wolf-week-select-mobile__row">
+            <span className="wolf-week-select-mobile__icon" aria-hidden>
+              <CalendarDays size={18} strokeWidth={2} />
+            </span>
             <label className="wolf-week-select-mobile__field">
-              <div className="wolf-select-wrap">
+              <div className="wolf-select-wrap wolf-week-select-mobile__select">
                 <select
                   value={selectedWeek}
                   onChange={(e) => onSelectWeek(Number(e.target.value))}
@@ -464,7 +465,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                 >
                   {program.weeks.map((w) => (
                     <option key={w.weekNumber} value={w.weekNumber}>
-                      {weekOptionLabel(w.weekNumber, weekTonnages[w.weekNumber] ?? 0)}
+                      {weekOptionLabel(w.weekNumber)}
                     </option>
                   ))}
                 </select>
@@ -482,6 +483,14 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               <Plus size={18} strokeWidth={2.25} aria-hidden />
             </button>
           </div>
+          {hideMobileWeekHead ? (
+            <div className="wolf-week-select-mobile__volume" aria-label={isEs ? 'Volumen total de la semana' : 'Weekly total volume'}>
+              <span className="wolf-week-select-mobile__volume-label">
+                {isEs ? 'Volumen total' : 'Total volume'}
+              </span>
+              <strong className="wolf-week-select-mobile__volume-value">{selectedWeekVolume}</strong>
+            </div>
+          ) : null}
         </div>
 
         <div className="wolf-week-carousel">
@@ -554,7 +563,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
           role="tabpanel"
           aria-labelledby={`wolf-week-tab-${selectedWeek}`}
         >
-          {!isStatsNav ? (
+          {!isStatsNav && !hideMobileWeekHead ? (
             <NavSectionHead
               title={selectedDayTitle}
               canRemove={canRemoveDay}

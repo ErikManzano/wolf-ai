@@ -1,0 +1,92 @@
+.wolf-se-delete-exercise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.wolf-se-delete-exercise-card {
+  width: min(360px, 100%);
+  padding: 22px 18px 16px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: var(--color-bg-panel, #18181b);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.wolf-se-delete-exercise-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  color: var(--color-text-primary, #fafafa);
+}
+
+.wolf-se-delete-exercise-title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--color-text-primary, #fafafa);
+}
+
+.wolf-se-delete-exercise-message {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #a1a1aa);
+  text-align: left;
+}
+
+.wolf-se-delete-exercise-message-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #f97316;
+}
+
+.wolf-se-delete-exercise-confirm {
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 12px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wolf-se-delete-exercise-confirm:active {
+  background: #b91c1c;
+}
+
+.wolf-se-delete-exercise-cancel {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: transparent;
+  color: var(--color-text-primary, #fafafa);
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.wolf-se-delete-exercise-cancel:active {
+  background: color-mix(in srgb, var(--color-bg-hover) 55%, transparent);
+}

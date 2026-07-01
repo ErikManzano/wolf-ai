@@ -1,12 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Dumbbell, GitMerge, GripVertical } from 'lucide-react';
-import { Reorder, useDragControls } from 'framer-motion';
+import { ChevronRight, Dumbbell, GitMerge, GripVertical, MoreVertical, Plus } from 'lucide-react';
+import { Reorder, useDragControls, motion, useReducedMotion } from 'framer-motion';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
-import { blockTonnage } from './blockMetrics';
-import { formatBlockPrescriptionCoachMobile } from './schemeFormat';
-import { blockDisplayName } from './sessionSheetUtils';
+import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
+import { blockTonnage, estimateBlockRpe } from './blockMetrics';
+import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from './schemeFormat';
+import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
+import { coachListItemMotion, coachListStagger } from './coachMobileMotion';
+import { CoachDayHeaderStrip } from './CoachDayHeaderStrip';
+import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
+import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
 import './session-coach-day-cards.css';
+import './exercise-coach-actions-sheet.css';
+import './exercise-delete-confirm-modal.css';
 
 export interface SessionCoachDayCardsProps {
   session: Session;
@@ -18,6 +25,15 @@ export interface SessionCoachDayCardsProps {
   sortable?: boolean;
   onSelectBlock?: (index: number) => void;
   onReorderBlocks?: (blocks: SessionExerciseBlock[]) => void;
+  onDuplicateDay?: () => void;
+  canDuplicateDay?: boolean;
+  canAddExercise?: boolean;
+  onAddExercise?: () => void;
+  onRemoveBlock?: (index: number) => void;
+  onDuplicateBlock?: (index: number) => void;
+  onMoveBlockUp?: (index: number) => void;
+  onMoveBlockDown?: (index: number) => void;
+  onChangeExercise?: (index: number) => void;
 }
 
 type SortableRow = { id: string; block: SessionExerciseBlock };
@@ -38,15 +54,6 @@ function rowsFromBlocks(blocks: SessionExerciseBlock[], prev?: SortableRow[]): S
 
 const ACCENT_KEYS = ['orange', 'blue', 'amber', 'violet'] as const;
 
-function dayTitle(dayLabel: string | undefined, dayNumber: number | undefined, isEs: boolean): string {
-  const trimmed = dayLabel?.trim();
-  if (trimmed && !/^D[ií]a\s+\d+$/i.test(trimmed) && !/^Day\s+\d+$/i.test(trimmed)) {
-    return trimmed;
-  }
-  if (dayNumber != null) return isEs ? `Día ${dayNumber}` : `Day ${dayNumber}`;
-  return isEs ? 'Sesión del día' : 'Day session';
-}
-
 interface CoachDayCardProps {
   block: SessionExerciseBlock;
   index: number;
@@ -54,6 +61,7 @@ interface CoachDayCardProps {
   athlete: Athlete;
   isEs: boolean;
   onSelect?: () => void;
+  onOpenMenu?: () => void;
   sortable?: boolean;
   onDragStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
@@ -65,19 +73,22 @@ function CoachDayCard({
   athlete,
   isEs,
   onSelect,
+  onOpenMenu,
   sortable,
   onDragStart,
 }: CoachDayCardProps) {
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
-  const name = blockDisplayName(block, exercises);
-  const prescription = formatBlockPrescriptionCoachMobile(block);
+  const hasExercise = blockHasExercise(block);
+  const name = blockDisplayName(block, exercises, isEs);
   const tonnage = blockTonnage(block, athlete, exercises);
   const accent = ACCENT_KEYS[index % ACCENT_KEYS.length]!;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
+  const isComplexReps = blockUsesComplexReps(block);
+  const estimatedRpe = estimateBlockRpe(block);
 
   return (
     <article
-      className={`wolf-se-coach-day-card wolf-se-coach-day-card--${accent}`}
+      className={`wolf-se-coach-day-card wolf-se-coach-day-card--${accent} wolf-se-coach-day-card--mockup`}
       data-accent={accent}
     >
       {sortable && onDragStart ? (
@@ -92,30 +103,64 @@ function CoachDayCard({
           <GripVertical size={16} aria-hidden />
         </div>
       ) : null}
-      <button type="button" className="wolf-se-coach-day-card__tap" onClick={onSelect}>
-        <span
-          className={`wolf-se-coach-day-card__icon${isComplex ? ' wolf-se-coach-day-card__icon--complex' : ''}`}
-          aria-hidden
-        >
-          {isComplex ? <GitMerge size={20} strokeWidth={2} /> : <Dumbbell size={20} strokeWidth={2} />}
-        </span>
-        <span className="wolf-se-coach-day-card__content">
-          <span className="wolf-se-coach-day-card__top">
-            <span className="wolf-se-coach-day-card__name">{name}</span>
+
+      <div className="wolf-se-coach-day-card__shell">
+        <div className="wolf-se-coach-day-card__header">
+          <span
+            className={`wolf-se-coach-day-card__icon${isComplex ? ' wolf-se-coach-day-card__icon--complex' : ''}`}
+            aria-hidden
+          >
+            {isComplex ? <GitMerge size={20} strokeWidth={2} /> : <Dumbbell size={20} strokeWidth={2} />}
+          </span>
+          <h3
+            className={`wolf-se-coach-day-card__name${hasExercise ? '' : ' wolf-se-coach-day-card__name--missing'}`}
+          >
+            {name}
+          </h3>
+          {onOpenMenu ? (
+            <button
+              type="button"
+              className="wolf-se-coach-day-card__menu-btn"
+              aria-label={isEs ? 'Acciones del ejercicio' : 'Exercise actions'}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenMenu();
+              }}
+            >
+              <MoreVertical size={18} aria-hidden />
+            </button>
+          ) : null}
+        </div>
+
+        {block.sets.length > 0 ? (
+          <ul className="wolf-se-coach-day-card__sets" aria-label={isEs ? 'Bloques prescritos' : 'Prescribed blocks'}>
+            {block.sets.map((scheme, si) => (
+              <li key={si}>
+                <code className="wolf-se-coach-day-card__set-row">
+                  {formatSetPrescriptionCoachMobile(scheme, isComplexReps)}
+                </code>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="wolf-se-coach-day-card__empty-sets">
+            {isEs ? 'Sin bloques prescritos' : 'No prescribed blocks'}
+          </p>
+        )}
+
+        <button type="button" className="wolf-se-coach-day-card__footer" onClick={onSelect}>
+          {estimatedRpe != null ? (
+            <span className="wolf-se-coach-day-card__rpe">RPE {estimatedRpe}</span>
+          ) : (
+            <span className="wolf-se-coach-day-card__rpe wolf-se-coach-day-card__rpe--muted">RPE —</span>
+          )}
+          <span className="wolf-se-coach-day-card__footer-vol">
+            {isEs ? 'Volumen' : 'Volume'}{' '}
+            <strong className={tonnage > 0 ? 'wolf-se-coach-day-card__vol--on' : ''}>{volumeLabel}</strong>
             <ChevronRight className="wolf-se-coach-day-card__chev" size={18} strokeWidth={2} aria-hidden />
           </span>
-          <span className="wolf-se-coach-day-card__bottom">
-            <code className="wolf-se-coach-day-card__rx" title={prescription}>
-              {prescription}
-            </code>
-            <span
-              className={`wolf-se-coach-day-card__vol${tonnage > 0 ? ' wolf-se-coach-day-card__vol--on' : ''}`}
-            >
-              {volumeLabel}
-            </span>
-          </span>
-        </span>
-      </button>
+        </button>
+      </div>
     </article>
   );
 }
@@ -173,9 +218,21 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
   sortable = false,
   onSelectBlock,
   onReorderBlocks,
+  onDuplicateDay,
+  canDuplicateDay,
+  canAddExercise = false,
+  onAddExercise,
+  onRemoveBlock,
+  onDuplicateBlock,
+  onMoveBlockUp,
+  onMoveBlockDown,
+  onChangeExercise,
 }) => {
   const canSort = sortable && Boolean(onReorderBlocks) && session.exercises.length > 1;
+  const reduceMotion = useReducedMotion();
   const [rows, setRows] = useState<SortableRow[]>(() => rowsFromBlocks(session.exercises));
+  const [actionsIndex, setActionsIndex] = useState<number | null>(null);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setRows((prev) => {
@@ -197,21 +254,33 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
     [onReorderBlocks],
   );
 
-  const dayEyebrow =
-    dayNumber != null
-      ? isEs
-        ? `DÍA ${dayNumber}`
-        : `DAY ${dayNumber}`
-      : isEs
-        ? 'DÍA'
-        : 'DAY';
+  const actionsIsComplex =
+    actionsIndex != null &&
+    normalizeBlockType(session.exercises[actionsIndex]!) === 'complex' &&
+    Boolean(session.exercises[actionsIndex]!.segments?.length);
+
+  const cardProps = (index: number) => ({
+    block: session.exercises[index]!,
+    index,
+    exercises,
+    athlete,
+    isEs,
+    onSelect: () => onSelectBlock?.(index),
+    onOpenMenu: onRemoveBlock || onDuplicateBlock || onMoveBlockUp || onMoveBlockDown ? () => setActionsIndex(index) : undefined,
+  });
 
   return (
     <section className="wolf-se-coach-day" aria-label={isEs ? 'Ejercicios del día' : 'Day exercises'}>
-      <header className="wolf-se-coach-day__head">
-        <span className="wolf-se-coach-day__eyebrow">{dayEyebrow}</span>
-        <h2 className="wolf-se-coach-day__title">{dayTitle(dayLabel, dayNumber, isEs)}</h2>
-      </header>
+      <CoachDayHeaderStrip
+        session={session}
+        athlete={athlete}
+        exercises={exercises}
+        isEs={isEs}
+        dayNumber={dayNumber}
+        dayLabel={dayLabel}
+        onDuplicateDay={onDuplicateDay}
+        canDuplicateDay={canDuplicateDay}
+      />
 
       {session.exercises.length > 0 ? (
         canSort ? (
@@ -223,33 +292,22 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
             className="wolf-se-coach-day__list wolf-se-coach-day__list--sortable"
           >
             {rows.map((row, i) => (
-              <SortableCoachDayCard
-                key={row.id}
-                row={row}
-                block={row.block}
-                index={i}
-                exercises={exercises}
-                athlete={athlete}
-                isEs={isEs}
-                onSelect={() => onSelectBlock?.(i)}
-              />
+              <SortableCoachDayCard key={row.id} row={row} {...cardProps(i)} />
             ))}
           </Reorder.Group>
         ) : (
-          <ul className="wolf-se-coach-day__list">
+          <motion.ul
+            className="wolf-se-coach-day__list"
+            variants={coachListStagger}
+            initial="hidden"
+            animate="visible"
+          >
             {session.exercises.map((block, i) => (
-              <li key={`coach-day-${block.exerciseId}-${i}`}>
-                <CoachDayCard
-                  block={block}
-                  index={i}
-                  exercises={exercises}
-                  athlete={athlete}
-                  isEs={isEs}
-                  onSelect={() => onSelectBlock?.(i)}
-                />
-              </li>
+              <motion.li key={`coach-day-${block.exerciseId}-${i}`} variants={coachListItemMotion(reduceMotion)}>
+                <CoachDayCard {...cardProps(i)} />
+              </motion.li>
             ))}
-          </ul>
+          </motion.ul>
         )
       ) : (
         <div className="wolf-se-coach-day__empty">
@@ -259,6 +317,81 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
           <p>{isEs ? 'Aún no hay ejercicios en este día' : 'No exercises in this day yet'}</p>
         </div>
       )}
+
+      {onAddExercise ? (
+        <button
+          type="button"
+          className="wolf-se-coach-day-add"
+          disabled={!canAddExercise}
+          onClick={onAddExercise}
+        >
+          <span className="wolf-se-coach-day-add__icon" aria-hidden>
+            <Plus size={20} strokeWidth={2.25} />
+          </span>
+          {isEs ? 'Añadir ejercicio' : 'Add exercise'}
+        </button>
+      ) : null}
+
+      <ExerciseCoachActionsSheet
+        open={actionsIndex != null}
+        onClose={() => setActionsIndex(null)}
+        isEs={isEs}
+        canDelete={session.exercises.length > 1 && Boolean(onRemoveBlock)}
+        canDuplicate={session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
+        canMoveUp={actionsIndex != null && actionsIndex > 0}
+        canMoveDown={actionsIndex != null && actionsIndex < session.exercises.length - 1}
+        onEditExercise={
+          onChangeExercise && actionsIndex != null && !actionsIsComplex
+            ? () => {
+                setActionsIndex(null);
+                onChangeExercise(actionsIndex);
+              }
+            : undefined
+        }
+        onDuplicateExercise={
+          onDuplicateBlock && actionsIndex != null
+            ? () => {
+                setActionsIndex(null);
+                onDuplicateBlock(actionsIndex);
+              }
+            : undefined
+        }
+        onMoveUp={
+          onMoveBlockUp && actionsIndex != null
+            ? () => {
+                setActionsIndex(null);
+                onMoveBlockUp(actionsIndex);
+              }
+            : undefined
+        }
+        onMoveDown={
+          onMoveBlockDown && actionsIndex != null
+            ? () => {
+                setActionsIndex(null);
+                onMoveBlockDown(actionsIndex);
+              }
+            : undefined
+        }
+        onDeleteExercise={
+          onRemoveBlock && actionsIndex != null
+            ? () => {
+                setActionsIndex(null);
+                setDeleteIndex(actionsIndex);
+              }
+            : undefined
+        }
+      />
+
+      <ExerciseDeleteConfirmModal
+        open={deleteIndex != null}
+        exerciseName={deleteIndex != null ? blockDisplayName(session.exercises[deleteIndex]!, exercises, isEs) : ''}
+        isEs={isEs}
+        onCancel={() => setDeleteIndex(null)}
+        onConfirm={() => {
+          if (deleteIndex != null) onRemoveBlock?.(deleteIndex);
+          setDeleteIndex(null);
+        }}
+      />
     </section>
   );
 };

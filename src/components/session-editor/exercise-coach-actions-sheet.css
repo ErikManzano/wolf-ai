@@ -1,0 +1,88 @@
+.wolf-se-coach-actions-root {
+  z-index: 110;
+}
+
+.wolf-se-coach-actions-sheet {
+  max-height: min(72vh, 520px);
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+.wolf-se-coach-actions-sheet__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 14px 6px;
+}
+
+.wolf-se-coach-actions-sheet__subtitle {
+  margin: 0;
+  padding: 2px 4px 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-coach-actions-sheet__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary, #111) 80%, transparent);
+}
+
+.wolf-se-coach-actions-sheet__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: transparent;
+  color: var(--color-text-primary, #fafafa);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wolf-se-coach-actions-sheet__list li:last-child .wolf-se-coach-actions-sheet__item {
+  border-bottom: none;
+}
+
+.wolf-se-coach-actions-sheet__item:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.wolf-se-coach-actions-sheet__item:not(:disabled):active {
+  background: color-mix(in srgb, var(--color-bg-hover) 65%, transparent);
+}
+
+.wolf-se-coach-actions-sheet__item--danger {
+  color: #f87171;
+}
+
+.wolf-se-coach-actions-sheet__cancel {
+  width: 100%;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  background: transparent;
+  color: var(--color-text-primary, #fafafa);
+  font-size: 0.95rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.wolf-se-coach-actions-sheet__cancel:active {
+  background: color-mix(in srgb, var(--color-bg-hover) 55%, transparent);
+}

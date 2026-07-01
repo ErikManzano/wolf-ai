@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CalendarRange,
   ChevronDown,
+  Pencil,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -18,6 +19,10 @@ import WlProgramAssignSheet from './WlProgramAssignSheet';
 import { countBlocksInProgramDay, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
+import {
+  WlProgramEditorHeaderMenu,
+  type WlProgramEditorMobileActions,
+} from './WlProgramEditorHeaderMenu';
 import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import '../wl-management/wl-management.css';
@@ -69,6 +74,9 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const [createActions, setCreateActions] = useState<OlympicProgramPlanCreateActions | null>(null);
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
+  const [mobilePinnedChrome, setMobilePinnedChrome] = useState<React.ReactNode>(null);
+  const [mobileProgramActions, setMobileProgramActions] = useState<WlProgramEditorMobileActions | null>(null);
+  const mobileTitleInputRef = useRef<HTMLInputElement>(null);
   const programRef = useRef(program);
   const dirtyRef = useRef(false);
   const saveSeqRef = useRef(0);
@@ -135,10 +143,34 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
               label: isEs ? 'Volver a Programas' : 'Back to Programs',
               onBack,
             },
+            hideBrandIcon: true,
+            belowTitle: hasProgram ? (
+              <button
+                type="button"
+                className="mobile-header-title-edit"
+                onClick={() => mobileTitleInputRef.current?.focus()}
+              >
+                <Pencil size={12} aria-hidden />
+                <span>{isEs ? 'Toca para editar el nombre' : 'Tap to edit name'}</span>
+              </button>
+            ) : undefined,
+            headerActions: hasProgram ? (
+              <WlProgramEditorHeaderMenu isEs={isEs} actions={mobileProgramActions} />
+            ) : undefined,
+            pinnedBelowHeader: mobilePinnedChrome,
             lockEdgeSwipe: true,
           }
         : null,
-    [isMobileLayout, coachProgram, programTitle, isEs, onBack],
+    [
+      isMobileLayout,
+      coachProgram,
+      programTitle,
+      isEs,
+      onBack,
+      hasProgram,
+      mobileProgramActions,
+      mobilePinnedChrome,
+    ],
   );
   useMobileTopBar(mobileTopBar);
 
@@ -362,7 +394,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   return (
     <div
-      className={`wl-programs-panel wl-programs-editor${showActionDock ? '' : ' wl-programs-editor--no-dock'}${useStickyDesktopHead ? ' wl-programs-editor--sticky-head' : ''}`}
+      className={`wl-programs-panel wl-programs-editor${showActionDock ? '' : ' wl-programs-editor--no-dock'}${useStickyDesktopHead ? ' wl-programs-editor--sticky-head' : ''}${isMobileLayout && hasProgram ? ' wl-programs-editor--mobile-plan' : ''}`}
     >
       <header
         className={`wl-programs-editor-hero${useStickyDesktopHead ? ' wl-programs-editor-sticky-head' : ''}${portalToolbarToHead ? ' wl-programs-editor-sticky-head--unified' : ''}`}
@@ -416,6 +448,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
                 label={isEs ? 'Nombre del plan' : 'Plan name'}
                 required
+                inputRef={mobileTitleInputRef}
               />
             </div>
           </>
@@ -464,6 +497,8 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 lastSavedAt={lastSavedAt}
                 onRetryProgramSave={handleRetrySave}
                 onActiveDayContext={handleActiveDayContext}
+                onMobilePinnedChrome={isMobileLayout ? setMobilePinnedChrome : undefined}
+                onMobileProgramActionsChange={isMobileLayout ? setMobileProgramActions : undefined}
               />
             )}
           </div>

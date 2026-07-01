@@ -1310,9 +1310,57 @@
 
 .wolf-week-select-mobile__row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+.wolf-week-select-mobile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  color: var(--color-accent, #f97316);
+  background: color-mix(in srgb, var(--color-accent, #f97316) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent, #f97316) 25%, var(--color-border));
+}
+
+.wolf-week-select-mobile__volume {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 2px 4px;
+}
+
+.wolf-week-select-mobile__volume-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.wolf-week-select-mobile__volume-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-accent, #f97316);
+}
+
+.wolf-program-nav--editor-density .wolf-day-tab.active {
+  background: var(--color-accent, #f97316);
+  color: #0a0a0a;
+  border-color: var(--color-accent, #f97316);
+  font-weight: 800;
+}
+
+.wolf-program-nav--editor-density .wolf-day-tab {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  font-weight: 700;
 }
 
 .wolf-week-select-mobile__field {

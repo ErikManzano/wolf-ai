@@ -112,7 +112,7 @@ const MobileExerciseCard: React.FC<MobileCardProps> = ({
         <span className="wolf-se-mobile-card__idx">{blockIndex + 1}</span>
         <div className="wolf-se-mobile-card__title-wrap">
           {isComplex ? (
-            <h4 className="wolf-se-mobile-card__title">{blockDisplayName(block, exercises)}</h4>
+            <h4 className="wolf-se-mobile-card__title">{blockDisplayName(block, exercises, isEs)}</h4>
           ) : (
             <div
               className="wolf-se-mobile-card__picker"

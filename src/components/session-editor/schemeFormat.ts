@@ -55,6 +55,15 @@ export function formatBlockPrescriptionCoachMobile(block: SessionExerciseBlock):
   return block.sets.map(formatRow).join(' · ');
 }
 
+/** Una fila en card mobile coach: 70% - 3x3 */
+export function formatSetPrescriptionCoachMobile(row: SetScheme, isComplex: boolean): string {
+  const reps = formatSchemeRepsToken(row, isComplex);
+  if (row.percentage > 0) {
+    return `${row.percentage}% - ${row.sets}x${reps}`;
+  }
+  return `${row.sets}x${reps}`;
+}
+
 /** Tab de bloque en editor coach: 70% - 3 - 3 */
 export function formatSetSchemeCoachTab(row: SetScheme, isComplex: boolean): string {
   const reps = formatSchemeRepsToken(row, isComplex);

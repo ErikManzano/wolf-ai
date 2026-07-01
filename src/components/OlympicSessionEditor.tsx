@@ -1,13 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
 import type { SessionApplyFn, SessionCatalogProps } from './session-editor/types';
-import { addExerciseBlock, moveExerciseBlock, removeExerciseBlock, setExerciseBlockOrder, WL_SESSION_LIMITS } from '../services/sessionMutations';
+import {
+  addExerciseBlock,
+  duplicateExerciseBlock,
+  moveExerciseBlock,
+  removeExerciseBlock,
+  setBlockExercise,
+  setExerciseBlockOrder,
+  WL_SESSION_LIMITS,
+} from '../services/sessionMutations';
 import { normalizeBlockType } from '../services/trainingEngine';
 import { BlockKindBadges, ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { ExerciseOverviewScreen } from './session-editor/ExerciseOverviewScreen';
 import { SessionDayEditor } from './session-editor/SessionDayEditor';
 import { SessionDayHero } from './session-editor/SessionDayHero';
+import { coachScreenMotion, type CoachNavDirection } from './session-editor/coachMobileMotion';
 import { blockDisplayName } from './session-editor/sessionSheetUtils';
 import { AppBreadcrumb } from './wl-shared/AppBreadcrumb';
 import { ExercisePickerSheet } from './mobile-wl/sheets/ExercisePickerSheet';
@@ -19,6 +29,7 @@ import './session-editor/session-editor-polish.css';
 import './session-editor/exercise-overview-screen.css';
 import './session-editor/exercise-sets-coach-screen.css';
 import './session-editor/session-coach-day-cards.css';
+import './session-editor/session-coach-mobile-motion.css';
 import './mobile-wl/mobile-wl.css';
 import './wl-shared/app-breadcrumb.css';
 import '../styles/interactive.css';
@@ -54,6 +65,8 @@ interface OlympicSessionEditorProps {
   saveState?: import('./wl-programs/programSync').ProgramSyncState;
   onRetrySave?: () => void;
   onFlushAutosave?: () => void;
+  onDuplicateDay?: () => void;
+  canDuplicateDay?: boolean;
 }
 
 const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
@@ -75,11 +88,14 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   saveState,
   onRetrySave,
   onFlushAutosave,
+  onDuplicateDay,
+  canDuplicateDay,
 }) => {
   const [view, setView] = useState<SessionEditorView>('sheet');
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
   const [focusBlockIndex, setFocusBlockIndex] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerPurpose, setPickerPurpose] = useState<'add' | 'change'>('add');
   const [overviewExpandSetIndex, setOverviewExpandSetIndex] = useState<number | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 1024px)');
@@ -123,6 +139,8 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 
   const sessionRef = useRef(session);
   sessionRef.current = session;
+  const coachNavRef = useRef<CoachNavDirection>('forward');
+  const reduceMotion = useReducedMotion();
 
   const apply = useCallback<SessionApplyFn>(
     (fn) => {
@@ -136,6 +154,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const openExerciseOverview = useCallback(
     (index: number, expandSetIndex: number | null = null) => {
       if (index < 0 || index >= session.exercises.length) return;
+      coachNavRef.current = 'forward';
       setEditingBlockIndex(index);
       setOverviewExpandSetIndex(expandSetIndex);
       setEditorView(useMobileCoachFlow ? 'exerciseOverview' : 'exerciseSets');
@@ -145,6 +164,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 
   const handleAddExercise = useCallback(() => {
     if (useMobileCoachFlow) {
+      setPickerPurpose('add');
       setPickerOpen(true);
       return;
     }
@@ -155,20 +175,44 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     });
   }, [apply, athlete, exercises, useMobileCoachFlow]);
 
+  const openChangeExercisePicker = useCallback(() => {
+    setPickerPurpose('change');
+    setPickerOpen(true);
+  }, []);
+
+  const openChangeExercisePickerForIndex = useCallback((index: number) => {
+    setEditingBlockIndex(index);
+    setPickerPurpose('change');
+    setPickerOpen(true);
+  }, []);
+
+  const handleDuplicateBlockAt = useCallback(
+    (index: number) => {
+      if (sessionRef.current.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION) return;
+      apply((current) => duplicateExerciseBlock(current, index, athlete, exercises));
+    },
+    [apply, athlete, exercises],
+  );
+
   const handlePickerSelect = useCallback(
     (exerciseId: string) => {
       setPickerOpen(false);
+      if (pickerPurpose === 'change' && editingBlockIndex != null) {
+        apply((current) => setBlockExercise(current, editingBlockIndex, exerciseId, athlete, exercises));
+        return;
+      }
       let newIndex = 0;
       apply((current) => {
         const next = addExerciseBlock(current, exerciseId, athlete, exercises);
         newIndex = next.exercises.length - 1;
         return next;
       });
+      coachNavRef.current = 'forward';
       setEditingBlockIndex(newIndex);
       setOverviewExpandSetIndex(0);
       setEditorView('exerciseOverview');
     },
-    [apply, athlete, exercises, setEditorView],
+    [apply, athlete, exercises, editingBlockIndex, pickerPurpose, setEditorView],
   );
 
   const handleReorderBlocks = useCallback(
@@ -182,6 +226,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     (index: number) => {
       apply((current) => removeExerciseBlock(current, index, athlete, exercises));
       if (editingBlockIndex === index) {
+        coachNavRef.current = 'back';
         setEditingBlockIndex(null);
         setEditorView('sheet');
       }
@@ -205,7 +250,34 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     [apply, exercises, athlete],
   );
 
+  const handleDuplicateExercise = useCallback(() => {
+    if (editingBlockIndex == null) return;
+    if (sessionRef.current.exercises.length >= WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION) return;
+    let newIndex = editingBlockIndex + 1;
+    apply((current) => {
+      const next = duplicateExerciseBlock(current, editingBlockIndex, athlete, exercises);
+      newIndex = Math.min(editingBlockIndex + 1, next.exercises.length - 1);
+      return next;
+    });
+    setEditingBlockIndex(newIndex);
+  }, [apply, athlete, exercises, editingBlockIndex]);
+
+  const handleMoveEditingBlockUp = useCallback(() => {
+    if (editingBlockIndex == null || editingBlockIndex <= 0) return;
+    const nextIndex = editingBlockIndex - 1;
+    apply((current) => moveExerciseBlock(current, editingBlockIndex, nextIndex, athlete, exercises));
+    setEditingBlockIndex(nextIndex);
+  }, [apply, athlete, exercises, editingBlockIndex]);
+
+  const handleMoveEditingBlockDown = useCallback(() => {
+    if (editingBlockIndex == null || editingBlockIndex >= sessionRef.current.exercises.length - 1) return;
+    const nextIndex = editingBlockIndex + 1;
+    apply((current) => moveExerciseBlock(current, editingBlockIndex, nextIndex, athlete, exercises));
+    setEditingBlockIndex(nextIndex);
+  }, [apply, athlete, exercises, editingBlockIndex]);
+
   const backToSheet = useCallback(() => {
+    coachNavRef.current = 'back';
     setEditorView('sheet');
     setEditingBlockIndex(null);
     setOverviewExpandSetIndex(null);
@@ -219,7 +291,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     (dayNumber != null ? (isEs ? `Día ${dayNumber}` : `Day ${dayNumber}`) : isEs ? 'Día' : 'Day');
   const editingBlock =
     editingBlockIndex != null ? session.exercises[editingBlockIndex] : undefined;
-  const exerciseCrumb = editingBlock ? blockDisplayName(editingBlock, exercises) : null;
+  const exerciseCrumb = editingBlock ? blockDisplayName(editingBlock, exercises, isEs) : null;
   const editingIsComplex = editingBlock
     ? normalizeBlockType(editingBlock) === 'complex' && Boolean(editingBlock.segments?.length)
     : false;
@@ -242,81 +314,113 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
 
   const showStickyAdd = view === 'sheet' && canAddExercise;
 
+  const sheetView = (
+    <>
+      {hideSheetList ? (
+        <div className="wolf-se-sheet wolf-se-sheet--compact" aria-label={isEs ? 'Hoja del día' : 'Day sheet'}>
+          <div className="wolf-se-sheet-head wolf-se-sheet-head--compact">
+            <div className="wolf-se-sheet-head-crumb">
+              <AppBreadcrumb isEs={isEs} items={sheetBreadcrumbItems} />
+            </div>
+            <span className="wolf-se-sheet-hint">
+              {session.exercises.length
+                ? isEs
+                  ? `${session.exercises.length} ejercicio${session.exercises.length === 1 ? '' : 's'} · añade o toca en la tabla`
+                  : `${session.exercises.length} exercise${session.exercises.length === 1 ? '' : 's'} · add or tap in the grid`
+                : isEs
+                  ? 'Añade el primer ejercicio del día'
+                  : 'Add the first exercise for this day'}
+            </span>
+          </div>
+          {canAddExercise ? (
+            <div className="wolf-se-sheet-footer">
+              <button type="button" className="wolf-se-sets-premium__add-row wolf-se-sheet-add" onClick={handleAddExercise}>
+                <Plus size={14} aria-hidden />
+                {isEs ? 'Añadir ejercicio' : 'Add exercise'}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          <SessionDayEditor
+            session={session}
+            athlete={athlete}
+            exercises={exercises}
+            pickerOptions={catalog.pickerOptions}
+            isEs={isEs}
+            breadcrumbItems={embedded ? undefined : sheetBreadcrumbItems}
+            showSummary={!embedded}
+            canAddExercise={canAddExercise}
+            dense={embedded}
+            embedded={embedded}
+            dayNumber={dayNumber}
+            dayLabel={dayLabel}
+            sortable
+            focusBlockIndex={focusBlockIndex}
+            onFocusBlockHandled={() => setFocusBlockIndex(null)}
+            onApply={apply}
+            onSelectBlock={openExerciseOverview}
+            onAddExercise={handleAddExercise}
+            onReorderBlocks={handleReorderBlocks}
+            onRemoveBlock={handleRemoveBlock}
+            onMoveBlockUp={handleMoveBlockUp}
+            onMoveBlockDown={handleMoveBlockDown}
+            onDuplicateDay={onDuplicateDay}
+            canDuplicateDay={canDuplicateDay}
+            onChangeExercise={openChangeExercisePickerForIndex}
+            onDuplicateBlock={handleDuplicateBlockAt}
+          />
+          {embedded ? null : <SessionDayHero session={session} isEs={isEs} />}
+        </>
+      )}
+    </>
+  );
+
   return (
     <div
       className={`wolf-session-editor wolf-session-editor--flow${embedded ? ' wolf-session-editor--embedded' : ''}${isMobile ? ' wolf-session-editor--mobile-sticky' : ''}${useMobileCoachFlow ? ' wolf-session-editor--mobile-coach' : ''}`}
     >
-      {view === 'sheet' ? (
-        <>
-          {hideSheetList ? (
-            <div className="wolf-se-sheet wolf-se-sheet--compact" aria-label={isEs ? 'Hoja del día' : 'Day sheet'}>
-              <div className="wolf-se-sheet-head wolf-se-sheet-head--compact">
-                <div className="wolf-se-sheet-head-crumb">
-                  <AppBreadcrumb isEs={isEs} items={sheetBreadcrumbItems} />
-                </div>
-                <span className="wolf-se-sheet-hint">
-                  {session.exercises.length
-                    ? isEs
-                      ? `${session.exercises.length} ejercicio${session.exercises.length === 1 ? '' : 's'} · añade o toca en la tabla`
-                      : `${session.exercises.length} exercise${session.exercises.length === 1 ? '' : 's'} · add or tap in the grid`
-                    : isEs
-                      ? 'Añade el primer ejercicio del día'
-                      : 'Add the first exercise for this day'}
-                </span>
-              </div>
-              {canAddExercise ? (
-                <div className="wolf-se-sheet-footer">
-                  <button type="button" className="wolf-se-sets-premium__add-row wolf-se-sheet-add" onClick={handleAddExercise}>
-                    <Plus size={14} aria-hidden />
-                    {isEs ? 'Añadir ejercicio' : 'Add exercise'}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <>
-              <SessionDayEditor
-                session={session}
+      {useMobileCoachFlow ? (
+        <AnimatePresence mode="wait" initial={false}>
+          {view === 'sheet' ? (
+            <motion.div
+              key="coach-sheet"
+              className="wolf-se-coach-stage"
+              {...coachScreenMotion(reduceMotion, 'sheet', coachNavRef.current)}
+            >
+              {sheetView}
+            </motion.div>
+          ) : null}
+          {view === 'exerciseOverview' && editingBlockIndex != null && editingBlock ? (
+            <motion.div
+              key={`coach-overview-${editingBlockIndex}`}
+              className="wolf-se-coach-stage"
+              {...coachScreenMotion(reduceMotion, 'overview', coachNavRef.current)}
+            >
+              <ExerciseOverviewScreen
+                block={editingBlock}
+                blockIndex={editingBlockIndex}
                 athlete={athlete}
                 exercises={exercises}
-                pickerOptions={catalog.pickerOptions}
                 isEs={isEs}
-                breadcrumbItems={embedded ? undefined : sheetBreadcrumbItems}
-                showSummary={!embedded}
-                canAddExercise={canAddExercise}
-                dense={embedded}
-                embedded={embedded}
-                dayNumber={dayNumber}
-                dayLabel={dayLabel}
-                sortable
-                focusBlockIndex={focusBlockIndex}
-                onFocusBlockHandled={() => setFocusBlockIndex(null)}
+                totalBlocks={session.exercises.length}
                 onApply={apply}
-                onSelectBlock={openExerciseOverview}
-                onAddExercise={handleAddExercise}
-                onReorderBlocks={handleReorderBlocks}
-                onRemoveBlock={handleRemoveBlock}
-                onMoveBlockUp={handleMoveBlockUp}
-                onMoveBlockDown={handleMoveBlockDown}
+                onBack={backToSheet}
+                initialExpandedSetIndex={overviewExpandSetIndex}
+                onRemoveBlock={() => handleRemoveBlock(editingBlockIndex)}
+                onChangeExercise={!editingIsComplex ? openChangeExercisePicker : undefined}
+                onDuplicateExercise={handleDuplicateExercise}
+                canDuplicateExercise={session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
+                onMoveBlockUp={handleMoveEditingBlockUp}
+                onMoveBlockDown={handleMoveEditingBlockDown}
               />
-              {embedded ? null : <SessionDayHero session={session} isEs={isEs} />}
-            </>
-          )}
-        </>
-      ) : view === 'exerciseOverview' && useMobileCoachFlow && editingBlockIndex != null && editingBlock ? (
-        <ExerciseOverviewScreen
-          block={editingBlock}
-          blockIndex={editingBlockIndex}
-          athlete={athlete}
-          exercises={exercises}
-          isEs={isEs}
-          totalBlocks={session.exercises.length}
-          onApply={apply}
-          onBack={backToSheet}
-          initialExpandedSetIndex={overviewExpandSetIndex}
-          onRemoveBlock={() => handleRemoveBlock(editingBlockIndex)}
-        />
-      ) : view === 'exerciseSets' && !useMobileCoachFlow && editingBlockIndex != null && editingBlock ? (
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      ) : view === 'sheet' ? (
+        sheetView
+      ) : view === 'exerciseSets' && editingBlockIndex != null && editingBlock ? (
         <div className="wolf-se-exercise-view">
           <div className={`wolf-se-exercise-head${embedded ? ' wolf-se-exercise-head--embedded' : ''}`}>
             <button
@@ -382,16 +486,24 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           options={catalog.pickerOptions}
-          value=""
+          value={pickerPurpose === 'change' ? (editingBlock?.exerciseId ?? '') : ''}
           isEs={isEs}
-          title={isEs ? 'Agregar ejercicio' : 'Add exercise'}
+          title={
+            pickerPurpose === 'change'
+              ? isEs
+                ? 'Cambiar ejercicio'
+                : 'Change exercise'
+              : isEs
+                ? 'Agregar ejercicio'
+                : 'Add exercise'
+          }
           recentIds={catalog.recentIds}
           keepOpenOnSelect={false}
           onChange={handlePickerSelect}
         />
       ) : null}
 
-      {(!useMobileCoachFlow || view === 'sheet') ? (
+      {useMobileCoachFlow ? null : (
       <StickySessionActions
         session={session}
         isEs={isEs}
@@ -404,7 +516,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
         addLabel={useMobileCoachFlow ? (isEs ? 'Agregar ejercicio' : 'Add exercise') : undefined}
         hideMetrics={useMobileCoachFlow}
       />
-      ) : null}
+      )}
     </div>
   );
 };
