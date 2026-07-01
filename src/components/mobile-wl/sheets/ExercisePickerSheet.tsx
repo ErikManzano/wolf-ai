@@ -11,11 +11,12 @@ import { BottomSheet } from './BottomSheet';
 import '../mobile-wl.css';
 
 const GROUP_ORDER: ExerciseCategory[] = ['snatch', 'clean_jerk', 'squat', 'accessory'];
-const CAT: Record<ExerciseCategory, string> = {
-  snatch: 'SN',
-  clean_jerk: 'CJ',
-  squat: 'SQ',
-  accessory: 'AC',
+
+const GROUP_LABELS: Record<ExerciseCategory, { es: string; en: string; short: string }> = {
+  snatch: { es: 'Arrancada', en: 'Snatch', short: 'SN' },
+  clean_jerk: { es: 'Cargada y envión', en: 'Clean & jerk', short: 'CJ' },
+  squat: { es: 'Sentadilla', en: 'Squat', short: 'SQ' },
+  accessory: { es: 'Accesorios', en: 'Accessory', short: 'AC' },
 };
 
 interface ExercisePickerSheetProps {
@@ -50,9 +51,8 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    const t = window.setTimeout(() => inputRef.current?.focus(), 50);
-    return () => window.clearTimeout(t);
+    if (open) return;
+    setQuery('');
   }, [open]);
 
   const recentOptions = useMemo(
@@ -62,7 +62,7 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
 
   const filtered = useMemo(
     () =>
-      fuzzySearchPickerOptions(options, query, 32, {
+      fuzzySearchPickerOptions(options, query, 48, {
         catalogGroup: catalogGroupFilter,
         exerciseIdsInGroup: pickerIdsInGroup,
         preferIds: recentIds,
@@ -81,82 +81,126 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
     onChange(id);
     setQuery('');
     if (!keepOpenOnSelect) onClose();
-    else requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   const sheetTitle = title ?? (isEs ? 'Elegir ejercicio' : 'Pick exercise');
+  const showRecents = !query.trim() && recentOptions.length > 0;
+  const resultsLabel = query.trim()
+    ? isEs
+      ? `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}`
+      : `${filtered.length} result${filtered.length === 1 ? '' : 's'}`
+    : isEs
+      ? 'Catálogo'
+      : 'Catalog';
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={sheetTitle} snap={0.9}>
-      <div className="mwl-picker-search">
-        <Search size={18} aria-hidden />
-        <input
-          ref={inputRef}
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.preventDefault();
-          }}
-          placeholder={isEs ? 'Buscar ejercicio' : 'Search exercise'}
-          aria-label={isEs ? 'Buscar ejercicio' : 'Search exercise'}
-        />
-      </div>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={sheetTitle}
+      snap={0.88}
+      panelClassName="mwl-sheet-panel--picker"
+      bodyClassName="mwl-sheet-body--picker"
+    >
+      <div className="mwl-picker-chrome">
+        <label className="mwl-picker-search">
+          <Search size={18} aria-hidden />
+          <input
+            ref={inputRef}
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+            placeholder={isEs ? 'Buscar por nombre…' : 'Search by name…'}
+            aria-label={isEs ? 'Buscar ejercicio' : 'Search exercise'}
+          />
+        </label>
 
-      {!query.trim() && recentOptions.length > 0 && (
-        <>
-          <span className="mwl-field-label">{isEs ? 'En esta sesión' : 'In this session'}</span>
-          <div className="mwl-picker-list" style={{ marginBottom: 16 }}>
-            {recentOptions.map((o) => (
-              <button
-                key={`recent-${o.id}`}
-                type="button"
-                className={`mwl-picker-item${value === o.id ? ' is-selected' : ''}`}
-                onClick={() => pick(o.id)}
-              >
-                <span className="mwl-picker-item-name">{o.name}</span>
-                <span className="mwl-picker-item-cat">
-                  {catalogGroupLabel(o.tags, o.catalogGroup) ?? o.category}
-                </span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      <span className="mwl-field-label">
-        {isEs ? 'Resultados' : 'Results'}
-        {catalogGroupFilter
-          ? ` · ${catalogGroupLabel(undefined, catalogGroupFilter) ?? catalogGroupFilter}`
-          : ''}
-      </span>
-      <div className="mwl-picker-list">
-        {filtered.length === 0 ? (
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-            {isEs ? 'Sin resultados. Cambia el grupo o el texto de búsqueda.' : 'No results. Change group or search text.'}
-          </p>
-        ) : (
-          grouped.map((section) => (
-            <section key={section.cat} className="mwl-picker-group">
-              <span className="mwl-picker-group-label">{CAT[section.cat]}</span>
-              {section.items.map((o) => (
-                <button
-                  key={o.id}
-                  type="button"
-                  className={`mwl-picker-item${value === o.id ? ' is-selected' : ''}`}
-                  onClick={() => pick(o.id)}
-                >
-                  <span className="mwl-picker-item-name">{o.name}</span>
-                  <span className="mwl-picker-item-cat">
-                    {[catalogGroupLabel(o.tags, o.catalogGroup), o.kind === 'complex' ? 'C+' : null]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
-                </button>
-              ))}
+        <div className="mwl-picker-scroll" role="listbox" aria-label={sheetTitle}>
+          {showRecents ? (
+            <section className="mwl-picker-section">
+              <h3 className="mwl-picker-section-title">{isEs ? 'Recientes' : 'Recent'}</h3>
+              <div className="mwl-picker-list mwl-picker-list--recents">
+                {recentOptions.map((o) => (
+                  <button
+                    key={`recent-${o.id}`}
+                    type="button"
+                    role="option"
+                    aria-selected={value === o.id}
+                    className={`mwl-picker-item${value === o.id ? ' is-selected' : ''}`}
+                    onClick={() => pick(o.id)}
+                  >
+                    <span className="mwl-picker-item-main">
+                      <span className="mwl-picker-item-name">{o.name}</span>
+                      <span className="mwl-picker-item-cat">
+                        {catalogGroupLabel(o.tags, o.catalogGroup) ?? o.category}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             </section>
-          ))
-        )}
+          ) : null}
+
+          <section className="mwl-picker-section">
+            <h3 className="mwl-picker-section-title">
+              {resultsLabel}
+              {catalogGroupFilter
+                ? ` · ${catalogGroupLabel(undefined, catalogGroupFilter) ?? catalogGroupFilter}`
+                : ''}
+            </h3>
+
+            {filtered.length === 0 ? (
+              <p className="mwl-picker-empty">
+                {isEs
+                  ? 'Sin resultados. Prueba otro término de búsqueda.'
+                  : 'No results. Try a different search term.'}
+              </p>
+            ) : (
+              <div className="mwl-picker-list">
+                {grouped.map((section) => {
+                  const groupMeta = GROUP_LABELS[section.cat];
+                  return (
+                    <section key={section.cat} className="mwl-picker-group">
+                      <h4 className="mwl-picker-group-label">
+                        <span className="mwl-picker-group-label__short" aria-hidden>
+                          {groupMeta.short}
+                        </span>
+                        <span>{isEs ? groupMeta.es : groupMeta.en}</span>
+                      </h4>
+                      {section.items.map((o) => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          role="option"
+                          aria-selected={value === o.id}
+                          className={`mwl-picker-item${value === o.id ? ' is-selected' : ''}`}
+                          onClick={() => pick(o.id)}
+                        >
+                          <span className="mwl-picker-item-main">
+                            <span className="mwl-picker-item-name">{o.name}</span>
+                            {(catalogGroupLabel(o.tags, o.catalogGroup) || o.kind === 'complex') && (
+                              <span className="mwl-picker-item-cat">
+                                {[catalogGroupLabel(o.tags, o.catalogGroup), o.kind === 'complex' ? 'Complex' : null]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </BottomSheet>
   );

@@ -1,6 +1,7 @@
 .mobile-bottom-nav {
-  --mobile-nav-accent: #ef4444;
-  --mobile-nav-accent-deep: #dc2626;
+  --mobile-nav-accent: var(--color-accent, #f97316);
+  --mobile-nav-accent-deep: #ea580c;
+  --mobile-nav-accent-hover: var(--color-accent-hover, #fb923c);
   --mobile-nav-dock-bg: #050505;
   --mobile-nav-inactive: #a3a3a3;
   --mobile-nav-active: #f5f5f5;
@@ -86,11 +87,11 @@
 }
 
 .mobile-bottom-nav__item.is-active:not(.mobile-bottom-nav__item--center) {
-  color: var(--mobile-nav-active);
+  color: var(--mobile-nav-accent);
 }
 
 .mobile-bottom-nav__item.is-active:not(.mobile-bottom-nav__item--center) .mobile-bottom-nav__icon-wrap {
-  color: var(--mobile-nav-active);
+  color: var(--mobile-nav-accent);
   background: transparent;
   border: none;
   box-shadow: none;
@@ -98,23 +99,31 @@
 
 .mobile-bottom-nav__item--center {
   min-height: 64px;
-  color: #0a0a0a;
+  color: var(--color-bg-main, #0a0c10);
 }
 
 .mobile-bottom-nav__item--center .mobile-bottom-nav__icon-wrap {
   width: 42px;
   height: 42px;
   border-radius: 999px;
-  color: #0a0a0a;
-  background: linear-gradient(180deg, #ff4d4d 0%, var(--mobile-nav-accent) 42%, var(--mobile-nav-accent-deep) 100%);
-  border: 2px solid color-mix(in srgb, #fff 12%, var(--mobile-nav-accent-deep));
+  color: var(--color-bg-main, #0a0c10);
+  background: var(
+    --color-accent-gradient,
+    linear-gradient(135deg, #f97316 0%, #ef4444 100%)
+  );
+  border: 2px solid color-mix(in srgb, #fff 14%, var(--mobile-nav-accent));
   box-shadow: 0 2px 0 color-mix(in srgb, #fff 22%, transparent) inset;
 }
 
 .mobile-bottom-nav__item--center.is-active .mobile-bottom-nav__icon-wrap {
-  color: #0a0a0a;
-  background: linear-gradient(180deg, #ff5c5c 0%, var(--mobile-nav-accent) 40%, #b91c1c 100%);
-  border-color: color-mix(in srgb, #fff 18%, var(--mobile-nav-accent-deep));
+  color: var(--color-bg-main, #0a0c10);
+  background: linear-gradient(
+    135deg,
+    var(--mobile-nav-accent-hover) 0%,
+    var(--mobile-nav-accent) 48%,
+    var(--mobile-nav-accent-deep) 100%
+  );
+  border-color: color-mix(in srgb, #fff 20%, var(--mobile-nav-accent-deep));
   box-shadow: 0 2px 0 color-mix(in srgb, #fff 24%, transparent) inset;
 }
 

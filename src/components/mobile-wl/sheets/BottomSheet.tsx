@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useBottomSheet } from '../hooks/useBottomSheet';
@@ -12,6 +13,8 @@ interface BottomSheetProps {
   /** 0–1 fraction of viewport height, default 0.65 */
   snap?: number;
   footer?: React.ReactNode;
+  panelClassName?: string;
+  bodyClassName?: string;
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -21,12 +24,20 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   snap = 0.65,
   footer,
+  panelClassName,
+  bodyClassName,
 }) => {
   const { titleId, panelRef, onBackdropClick } = useBottomSheet(open, onClose);
+  const snapVh = Math.round(snap * 100);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  const panelClass = ['mwl-sheet-panel', panelClassName].filter(Boolean).join(' ');
+  const bodyClass = ['mwl-sheet-body', bodyClassName].filter(Boolean).join(' ');
+
+  return createPortal(
     <AnimatePresence>
-      {open && (
+      {open ? (
         <div className="mwl-sheet-root" aria-hidden={!open}>
           <motion.button
             type="button"
@@ -44,8 +55,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
             tabIndex={-1}
-            className="mwl-sheet-panel"
-            style={{ maxHeight: `${Math.round(snap * 100)}vh` }}
+            className={panelClass}
+            style={{ height: `${snapVh}vh`, maxHeight: `${snapVh}vh` }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -70,11 +81,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                 <X size={20} />
               </button>
             </header>
-            <div className="mwl-sheet-body">{children}</div>
+            <div className={bodyClass}>{children}</div>
             {footer ? <footer className="mwl-sheet-footer">{footer}</footer> : null}
           </motion.div>
         </div>
-      )}
-    </AnimatePresence>
+      ) : null}
+    </AnimatePresence>,
+    document.body,
   );
 };

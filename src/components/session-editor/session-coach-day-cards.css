@@ -31,7 +31,7 @@
 .wolf-se-coach-day__list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -231,11 +231,11 @@
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--mobile-coach .wolf-se-coach-day {
-  padding: 0;
+  padding: 20px;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-coach-day__list {
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 
 /* ── Coach day header strip (mockup KPIs) ── */
