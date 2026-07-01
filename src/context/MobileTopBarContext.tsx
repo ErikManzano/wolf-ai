@@ -17,6 +17,8 @@ export type MobileTopBarConfig = {
   back?: MobileTopBarBack | null;
   /** Optional row below the title (e.g. program select on athlete plan). */
   belowTitle?: ReactNode;
+  /** Replaces the default title string (e.g. inline editable plan name). */
+  titleContent?: ReactNode;
   /** Fixed strip directly under the mobile header (outside scroll containers). */
   pinnedBelowHeader?: ReactNode;
   /** Extra actions in the header row (e.g. program editor ⋮ menu). */

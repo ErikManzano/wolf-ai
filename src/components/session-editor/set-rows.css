@@ -1548,7 +1548,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   border-bottom: none;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.38);
   padding: 4px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-  overflow-y: visible;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1579,6 +1579,11 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
 
 .wolf-se-combo-select__menu--grid > li:not(.wolf-se-combo-select__sheet-handle) {
   min-width: 0;
+}
+
+.wolf-se-combo-select__menu--grid .wolf-se-combo-select__option {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .wolf-se-combo-select__option.is-selected {

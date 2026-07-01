@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import { coachModalMotion } from './coachMobileMotion';
@@ -33,7 +34,9 @@ export const ExerciseDeleteConfirmModal: React.FC<ExerciseDeleteConfirmModalProp
 
   const label = exerciseName.trim() || (isEs ? 'este ejercicio' : 'this exercise');
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -79,6 +82,7 @@ export const ExerciseDeleteConfirmModal: React.FC<ExerciseDeleteConfirmModalProp
           </motion.div>
         </motion.div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };

@@ -33,6 +33,8 @@ export interface SessionDayEditorProps {
   onMoveBlockDown?: (index: number) => void;
   onDuplicateDay?: () => void;
   canDuplicateDay?: boolean;
+  onRemoveDay?: () => void;
+  canRemoveDay?: boolean;
   onChangeExercise?: (index: number) => void;
   onDuplicateBlock?: (index: number) => void;
 }
@@ -62,6 +64,8 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   onMoveBlockDown,
   onDuplicateDay,
   canDuplicateDay,
+  onRemoveDay,
+  canRemoveDay,
   onChangeExercise,
   onDuplicateBlock,
 }) => {
@@ -81,6 +85,8 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
         onReorderBlocks={onReorderBlocks}
         onDuplicateDay={onDuplicateDay}
         canDuplicateDay={canDuplicateDay}
+        onRemoveDay={onRemoveDay}
+        canRemoveDay={canRemoveDay}
         canAddExercise={canAddExercise}
         onAddExercise={onAddExercise}
         onRemoveBlock={onRemoveBlock}

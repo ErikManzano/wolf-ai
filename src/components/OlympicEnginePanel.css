@@ -1406,6 +1406,32 @@
   background: transparent;
 }
 
+.wolf-week-tab-remove--mobile {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #ef4444 38%, #3f3f46);
+  background: color-mix(in srgb, #ef4444 8%, #18181b);
+  color: #fca5a5;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-week-tab-remove--mobile:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wolf-week-tab-remove--mobile:not(:disabled):active {
+  background: color-mix(in srgb, #ef4444 16%, #1f1f23);
+}
+
 /* Desktop: week pill tabs (Editor / Tabla style) */
 .wolf-week-tabs-pills {
   display: none;

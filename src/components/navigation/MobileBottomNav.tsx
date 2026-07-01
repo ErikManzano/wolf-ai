@@ -69,7 +69,7 @@ export function MobileBottomNav({
               onClick={() => onNavigate(item.id)}
             >
               <span className="mobile-bottom-nav__icon-wrap" aria-hidden>
-                <Icon size={isCenter ? 26 : 22} strokeWidth={isCenter ? 2.35 : 1.85} />
+                <Icon size={22} strokeWidth={isCenter ? 2.35 : 1.85} />
               </span>
               <span className="mobile-bottom-nav__label">{label}</span>
             </button>

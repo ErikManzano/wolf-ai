@@ -57,10 +57,10 @@ function MobileFieldRow({
       trigger.click();
       return;
     }
-    const input = root.querySelector<HTMLInputElement>('input.wolf-se-combo-select__input');
-    if (!input) return;
-    input.focus();
-    input.click();
+    const chevron = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-select__chevron');
+    if (chevron) {
+      chevron.click();
+    }
   }, []);
 
   return (
@@ -100,10 +100,15 @@ function CoachRestMetricRow({
   const ariaLabel = isEs ? `Descanso bloque ${setIndex + 1}` : `Rest block ${setIndex + 1}`;
 
   const activatePicker = useCallback(() => {
-    const trigger = pickerRef.current?.querySelector<HTMLButtonElement>(
-      'button.wolf-se-combo-preset__trigger',
-    );
-    trigger?.click();
+    const root = pickerRef.current;
+    if (!root) return;
+    const trigger = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-preset__trigger');
+    if (trigger) {
+      trigger.click();
+      return;
+    }
+    const chevron = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-select__chevron');
+    chevron?.click();
   }, []);
 
   return (

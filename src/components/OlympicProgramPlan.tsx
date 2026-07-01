@@ -1378,6 +1378,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         onViewChange={setSessionEditorView}
                         onDuplicateDay={handleDuplicateDay}
                         canDuplicateDay={canAddDay}
+                        onRemoveDay={() => handleRemoveDay(selectedDay)}
+                        canRemoveDay={canRemoveDay}
                       />
                     </div>
                   ) : null}

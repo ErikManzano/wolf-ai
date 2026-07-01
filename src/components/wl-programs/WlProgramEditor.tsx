@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   CalendarRange,
   ChevronDown,
-  Pencil,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -23,6 +22,7 @@ import {
   WlProgramEditorHeaderMenu,
   type WlProgramEditorMobileActions,
 } from './WlProgramEditorHeaderMenu';
+import { WlProgramMobileHeaderTitle } from './WlProgramMobileHeaderTitle';
 import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import '../wl-management/wl-management.css';
@@ -136,24 +136,27 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       isMobileLayout && coachProgram
         ? {
             title:
-              programTitle.trim() ||
-              coachProgram.name ||
-              (isEs ? 'Sin nombre' : 'Untitled'),
+              !hasProgram
+                ? programTitle.trim() ||
+                  coachProgram.name ||
+                  (isEs ? 'Sin nombre' : 'Untitled')
+                : undefined,
+            titleContent: hasProgram ? (
+              <WlProgramMobileHeaderTitle
+                isEs={isEs}
+                value={programTitle}
+                onChange={handleProgramTitleChange}
+                onBlur={handleProgramTitleBlur}
+                maxLength={PLAN_TITLE_MAX_LEN}
+                placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
+                inputRef={mobileTitleInputRef}
+              />
+            ) : undefined,
             back: {
               label: isEs ? 'Volver a Programas' : 'Back to Programs',
               onBack,
             },
             hideBrandIcon: true,
-            belowTitle: hasProgram ? (
-              <button
-                type="button"
-                className="mobile-header-title-edit"
-                onClick={() => mobileTitleInputRef.current?.focus()}
-              >
-                <Pencil size={12} aria-hidden />
-                <span>{isEs ? 'Toca para editar el nombre' : 'Tap to edit name'}</span>
-              </button>
-            ) : undefined,
             headerActions: hasProgram ? (
               <WlProgramEditorHeaderMenu isEs={isEs} actions={mobileProgramActions} />
             ) : undefined,
@@ -170,6 +173,8 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       hasProgram,
       mobileProgramActions,
       mobilePinnedChrome,
+      handleProgramTitleChange,
+      handleProgramTitleBlur,
     ],
   );
   useMobileTopBar(mobileTopBar);
@@ -448,7 +453,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
                 label={isEs ? 'Nombre del plan' : 'Plan name'}
                 required
-                inputRef={mobileTitleInputRef}
+                inputRef={isMobileLayout && hasProgram ? undefined : mobileTitleInputRef}
               />
             </div>
           </>

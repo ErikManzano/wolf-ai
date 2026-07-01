@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { PortaledComboList } from './PortaledComboList';
-import { wrapOptionIndex } from './comboMenuPortal';
+import { isMobileComboViewport, wrapOptionIndex } from './comboMenuPortal';
 
 export interface ComboNumberFieldProps {
   value: number;
@@ -93,6 +93,9 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
 
   const close = useCallback(() => setOpen(false), []);
   const isPremium = variant === 'premium';
+  const isCoachMobile = (className ?? '').includes('coach-mobile');
+  const pickerOnly = isCoachMobile || (isPremium && isMobileComboViewport());
+  const openPicker = useCallback(() => setOpen(true), []);
 
   const moveActive = useCallback(
     (delta: number) => {
@@ -115,8 +118,10 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
       <input
         ref={inputRef}
         type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode={pickerOnly ? 'none' : 'numeric'}
+        pattern={pickerOnly ? undefined : '[0-9]*'}
+        readOnly={pickerOnly}
+        tabIndex={pickerOnly ? -1 : undefined}
         role={isPremium ? 'combobox' : undefined}
         className={
           isPremium
@@ -134,10 +139,20 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
             : undefined
         }
         value={display}
-        onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ''))}
-        onFocus={() => isPremium && setOpen(true)}
-        onClick={() => {
+        onChange={(e) => {
+          if (pickerOnly) return;
+          setDraft(e.target.value.replace(/[^\d]/g, ''));
+        }}
+        onFocus={(e) => {
+          if (pickerOnly) {
+            openPicker();
+            (e.target as HTMLInputElement).blur();
+            return;
+          }
           if (isPremium) setOpen(true);
+        }}
+        onClick={() => {
+          if (pickerOnly || isPremium) openPicker();
         }}
         onBlur={() => {
           if (skipBlurCommitRef.current) {
@@ -201,12 +216,7 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
             tabIndex={-1}
             aria-hidden
             onPointerDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setOpen((v) => {
-                if (!v) requestAnimationFrame(() => inputRef.current?.focus());
-                return !v;
-              });
-            }}
+            onClick={() => setOpen((v) => !v)}
           >
             <ChevronDown size={14} strokeWidth={2.25} />
           </button>

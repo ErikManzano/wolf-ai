@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowDown, ArrowUp, Copy, Pencil, Trash2 } from 'lucide-react';
 import { COACH_MOBILE_SPRING_SOFT } from './coachMobileMotion';
@@ -50,7 +51,9 @@ export const ExerciseCoachActionsSheet: React.FC<ExerciseCoachActionsSheetProps>
 
   const showMove = Boolean(onMoveUp || onMoveDown);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <div className="mwl-sheet-root wolf-se-coach-actions-root" aria-hidden={!open}>
@@ -183,6 +186,7 @@ export const ExerciseCoachActionsSheet: React.FC<ExerciseCoachActionsSheetProps>
           </motion.div>
         </div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };

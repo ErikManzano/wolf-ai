@@ -71,7 +71,7 @@ export function MobileTopBar({
         ) : null}
         {config?.hideBrandIcon ? null : <WolfHeaderIcon />}
         <div className={`mobile-header-brand-copy${config?.belowTitle ? ' mobile-header-brand-copy--stacked' : ''}`}>
-          <div className="mobile-header-title">{title}</div>
+          {config?.titleContent ?? <div className="mobile-header-title">{title}</div>}
           {config?.belowTitle ? (
             <div className="mobile-header-below-title">{config.belowTitle}</div>
           ) : null}

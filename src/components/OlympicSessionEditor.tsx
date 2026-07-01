@@ -67,6 +67,8 @@ interface OlympicSessionEditorProps {
   onFlushAutosave?: () => void;
   onDuplicateDay?: () => void;
   canDuplicateDay?: boolean;
+  onRemoveDay?: () => void;
+  canRemoveDay?: boolean;
 }
 
 const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
@@ -90,6 +92,8 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   onFlushAutosave,
   onDuplicateDay,
   canDuplicateDay,
+  onRemoveDay,
+  canRemoveDay,
 }) => {
   const [view, setView] = useState<SessionEditorView>('sheet');
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
@@ -368,6 +372,8 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             onMoveBlockDown={handleMoveBlockDown}
             onDuplicateDay={onDuplicateDay}
             canDuplicateDay={canDuplicateDay}
+            onRemoveDay={onRemoveDay}
+            canRemoveDay={canRemoveDay}
             onChangeExercise={openChangeExercisePickerForIndex}
             onDuplicateBlock={handleDuplicateBlockAt}
           />

@@ -52,7 +52,7 @@ function measureMobileSheetRect(optionCount: number): ComboMenuRect {
     width: window.innerWidth,
     maxHeight: needsScroll ? maxSheet : contentHeight,
     height: needsScroll ? maxSheet : contentHeight,
-    overflowY: needsScroll ? 'auto' : 'visible',
+    overflowY: 'auto',
     columns,
   };
 }
@@ -140,6 +140,13 @@ export function usePortaledComboMenu(
     if (!open) {
       setMenuRect(null);
       return;
+    }
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      const tag = active.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        active.blur();
+      }
     }
     updateRect();
   }, [open, updateRect]);

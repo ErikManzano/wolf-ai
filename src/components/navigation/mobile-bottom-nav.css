@@ -4,7 +4,7 @@
   --mobile-nav-dock-bg: #050505;
   --mobile-nav-inactive: #a3a3a3;
   --mobile-nav-active: #f5f5f5;
-  --mobile-bottom-nav-occupancy: calc(12px + 72px + max(10px, env(safe-area-inset-bottom, 10px)) + 12px);
+  --mobile-bottom-nav-occupancy: calc(12px + 64px + max(10px, env(safe-area-inset-bottom, 10px)) + 12px);
 
   position: fixed;
   left: 0;
@@ -59,12 +59,12 @@
     transform 0.12s ease;
 }
 
-.mobile-bottom-nav__item:active {
+.mobile-bottom-nav__item:active:not(.mobile-bottom-nav__item--center) {
   transform: scale(0.94);
 }
 
 .mobile-bottom-nav__item--center:active {
-  transform: scale(0.96);
+  transform: none;
 }
 
 .mobile-bottom-nav__icon-wrap {
@@ -98,30 +98,24 @@
 
 .mobile-bottom-nav__item--center {
   min-height: 64px;
-  margin-top: -18px;
   color: #0a0a0a;
 }
 
 .mobile-bottom-nav__item--center .mobile-bottom-nav__icon-wrap {
-  width: 54px;
-  height: 54px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   color: #0a0a0a;
   background: linear-gradient(180deg, #ff4d4d 0%, var(--mobile-nav-accent) 42%, var(--mobile-nav-accent-deep) 100%);
   border: 2px solid color-mix(in srgb, #fff 12%, var(--mobile-nav-accent-deep));
-  box-shadow:
-    0 8px 22px rgba(239, 68, 68, 0.45),
-    0 2px 0 color-mix(in srgb, #fff 22%, transparent) inset;
+  box-shadow: 0 2px 0 color-mix(in srgb, #fff 22%, transparent) inset;
 }
 
 .mobile-bottom-nav__item--center.is-active .mobile-bottom-nav__icon-wrap {
   color: #0a0a0a;
   background: linear-gradient(180deg, #ff5c5c 0%, var(--mobile-nav-accent) 40%, #b91c1c 100%);
   border-color: color-mix(in srgb, #fff 18%, var(--mobile-nav-accent-deep));
-  box-shadow:
-    0 10px 28px rgba(239, 68, 68, 0.55),
-    0 0 0 3px color-mix(in srgb, var(--mobile-nav-accent) 28%, transparent),
-    0 2px 0 color-mix(in srgb, #fff 24%, transparent) inset;
+  box-shadow: 0 2px 0 color-mix(in srgb, #fff 24%, transparent) inset;
 }
 
 .mobile-bottom-nav__label {
@@ -143,9 +137,6 @@
 
   .mobile-bottom-nav__item--center:not(.is-active):hover .mobile-bottom-nav__icon-wrap {
     filter: brightness(1.06);
-    box-shadow:
-      0 10px 26px rgba(239, 68, 68, 0.5),
-      0 2px 0 color-mix(in srgb, #fff 24%, transparent) inset;
   }
 }
 
@@ -168,13 +159,9 @@
     height: 30px;
   }
 
-  .mobile-bottom-nav__item--center {
-    margin-top: -16px;
-  }
-
   .mobile-bottom-nav__item--center .mobile-bottom-nav__icon-wrap {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
   }
 }
 

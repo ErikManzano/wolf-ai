@@ -478,6 +478,7 @@
   caret-color: transparent;
   cursor: pointer;
   opacity: 0.01;
+  pointer-events: none;
 }
 
 .wolf-se-combo-select--coach-mobile .wolf-se-combo-select__chevron,

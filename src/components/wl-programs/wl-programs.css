@@ -2856,6 +2856,12 @@
   height: 40px;
 }
 
+.wl-programs-embedded-plan .wolf-program-nav--compact .wolf-week-tab-remove--mobile {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+}
+
 .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tabs-strip {
   flex-wrap: nowrap;
   gap: 2px;
@@ -2993,14 +2999,13 @@
   .wl-programs-embedded-plan .wolf-program-nav--editor-density .wolf-program-nav-section--days > .wolf-program-nav-row-head {
     display: none;
   }
+}
 
-  .wl-programs-embedded-plan .wolf-program-nav--editor-density .wolf-program-nav-day-remove--strip {
-    display: inline-flex;
-  }
+.wl-programs-embedded-plan .wolf-program-nav--editor-density .wolf-program-nav-day-remove--strip {
+  display: inline-flex;
 }
 
 .wolf-program-nav-day-remove--strip {
-  display: none;
   align-items: center;
   justify-content: center;
   flex: 0 0 26px;
@@ -5105,6 +5110,12 @@
     width: 36px;
     height: 36px;
     flex: 0 0 36px;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-week-tab-remove--mobile {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
   }
 
   .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab,
