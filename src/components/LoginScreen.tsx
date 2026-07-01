@@ -636,12 +636,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 type="button"
                 className="wolf-login-btn-outline-icon"
                 onClick={() => {
-                  setTab(allowPublicRegister ? 'register' : 'login');
+                  setTab(import.meta.env.PROD ? 'login' : allowPublicRegister ? 'register' : 'login');
                   setMobilePhase('auth');
                 }}
               >
                 <Mail size={20} strokeWidth={2} aria-hidden />
-                {allowPublicRegister ? t.continueEmail : t.loginCta}
+                {t.continueEmail}
               </button>
               <button type="button" className="wolf-login-btn-outline-icon" disabled title={t.soon}>
                 <Smartphone size={20} strokeWidth={2} aria-hidden />

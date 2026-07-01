@@ -40,11 +40,17 @@ function MobileFieldRow({
   value,
   label,
   ariaLabel,
+  suffix,
+  showChevron = true,
+  wide = false,
   children,
 }: {
   value: string;
   label: string;
   ariaLabel: string;
+  suffix?: string;
+  showChevron?: boolean;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -64,22 +70,32 @@ function MobileFieldRow({
   }, []);
 
   return (
-    <div className="wolf-se-coach-mobile-row" role="group" aria-label={ariaLabel}>
-      <div className="wolf-se-coach-mobile-row__face" aria-hidden>
-        <span className="wolf-se-coach-mobile-row__value">{value}</span>
-        <div className="wolf-se-coach-mobile-row__control">
-          <span className="wolf-se-coach-mobile-row__label">{label}</span>
-          <ChevronDown size={16} className="wolf-se-coach-mobile-row__chev" />
+    <div
+      className={`wolf-se-coach-mobile-field${wide ? ' wolf-se-coach-mobile-field--wide' : ''}`}
+      role="group"
+      aria-label={ariaLabel}
+    >
+      <span className="wolf-se-coach-mobile-field__label">{label}</span>
+      <div className="wolf-se-coach-mobile-row">
+        <div className="wolf-se-coach-mobile-row__face" aria-hidden>
+          <div className="wolf-se-coach-mobile-row__value-row">
+            <span className="wolf-se-coach-mobile-row__value">{value}</span>
+            {suffix ? (
+              <span className="wolf-se-coach-mobile-row__suffix">{suffix}</span>
+            ) : showChevron ? (
+              <ChevronDown size={18} className="wolf-se-coach-mobile-row__chev" aria-hidden />
+            ) : null}
+          </div>
         </div>
-      </div>
-      <button
-        type="button"
-        className="wolf-se-coach-mobile-row__hit"
-        aria-label={ariaLabel}
-        onClick={activatePicker}
-      />
-      <div ref={pickerRef} className="wolf-se-coach-mobile-row__picker" aria-hidden>
-        {children}
+        <button
+          type="button"
+          className="wolf-se-coach-mobile-row__hit"
+          aria-label={ariaLabel}
+          onClick={activatePicker}
+        />
+        <div ref={pickerRef} className="wolf-se-coach-mobile-row__picker" aria-hidden>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -112,24 +128,30 @@ function CoachRestMetricRow({
   }, []);
 
   return (
-    <div className="wolf-se-coach-mobile-metric wolf-se-coach-mobile-metric--rest wolf-se-coach-mobile-metric--editable">
-      <div className="wolf-se-coach-mobile-metric__face" aria-hidden>
-        <span className="wolf-se-coach-mobile-metric__value">{formatRestSec(restSec)}</span>
-        <span className="wolf-se-coach-mobile-metric__control">
-          <span className="wolf-se-coach-mobile-metric__label">{isEs ? 'DESCANSO' : 'REST'}</span>
-          <ChevronDown size={16} className="wolf-se-coach-mobile-metric__chev" aria-hidden />
-        </span>
-      </div>
-      <button type="button" className="wolf-se-coach-mobile-metric__hit" aria-label={ariaLabel} onClick={activatePicker} />
-      <div ref={pickerRef} className="wolf-se-coach-mobile-metric__picker" aria-hidden>
-        <ComboPresetField
-          variant="premium"
-          value={restSec}
-          options={REST_PRESET_OPTIONS}
-          onChange={onRestChange}
-          className="wolf-se-combo-select--coach-mobile"
-          aria-label={ariaLabel}
-        />
+    <div
+      className="wolf-se-coach-mobile-field wolf-se-coach-mobile-field--wide"
+      role="group"
+      aria-label={ariaLabel}
+    >
+      <span className="wolf-se-coach-mobile-field__label">{isEs ? 'Descanso' : 'Rest'}</span>
+      <div className="wolf-se-coach-mobile-metric wolf-se-coach-mobile-metric--rest wolf-se-coach-mobile-metric--editable">
+        <div className="wolf-se-coach-mobile-metric__face" aria-hidden>
+          <div className="wolf-se-coach-mobile-metric__value-row">
+            <span className="wolf-se-coach-mobile-metric__value">{formatRestSec(restSec)}</span>
+            <ChevronDown size={18} className="wolf-se-coach-mobile-metric__chev" aria-hidden />
+          </div>
+        </div>
+        <button type="button" className="wolf-se-coach-mobile-metric__hit" aria-label={ariaLabel} onClick={activatePicker} />
+        <div ref={pickerRef} className="wolf-se-coach-mobile-metric__picker" aria-hidden>
+          <ComboPresetField
+            variant="premium"
+            value={restSec}
+            options={REST_PRESET_OPTIONS}
+            onChange={onRestChange}
+            className="wolf-se-combo-select--coach-mobile"
+            aria-label={ariaLabel}
+          />
+        </div>
       </div>
     </div>
   );
@@ -250,10 +272,13 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
           </p>
         </div>
 
-        <div className="wolf-se-coach-set-block__mobile-rows">
+        <div className="wolf-se-coach-set-block__mobile-grid">
           <MobileFieldRow
-            value={`${scheme.percentage}%`}
-            label={isEs ? 'INTENSIDAD' : 'INTENSITY'}
+            value={String(scheme.percentage)}
+            suffix="%"
+            showChevron={false}
+            wide
+            label={isEs ? 'Intensidad' : 'Intensity'}
             ariaLabel={isEs ? `Intensidad bloque ${si + 1}` : `Intensity block ${si + 1}`}
           >
             <ComboNumberField
@@ -272,7 +297,8 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
 
           <MobileFieldRow
             value={String(scheme.sets)}
-            label={isEs ? 'SERIES' : 'SETS'}
+            showChevron={false}
+            label={isEs ? 'Series' : 'Sets'}
             ariaLabel={isEs ? `Series bloque ${si + 1}` : `Sets block ${si + 1}`}
           >
             <ComboNumberField
@@ -290,7 +316,8 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
 
           <MobileFieldRow
             value={String(scheme.reps)}
-            label="REPS"
+            showChevron={false}
+            label="Reps"
             ariaLabel={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
           >
             <ComboNumberField
@@ -305,24 +332,31 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
               aria-label={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
             />
           </MobileFieldRow>
-        </div>
 
-        <div className="wolf-se-coach-set-block__mobile-footer">
           <CoachRestMetricRow
             restSec={restSec}
             isEs={isEs}
             setIndex={si}
             onRestChange={onRestChange}
           />
-          <div className="wolf-se-coach-mobile-metric wolf-se-coach-mobile-metric--tonnage wolf-se-coach-mobile-metric--readonly">
-            <span className="wolf-se-coach-mobile-metric__value">
-              {kg}
-              <span className="wolf-se-coach-mobile-metric__unit"> kg</span>
-            </span>
-            <span className="wolf-se-coach-mobile-metric__label">{isEs ? 'TONELAJE' : 'LOAD'}</span>
-            <span className="wolf-se-coach-mobile-metric__readonly-hint">
-              {isEs ? 'Calculado' : 'Calculated'}
-            </span>
+
+          <div className="wolf-se-coach-mobile-field wolf-se-coach-mobile-field--wide">
+            <span className="wolf-se-coach-mobile-field__label">{isEs ? 'Tonelaje' : 'Load'}</span>
+            <div className="wolf-se-coach-mobile-metric wolf-se-coach-mobile-metric--tonnage wolf-se-coach-mobile-metric--readonly">
+              <div className="wolf-se-coach-mobile-metric__face" aria-hidden>
+                <div className="wolf-se-coach-mobile-metric__value-row">
+                  <div className="wolf-se-coach-mobile-metric__value-stack">
+                    <span className="wolf-se-coach-mobile-metric__value">
+                      {kg}
+                      <span className="wolf-se-coach-mobile-metric__unit"> kg</span>
+                    </span>
+                    <span className="wolf-se-coach-mobile-metric__readonly-hint">
+                      {isEs ? 'Calculado' : 'Calculated'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </article>

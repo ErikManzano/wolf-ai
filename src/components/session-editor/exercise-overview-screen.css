@@ -184,6 +184,10 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.wolf-session-editor--mobile-coach .wolf-se-exercise-overview__body {
+  padding-inline: 16px;
+}
+
 .wolf-se-exercise-overview__editor {
   display: flex;
   flex-direction: column;
