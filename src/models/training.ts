@@ -200,9 +200,15 @@ export interface SetCompletionLog {
   actualReps?: number;
   /** Reps realizadas por movimiento en complejos, paralelo a segmentReps del esquema. */
   actualSegmentReps?: number[];
+  /** Estado por rep (simple), paralelo a reps prescritas. */
+  actualRepOutcomes?: RepOutcome[];
+  /** Estado por rep en cada movimiento de un complejo. */
+  actualSegmentRepOutcomes?: RepOutcome[][];
   /** RPE reportado al completar la serie (6–10). */
   actualRpe?: number;
 }
+
+export type RepOutcome = 'pending' | 'completed' | 'failed';
 
 export interface Session {
   id: string;

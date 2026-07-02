@@ -137,6 +137,8 @@ export function applySetLogUpdateLocal(
     actualKg: input.actualKg ?? next[idx]!.actualKg,
     actualReps: input.actualReps ?? next[idx]!.actualReps,
     actualSegmentReps: input.actualSegmentReps ?? next[idx]!.actualSegmentReps,
+    actualRepOutcomes: input.actualRepOutcomes ?? next[idx]!.actualRepOutcomes,
+    actualSegmentRepOutcomes: input.actualSegmentRepOutcomes ?? next[idx]!.actualSegmentRepOutcomes,
     actualRpe: input.actualRpe ?? next[idx]!.actualRpe,
   };
   return next;

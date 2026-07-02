@@ -19,6 +19,8 @@ export type MobileTopBarConfig = {
   belowTitle?: ReactNode;
   /** Replaces the default title string (e.g. inline editable plan name). */
   titleContent?: ReactNode;
+  /** Program select replaces the title row (athlete plan view). */
+  inlinePlan?: boolean;
   /** Fixed strip directly under the mobile header (outside scroll containers). */
   pinnedBelowHeader?: ReactNode;
   /** Extra actions in the header row (e.g. program editor ⋮ menu). */

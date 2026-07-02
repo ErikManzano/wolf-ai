@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useId } from 'react';
+import { createPortal } from 'react-dom';
 import './ConfirmationModal.css';
 import '../styles/interactive.css';
 
@@ -23,6 +24,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   danger = false,
 }) => {
+  const titleId = useId();
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -32,18 +35,31 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onCancel]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
-  return (
-    <div className="confirm-modal-overlay" role="presentation" onClick={onCancel}>
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div
+      className="confirm-modal-overlay"
+      role="presentation"
+      onClick={onCancel}
+    >
       <div
         className="confirm-modal-card"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-modal-title"
+        aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 id="confirm-modal-title" className="confirm-modal-title">
+        <h3 id={titleId} className="confirm-modal-title">
           {title}
         </h3>
         <p className="confirm-modal-message">{message}</p>
@@ -60,7 +76,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

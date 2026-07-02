@@ -4,6 +4,7 @@
   flex: 1;
   min-height: 0;
   width: 100%;
+  overflow: visible;
 }
 
 .wolf-session-editor--mobile-coach .wolf-se-coach-day-card,
@@ -78,7 +79,7 @@
 }
 
 .wolf-session-editor--mobile-coach .wolf-se-coach-block-card__editor {
-  overflow: hidden;
+  overflow: visible;
 }
 
 @keyframes wolf-se-coach-tag-in {

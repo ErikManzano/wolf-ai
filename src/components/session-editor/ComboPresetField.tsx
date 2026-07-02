@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { PortaledComboList } from './PortaledComboList';
-import { wrapOptionIndex } from './comboMenuPortal';
+import { COACH_MOBILE_OPEN_EVENT, wrapOptionIndex } from './comboMenuPortal';
 
 export interface ComboPresetOption<T extends string | number> {
   value: T;
@@ -40,11 +40,20 @@ export function ComboPresetField<T extends string | number>({
   const selectedIndex = options.findIndex((opt) => opt.value === value);
   const selected = options[selectedIndex] ?? options[0];
   const isPremium = variant === 'premium';
+  const isCoachMobile = (className ?? '').includes('coach-mobile');
 
   useEffect(() => {
     if (!open) return;
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [open, selectedIndex]);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || !isCoachMobile) return;
+    const onCoachOpen = () => setOpen(true);
+    el.addEventListener(COACH_MOBILE_OPEN_EVENT, onCoachOpen);
+    return () => el.removeEventListener(COACH_MOBILE_OPEN_EVENT, onCoachOpen);
+  }, [isCoachMobile]);
 
   const close = useCallback(() => setOpen(false), []);
 

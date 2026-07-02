@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { GeneratedProgram } from '../../models/training';
+import { weekNavigatorLabel } from '../../utils/athleteDayMetrics';
 
 interface MobileWeekNavigatorProps {
   weeks: GeneratedProgram['weeks'];
@@ -14,10 +15,11 @@ interface MobileWeekNavigatorProps {
 
 function weekOptionLabel(
   weekNumber: number,
+  totalWeeks: number,
   allDaysDone: boolean,
   isEs: boolean,
 ): string {
-  const base = isEs ? `Semana - ${weekNumber}` : `Week - ${weekNumber}`;
+  const base = weekNavigatorLabel(weekNumber, totalWeeks, isEs);
   if (!allDaysDone) return base;
   return isEs ? `${base} · Completa` : `${base} · Complete`;
 }
@@ -31,6 +33,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
   variant = 'inline',
 }) => {
   const weekIdx = weeks.findIndex((w) => w.weekNumber === activeWeek);
+  const totalWeeks = weeks.length;
 
   const goPrevWeek = () => {
     if (weekIdx > 0) onWeekChange(weeks[weekIdx - 1]!.weekNumber);
@@ -76,7 +79,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
                   );
                   return (
                     <option key={w.weekNumber} value={w.weekNumber}>
-                      {weekOptionLabel(w.weekNumber, allDaysDone, isEs)}
+                      {weekOptionLabel(w.weekNumber, totalWeeks, allDaysDone, isEs)}
                     </option>
                   );
                 })}

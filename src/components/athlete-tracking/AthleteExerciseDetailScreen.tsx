@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Circle, MoreHorizontal, Timer, User } from 'lucide-react';
-import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../../models/training';
+import { ArrowLeft, Timer } from 'lucide-react';
+import type { Athlete, Exercise, RepOutcome, SessionExerciseBlock, SetCompletionLog } from '../../models/training';
+import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
 import {
   blockExerciseTitle,
   blockSummaryStats,
-  blockTechniqueTag,
   formatRestLabel,
 } from '../../utils/athleteDayMetrics';
-import { formatSetLoadLabel, formatSetDoneRepsLabel, formatSetRepsLabel } from '../../utils/athleteLoadLabels';
 import { ExerciseDetailMock } from './ExerciseDetailMock';
-import { cn } from '../../lib/utils';
+import { DetailSetCard } from './DetailSetCard';
+import { isSetAddressed, isSetFullyComplete } from '../../utils/setCompletionStatus';
 
 export interface AthleteExerciseDetailScreenProps {
   open: boolean;
@@ -19,16 +19,20 @@ export interface AthleteExerciseDetailScreenProps {
   exercises: Exercise[];
   exName: (id: string) => string;
   isEs: boolean;
-  isSetComplete: (schemeIndex: number, setInstance: number) => boolean;
   getSetLog: (schemeIndex: number, setInstance: number) => SetCompletionLog | undefined;
   onClose: () => void;
-  onStartSet: (schemeIndex: number, setInstance: number) => void;
-  onToggleSet: (
+  onSaveSet: (
     schemeIndex: number,
     setInstance: number,
-    actualKg: number,
-    actualReps: number,
+    payload: {
+      actualKg: number;
+      actualReps: number;
+      actualSegmentReps?: number[];
+      actualRepOutcomes?: RepOutcome[];
+      actualSegmentRepOutcomes?: RepOutcome[][];
+    },
   ) => void;
+  onClearSet: (schemeIndex: number, setInstance: number) => void;
 }
 
 export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenProps> = ({
@@ -38,22 +42,29 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
   exercises,
   exName,
   isEs,
-  isSetComplete,
   getSetLog,
   onClose,
-  onStartSet,
-  onToggleSet,
+  onSaveSet,
+  onClearSet,
 }) => {
   const { title, isComplex } = blockExerciseTitle(block, exName);
-  const techniqueTag = blockTechniqueTag(block, exercises, exName, isEs);
+  const blockKind = getExerciseBlockKind(block);
+  const kindLabel = exerciseBlockKindLabel(blockKind, isEs);
   const stats = blockSummaryStats(block, athlete, exercises);
 
   const activeSetIndex = useMemo(() => {
-    const idx = stats.flat.findIndex((row) => !isSetComplete(row.schemeIndex, row.setInstance));
+    const idx = stats.flat.findIndex((row) => {
+      const log = getSetLog(row.schemeIndex, row.setInstance);
+      return !isSetAddressed(row, log);
+    });
     return idx >= 0 ? idx : stats.flat.length - 1;
-  }, [stats.flat, isSetComplete]);
+  }, [stats.flat, getSetLog]);
 
   const activeRow = stats.flat[activeSetIndex];
+  const activeRestSec = activeRow
+    ? block.sets[activeRow.schemeIndex]?.restSec ?? stats.restSec
+    : stats.restSec;
+  const restLabel = formatRestLabel(activeRestSec);
 
   if (!open) return null;
 
@@ -65,134 +76,58 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
             <ArrowLeft size={20} />
           </button>
           <h1 className="wa-exercise-detail__title">{title}</h1>
-          <button type="button" className="wa-exercise-detail__icon-btn" aria-label={isEs ? 'Opciones' : 'Options'}>
-            <MoreHorizontal size={20} />
-          </button>
         </header>
 
-        <div className="wa-exercise-detail__tags">
-          <span
-            className={cn(
-              'wa-exercise-detail__tag',
-              isComplex ? 'wa-exercise-detail__tag--complex' : 'wa-exercise-detail__tag--simple',
-            )}
-          >
-            {isComplex ? (isEs ? 'Complejo' : 'Complex') : isEs ? 'Simple' : 'Single'}
-          </span>
-          {techniqueTag ? (
-            <span className="wa-exercise-detail__tag wa-exercise-detail__tag--technique">
-              <User size={11} aria-hidden />
-              {techniqueTag}
-            </span>
-          ) : null}
-        </div>
-
         <div className="wa-exercise-detail__scroll">
-          <ExerciseDetailMock exerciseName={title} isComplex={isComplex} isEs={isEs} />
-
-          <div className="wa-exercise-detail__stats">
-            <div className="wa-exercise-detail__stat">
-              <span className="wa-exercise-detail__stat-label">{isEs ? 'Intensidad' : 'Intensity'}</span>
-              <strong>{stats.intensity}%</strong>
-              <span className="wa-exercise-detail__stat-sub">
-                {stats.anchorKg > 0
-                  ? `${stats.anchorKg} kg ${isEs ? '(referencia)' : '(reference)'}`
-                  : isEs
-                    ? 'Sin PRs cargados'
-                    : 'No PRs loaded'}
-              </span>
-            </div>
-            <div className="wa-exercise-detail__stat">
-              <span className="wa-exercise-detail__stat-label">{isEs ? 'Reps objetivo' : 'Target reps'}</span>
-              <strong>{stats.targetReps}</strong>
-            </div>
-            <div className="wa-exercise-detail__stat">
-              <span className="wa-exercise-detail__stat-label">{isEs ? 'Series' : 'Sets'}</span>
-              <strong>{stats.totalSets}</strong>
-            </div>
-            <div className="wa-exercise-detail__stat">
-              <span className="wa-exercise-detail__stat-label">{isEs ? 'Descanso' : 'Rest'}</span>
-              <strong>{formatRestLabel(stats.restSec)}</strong>
-            </div>
+          <div className="wa-exercise-detail__meta">
+            <span className={`wa-exercise-detail__kind wa-exercise-detail__kind--${blockKind}`}>
+              {kindLabel}
+            </span>
           </div>
 
+          <ExerciseDetailMock exerciseName={title} isComplex={isComplex} isEs={isEs} />
+
           <section className="wa-exercise-detail__sets" aria-labelledby="wa-exercise-sets-title">
-            <h2 id="wa-exercise-sets-title" className="wa-exercise-detail__sets-title">
-              {isEs ? 'Series' : 'Sets'}
-            </h2>
+            <div className="wa-exercise-detail__sets-head">
+              <h2 id="wa-exercise-sets-title" className="wa-exercise-detail__sets-title">
+                {isEs ? 'Series' : 'Sets'}
+              </h2>
+              <div className="wa-exercise-detail__rest">
+                <span className="wa-exercise-detail__rest-label">
+                  {isEs ? 'Descanso recomendado' : 'Recommended rest'}
+                </span>
+                <span className="wa-exercise-detail__rest-value">
+                  <Timer size={14} aria-hidden />
+                  {restLabel}
+                </span>
+              </div>
+            </div>
+
             <ul className="wa-exercise-detail__sets-list">
               {stats.flat.map((row, idx) => {
-                const done = isSetComplete(row.schemeIndex, row.setInstance);
                 const log = getSetLog(row.schemeIndex, row.setInstance);
-                const active = idx === activeSetIndex && !done;
+                const addressed = isSetAddressed(row, log);
+                const fullyComplete = isSetFullyComplete(row, log);
+                const active = idx === activeSetIndex && !addressed;
 
                 return (
                   <li key={`${row.schemeIndex}-${row.setInstance}`}>
-                    <div
-                      className={cn(
-                        'wa-detail-set',
-                        done && 'wa-detail-set--done',
-                        active && 'wa-detail-set--active',
-                      )}
-                    >
-                      <span className="wa-detail-set__num">{row.setInstance}</span>
-                      <div className="wa-detail-set__main">
-                        <span className="wa-detail-set__load">{formatSetLoadLabel(row)}</span>
-                        <span className="wa-detail-set__reps">{formatSetRepsLabel(row, isEs)}</span>
-                      </div>
-                      <div className="wa-detail-set__status">
-                        <span className="wa-detail-set__done-label">
-                          {formatSetDoneRepsLabel(row, log, isEs)}
-                        </span>
-                        <button
-                          type="button"
-                          className={cn('wa-detail-set__check', done && 'is-done')}
-                          aria-pressed={done}
-                          aria-label={
-                            done
-                              ? isEs
-                                ? 'Desmarcar serie'
-                                : 'Unmark set'
-                              : isEs
-                                ? 'Marcar serie'
-                                : 'Mark set'
-                          }
-                          onClick={() =>
-                            onToggleSet(
-                              row.schemeIndex,
-                              row.setInstance,
-                              log?.actualKg ?? row.prescribedKg,
-                              log?.actualReps ?? row.prescribedReps,
-                            )
-                          }
-                        >
-                          {done ? (
-                            <span className="wa-detail-set__check-fill" aria-hidden />
-                          ) : (
-                            <Circle size={22} strokeWidth={2} aria-hidden />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+                    <DetailSetCard
+                      row={row}
+                      log={log}
+                      addressed={addressed}
+                      fullyComplete={fullyComplete}
+                      active={active}
+                      isEs={isEs}
+                      onSaveSet={(payload) => onSaveSet(row.schemeIndex, row.setInstance, payload)}
+                      onClearSet={() => onClearSet(row.schemeIndex, row.setInstance)}
+                    />
                   </li>
                 );
               })}
             </ul>
           </section>
         </div>
-
-        {activeRow && !isSetComplete(activeRow.schemeIndex, activeRow.setInstance) ? (
-          <footer className="wa-exercise-detail__footer">
-            <button
-              type="button"
-              className="wa-exercise-detail__cta"
-              onClick={() => onStartSet(activeRow.schemeIndex, activeRow.setInstance)}
-            >
-              <Timer size={18} aria-hidden />
-              {isEs ? `Comenzar serie ${activeRow.setInstance}` : `Start set ${activeRow.setInstance}`}
-            </button>
-          </footer>
-        ) : null}
       </div>
     </div>,
     document.body,

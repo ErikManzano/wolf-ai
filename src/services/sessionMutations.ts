@@ -220,6 +220,17 @@ export function getExerciseBlockKind(block: SessionExerciseBlock): ExerciseBlock
   return 'simple';
 }
 
+export function exerciseBlockKindLabel(kind: ExerciseBlockKind, isEs: boolean): string {
+  switch (kind) {
+    case 'warmup':
+      return isEs ? 'Calentamiento' : 'Warm-up';
+    case 'complex':
+      return isEs ? 'Complejo' : 'Complex';
+    default:
+      return isEs ? 'Simple' : 'Single';
+  }
+}
+
 /** Simple, complejo o calentamiento (mutuamente excluyentes en la hoja). */
 export function setExerciseBlockKind(
   session: Session,

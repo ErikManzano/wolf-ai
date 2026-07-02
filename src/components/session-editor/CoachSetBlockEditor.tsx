@@ -5,6 +5,7 @@ import { WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { ComboNumberField } from './ComboNumberField';
 import { ComboPresetField } from './ComboPresetField';
+import { dispatchCoachMobileOpen } from './comboMenuPortal';
 import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import { DEFAULT_REST_SEC, formatRestSec } from './setSchemeUtils';
 import './exercise-sets-coach-screen.css';
@@ -36,6 +37,25 @@ export interface CoachSetBlockEditorProps {
   canRemove?: boolean;
 }
 
+function openCoachMobilePicker(root: HTMLElement) {
+  const combo = root.querySelector('.wolf-se-combo-select');
+  if (combo) {
+    dispatchCoachMobileOpen(combo);
+    return;
+  }
+  const presetTrigger = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-preset__trigger');
+  if (presetTrigger) {
+    presetTrigger.click();
+    return;
+  }
+  const input = root.querySelector<HTMLInputElement>('input.wolf-se-combo-select__input');
+  if (input) {
+    input.click();
+    return;
+  }
+  root.querySelector<HTMLButtonElement>('button.wolf-se-combo-select__chevron')?.click();
+}
+
 function MobileFieldRow({
   value,
   label,
@@ -58,15 +78,7 @@ function MobileFieldRow({
   const activatePicker = useCallback(() => {
     const root = pickerRef.current;
     if (!root) return;
-    const trigger = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-preset__trigger');
-    if (trigger) {
-      trigger.click();
-      return;
-    }
-    const chevron = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-select__chevron');
-    if (chevron) {
-      chevron.click();
-    }
+    window.requestAnimationFrame(() => openCoachMobilePicker(root));
   }, []);
 
   return (
@@ -91,7 +103,12 @@ function MobileFieldRow({
           type="button"
           className="wolf-se-coach-mobile-row__hit"
           aria-label={ariaLabel}
-          onClick={activatePicker}
+          onPointerUp={(e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            e.stopPropagation();
+            activatePicker();
+          }}
         />
         <div ref={pickerRef} className="wolf-se-coach-mobile-row__picker" aria-hidden>
           {children}
@@ -118,13 +135,7 @@ function CoachRestMetricRow({
   const activatePicker = useCallback(() => {
     const root = pickerRef.current;
     if (!root) return;
-    const trigger = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-preset__trigger');
-    if (trigger) {
-      trigger.click();
-      return;
-    }
-    const chevron = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-select__chevron');
-    chevron?.click();
+    window.requestAnimationFrame(() => openCoachMobilePicker(root));
   }, []);
 
   return (
@@ -141,7 +152,17 @@ function CoachRestMetricRow({
             <ChevronDown size={18} className="wolf-se-coach-mobile-metric__chev" aria-hidden />
           </div>
         </div>
-        <button type="button" className="wolf-se-coach-mobile-metric__hit" aria-label={ariaLabel} onClick={activatePicker} />
+        <button
+          type="button"
+          className="wolf-se-coach-mobile-metric__hit"
+          aria-label={ariaLabel}
+          onPointerUp={(e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            e.stopPropagation();
+            activatePicker();
+          }}
+        />
         <div ref={pickerRef} className="wolf-se-coach-mobile-metric__picker" aria-hidden>
           <ComboPresetField
             variant="premium"

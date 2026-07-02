@@ -1,14 +1,45 @@
-import React from 'react';
-import { Play, Video } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { Play } from 'lucide-react';
+import {
+  EXERCISE_DEMO_PLACEHOLDER_YOUTUBE_ID,
+  exerciseDemoEmbedUrl,
+  exerciseDemoThumbnailUrl,
+} from '../../config/exerciseDemoPlaceholder';
+import './exercise-detail-mock.css';
 
 interface ExerciseDetailMockProps {
   exerciseName: string;
   isComplex: boolean;
   isEs: boolean;
+  /** YouTube video ID (not full URL). Falls back to demo placeholder. */
+  youtubeVideoId?: string;
 }
 
-/** Mockup: video + nota del coach (contenido real vendrá del backend). */
-export const ExerciseDetailMock: React.FC<ExerciseDetailMockProps> = ({ exerciseName, isComplex, isEs }) => {
+function WolfPlayMark() {
+  return (
+    <svg
+      className="wa-exercise-media__wolf-mark"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
+    </svg>
+  );
+}
+
+/** Demo video + coach note (per-exercise media will come from catalog/backend). */
+export const ExerciseDetailMock: React.FC<ExerciseDetailMockProps> = ({
+  exerciseName,
+  isComplex,
+  isEs,
+  youtubeVideoId,
+}) => {
+  const videoId = youtubeVideoId?.trim() || EXERCISE_DEMO_PLACEHOLDER_YOUTUBE_ID;
+  const [playing, setPlaying] = useState(false);
+  const embedUrl = exerciseDemoEmbedUrl(videoId, true);
+  const thumbnailUrl = exerciseDemoThumbnailUrl(videoId);
+
   const coachNote = isEs
     ? isComplex
       ? `En ${exerciseName}, mantén la recepción estable antes del siguiente movimiento. El coach quiere fluidez entre segmentos sin pausa larga en el rack.`
@@ -17,36 +48,58 @@ export const ExerciseDetailMock: React.FC<ExerciseDetailMockProps> = ({ exercise
       ? `On ${exerciseName}, stay stable before the next movement. Coach wants smooth transitions between segments without a long rack pause.`
       : `On ${exerciseName}, position over speed. Stay close, full extension, active catch.`;
 
-  return (
-    <section
-      className="mb-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden"
-      aria-label={isEs ? 'Detalle del ejercicio' : 'Exercise detail'}
-    >
-      <button
-        type="button"
-        className="relative w-full aspect-video max-h-[140px] bg-zinc-950 flex items-center justify-center group touch-manipulation"
-        aria-label={isEs ? 'Reproducir video demostrativo' : 'Play demo video'}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
-        <div className="flex flex-col items-center gap-2 text-zinc-500 group-active:scale-95 transition-transform">
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800/90 border border-zinc-700 text-orange-400">
-            <Play size={22} fill="currentColor" className="ml-0.5" aria-hidden />
-          </span>
-          <span className="flex items-center gap-1 text-[0.65rem] font-medium uppercase tracking-wider">
-            <Video size={12} aria-hidden />
-            {isEs ? 'Video · Próximamente' : 'Video · Coming soon'}
-          </span>
-        </div>
-      </button>
+  const handlePlay = useCallback(() => setPlaying(true), []);
 
-      <div className="px-3 py-2.5 border-t border-zinc-800/60">
-        <p className="text-[0.62rem] uppercase tracking-wider text-orange-400/90 font-semibold mb-1">
-          {isEs ? 'Nota del coach' : 'Coach note'}
-        </p>
-        <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{coachNote}</p>
-        <p className="text-[0.6rem] text-zinc-600 mt-1.5 italic">
-          {isEs ? 'Vista previa — contenido editable por el coach.' : 'Preview — coach-editable content.'}
-        </p>
+  return (
+    <section className="wa-exercise-media" aria-label={isEs ? 'Detalle del ejercicio' : 'Exercise detail'}>
+      <div className="wa-exercise-media__video">
+        {playing ? (
+          <iframe
+            src={embedUrl}
+            title={
+              isEs
+                ? `Video demostrativo de ${exerciseName}`
+                : `Demo video for ${exerciseName}`
+            }
+            className="wa-exercise-media__iframe"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ) : (
+          <button
+            type="button"
+            className="wa-exercise-media__poster"
+            onClick={handlePlay}
+            aria-label={isEs ? `Reproducir video de ${exerciseName}` : `Play ${exerciseName} video`}
+          >
+            <img
+              className="wa-exercise-media__thumb"
+              src={thumbnailUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="wa-exercise-media__shade" aria-hidden />
+            <span className="wa-exercise-media__play-stack">
+              <span className="wa-exercise-media__play-ring">
+                <WolfPlayMark />
+                <Play className="wa-exercise-media__play-icon" size={22} strokeWidth={2.25} fill="currentColor" aria-hidden />
+              </span>
+              <span className="wa-exercise-media__play-label">
+                {isEs ? 'Reproducir video' : 'Play video'}
+              </span>
+            </span>
+            <span className="wa-exercise-media__demo-badge">{isEs ? 'Demo' : 'Demo'}</span>
+          </button>
+        )}
+      </div>
+
+      <div className="wa-exercise-media__coach">
+        <div className="wa-exercise-media__coach-head">
+          <span className="wa-exercise-media__coach-kicker">{isEs ? 'Nota del coach' : 'Coach note'}</span>
+        </div>
+        <p className="wa-exercise-media__coach-text">{coachNote}</p>
       </div>
     </section>
   );

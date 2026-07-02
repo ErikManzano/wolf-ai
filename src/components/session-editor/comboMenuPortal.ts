@@ -122,6 +122,13 @@ export function wrapOptionIndex(index: number, length: number): number {
   return ((index % length) + length) % length;
 }
 
+/** Dispatched on `.wolf-se-combo-select` to open coach-mobile pickers without simulating input clicks. */
+export const COACH_MOBILE_OPEN_EVENT = 'wolf-se-coach-mobile-open';
+
+export function dispatchCoachMobileOpen(comboRoot: Element): void {
+  comboRoot.dispatchEvent(new CustomEvent(COACH_MOBILE_OPEN_EVENT, { bubbles: false }));
+}
+
 export function usePortaledComboMenu(
   open: boolean,
   anchorRef: RefObject<HTMLElement | null>,
@@ -178,6 +185,7 @@ export function usePortaledComboMenu(
       const target = e.target as Node;
       if (rootRef.current?.contains(target)) return;
       if (menuRef.current?.contains(target)) return;
+      if ((target as Element).closest?.('.wolf-se-combo-select__backdrop')) return;
       if (!open) return;
       window.requestAnimationFrame(() => onClose());
     };

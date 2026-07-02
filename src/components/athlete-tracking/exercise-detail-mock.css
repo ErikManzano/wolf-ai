@@ -1,0 +1,192 @@
+.wa-exercise-media {
+  margin: 0 0 1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 94%, #0a0c10);
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 4%, transparent) inset,
+    0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.wa-exercise-media__video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 168px;
+  max-height: 240px;
+  background: #050505;
+}
+
+.wa-exercise-media__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.wa-exercise-media__poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: #050505;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wa-exercise-media__poster:active .wa-exercise-media__play-ring {
+  transform: scale(0.94);
+}
+
+.wa-exercise-media__thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.72;
+}
+
+.wa-exercise-media__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 12, 16, 0.15) 0%,
+    rgba(10, 12, 16, 0.55) 48%,
+    rgba(10, 12, 16, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.wa-exercise-media__play-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.wa-exercise-media__play-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(
+    --color-accent-gradient,
+    linear-gradient(135deg, #f97316 0%, #ef4444 100%)
+  );
+  border: 2px solid color-mix(in srgb, #fff 22%, var(--color-accent, #f97316));
+  box-shadow:
+    0 10px 28px rgba(249, 115, 22, 0.45),
+    0 2px 0 color-mix(in srgb, #fff 24%, transparent) inset;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wa-exercise-media__wolf-mark {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  opacity: 0.22;
+  color: #fff;
+}
+
+.wa-exercise-media__play-icon {
+  position: relative;
+  z-index: 1;
+  margin-left: 3px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.wa-exercise-media__play-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fafafa;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+
+.wa-exercise-media__demo-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fdba74;
+  background: color-mix(in srgb, #f97316 16%, rgba(10, 12, 16, 0.72));
+  border: 1px solid color-mix(in srgb, #f97316 38%, transparent);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.wa-exercise-media__coach {
+  padding: 12px 14px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
+}
+
+.wa-exercise-media__coach-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.wa-exercise-media__coach-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent, #f97316);
+  background: color-mix(in srgb, var(--color-accent, #f97316) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent, #f97316) 28%, transparent);
+}
+
+.wa-exercise-media__coach-text {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 400px) {
+  .wa-exercise-media__video {
+    min-height: 152px;
+  }
+
+  .wa-exercise-media__play-ring {
+    width: 58px;
+    height: 58px;
+  }
+
+  .wa-exercise-media__play-label {
+    font-size: 0.66rem;
+  }
+}

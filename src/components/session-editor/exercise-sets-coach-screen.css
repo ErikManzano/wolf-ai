@@ -473,6 +473,8 @@
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .wolf-se-combo-select--coach-mobile {
@@ -489,7 +491,7 @@
   box-shadow: none !important;
   padding: 0 !important;
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .wolf-se-combo-select--coach-mobile.wolf-se-combo-select--premium {
@@ -640,6 +642,8 @@
   background: transparent;
   cursor: pointer;
   touch-action: manipulation;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .wolf-se-sets-section--coach-mobile .wolf-se-premium-set-card {

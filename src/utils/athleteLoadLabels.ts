@@ -1,6 +1,37 @@
 import type { FlatSetRow } from './athleteSetLogs';
 import { formatAthleteKg } from '../components/session-editor/blockMetrics';
 
+export function formatSetCompactLabel(row: FlatSetRow, isEs: boolean): string {
+  const reps = row.prescribedReps;
+  const repsLabel = isEs ? 'reps' : 'reps';
+
+  if (row.prescribedKg > 0) {
+    return `${formatAthleteKg(row.prescribedKg)} kg • ${reps} ${repsLabel}`;
+  }
+
+  return `${row.percentage}% • ${reps} ${repsLabel}`;
+}
+
+export function formatSegmentCompactLabel(
+  kg: number,
+  reps: number,
+  isEs: boolean,
+  percentage?: number,
+  repToken?: string,
+): string {
+  const repsLabel = isEs ? 'reps' : 'reps';
+  const repsText = repToken?.trim() || String(reps);
+  const load =
+    kg > 0
+      ? `${formatAthleteKg(kg)} kg`
+      : percentage && percentage > 0
+        ? `${percentage}%`
+        : null;
+
+  if (load) return `${load} • ${repsText} ${repsLabel}`;
+  return `${repsText} ${repsLabel}`;
+}
+
 export function formatSetLoadLabel(row: FlatSetRow): string {
   const pct = `${row.percentage}%`;
 

@@ -27,8 +27,6 @@ export interface SessionCoachDayCardsProps {
   onReorderBlocks?: (blocks: SessionExerciseBlock[]) => void;
   onDuplicateDay?: () => void;
   canDuplicateDay?: boolean;
-  onRemoveDay?: () => void;
-  canRemoveDay?: boolean;
   canAddExercise?: boolean;
   onAddExercise?: () => void;
   onRemoveBlock?: (index: number) => void;
@@ -222,8 +220,6 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
   onReorderBlocks,
   onDuplicateDay,
   canDuplicateDay,
-  onRemoveDay,
-  canRemoveDay,
   canAddExercise = false,
   onAddExercise,
   onRemoveBlock,
@@ -284,8 +280,6 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
         dayLabel={dayLabel}
         onDuplicateDay={onDuplicateDay}
         canDuplicateDay={canDuplicateDay}
-        onRemoveDay={onRemoveDay}
-        canRemoveDay={canRemoveDay}
       />
 
       {session.exercises.length > 0 ? (

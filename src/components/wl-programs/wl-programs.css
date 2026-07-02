@@ -2995,6 +2995,47 @@
   min-height: 34px;
 }
 
+.wl-programs-embedded-plan .wolf-program-nav--editor-density .wolf-program-nav-week-remove--carousel {
+  display: inline-flex;
+}
+
+.wolf-program-nav-week-remove--carousel {
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  min-width: 28px;
+  min-height: 34px;
+  align-self: stretch;
+  padding: 0;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, #ef4444 38%, #3f3f46);
+  background: color-mix(in srgb, #ef4444 8%, #18181b);
+  color: #fca5a5;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wolf-program-nav-week-remove--carousel:hover:not(:disabled) {
+  color: #fecaca;
+  border-color: color-mix(in srgb, #ef4444 58%, #52525b);
+  background: color-mix(in srgb, #ef4444 16%, #1f1f23);
+}
+
+.wolf-program-nav-week-remove--carousel:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wolf-program-nav-week-remove--carousel:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
 @media (min-width: 1025px) {
   .wl-programs-embedded-plan .wolf-program-nav--editor-density .wolf-program-nav-section--days > .wolf-program-nav-row-head {
     display: none;

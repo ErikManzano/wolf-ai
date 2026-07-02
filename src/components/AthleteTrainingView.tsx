@@ -139,7 +139,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   const t = useMemo(
     () => ({
-      kicker: isEs ? 'Tu semana de entreno' : 'Your training week',
       emptyTitle: isEs ? 'Sin plan asignado' : 'No plan assigned',
       emptyBody: isEs
         ? 'Cuando tu coach te asigne programas desde «Programas», aparecerán aquí. Puedes llevar varios planes a la vez.'
@@ -182,14 +181,14 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
 
   const mobileTopBar = useMemo(() => {
     if (!activeAssignment || myAssignments.length === 0) {
-      return { title: t.kicker };
+      return { title: t.emptyTitle };
     }
     return {
-      title: t.kicker,
-      belowTitle: planSelect ?? undefined,
+      inlinePlan: true,
+      titleContent: <div className="mobile-header-inline-slot">{planSelect}</div>,
       pinnedBelowHeader: weekNavigator ?? undefined,
     };
-  }, [t.kicker, myAssignments, activeAssignment, planSelect, weekNavigator]);
+  }, [t.emptyTitle, myAssignments, activeAssignment, planSelect, weekNavigator]);
   useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
@@ -358,16 +357,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
           exercises={motorExercises}
           exName={exName}
           isEs={isEs}
-          isSetComplete={(schemeIndex, setInstance) =>
-            isSetComplete(
-              activeAssignment.id,
-              weekData.weekNumber,
-              activeDayData.dayNumber,
-              exerciseDetailIndex,
-              schemeIndex,
-              setInstance,
-            )
-          }
           getSetLog={(schemeIndex, setInstance) =>
             getSetLog(
               activeAssignment.id,
@@ -379,27 +368,38 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
             )
           }
           onClose={() => setExerciseDetailIndex(null)}
-          onStartSet={(schemeIndex, setInstance) => {
-            setWorkoutStartAt({
-              exerciseIndex: exerciseDetailIndex,
-              schemeIndex,
-              setInstance,
-            });
-            setWorkoutDay(activeDayData);
-            setExerciseDetailIndex(null);
-          }}
-          onToggleSet={(schemeIndex, setInstance, actualKg, actualReps) =>
-            toggleSetComplete({
+          onSaveSet={(schemeIndex, setInstance, payload) => {
+            updateSetLog({
               assignmentId: activeAssignment.id,
               weekNumber: weekData.weekNumber,
               dayNumber: activeDayData.dayNumber,
               exerciseIndex: exerciseDetailIndex,
               schemeIndex,
               setInstance,
-              actualKg,
-              actualReps,
-            })
-          }
+              ...payload,
+            });
+          }}
+          onClearSet={(schemeIndex, setInstance) => {
+            if (
+              isSetComplete(
+                activeAssignment.id,
+                weekData.weekNumber,
+                activeDayData.dayNumber,
+                exerciseDetailIndex,
+                schemeIndex,
+                setInstance,
+              )
+            ) {
+              toggleSetComplete({
+                assignmentId: activeAssignment.id,
+                weekNumber: weekData.weekNumber,
+                dayNumber: activeDayData.dayNumber,
+                exerciseIndex: exerciseDetailIndex,
+                schemeIndex,
+                setInstance,
+              });
+            }
+          }}
         />
       ) : null}
 

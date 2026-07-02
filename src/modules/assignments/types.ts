@@ -1,5 +1,6 @@
 import type {
   ProgramAssignment,
+  RepOutcome,
   SessionCompletion,
   SetCompletionLog,
   WolfUser,
@@ -90,6 +91,8 @@ export type SetLogInput = {
   actualKg?: number;
   actualReps?: number;
   actualSegmentReps?: number[];
+  actualRepOutcomes?: RepOutcome[];
+  actualSegmentRepOutcomes?: RepOutcome[][];
   actualRpe?: number;
 };
 

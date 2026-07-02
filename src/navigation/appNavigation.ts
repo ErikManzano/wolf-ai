@@ -32,7 +32,6 @@ export type AppNavItem = {
 };
 
 const COACH_ONLY_NAV = new Set<AppViewId>(['programs', 'praxiogram', 'exercise-intelligence', 'athletes']);
-const COACH_HIDDEN_NAV = new Set<AppViewId>(['global-calendar']);
 const ATHLETE_ONLY_NAV = new Set<AppViewId>(['my-wl-plan']);
 const SUPER_ADMIN_ONLY_NAV = new Set<AppViewId>(['admin-users']);
 
@@ -46,15 +45,17 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'programs',
   'praxiogram',
   'athletes',
+  'global-calendar',
 ];
 
-const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['dashboard', 'my-wl-plan'];
+const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['dashboard', 'my-wl-plan', 'global-calendar'];
 const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
   'praxiogram',
   'athletes',
+  'global-calendar',
 ];
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
@@ -85,7 +86,6 @@ export function isNavItemVisible(
   if (ATHLETE_ONLY_NAV.has(id)) return persona === 'athlete';
   if (role === 'super_admin') return !ATHLETE_ONLY_NAV.has(id);
   if (persona === 'athlete' && COACH_ONLY_NAV.has(id)) return false;
-  if (persona === 'coach' && COACH_HIDDEN_NAV.has(id)) return false;
   return true;
 }
 
@@ -165,7 +165,9 @@ export function isMobileBottomNavItemActive(
         activeView === 'library'
       );
     case 'athletes':
-      return activeView === 'athletes' || activeView === 'planning' || activeView === 'global-calendar';
+      return activeView === 'athletes' || activeView === 'planning';
+    case 'global-calendar':
+      return activeView === 'global-calendar';
     case 'account':
       return activeView === 'account';
     case 'admin-users':

@@ -1,5 +1,6 @@
 import type { Athlete, Exercise, ExerciseGoal, ProgramDay, SessionExerciseBlock } from '../models/training';
-import { findCatalogExercise, kgForExercise } from '../components/session-editor/blockMetrics';
+import { findCatalogExercise, kgForExercise, sessionTonnage } from '../components/session-editor/blockMetrics';
+import { formatWeekTonnageLabel } from '../components/session-editor/sessionSheetUtils';
 import { formatBlockPrescription, blockUsesComplexReps, formatSchemeRepsToken } from '../components/session-editor/schemeFormat';
 import { DEFAULT_REST_SEC } from '../components/session-editor/setSchemeUtils';
 import { flattenBlockSets } from './athleteSetLogs';
@@ -14,6 +15,32 @@ export function dayGoalBadge(primaryGoal: ExerciseGoal, isEs: boolean): string {
   if (primaryGoal === 'technique') return isEs ? 'Técnica' : 'Technique';
   if (primaryGoal === 'power') return isEs ? 'Potencia' : 'Power';
   return isEs ? 'Fuerza' : 'Strength';
+}
+
+/** Periodization phase label aligned with programGenerator phaseModifiers. */
+export function weekPhaseLabel(weekNumber: number, totalWeeks: number, isEs: boolean): string {
+  if (weekNumber === totalWeeks && totalWeeks > 1) {
+    return isEs ? 'Afinación' : 'Taper';
+  }
+  const p = weekNumber / Math.max(1, totalWeeks);
+  if (p <= 0.38) return isEs ? 'Acumulación' : 'Accumulation';
+  if (p <= 0.72) return isEs ? 'Intensificación' : 'Intensification';
+  return isEs ? 'Pico' : 'Peak';
+}
+
+export function weekNavigatorLabel(weekNumber: number, totalWeeks: number, isEs: boolean): string {
+  const phase = weekPhaseLabel(weekNumber, totalWeeks, isEs);
+  return isEs ? `Semana ${weekNumber} · ${phase}` : `Week ${weekNumber} · ${phase}`;
+}
+
+export function estimateDayVolume(
+  day: ProgramDay,
+  athlete: Athlete | undefined,
+  exercises: Exercise[],
+  isEs: boolean,
+): string {
+  if (!athlete) return formatWeekTonnageLabel(0, isEs);
+  return formatWeekTonnageLabel(sessionTonnage(day.session, athlete, exercises), isEs);
 }
 
 export function dayFocusBadge(day: ProgramDay, primaryGoal: ExerciseGoal, isEs: boolean): string {

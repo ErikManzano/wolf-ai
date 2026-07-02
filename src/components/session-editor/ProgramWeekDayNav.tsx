@@ -495,14 +495,6 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               </button>
             ) : null}
           </div>
-          {hideMobileWeekHead ? (
-            <div className="wolf-week-select-mobile__volume" aria-label={isEs ? 'Volumen total de la semana' : 'Weekly total volume'}>
-              <span className="wolf-week-select-mobile__volume-label">
-                {isEs ? 'Volumen total' : 'Total volume'}
-              </span>
-              <strong className="wolf-week-select-mobile__volume-value">{selectedWeekVolume}</strong>
-            </div>
-          ) : null}
         </div>
 
         <div className="wolf-week-carousel">
@@ -552,6 +544,19 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               aria-label={labels.addWeek}
             >
               <Plus size={16} strokeWidth={2.25} aria-hidden />
+            </button>
+          ) : null}
+
+          {!isStatsNav && isEditorDensity && canRemoveWeek && onRemoveWeek ? (
+            <button
+              type="button"
+              className="wolf-program-nav-week-remove wolf-program-nav-week-remove--carousel"
+              onClick={() => requestRemoveWeek(selectedWeek)}
+              disabled={!canRemoveWeek}
+              title={labels.removeWeek}
+              aria-label={labels.removeWeek}
+            >
+              <Trash2 size={14} strokeWidth={2} aria-hidden />
             </button>
           ) : null}
 

@@ -57,7 +57,9 @@ export function MobileTopBar({
 
   return (
     <>
-    <div className={`mobile-header${config?.belowTitle ? ' mobile-header--stacked' : ''}`}>
+    <div
+      className={`mobile-header${config?.belowTitle ? ' mobile-header--stacked' : ''}${config?.inlinePlan ? ' mobile-header--inline-plan' : ''}`}
+    >
       <div className="mobile-header-brand" aria-live="polite">
         {back ? (
           <button

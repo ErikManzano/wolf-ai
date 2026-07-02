@@ -120,6 +120,11 @@
     gap: 8px;
   }
 
+  .mobile-header--inline-plan .mobile-header-brand-copy {
+    flex: 1;
+    min-width: 0;
+  }
+
   .mobile-header--inline-plan .mobile-header-title {
     flex: 0 1 auto;
     max-width: 52%;
@@ -128,25 +133,31 @@
   }
 
   .mobile-header-inline-slot {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-width: 0;
-    max-width: min(11.5rem, 38vw);
+    max-width: none;
+    width: 100%;
   }
 
   .mobile-header-inline-slot .wolf-athlete-plan-select {
+    display: block;
     margin: 0;
     min-width: 0;
+    width: 100%;
   }
 
   .mobile-header-inline-slot .wolf-select-wrap--app {
     width: 100%;
-    max-width: min(11.5rem, 38vw);
+    max-width: none;
   }
 
   .mobile-header-inline-slot .wolf-select-wrap--app select {
-    min-height: 32px;
-    padding: 4px 28px 4px 8px;
-    font-size: 0.75rem;
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 32px 6px 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
@@ -392,15 +403,24 @@
     min-height: 36px;
     margin: 0;
     padding: 0;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+    background: color-mix(in srgb, var(--color-bg-panel) 96%, #0c0a14);
+    color: var(--color-text-secondary);
   }
 
   .mobile-subheader .wolf-athlete-week-select .wolf-select-wrap select {
     width: 100%;
     min-height: 36px;
     height: 36px;
-    padding: 0 28px 0 8px;
+    padding: 0 28px 0 12px;
     font-size: 0.82rem;
     line-height: 1.2;
+    border-radius: 999px;
+    text-align: center;
+    font-weight: 700;
+    border-color: color-mix(in srgb, var(--color-border) 85%, transparent);
+    background: color-mix(in srgb, var(--color-bg-panel) 96%, #0c0a14);
   }
 
   .app-container:has(.mobile-subheader) {

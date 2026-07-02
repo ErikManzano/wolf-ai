@@ -3,7 +3,7 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  gap: 10px;
+  gap: 5px;
 }
 
 .wolf-se-exercise-overview__head {
@@ -414,7 +414,7 @@
 
 .wolf-se-exercise-overview__footer {
   flex-shrink: 0;
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 .wolf-se-exercise-overview__footer .wolf-se-coach-block-add {

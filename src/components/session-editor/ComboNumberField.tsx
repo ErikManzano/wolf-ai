@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { PortaledComboList } from './PortaledComboList';
-import { isMobileComboViewport, wrapOptionIndex } from './comboMenuPortal';
+import { COACH_MOBILE_OPEN_EVENT, isMobileComboViewport, wrapOptionIndex } from './comboMenuPortal';
 
 export interface ComboNumberFieldProps {
   value: number;
@@ -96,6 +96,14 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
   const isCoachMobile = (className ?? '').includes('coach-mobile');
   const pickerOnly = isCoachMobile || (isPremium && isMobileComboViewport());
   const openPicker = useCallback(() => setOpen(true), []);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || !pickerOnly) return;
+    const onCoachOpen = () => setOpen(true);
+    el.addEventListener(COACH_MOBILE_OPEN_EVENT, onCoachOpen);
+    return () => el.removeEventListener(COACH_MOBILE_OPEN_EVENT, onCoachOpen);
+  }, [pickerOnly]);
 
   const moveActive = useCallback(
     (delta: number) => {
@@ -216,7 +224,10 @@ export const ComboNumberField: React.FC<ComboNumberFieldProps> = ({
             tabIndex={-1}
             aria-hidden
             onPointerDown={(e) => e.preventDefault()}
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => {
+              if (pickerOnly) openPicker();
+              else setOpen((v) => !v);
+            }}
           >
             <ChevronDown size={14} strokeWidth={2.25} />
           </button>
