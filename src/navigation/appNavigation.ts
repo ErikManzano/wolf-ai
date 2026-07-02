@@ -45,7 +45,6 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'programs',
   'praxiogram',
   'athletes',
-  'global-calendar',
 ];
 
 const ATHLETE_MOBILE_BOTTOM: AppViewId[] = ['dashboard', 'my-wl-plan', 'global-calendar'];
@@ -55,7 +54,6 @@ const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'programs',
   'praxiogram',
   'athletes',
-  'global-calendar',
 ];
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
@@ -133,7 +131,10 @@ export function getMobileSecondaryNavItems(
   const primary = new Set(getMobileBottomNavIds(persona, role));
   const topBar = new Set(MOBILE_TOP_BAR_NAV_IDS);
   return getVisibleNavItems(persona, role).filter(
-    (item) => !primary.has(item.id) && !topBar.has(item.id),
+    (item) =>
+      !primary.has(item.id) &&
+      !topBar.has(item.id) &&
+      !(persona === 'coach' && item.id === 'global-calendar'),
   );
 }
 
