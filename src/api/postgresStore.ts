@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { Exercise, ProgramAssignment, SessionCompletion, SetCompletionLog, WolfUser, Athlete, CoachWlProgramTemplate, GeneratedProgram, AthleteLevel } from '../models/training';
+import type { Exercise, ProgramAssignment, RepOutcome, SessionCompletion, SetCompletionLog, WolfUser, Athlete, CoachWlProgramTemplate, GeneratedProgram, AthleteLevel } from '../models/training';
 import type { CoachProgram, CoachProgramStatus } from '../models/coach-architecture';
 import { mockExercises, mockAthletes, mockUsers } from '../data/loadMockData';
 import { normalizeExercise } from '../utils/exerciseCatalog';
@@ -176,6 +176,14 @@ export class PostgresStore {
     await this.pool.query(`
       ALTER TABLE workout_set_logs
       ADD COLUMN IF NOT EXISTS actual_rpe REAL;
+    `);
+    await this.pool.query(`
+      ALTER TABLE workout_set_logs
+      ADD COLUMN IF NOT EXISTS actual_rep_outcomes JSONB;
+    `);
+    await this.pool.query(`
+      ALTER TABLE workout_set_logs
+      ADD COLUMN IF NOT EXISTS actual_segment_rep_outcomes JSONB;
     `);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS coach_exercises (
@@ -829,7 +837,8 @@ export class PostgresStore {
       ? await this.pool.query(
           `
           SELECT assignment_id, week_number, day_number, exercise_index, scheme_index,
-                 set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe, completed_at
+                 set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
+                 actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
           FROM workout_set_logs
           WHERE assignment_id = $1
           ORDER BY completed_at DESC;
@@ -839,7 +848,8 @@ export class PostgresStore {
       : await this.pool.query(
           `
           SELECT assignment_id, week_number, day_number, exercise_index, scheme_index,
-                 set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe, completed_at
+                 set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
+                 actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
           FROM workout_set_logs
           ORDER BY completed_at DESC;
           `,
@@ -857,6 +867,8 @@ export class PostgresStore {
     actualKg?: number;
     actualReps?: number;
     actualSegmentReps?: number[];
+    actualRepOutcomes?: RepOutcome[];
+    actualSegmentRepOutcomes?: RepOutcome[][];
     actualRpe?: number;
   }): Promise<boolean> {
     const existing = await this.pool.query(
@@ -884,9 +896,10 @@ export class PostgresStore {
       `
       INSERT INTO workout_set_logs (
         id, assignment_id, week_number, day_number, exercise_index, scheme_index,
-        set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe, completed_at
+        set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
+        actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::timestamptz);
       `,
       [
         id,
@@ -900,6 +913,8 @@ export class PostgresStore {
         input.actualReps ?? null,
         input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
         input.actualRpe ?? null,
+        input.actualRepOutcomes?.length ? JSON.stringify(input.actualRepOutcomes) : null,
+        input.actualSegmentRepOutcomes?.length ? JSON.stringify(input.actualSegmentRepOutcomes) : null,
         new Date().toISOString(),
       ],
     );
@@ -916,6 +931,8 @@ export class PostgresStore {
     actualKg?: number;
     actualReps?: number;
     actualSegmentReps?: number[];
+    actualRepOutcomes?: RepOutcome[];
+    actualSegmentRepOutcomes?: RepOutcome[][];
     actualRpe?: number;
   }): Promise<SetCompletionLog | null> {
     const existing = await this.pool.query(
@@ -940,9 +957,10 @@ export class PostgresStore {
         `
         INSERT INTO workout_set_logs (
           id, assignment_id, week_number, day_number, exercise_index, scheme_index,
-          set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe, completed_at
+          set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
+          actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz);
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::timestamptz);
         `,
         [
           id,
@@ -956,6 +974,8 @@ export class PostgresStore {
           input.actualReps ?? null,
           input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
           input.actualRpe ?? null,
+          input.actualRepOutcomes?.length ? JSON.stringify(input.actualRepOutcomes) : null,
+          input.actualSegmentRepOutcomes?.length ? JSON.stringify(input.actualSegmentRepOutcomes) : null,
           new Date().toISOString(),
         ],
       );
@@ -966,7 +986,9 @@ export class PostgresStore {
         SET actual_kg = COALESCE($8, actual_kg),
             actual_reps = COALESCE($9, actual_reps),
             actual_segment_reps = COALESCE($10::jsonb, actual_segment_reps),
-            actual_rpe = COALESCE($11, actual_rpe)
+            actual_rpe = COALESCE($11, actual_rpe),
+            actual_rep_outcomes = COALESCE($12::jsonb, actual_rep_outcomes),
+            actual_segment_rep_outcomes = COALESCE($13::jsonb, actual_segment_rep_outcomes)
         WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
           AND exercise_index = $4 AND scheme_index = $5 AND set_instance = $6;
         `,
@@ -981,6 +1003,8 @@ export class PostgresStore {
           input.actualReps ?? null,
           input.actualSegmentReps?.length ? JSON.stringify(input.actualSegmentReps) : null,
           input.actualRpe ?? null,
+          input.actualRepOutcomes?.length ? JSON.stringify(input.actualRepOutcomes) : null,
+          input.actualSegmentRepOutcomes?.length ? JSON.stringify(input.actualSegmentRepOutcomes) : null,
         ],
       );
     }
@@ -1239,6 +1263,20 @@ export class PostgresStore {
         }
       : {}),
     ...(row.actual_rpe != null ? { actualRpe: Number(row.actual_rpe) } : {}),
+    ...(row.actual_rep_outcomes != null
+      ? {
+          actualRepOutcomes: Array.isArray(row.actual_rep_outcomes)
+            ? (row.actual_rep_outcomes as RepOutcome[])
+            : (JSON.parse(String(row.actual_rep_outcomes)) as RepOutcome[]),
+        }
+      : {}),
+    ...(row.actual_segment_rep_outcomes != null
+      ? {
+          actualSegmentRepOutcomes: Array.isArray(row.actual_segment_rep_outcomes)
+            ? (row.actual_segment_rep_outcomes as RepOutcome[][])
+            : (JSON.parse(String(row.actual_segment_rep_outcomes)) as RepOutcome[][]),
+        }
+      : {}),
   });
 
   private mapCompletionRow = (row: Record<string, unknown>): SessionCompletion => ({

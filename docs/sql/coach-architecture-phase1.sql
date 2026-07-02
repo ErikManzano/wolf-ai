@@ -116,6 +116,9 @@ CREATE TABLE IF NOT EXISTS workout_set_logs (
   actual_kg             REAL,
   actual_reps           INTEGER,
   actual_segment_reps   JSONB,
+  actual_rpe              REAL,
+  actual_rep_outcomes     JSONB,
+  actual_segment_rep_outcomes JSONB,
   completed_at          TIMESTAMPTZ NOT NULL
 );
 

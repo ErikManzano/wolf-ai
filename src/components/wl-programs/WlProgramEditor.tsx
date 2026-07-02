@@ -18,10 +18,6 @@ import WlProgramAssignSheet from './WlProgramAssignSheet';
 import { countBlocksInProgramDay, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
-import {
-  WlProgramEditorHeaderMenu,
-  type WlProgramEditorMobileActions,
-} from './WlProgramEditorHeaderMenu';
 import { WlProgramMobileHeaderTitle } from './WlProgramMobileHeaderTitle';
 import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
@@ -79,7 +75,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     onBackToDay: () => void;
     exerciseTitle: string;
   } | null>(null);
-  const [mobileProgramActions, setMobileProgramActions] = useState<WlProgramEditorMobileActions | null>(null);
   const mobileTitleInputRef = useRef<HTMLInputElement>(null);
   const programRef = useRef(program);
   const dirtyRef = useRef(false);
@@ -170,9 +165,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                   onBack,
                 },
             hideBrandIcon: true,
-            headerActions: hasProgram ? (
-              <WlProgramEditorHeaderMenu isEs={isEs} actions={mobileProgramActions} />
-            ) : undefined,
             pinnedBelowHeader: mobileExerciseFocus ? null : mobilePinnedChrome,
             lockEdgeSwipe: true,
           }
@@ -184,7 +176,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       isEs,
       onBack,
       hasProgram,
-      mobileProgramActions,
       mobilePinnedChrome,
       mobileExerciseFocus,
       handleProgramTitleChange,
@@ -518,7 +509,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 onActiveDayContext={handleActiveDayContext}
                 onMobilePinnedChrome={isMobileLayout ? setMobilePinnedChrome : undefined}
                 onMobileExerciseFocusChange={isMobileLayout ? setMobileExerciseFocus : undefined}
-                onMobileProgramActionsChange={isMobileLayout ? setMobileProgramActions : undefined}
               />
             )}
           </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, ChevronRight, MoreVertical, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
 import type { SessionApplyFn } from './types';
 import {
@@ -22,13 +22,9 @@ import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
 import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from './schemeFormat';
 import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import { CoachSetBlockEditor } from './CoachSetBlockEditor';
-import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
-import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
 import { coachBlockExpandMotion, coachListItemMotion, coachListStagger } from './coachMobileMotion';
 import './exercise-overview-screen.css';
 import './exercise-sets-coach-screen.css';
-import './exercise-coach-actions-sheet.css';
-import './exercise-delete-confirm-modal.css';
 
 export interface ExerciseOverviewScreenProps {
   block: SessionExerciseBlock;
@@ -129,23 +125,15 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   athlete,
   exercises,
   isEs,
-  totalBlocks,
   onApply,
   onBack,
   hideHeaderBack = false,
-  onRemoveBlock,
-  onDuplicateExercise,
-  onMoveBlockUp,
-  onMoveBlockDown,
-  canDuplicateExercise = true,
   initialExpandedSetIndex = null,
   onChangeExercise,
 }) => {
   const apply = onApply;
   const reduceMotion = useReducedMotion();
   const blockRefs = useRef<Map<number, HTMLElement>>(new Map());
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [expandedSetIndex, setExpandedSetIndex] = useState<number | null>(initialExpandedSetIndex);
 
   useEffect(() => {
@@ -175,28 +163,10 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
     setExpandedSetIndex((prev) => (prev === si ? null : si));
   };
 
-  const requestDelete = () => {
-    setActionsOpen(false);
-    setDeleteOpen(true);
-  };
-
-  const confirmDelete = () => {
-    setDeleteOpen(false);
-    onRemoveBlock?.();
-  };
-
-  const runEditExercise = () => {
-    if (!onChangeExercise) return;
-    setActionsOpen(false);
-    onChangeExercise();
-  };
-
   return (
     <div className="wolf-se-exercise-overview">
-      <header
-        className={`wolf-se-exercise-overview__head${hideHeaderBack ? ' wolf-se-exercise-overview__head--no-back' : ''}`}
-      >
-        {hideHeaderBack ? null : (
+      {hideHeaderBack ? null : (
+        <header className="wolf-se-exercise-overview__head">
           <button
             type="button"
             className="wolf-se-exercise-overview__back"
@@ -205,22 +175,9 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
           >
             <ArrowLeft size={20} aria-hidden />
           </button>
-        )}
-        {hideHeaderBack ? null : (
           <h2 className="wolf-se-exercise-overview__title">{title}</h2>
-        )}
-        <div className="wolf-se-exercise-overview__menu">
-          <button
-            type="button"
-            className="wolf-se-exercise-overview__menu-btn"
-            title={isEs ? 'Acciones del ejercicio' : 'Exercise actions'}
-            aria-label={isEs ? 'Acciones del ejercicio' : 'Exercise actions'}
-            onClick={() => setActionsOpen(true)}
-          >
-            <MoreVertical size={20} aria-hidden />
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="wolf-se-exercise-overview__body">
         {!hasExercise && onChangeExercise ? (
@@ -338,29 +295,6 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
           {isEs ? 'Agregar bloque' : 'Add block'}
         </button>
       </footer>
-
-      <ExerciseCoachActionsSheet
-        open={actionsOpen}
-        onClose={() => setActionsOpen(false)}
-        isEs={isEs}
-        canDelete={totalBlocks > 1 && Boolean(onRemoveBlock)}
-        canDuplicate={canDuplicateExercise}
-        canMoveUp={bi > 0}
-        canMoveDown={bi < totalBlocks - 1}
-        onEditExercise={onChangeExercise ? runEditExercise : undefined}
-        onDuplicateExercise={onDuplicateExercise}
-        onMoveUp={onMoveBlockUp}
-        onMoveDown={onMoveBlockDown}
-        onDeleteExercise={onRemoveBlock ? requestDelete : undefined}
-      />
-
-      <ExerciseDeleteConfirmModal
-        open={deleteOpen}
-        exerciseName={title}
-        isEs={isEs}
-        onCancel={() => setDeleteOpen(false)}
-        onConfirm={confirmDelete}
-      />
     </div>
   );
 };

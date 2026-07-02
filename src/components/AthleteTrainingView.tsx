@@ -212,18 +212,15 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const persistSetLog = useCallback(
     (payload: SetLogInput) => {
       if (!activeAssignment || !weekData || !activeDayData || exerciseDetailIndex == null) return;
-      const exists = isSetComplete(
-        activeAssignment.id,
-        weekData.weekNumber,
-        activeDayData.dayNumber,
-        exerciseDetailIndex,
-        payload.schemeIndex,
-        payload.setInstance,
-      );
-      if (exists) updateSetLog(payload);
-      else toggleSetComplete(payload);
+      updateSetLog({
+        ...payload,
+        assignmentId: activeAssignment.id,
+        weekNumber: weekData.weekNumber,
+        dayNumber: activeDayData.dayNumber,
+        exerciseIndex: exerciseDetailIndex,
+      });
     },
-    [activeAssignment, weekData, activeDayData, exerciseDetailIndex, isSetComplete, updateSetLog, toggleSetComplete],
+    [activeAssignment, weekData, activeDayData, exerciseDetailIndex, updateSetLog],
   );
 
   if (assignmentsLoading) {

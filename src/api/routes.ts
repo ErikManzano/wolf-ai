@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, ProgramAssignmentVersion, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, ProgramAssignmentVersion, RepOutcome, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
 import type {
   AthleteLoadCalibration,
   CoachExerciseOverride,
@@ -1732,6 +1732,54 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json({ active: false });
   });
 
+  const REP_OUTCOMES = new Set<RepOutcome>(['pending', 'completed', 'failed']);
+
+  function parseRepOutcomes(value: unknown): RepOutcome[] | undefined {
+    if (!Array.isArray(value)) return undefined;
+    const parsed = value.filter((item): item is RepOutcome => typeof item === 'string' && REP_OUTCOMES.has(item as RepOutcome));
+    return parsed.length ? parsed : undefined;
+  }
+
+  function parseSegmentRepOutcomes(value: unknown): RepOutcome[][] | undefined {
+    if (!Array.isArray(value)) return undefined;
+    const parsed = value
+      .map((segment) => parseRepOutcomes(segment) ?? [])
+      .filter((segment) => segment.length > 0);
+    return parsed.length ? parsed : undefined;
+  }
+
+  function parseSetLogBody(body: {
+    assignmentId?: string;
+    weekNumber?: number;
+    dayNumber?: number;
+    exerciseIndex?: number;
+    schemeIndex?: number;
+    setInstance?: number;
+    actualKg?: number;
+    actualReps?: number;
+    actualSegmentReps?: number[];
+    actualRepOutcomes?: unknown;
+    actualSegmentRepOutcomes?: unknown;
+    actualRpe?: number;
+  }) {
+    return {
+      assignmentId: body.assignmentId,
+      weekNumber: body.weekNumber != null ? Number(body.weekNumber) : undefined,
+      dayNumber: body.dayNumber != null ? Number(body.dayNumber) : undefined,
+      exerciseIndex: body.exerciseIndex != null ? Number(body.exerciseIndex) : undefined,
+      schemeIndex: body.schemeIndex != null ? Number(body.schemeIndex) : undefined,
+      setInstance: body.setInstance != null ? Number(body.setInstance) : undefined,
+      actualKg: body.actualKg != null ? Number(body.actualKg) : undefined,
+      actualReps: body.actualReps != null ? Number(body.actualReps) : undefined,
+      actualSegmentReps: Array.isArray(body.actualSegmentReps)
+        ? body.actualSegmentReps.map((n) => Number(n))
+        : undefined,
+      actualRepOutcomes: parseRepOutcomes(body.actualRepOutcomes),
+      actualSegmentRepOutcomes: parseSegmentRepOutcomes(body.actualSegmentRepOutcomes),
+      actualRpe: body.actualRpe != null ? Number(body.actualRpe) : undefined,
+    };
+  }
+
   router.get('/set-logs', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
     if (!actor) {
@@ -1768,23 +1816,13 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
   });
 
   router.post('/set-logs/toggle', async (req, res) => {
+    try {
     const actor = await userFromBearer(req, state, store);
     if (!actor) {
       res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
-    const body = req.body as {
-      assignmentId?: string;
-      weekNumber?: number;
-      dayNumber?: number;
-      exerciseIndex?: number;
-      schemeIndex?: number;
-      setInstance?: number;
-      actualKg?: number;
-      actualReps?: number;
-      actualSegmentReps?: number[];
-      actualRpe?: number;
-    };
+    const body = parseSetLogBody(req.body as Parameters<typeof parseSetLogBody>[0]);
     if (
       !body.assignmentId ||
       body.weekNumber == null ||
@@ -1796,7 +1834,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(400).json({ error: 'assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance required.' });
       return;
     }
-    const assignment = await findAssignmentById(body.assignmentId!, state, store);
+    const assignment = await findAssignmentById(body.assignmentId, state, store);
     if (!assignment) {
       res.status(404).json({ error: 'Assignment not found.' });
       return;
@@ -1807,17 +1845,17 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     }
     const payload = {
       assignmentId: body.assignmentId,
-      weekNumber: Number(body.weekNumber),
-      dayNumber: Number(body.dayNumber),
-      exerciseIndex: Number(body.exerciseIndex),
-      schemeIndex: Number(body.schemeIndex),
-      setInstance: Number(body.setInstance),
-      actualKg: body.actualKg != null ? Number(body.actualKg) : undefined,
-      actualReps: body.actualReps != null ? Number(body.actualReps) : undefined,
-      actualSegmentReps: Array.isArray(body.actualSegmentReps)
-        ? body.actualSegmentReps.map((n) => Number(n))
-        : undefined,
-      actualRpe: body.actualRpe != null ? Number(body.actualRpe) : undefined,
+      weekNumber: body.weekNumber,
+      dayNumber: body.dayNumber,
+      exerciseIndex: body.exerciseIndex,
+      schemeIndex: body.schemeIndex,
+      setInstance: body.setInstance,
+      actualKg: body.actualKg,
+      actualReps: body.actualReps,
+      actualSegmentReps: body.actualSegmentReps,
+      actualRepOutcomes: body.actualRepOutcomes,
+      actualSegmentRepOutcomes: body.actualSegmentRepOutcomes,
+      actualRpe: body.actualRpe,
     };
     if (store) {
       const active = await store.toggleSetLog(payload);
@@ -1842,26 +1880,20 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       completedAt: new Date().toISOString(),
     });
     res.json({ active: true });
+    } catch (err) {
+      console.error('[set-logs/toggle]', err);
+      res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to toggle set log.' });
+    }
   });
 
   router.patch('/set-logs', async (req, res) => {
+    try {
     const actor = await userFromBearer(req, state, store);
     if (!actor) {
       res.status(401).json({ error: 'Unauthorized.' });
       return;
     }
-    const body = req.body as {
-      assignmentId?: string;
-      weekNumber?: number;
-      dayNumber?: number;
-      exerciseIndex?: number;
-      schemeIndex?: number;
-      setInstance?: number;
-      actualKg?: number;
-      actualReps?: number;
-      actualSegmentReps?: number[];
-      actualRpe?: number;
-    };
+    const body = parseSetLogBody(req.body as Parameters<typeof parseSetLogBody>[0]);
     if (
       !body.assignmentId ||
       body.weekNumber == null ||
@@ -1884,17 +1916,17 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     }
     const payload = {
       assignmentId: body.assignmentId,
-      weekNumber: Number(body.weekNumber),
-      dayNumber: Number(body.dayNumber),
-      exerciseIndex: Number(body.exerciseIndex),
-      schemeIndex: Number(body.schemeIndex),
-      setInstance: Number(body.setInstance),
-      actualKg: body.actualKg != null ? Number(body.actualKg) : undefined,
-      actualReps: body.actualReps != null ? Number(body.actualReps) : undefined,
-      actualSegmentReps: Array.isArray(body.actualSegmentReps)
-        ? body.actualSegmentReps.map((n) => Number(n))
-        : undefined,
-      actualRpe: body.actualRpe != null ? Number(body.actualRpe) : undefined,
+      weekNumber: body.weekNumber,
+      dayNumber: body.dayNumber,
+      exerciseIndex: body.exerciseIndex,
+      schemeIndex: body.schemeIndex,
+      setInstance: body.setInstance,
+      actualKg: body.actualKg,
+      actualReps: body.actualReps,
+      actualSegmentReps: body.actualSegmentReps,
+      actualRepOutcomes: body.actualRepOutcomes,
+      actualSegmentRepOutcomes: body.actualSegmentRepOutcomes,
+      actualRpe: body.actualRpe,
     };
     if (store) {
       const updated = await store.patchSetLog(payload);
@@ -1915,6 +1947,9 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         actualKg: payload.actualKg ?? state.setLogs[idx]!.actualKg,
         actualReps: payload.actualReps ?? state.setLogs[idx]!.actualReps,
         actualSegmentReps: payload.actualSegmentReps ?? state.setLogs[idx]!.actualSegmentReps,
+        actualRepOutcomes: payload.actualRepOutcomes ?? state.setLogs[idx]!.actualRepOutcomes,
+        actualSegmentRepOutcomes:
+          payload.actualSegmentRepOutcomes ?? state.setLogs[idx]!.actualSegmentRepOutcomes,
         actualRpe: payload.actualRpe ?? state.setLogs[idx]!.actualRpe,
       };
       res.json(state.setLogs[idx]);
@@ -1926,6 +1961,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     state.setLogs.push(created);
     res.json(created);
+    } catch (err) {
+      console.error('[set-logs/patch]', err);
+      res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to save set log.' });
+    }
   });
 
   router.delete('/assignments/:id', async (req, res) => {

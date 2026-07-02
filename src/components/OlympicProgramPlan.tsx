@@ -98,8 +98,6 @@ interface OlympicProgramPlanProps {
   onMobilePinnedChrome?: (node: React.ReactNode) => void;
   /** Exercise editor open on mobile — hide tabs and wire header back to day sheet. */
   onMobileExerciseFocusChange?: (focus: { onBackToDay: () => void; exerciseTitle: string } | null) => void;
-  /** Expose program editor actions for the mobile header ⋮ menu. */
-  onMobileProgramActionsChange?: (actions: import('./wl-programs/WlProgramEditorHeaderMenu').WlProgramEditorMobileActions | null) => void;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -194,7 +192,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   onActiveDayContext,
   onMobilePinnedChrome,
   onMobileExerciseFocusChange,
-  onMobileProgramActionsChange,
 }) => {
   const isEs = language === 'ES';
   const isMobileLayout = useMediaQuery('(max-width: 1024px)');
@@ -1020,34 +1017,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     customizeSubview,
     customizeViewTabs,
     sessionEditorView,
-  ]);
-
-  useEffect(() => {
-    if (!onMobileProgramActionsChange) return;
-    if (!pinTabsInTopBar || !showCustomize || !program) {
-      onMobileProgramActionsChange(null);
-      return;
-    }
-    onMobileProgramActionsChange({
-      onDuplicateDay: handleDuplicateDay,
-      canDuplicateDay: canAddDay,
-      onUndo: handleUndo,
-      onRedo: handleRedo,
-      canUndo,
-      canRedo,
-    });
-    return () => onMobileProgramActionsChange(null);
-  }, [
-    onMobileProgramActionsChange,
-    pinTabsInTopBar,
-    showCustomize,
-    program,
-    handleDuplicateDay,
-    canAddDay,
-    handleUndo,
-    handleRedo,
-    canUndo,
-    canRedo,
   ]);
 
   const customizeToolbarPortaled =

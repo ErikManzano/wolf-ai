@@ -8,19 +8,13 @@
 
 .wolf-se-exercise-overview__head {
   display: grid;
-  grid-template-columns: 40px 1fr 40px;
+  grid-template-columns: 40px 1fr;
   align-items: center;
   gap: 4px;
   padding: 4px 0 2px;
 }
 
-.wolf-se-exercise-overview__head--no-back {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.wolf-se-exercise-overview__back,
-.wolf-se-exercise-overview__menu-btn {
+.wolf-se-exercise-overview__back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -32,11 +26,6 @@
   background: transparent;
   color: var(--color-text-primary, #fafafa);
   cursor: pointer;
-}
-
-.wolf-se-exercise-overview__menu-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
 }
 
 .wolf-se-exercise-overview__title-btn {
@@ -111,15 +100,6 @@
 
 .wolf-se-exercise-overview__pick-exercise:active {
   background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 18%, transparent);
-}
-
-.wolf-se-exercise-overview__menu-spacer {
-  opacity: 0.35;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
 }
 
 .wolf-se-exercise-overview__tags {

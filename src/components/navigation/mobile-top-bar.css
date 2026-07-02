@@ -509,47 +509,6 @@
     background: color-mix(in srgb, var(--color-bg-hover) 70%, transparent);
   }
 
-  .wl-program-editor-header-menu {
-    position: relative;
-  }
-
-  .wl-program-editor-header-menu__list {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    z-index: 80;
-    min-width: 180px;
-    padding: 6px;
-    border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
-    background: var(--color-bg-panel, #18181b);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  }
-
-  .wl-program-editor-header-menu__list button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--color-text-primary);
-    font-size: 0.84rem;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .wl-program-editor-header-menu__list button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .wl-program-editor-header-menu__list button:not(:disabled):active {
-    background: var(--color-bg-hover);
-  }
-
   .app-container:has(.mobile-subheader) .workspace-area {
     min-height: calc(100dvh - (56px + var(--wolf-mobile-subheader-h) + var(--safe-top)));
     max-height: calc(100dvh - (56px + var(--wolf-mobile-subheader-h) + var(--safe-top)));
