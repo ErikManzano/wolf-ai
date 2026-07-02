@@ -3,12 +3,9 @@ import {
   Activity,
   ArrowRight,
   Award,
-  BarChart3,
   Bell,
-  CalendarCheck,
   ClipboardCheck,
-  Dumbbell,
-  Flame,
+  ClipboardList,
   Gauge,
   Target,
   TrendingUp,
@@ -19,8 +16,13 @@ import { useWolfAssign } from '../../context/WolfAssignContext';
 import PerformanceStatsHistory from '../PerformanceStatsHistory';
 import { buildAthleteDashboardModel } from '../../utils/athleteDashboardStats';
 import { LevelBadge } from '../wl-athletes/LevelBadge';
+import {
+  type ProgramStatsKpiCard,
+  ProgramStatsKpiGrid,
+} from '../session-editor/programStatsShared';
 import './AthleteDashboard.css';
-import '../SuperDashboard.css';
+import '../coach-dashboard/coach-dashboard.css';
+import '../session-editor/session-sheet-spreadsheet.css';
 
 interface AthleteDashboardProps {
   language: 'ES' | 'EN';
@@ -105,233 +107,158 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
     [planChangeNotifications],
   );
 
+  const kpiCards: ProgramStatsKpiCard[] = [
+    {
+      id: 'sessions',
+      label: isEs ? 'Sesiones completadas' : 'Sessions completed',
+      value: `${model.aggregate.daysDone}/${model.aggregate.daysTotal || '—'}`,
+      sub: `${model.aggregate.daysPct}% ${isEs ? 'del mesociclo' : 'of mesocycle'}`,
+      subAccent: 'muted',
+      accent: 'default',
+      visualValue: model.aggregate.daysPct,
+    },
+    {
+      id: 'sets',
+      label: isEs ? 'Series registradas' : 'Sets logged',
+      value: `${model.aggregate.setsLogged}/${model.aggregate.setsTotal || '—'}`,
+      sub: `${model.aggregate.setsPct}% ${isEs ? 'adherencia' : 'adherence'}`,
+      subAccent: model.aggregate.setsPct >= 70 ? 'success' : 'muted',
+      accent: 'sets',
+      visualValue: model.aggregate.setsPct,
+    },
+    {
+      id: 'volume',
+      label: isEs ? 'Volumen registrado' : 'Logged volume',
+      value: model.aggregate.volumeLoggedKg.toLocaleString(),
+      sub: `kg · ${isEs ? 'carga × reps reales' : 'actual load × reps'}`,
+      subAccent: 'muted',
+      accent: 'volume',
+    },
+    {
+      id: 'streak',
+      label: isEs ? 'Racha / semana' : 'Streak / week',
+      value: `${model.streakDays}d`,
+      sub: `${model.aggregate.sessionsThisWeek} ${isEs ? 'sesiones esta semana' : 'sessions this week'}`,
+      subAccent: 'success',
+      accent: 'intensity',
+    },
+  ];
+
+  const prMarks = [
+    { key: 'sn', label: 'Snatch', value: model.oneRM.snatch },
+    { key: 'cj', label: 'C&J', value: model.oneRM.cleanJerk },
+    { key: 'bs', label: isEs ? 'Sentadilla' : 'Back squat', value: model.oneRM.backSquat },
+    { key: 'fs', label: 'Front squat', value: model.oneRM.frontSquat },
+    ...(model.deadliftKg ? [{ key: 'dl', label: 'Deadlift', value: model.deadliftKg }] : []),
+  ];
+
   return (
-    <div className="athlete-dashboard super-dashboard">
-      <header className="ad-hero" aria-labelledby="ad-main-title">
-        <div className="ad-hero__inner">
-          <div className="ad-hero__copy">
-            <p className="sd-hero__eyebrow">{isEs ? 'Panel de rendimiento' : 'Performance panel'}</p>
-            <div className="ad-hero__title-row">
-              <h1 id="ad-main-title" className="sd-hero__title">
-                {model.displayName}
-              </h1>
-              <LevelBadge level={model.level} isEs={isEs} />
-            </div>
-            <p className="sd-hero__sub">
-              {isEs
-                ? 'Datos en vivo de tus planes WL, series registradas y PRs — sin estimaciones de demo.'
-                : 'Live data from your WL plans, logged sets, and PRs — no demo placeholders.'}
-            </p>
-            <div className="ad-hero__signals">
-              <span className="ad-signal" title={isEs ? 'Preparación' : 'Readiness'}>
-                <Gauge size={14} aria-hidden />
-                {isEs ? 'Listo' : 'Ready'} {model.readinessScore}%
-              </span>
-              <span className="ad-signal" title={isEs ? 'Fatiga acumulada' : 'Fatigue'}>
-                <Activity size={14} aria-hidden />
-                {isEs ? 'Fatiga' : 'Fatigue'} {model.fatigueScore}%
-              </span>
-              {model.bodyweight > 0 ? (
-                <span className="ad-signal">
-                  {model.bodyweight} kg BW
-                </span>
-              ) : null}
-            </div>
+    <div className="mock-view super-dashboard athlete-dashboard">
+      <div className="cd-toolbar ad-toolbar">
+        <div className="ad-toolbar__identity">
+          <p className="ad-toolbar__eyebrow">{isEs ? 'Panel de rendimiento' : 'Performance panel'}</p>
+          <div className="ad-toolbar__title-row">
+            <h1 className="ad-toolbar__title">{model.displayName}</h1>
+            <LevelBadge level={model.level} isEs={isEs} />
           </div>
-          <div className="ad-hero__cta">
-            {next ? (
-              <button type="button" className="ad-cta-btn" onClick={onOpenPlan}>
-                <Zap size={18} aria-hidden />
-                <span>
-                  {isEs ? 'Continuar entreno' : 'Resume training'}
-                  <small>
-                    S{next.weekNumber} · D{next.dayNumber}
-                    {next.dayLabel ? ` · ${next.dayLabel}` : ''}
-                  </small>
-                </span>
-                <ArrowRight size={18} aria-hidden />
-              </button>
-            ) : (
-              <button type="button" className="ad-cta-btn ad-cta-btn--ghost" onClick={onOpenPlan}>
-                <ClipboardCheck size={18} aria-hidden />
-                {isEs ? 'Abrir mi plan WL' : 'Open my WL plan'}
-              </button>
-            )}
+          <div className="ad-toolbar__signals">
+            <span className="ad-signal" title={isEs ? 'Preparación' : 'Readiness'}>
+              <Gauge size={13} aria-hidden />
+              {isEs ? 'Listo' : 'Ready'} {model.readinessScore}%
+            </span>
+            <span className="ad-signal" title={isEs ? 'Fatiga acumulada' : 'Fatigue'}>
+              <Activity size={13} aria-hidden />
+              {isEs ? 'Fatiga' : 'Fatigue'} {model.fatigueScore}%
+            </span>
+            {model.bodyweight > 0 ? (
+              <span className="ad-signal">{model.bodyweight} kg BW</span>
+            ) : null}
           </div>
         </div>
-      </header>
+        <div className="ad-toolbar__actions">
+          {next ? (
+            <button type="button" className="ad-resume-btn" onClick={onOpenPlan}>
+              <Zap size={16} aria-hidden />
+              <span>
+                {isEs ? 'Continuar entreno' : 'Resume training'}
+                <small>
+                  S{next.weekNumber} · D{next.dayNumber}
+                  {next.dayLabel ? ` · ${next.dayLabel}` : ''}
+                </small>
+              </span>
+              <ArrowRight size={16} aria-hidden />
+            </button>
+          ) : (
+            <button type="button" className="ad-resume-btn ad-resume-btn--ghost" onClick={onOpenPlan}>
+              <ClipboardCheck size={16} aria-hidden />
+              {isEs ? 'Abrir mi plan WL' : 'Open my WL plan'}
+            </button>
+          )}
+        </div>
+      </div>
 
       {!model.hasLinkedProfile && myAssignments.length === 0 && !assignmentsLoading ? (
-        <div className="sd-banner" role="status">
-          {isEs
-            ? 'Aún no tienes planes asignados. Tu coach debe asignarte un programa desde Programas.'
-            : 'No plans assigned yet. Your coach must assign a program from Programs.'}
+        <div className="cd-alert cd-alert--ok ad-banner" role="status">
+          <p>
+            {isEs
+              ? 'Aún no tienes planes asignados. Tu coach debe asignarte un programa desde Programas.'
+              : 'No plans assigned yet. Your coach must assign a program from Programs.'}
+          </p>
         </div>
       ) : null}
 
-      {coachNotices.length > 0 ? (
-        <section className="sd-section ad-coach-notices" aria-label={isEs ? 'Avisos del coach' : 'Coach notices'}>
-          <header className="sd-section__head">
-            <h2>
-              <Bell size={18} aria-hidden />
-              {isEs ? 'Avisos del coach' : 'Coach notices'}
-              {unreadPlanChangeCount > 0 ? (
-                <span className="ad-coach-notices__badge">{unreadPlanChangeCount}</span>
-              ) : null}
-            </h2>
-          </header>
-          <ul className="ad-coach-notices__list">
-            {coachNotices.map((notice) => (
-              <li key={notice.id} className={`ad-coach-notice${notice.readAt ? ' is-read' : ''}`}>
-                <p className="ad-coach-notice__message">
-                  {isEs ? notice.messageEs : notice.messageEn}
-                </p>
-                <div className="ad-coach-notice__meta">
-                  <span>{notice.coachName}</span>
-                  <span>{formatRelativeDate(notice.changedAt, isEs)}</span>
-                  {!notice.readAt ? (
-                    <button
-                      type="button"
-                      className="btn-outline ad-inline-btn"
-                      onClick={() => void markPlanChangeNotificationRead(notice.id)}
-                    >
-                      {isEs ? 'Marcar leído' : 'Mark read'}
-                    </button>
-                  ) : null}
-                </div>
-              </li>
+      <div className="wolf-program-day-stats wolf-program-day-stats--dashboard cd-kpis">
+        <ProgramStatsKpiGrid cards={kpiCards} />
+      </div>
+
+      <section className="cd-panel cd-panel--dense ad-pr-panel" aria-label={isEs ? 'Marcas actuales' : 'Current marks'}>
+        <div className="cd-panel__head">
+          <h2 className="cd-panel__title">
+            <Award size={16} aria-hidden />
+            {isEs ? 'Marcas actuales' : 'Current marks'}
+          </h2>
+        </div>
+        <div className="cd-panel__body ad-pr-panel__body">
+          <div className="ad-pr-strip">
+            {prMarks.map((pr) => (
+              <div key={pr.key} className="ad-pr-card">
+                <span className="ad-pr-card__label">{pr.label}</span>
+                <strong className="ad-pr-card__value">{pr.value > 0 ? `${pr.value} kg` : '—'}</strong>
+              </div>
             ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section className="sd-kpi-grid" aria-label={isEs ? 'Indicadores' : 'Metrics'}>
-        <article className="sd-kpi">
-          <div className="sd-kpi__icon">
-            <CalendarCheck size={26} color="var(--color-accent)" aria-hidden />
+            {model.sinclair ? (
+              <div className="ad-pr-card ad-pr-card--accent">
+                <span className="ad-pr-card__label">Sinclair</span>
+                <strong className="ad-pr-card__value">{model.sinclair}</strong>
+              </div>
+            ) : null}
+            <div className="ad-pr-card ad-pr-card--meta">
+              <span className="ad-pr-card__label">{isEs ? 'PRs semana' : 'PRs this week'}</span>
+              <strong className="ad-pr-card__value">{model.prsThisWeek}</strong>
+              <span className="ad-pr-card__sub">
+                {model.intakesCount} {isEs ? 'envíos Stats' : 'Stats entries'}
+              </span>
+            </div>
           </div>
-          <h3 className="sd-kpi__label">{isEs ? 'Sesiones completadas' : 'Sessions completed'}</h3>
-          <p className="sd-kpi__value">
-            {model.aggregate.daysDone}
-            <span className="ad-kpi__unit">/{model.aggregate.daysTotal || '—'}</span>
-          </p>
-          <p className="sd-kpi__hint">{model.aggregate.daysPct}% {isEs ? 'del mesociclo' : 'of mesocycle'}</p>
-        </article>
-        <article className="sd-kpi">
-          <div className="sd-kpi__icon">
-            <Dumbbell size={26} color="var(--color-success)" aria-hidden />
-          </div>
-          <h3 className="sd-kpi__label">{isEs ? 'Series registradas' : 'Sets logged'}</h3>
-          <p className="sd-kpi__value">
-            {model.aggregate.setsLogged}
-            <span className="ad-kpi__unit">/{model.aggregate.setsTotal || '—'}</span>
-          </p>
-          <p className="sd-kpi__hint">{model.aggregate.setsPct}% {isEs ? 'adherencia granular' : 'granular adherence'}</p>
-        </article>
-        <article className="sd-kpi">
-          <div className="sd-kpi__icon">
-            <BarChart3 size={26} color="var(--color-warning)" aria-hidden />
-          </div>
-          <h3 className="sd-kpi__label">{isEs ? 'Volumen registrado' : 'Logged volume'}</h3>
-          <p className="sd-kpi__value">{model.aggregate.volumeLoggedKg.toLocaleString()}</p>
-          <p className="sd-kpi__hint">kg · {isEs ? 'carga × reps reales' : 'actual load × reps'}</p>
-        </article>
-        <article className="sd-kpi">
-          <div className="sd-kpi__icon">
-            <Flame size={26} color="var(--color-accent)" aria-hidden />
-          </div>
-          <h3 className="sd-kpi__label">{isEs ? 'Racha / semana' : 'Streak / week'}</h3>
-          <p className="sd-kpi__value">
-            {model.streakDays}
-            <span className="ad-kpi__unit">d</span>
-          </p>
-          <p className="sd-kpi__hint">
-            {model.aggregate.sessionsThisWeek} {isEs ? 'sesiones esta semana' : 'sessions this week'}
-          </p>
-        </article>
-      </section>
-
-      <section className="ad-pr-strip" aria-label={isEs ? 'Marcas actuales' : 'Current marks'}>
-        {[
-          { key: 'sn', label: 'Snatch', value: model.oneRM.snatch },
-          { key: 'cj', label: 'C&J', value: model.oneRM.cleanJerk },
-          { key: 'bs', label: isEs ? 'Sentadilla' : 'Back squat', value: model.oneRM.backSquat },
-          { key: 'fs', label: isEs ? 'Front squat' : 'Front squat', value: model.oneRM.frontSquat },
-          ...(model.deadliftKg ? [{ key: 'dl', label: 'Deadlift', value: model.deadliftKg }] : []),
-        ].map((pr) => (
-          <div key={pr.key} className="ad-pr-card">
-            <span className="ad-pr-card__label">{pr.label}</span>
-            <strong className="ad-pr-card__value">{pr.value > 0 ? `${pr.value} kg` : '—'}</strong>
-          </div>
-        ))}
-        {model.sinclair ? (
-          <div className="ad-pr-card ad-pr-card--accent">
-            <span className="ad-pr-card__label">Sinclair</span>
-            <strong className="ad-pr-card__value">{model.sinclair}</strong>
-          </div>
-        ) : null}
-        <div className="ad-pr-card ad-pr-card--meta">
-          <span className="ad-pr-card__label">{isEs ? 'PRs semana' : 'PRs this week'}</span>
-          <strong className="ad-pr-card__value">{model.prsThisWeek}</strong>
-          <span className="ad-pr-card__sub">
-            {model.intakesCount} {isEs ? 'envíos Stats' : 'Stats entries'}
-          </span>
         </div>
       </section>
 
-      {model.programs.length > 0 ? (
-        <section className="sd-section" aria-labelledby="ad-plans-title">
-          <div className="sd-section__head">
-            <h2 id="ad-plans-title" className="sd-section__title">
-              {isEs ? 'Planes activos' : 'Active plans'}
-            </h2>
-            <p className="sd-section__desc">
-              {isEs ? 'Progreso por programa asignado en el motor WL.' : 'Progress per WL engine assignment.'}
-            </p>
-          </div>
-          <div className="ad-plan-grid">
-            {model.programs.map((p) => (
-              <article key={p.assignmentId} className="ad-plan-card">
-                <header className="ad-plan-card__head">
-                  <h3>{p.programName}</h3>
-                  <span className="ad-plan-card__pct">{p.completionPct}%</span>
-                </header>
-                <div className="ad-progress">
-                  <div className="ad-progress__bar" style={{ width: `${p.completionPct}%` }} />
-                </div>
-                <ul className="ad-plan-card__stats">
-                  <li>
-                    {isEs ? 'Sesiones' : 'Sessions'}: {p.daysDone}/{p.daysTotal}
-                  </li>
-                  <li>
-                    {isEs ? 'Series' : 'Sets'}: {p.setsLogged}/{p.setsTotal} ({p.setsPct}%)
-                  </li>
-                  <li>
-                    {isEs ? 'Ejercicios' : 'Exercises'}: {p.exercisesDone}/{p.exercisesTotal}
-                  </li>
-                  <li>
-                    {isEs ? 'Volumen' : 'Volume'}: {p.volumeLoggedKg.toLocaleString()} kg
-                  </li>
-                </ul>
-                <footer className="ad-plan-card__foot">
-                  <span>{isEs ? 'Asignado' : 'Assigned'} {p.assignedAt}</span>
-                  <span>{formatRelativeDate(p.lastActivityAt, isEs)}</span>
-                </footer>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="sd-section">
-        <div className="sd-insights">
-          <div className="sd-insight">
-            <h3>
-              <Target size={18} color="var(--color-accent)" aria-hidden />
+      <div className="cd-quad-grid">
+        <section className="cd-panel cd-panel--dense" aria-labelledby="ad-next-title">
+          <div className="cd-panel__head">
+            <h2 id="ad-next-title" className="cd-panel__title">
+              <Target size={16} aria-hidden />
               {isEs ? 'Próxima sesión' : 'Next session'}
-            </h3>
+            </h2>
+            {next ? (
+              <button type="button" className="cd-link-btn" onClick={onOpenPlan}>
+                {isEs ? 'Ir al entreno' : 'Go to workout'}
+              </button>
+            ) : null}
+          </div>
+          <div className="cd-panel__body">
             {!next ? (
-              <p className="sd-insight__hint" style={{ margin: 0 }}>
+              <p className="cd-empty-hint">
                 {myAssignments.length === 0
                   ? isEs
                     ? 'Sin planes asignados.'
@@ -341,94 +268,173 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
                     : 'Mesocycle complete — check with your coach for the next block.'}
               </p>
             ) : (
-              <>
-                <p className="ad-next-session">
-                  <strong>{next.programName}</strong>
-                  <span>
-                    {isEs ? 'Semana' : 'Week'} {next.weekNumber} · {isEs ? 'Día' : 'Day'} {next.dayNumber}
-                    {next.dayLabel ? ` — ${next.dayLabel}` : ''}
-                  </span>
-                </p>
-                <button type="button" className="btn-outline ad-inline-btn" onClick={onOpenPlan}>
-                  {isEs ? 'Ir al entreno' : 'Go to workout'}
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="sd-insight">
-            <h3>
-              <TrendingUp size={18} color="var(--color-success)" aria-hidden />
-              {isEs ? 'Tendencia olímpica' : 'Olympic trend'}
-            </h3>
-            {model.volumeSpark.length === 0 ? (
-              <p className="sd-insight__hint" style={{ margin: 0 }}>
-                {isEs ? 'Sin envíos Stats vinculados aún.' : 'No linked Stats submissions yet.'}
-              </p>
-            ) : (
-              <>
-                <div className="sd-spark" role="img" aria-label={isEs ? 'Snatch + C&J' : 'Snatch + C&J'}>
-                  {model.volumeSpark.map((b) => (
-                    <div key={b.id} className="sd-spark__bar">
-                      <div className="sd-spark__fill" style={{ height: `${Math.max(8, b.h)}%` }} title={b.label} />
-                      <span className="sd-spark__label">{b.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="sd-insight__hint">
-                  {isEs ? 'Snatch + C&J por envío Stats.' : 'Snatch + C&J per Stats entry.'}
-                </p>
-              </>
-            )}
-          </div>
-
-          <div className="sd-insight">
-            <h3>
-              <Award size={18} color="var(--color-warning)" aria-hidden />
-              {isEs ? 'Última actividad' : 'Last activity'}
-            </h3>
-            <p className="ad-next-session">
-              <strong>{formatRelativeDate(model.lastTrainingAt, isEs)}</strong>
-              {active ? (
+              <div className="ad-next-session">
+                <strong>{next.programName}</strong>
                 <span>
-                  {active.programName} · {active.daysDone}/{active.daysTotal}{' '}
-                  {isEs ? 'sesiones' : 'sessions'}
+                  {isEs ? 'Semana' : 'Week'} {next.weekNumber} · {isEs ? 'Día' : 'Day'} {next.dayNumber}
+                  {next.dayLabel ? ` — ${next.dayLabel}` : ''}
                 </span>
-              ) : null}
-            </p>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {model.recentActivity.length > 0 ? (
-        <section className="sd-section" aria-labelledby="ad-activity-title">
-          <div className="sd-section__head">
-            <h2 id="ad-activity-title" className="sd-section__title">
+        {coachNotices.length > 0 ? (
+          <section className="cd-panel cd-panel--dense" aria-labelledby="ad-notices-title">
+            <div className="cd-panel__head">
+              <h2 id="ad-notices-title" className="cd-panel__title">
+                <Bell size={16} aria-hidden />
+                {isEs ? 'Avisos del coach' : 'Coach notices'}
+                {unreadPlanChangeCount > 0 ? (
+                  <span className="ad-coach-notices__badge">{unreadPlanChangeCount}</span>
+                ) : null}
+              </h2>
+            </div>
+            <div className="cd-panel__body">
+              <ul className="cd-alert-feed ad-coach-notices__list">
+                {coachNotices.map((notice) => (
+                  <li key={notice.id} className={`cd-alert-item ad-coach-notice${notice.readAt ? ' is-read' : ''}`}>
+                    <span className="cd-alert-item__dot" style={{ background: 'var(--color-accent)' }} aria-hidden />
+                    <div className="cd-alert-item__body">
+                      <strong>{isEs ? notice.messageEs : notice.messageEn}</strong>
+                      <p>
+                        {notice.coachName} · {formatRelativeDate(notice.changedAt, isEs)}
+                      </p>
+                    </div>
+                    {!notice.readAt ? (
+                      <button
+                        type="button"
+                        className="cd-link-btn cd-link-btn--compact"
+                        onClick={() => void markPlanChangeNotificationRead(notice.id)}
+                      >
+                        {isEs ? 'Leído' : 'Read'}
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ) : (
+          <section className="cd-panel cd-panel--dense" aria-labelledby="ad-trend-title">
+            <div className="cd-panel__head">
+              <h2 id="ad-trend-title" className="cd-panel__title">
+                <TrendingUp size={16} aria-hidden />
+                {isEs ? 'Tendencia olímpica' : 'Olympic trend'}
+              </h2>
+            </div>
+            <div className="cd-panel__body">
+              {model.volumeSpark.length === 0 ? (
+                <p className="cd-empty-hint">
+                  {isEs ? 'Sin envíos Stats vinculados aún.' : 'No linked Stats submissions yet.'}
+                </p>
+              ) : (
+                <>
+                  <div className="ad-spark" role="img" aria-label={isEs ? 'Snatch + C&J' : 'Snatch + C&J'}>
+                    {model.volumeSpark.map((b) => (
+                      <div key={b.id} className="ad-spark__bar">
+                        <div className="ad-spark__fill" style={{ height: `${Math.max(8, b.h)}%` }} title={b.label} />
+                        <span className="ad-spark__label">{b.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="cd-empty-hint" style={{ marginTop: 8 }}>
+                    {isEs ? 'Snatch + C&J por envío Stats.' : 'Snatch + C&J per Stats entry.'}
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
+        <section className="cd-panel cd-panel--dense" aria-labelledby="ad-plans-title">
+          <div className="cd-panel__head">
+            <h2 id="ad-plans-title" className="cd-panel__title">
+              <ClipboardList size={16} aria-hidden />
+              {isEs ? 'Planes activos' : 'Active plans'}
+            </h2>
+            <button type="button" className="cd-link-btn" onClick={onOpenPlan}>
+              {isEs ? 'Abrir plan' : 'Open plan'}
+            </button>
+          </div>
+          <div className="cd-panel__body">
+            {model.programs.length === 0 ? (
+              <p className="cd-empty-hint">{isEs ? 'Sin programas asignados.' : 'No assigned programs.'}</p>
+            ) : (
+              <ul className="cd-program-list">
+                {model.programs.map((p) => (
+                  <li key={p.assignmentId} className="cd-program-item">
+                    <div className="cd-program-item__head">
+                      <strong title={p.programName}>{p.programName}</strong>
+                      <span className="cd-program-item__stats">
+                        <span>
+                          {p.daysDone}/{p.daysTotal} {isEs ? 'ses.' : 'sess.'}
+                        </span>
+                        <span>{p.completionPct}%</span>
+                      </span>
+                    </div>
+                    <div className="cd-progress" aria-hidden>
+                      <span className="cd-progress__fill" style={{ width: `${p.completionPct}%` }} />
+                    </div>
+                    <div className="cd-program-item__meta">
+                      <span>
+                        {isEs ? 'Series' : 'Sets'}: {p.setsLogged}/{p.setsTotal} ({p.setsPct}%)
+                      </span>
+                      <span>{p.volumeLoggedKg.toLocaleString()} kg</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        <section className="cd-panel cd-panel--dense" aria-labelledby="ad-activity-title">
+          <div className="cd-panel__head">
+            <h2 id="ad-activity-title" className="cd-panel__title">
+              <Activity size={16} aria-hidden />
               {isEs ? 'Actividad reciente' : 'Recent activity'}
             </h2>
           </div>
-          <ul className="ad-activity-list">
-            {model.recentActivity.map((item) => (
-              <li key={item.id} className="ad-activity-item">
-                <span className={`ad-activity-item__dot ad-activity-item__dot--${item.kind}`} aria-hidden />
-                <div>
-                  <strong>{item.label}</strong>
-                  <span>{item.programName}</span>
-                </div>
-                <time dateTime={item.at}>{formatRelativeDate(item.at, isEs)}</time>
-              </li>
-            ))}
-          </ul>
+          <div className="cd-panel__body">
+            {model.recentActivity.length === 0 ? (
+              <p className="cd-empty-hint">
+                {active ? (
+                  <>
+                    {formatRelativeDate(model.lastTrainingAt, isEs)} · {active.programName} ·{' '}
+                    {active.daysDone}/{active.daysTotal} {isEs ? 'sesiones' : 'sessions'}
+                  </>
+                ) : (
+                  isEs ? 'Sin actividad registrada aún.' : 'No activity logged yet.'
+                )}
+              </p>
+            ) : (
+              <ul className="cd-activity-feed">
+                {model.recentActivity.map((item) => (
+                  <li key={item.id} className={`cd-activity-item cd-activity-item--${item.kind === 'session' ? 'session' : 'pr'}`}>
+                    <span className="cd-activity-item__dot" aria-hidden />
+                    <div className="cd-activity-item__body">
+                      <p>
+                        <strong>{item.label}</strong> · {item.programName}
+                      </p>
+                      <time dateTime={item.at}>{formatRelativeDate(item.at, isEs)}</time>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
-      ) : null}
+      </div>
 
-      <section id="ad-performance" className="sd-section" aria-labelledby="ad-perf-title">
-        <div className="sd-section__head">
-          <h2 id="ad-perf-title" className="sd-section__title">
+      <section id="ad-performance" className="cd-panel cd-panel--dense" aria-labelledby="ad-perf-title">
+        <div className="cd-panel__head">
+          <h2 id="ad-perf-title" className="cd-panel__title">
+            <Award size={16} aria-hidden />
             {isEs ? 'Historial Stats & PRs' : 'Stats & PR history'}
           </h2>
         </div>
-        <div className="sd-perf-embed">
+        <div className="cd-panel__body ad-perf-panel__body">
           <PerformanceStatsHistory
             language={language}
             persona="athlete"
