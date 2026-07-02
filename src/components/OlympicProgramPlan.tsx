@@ -96,6 +96,8 @@ interface OlympicProgramPlanProps {
   onActiveDayContext?: (ctx: { weekNumber: number; dayNumber: number }) => void;
   /** Pin Editor/Table/Stats tabs in the mobile top bar (WlProgramEditor). */
   onMobilePinnedChrome?: (node: React.ReactNode) => void;
+  /** Exercise editor open on mobile — hide tabs and wire header back to day sheet. */
+  onMobileExerciseFocusChange?: (focus: { onBackToDay: () => void; exerciseTitle: string } | null) => void;
   /** Expose program editor actions for the mobile header ⋮ menu. */
   onMobileProgramActionsChange?: (actions: import('./wl-programs/WlProgramEditorHeaderMenu').WlProgramEditorMobileActions | null) => void;
 }
@@ -191,6 +193,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   onRetryProgramSave,
   onActiveDayContext,
   onMobilePinnedChrome,
+  onMobileExerciseFocusChange,
   onMobileProgramActionsChange,
 }) => {
   const isEs = language === 'ES';
@@ -1005,9 +1008,19 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
 
   useEffect(() => {
     if (!onMobilePinnedChrome) return;
-    onMobilePinnedChrome(pinTabsInTopBar && showCustomize && program ? customizeViewTabs : null);
+    const showTabs =
+      pinTabsInTopBar && showCustomize && program && sessionEditorView === 'sheet';
+    onMobilePinnedChrome(showTabs ? customizeViewTabs : null);
     return () => onMobilePinnedChrome(null);
-  }, [onMobilePinnedChrome, pinTabsInTopBar, showCustomize, program, customizeSubview, customizeViewTabs]);
+  }, [
+    onMobilePinnedChrome,
+    pinTabsInTopBar,
+    showCustomize,
+    program,
+    customizeSubview,
+    customizeViewTabs,
+    sessionEditorView,
+  ]);
 
   useEffect(() => {
     if (!onMobileProgramActionsChange) return;
@@ -1376,6 +1389,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         dayNumber={selectedDay}
                         embedded
                         onViewChange={setSessionEditorView}
+                        onMobileExerciseFocusChange={
+                          pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
+                        }
                         onDuplicateDay={handleDuplicateDay}
                         canDuplicateDay={canAddDay}
                         onRemoveDay={() => handleRemoveDay(selectedDay)}

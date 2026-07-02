@@ -228,10 +228,6 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
 
         {compactPanel ? (
           <div className="wolf-se-coach-set-block__panel-toolbar">
-            <span className={`wolf-se-coach-set-block__purpose wolf-se-coach-set-block__purpose--${purpose}`}>
-              <span className="wolf-se-coach-set-block__purpose-dot" aria-hidden />
-              {purposeLabel(purpose, isEs)}
-            </span>
             {onDuplicate || onRemove ? (
               <div className="wolf-se-coach-set-block__head-actions">
                 {onDuplicate ? (

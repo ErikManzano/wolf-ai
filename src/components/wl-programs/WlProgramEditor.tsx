@@ -75,6 +75,10 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
   const [mobilePinnedChrome, setMobilePinnedChrome] = useState<React.ReactNode>(null);
+  const [mobileExerciseFocus, setMobileExerciseFocus] = useState<{
+    onBackToDay: () => void;
+    exerciseTitle: string;
+  } | null>(null);
   const [mobileProgramActions, setMobileProgramActions] = useState<WlProgramEditorMobileActions | null>(null);
   const mobileTitleInputRef = useRef<HTMLInputElement>(null);
   const programRef = useRef(program);
@@ -141,7 +145,11 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                   coachProgram.name ||
                   (isEs ? 'Sin nombre' : 'Untitled')
                 : undefined,
-            titleContent: hasProgram ? (
+            titleContent: mobileExerciseFocus ? (
+              <div className="mobile-header-title mobile-header-title--exercise">
+                {mobileExerciseFocus.exerciseTitle}
+              </div>
+            ) : hasProgram ? (
               <WlProgramMobileHeaderTitle
                 isEs={isEs}
                 value={programTitle}
@@ -152,15 +160,20 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 inputRef={mobileTitleInputRef}
               />
             ) : undefined,
-            back: {
-              label: isEs ? 'Volver a Programas' : 'Back to Programs',
-              onBack,
-            },
+            back: mobileExerciseFocus
+              ? {
+                  label: isEs ? 'Volver al día' : 'Back to day',
+                  onBack: mobileExerciseFocus.onBackToDay,
+                }
+              : {
+                  label: isEs ? 'Volver a Programas' : 'Back to Programs',
+                  onBack,
+                },
             hideBrandIcon: true,
             headerActions: hasProgram ? (
               <WlProgramEditorHeaderMenu isEs={isEs} actions={mobileProgramActions} />
             ) : undefined,
-            pinnedBelowHeader: mobilePinnedChrome,
+            pinnedBelowHeader: mobileExerciseFocus ? null : mobilePinnedChrome,
             lockEdgeSwipe: true,
           }
         : null,
@@ -173,6 +186,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       hasProgram,
       mobileProgramActions,
       mobilePinnedChrome,
+      mobileExerciseFocus,
       handleProgramTitleChange,
       handleProgramTitleBlur,
     ],
@@ -503,6 +517,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 onRetryProgramSave={handleRetrySave}
                 onActiveDayContext={handleActiveDayContext}
                 onMobilePinnedChrome={isMobileLayout ? setMobilePinnedChrome : undefined}
+                onMobileExerciseFocusChange={isMobileLayout ? setMobileExerciseFocus : undefined}
                 onMobileProgramActionsChange={isMobileLayout ? setMobileProgramActions : undefined}
               />
             )}

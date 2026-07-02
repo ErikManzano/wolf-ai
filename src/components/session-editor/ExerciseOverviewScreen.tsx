@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ChevronRight, MoreVertical, Plus } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
@@ -20,7 +20,7 @@ import {
 } from './blockMetrics';
 import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
 import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from './schemeFormat';
-import { purposeForScheme, purposeLabel, type SetPurpose } from './spreadsheetPurposeUtils';
+import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import { CoachSetBlockEditor } from './CoachSetBlockEditor';
 import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
 import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
@@ -39,6 +39,8 @@ export interface ExerciseOverviewScreenProps {
   totalBlocks: number;
   onApply: SessionApplyFn;
   onBack: () => void;
+  /** Mobile coach flow uses the app header back instead of a duplicate in-screen button. */
+  hideHeaderBack?: boolean;
   onRemoveBlock?: () => void;
   onDuplicateExercise?: () => void;
   onMoveBlockUp?: () => void;
@@ -46,24 +48,6 @@ export interface ExerciseOverviewScreenProps {
   canDuplicateExercise?: boolean;
   initialExpandedSetIndex?: number | null;
   onChangeExercise?: () => void;
-}
-
-const PURPOSE_TAG_CLASS: Record<SetPurpose, string> = {
-  technique: 'wolf-se-exercise-overview__tag--technique',
-  work: 'wolf-se-exercise-overview__tag--work',
-  intensity: 'wolf-se-exercise-overview__tag--intensity',
-};
-
-function blockPurposeTags(block: SessionExerciseBlock): SetPurpose[] {
-  const seen = new Set<SetPurpose>();
-  const out: SetPurpose[] = [];
-  for (const row of block.sets) {
-    const purpose = purposeForScheme(row);
-    if (seen.has(purpose)) continue;
-    seen.add(purpose);
-    out.push(purpose);
-  }
-  return out;
 }
 
 interface CoachBlockSummaryCardProps {
@@ -94,14 +78,21 @@ function CoachBlockSummaryCard({
   const prescription = formatSetPrescriptionCoachMobile(scheme, isComplex);
   const rowKg = schemeRowTonnage(scheme, block, athlete, exercises);
   const volumeLabel = rowKg > 0 ? `${rowKg.toLocaleString()} kg` : '—';
+  const purpose = purposeForScheme(scheme);
 
   return (
     <article
       className={`wolf-se-coach-block-card${expanded ? ' wolf-se-coach-block-card--expanded' : ''}`}
     >
       <button type="button" className="wolf-se-coach-block-card__tap" onClick={onToggle}>
-        <span className="wolf-se-coach-block-card__label">
-          {isEs ? `Bloque ${setIndex + 1}` : `Block ${setIndex + 1}`}
+        <span className="wolf-se-coach-block-card__head">
+          <span className="wolf-se-coach-block-card__label">
+            {isEs ? `Bloque ${setIndex + 1}` : `Block ${setIndex + 1}`}
+          </span>
+          <span className={`wolf-se-coach-block-card__purpose wolf-se-coach-block-card__purpose--${purpose}`}>
+            <span className="wolf-se-coach-block-card__purpose-dot" aria-hidden />
+            {purposeLabel(purpose, isEs)}
+          </span>
         </span>
         <span className="wolf-se-coach-block-card__row">
           <code className="wolf-se-coach-block-card__rx">{prescription}</code>
@@ -141,6 +132,7 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   totalBlocks,
   onApply,
   onBack,
+  hideHeaderBack = false,
   onRemoveBlock,
   onDuplicateExercise,
   onMoveBlockUp,
@@ -173,7 +165,6 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   const totalReps = blockTotalReps(block);
   const catalogEx = findCatalogExercise(exercises, block.exerciseId);
   const canAddBlock = block.sets.length < WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK;
-  const purposeTags = useMemo(() => blockPurposeTags(block), [block.sets]);
 
   const handleAddBlock = () => {
     apply((current) => addSetToBlock(current, bi, athlete, exercises));
@@ -202,16 +193,22 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
 
   return (
     <div className="wolf-se-exercise-overview">
-      <header className="wolf-se-exercise-overview__head">
-        <button
-          type="button"
-          className="wolf-se-exercise-overview__back"
-          onClick={onBack}
-          aria-label={isEs ? 'Volver al día' : 'Back to day'}
-        >
-          <ArrowLeft size={20} aria-hidden />
-        </button>
-        <h2 className="wolf-se-exercise-overview__title">{title}</h2>
+      <header
+        className={`wolf-se-exercise-overview__head${hideHeaderBack ? ' wolf-se-exercise-overview__head--no-back' : ''}`}
+      >
+        {hideHeaderBack ? null : (
+          <button
+            type="button"
+            className="wolf-se-exercise-overview__back"
+            onClick={onBack}
+            aria-label={isEs ? 'Volver al día' : 'Back to day'}
+          >
+            <ArrowLeft size={20} aria-hidden />
+          </button>
+        )}
+        {hideHeaderBack ? null : (
+          <h2 className="wolf-se-exercise-overview__title">{title}</h2>
+        )}
         <div className="wolf-se-exercise-overview__menu">
           <button
             type="button"
@@ -224,20 +221,6 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
           </button>
         </div>
       </header>
-
-      {purposeTags.length > 0 ? (
-        <div className="wolf-se-exercise-overview__tags">
-          {purposeTags.map((purpose) => (
-            <span
-              key={purpose}
-              className={`wolf-se-exercise-overview__tag ${PURPOSE_TAG_CLASS[purpose]}`}
-            >
-              <span className="wolf-se-exercise-overview__tag-dot" aria-hidden />
-              {purposeLabel(purpose, isEs)}
-            </span>
-          ))}
-        </div>
-      ) : null}
 
       <div className="wolf-se-exercise-overview__body">
         {!hasExercise && onChangeExercise ? (

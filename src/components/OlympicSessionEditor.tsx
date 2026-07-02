@@ -62,6 +62,8 @@ interface OlympicSessionEditorProps {
   hideSheetList?: boolean;
   /** Notifies parent when switching between day sheet and exercise editor. */
   onViewChange?: (view: SessionEditorView) => void;
+  /** Mobile coach flow: exercise focus for top bar (back + title). */
+  onMobileExerciseFocusChange?: (focus: { onBackToDay: () => void; exerciseTitle: string } | null) => void;
   saveState?: import('./wl-programs/programSync').ProgramSyncState;
   onRetrySave?: () => void;
   onFlushAutosave?: () => void;
@@ -87,6 +89,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   initialBlockIndex = null,
   hideSheetList = false,
   onViewChange,
+  onMobileExerciseFocusChange,
   saveState,
   onRetrySave,
   onFlushAutosave,
@@ -288,6 +291,33 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     onFlushAutosave?.();
   }, [setEditorView, onFlushAutosave]);
 
+  useEffect(() => {
+    if (!onMobileExerciseFocusChange || !useMobileCoachFlow) return;
+    if (view === 'sheet' || editingBlockIndex == null) {
+      onMobileExerciseFocusChange(null);
+      return;
+    }
+    const block = session.exercises[editingBlockIndex];
+    if (!block) {
+      onMobileExerciseFocusChange(null);
+      return;
+    }
+    onMobileExerciseFocusChange({
+      onBackToDay: backToSheet,
+      exerciseTitle: blockDisplayName(block, exercises, isEs),
+    });
+    return () => onMobileExerciseFocusChange(null);
+  }, [
+    onMobileExerciseFocusChange,
+    useMobileCoachFlow,
+    view,
+    editingBlockIndex,
+    session.exercises,
+    exercises,
+    isEs,
+    backToSheet,
+  ]);
+
   const weekCrumb =
     weekNumber != null ? (isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`) : isEs ? 'Semana' : 'Week';
   const dayCrumb =
@@ -413,6 +443,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
                 totalBlocks={session.exercises.length}
                 onApply={apply}
                 onBack={backToSheet}
+                hideHeaderBack={useMobileCoachFlow}
                 initialExpandedSetIndex={overviewExpandSetIndex}
                 onRemoveBlock={() => handleRemoveBlock(editingBlockIndex)}
                 onChangeExercise={!editingIsComplex ? openChangeExercisePicker : undefined}

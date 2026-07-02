@@ -231,7 +231,7 @@
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--mobile-coach .wolf-se-coach-day {
-  padding: 20px;
+  padding: 20px 24px;
 }
 
 .wl-programs-embedded-plan .wolf-program-day-board .wolf-se-coach-day__list {
@@ -240,10 +240,11 @@
 
 /* ── Coach day header strip (mockup KPIs) ── */
 .wolf-se-coach-day-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px;
+  display: grid;
+  gap: 0;
+  row-gap: 10px;
+  column-gap: 0;
+  padding: 0;
 }
 
 .wolf-se-coach-day-strip__head {
@@ -334,7 +335,8 @@
 
 .wolf-se-coach-day-strip__kpis {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(1, 1fr);
   gap: 8px;
 }
 
