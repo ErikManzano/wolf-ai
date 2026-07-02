@@ -899,7 +899,7 @@ export class PostgresStore {
         set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
         actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::timestamptz);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::double precision, $9::integer, $10::jsonb, $11::double precision, $12::jsonb, $13::jsonb, $14::timestamptz);
       `,
       [
         id,
@@ -960,7 +960,7 @@ export class PostgresStore {
           set_instance, actual_kg, actual_reps, actual_segment_reps, actual_rpe,
           actual_rep_outcomes, actual_segment_rep_outcomes, completed_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb, $14::timestamptz);
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::double precision, $9::integer, $10::jsonb, $11::double precision, $12::jsonb, $13::jsonb, $14::timestamptz);
         `,
         [
           id,
@@ -983,12 +983,12 @@ export class PostgresStore {
       await this.pool.query(
         `
         UPDATE workout_set_logs
-        SET actual_kg = COALESCE($8, actual_kg),
-            actual_reps = COALESCE($9, actual_reps),
-            actual_segment_reps = COALESCE($10::jsonb, actual_segment_reps),
-            actual_rpe = COALESCE($11, actual_rpe),
-            actual_rep_outcomes = COALESCE($12::jsonb, actual_rep_outcomes),
-            actual_segment_rep_outcomes = COALESCE($13::jsonb, actual_segment_rep_outcomes)
+        SET actual_kg = COALESCE($7::double precision, actual_kg),
+            actual_reps = COALESCE($8::integer, actual_reps),
+            actual_segment_reps = COALESCE($9::jsonb, actual_segment_reps),
+            actual_rpe = COALESCE($10::double precision, actual_rpe),
+            actual_rep_outcomes = COALESCE($11::jsonb, actual_rep_outcomes),
+            actual_segment_rep_outcomes = COALESCE($12::jsonb, actual_segment_rep_outcomes)
         WHERE assignment_id = $1 AND week_number = $2 AND day_number = $3
           AND exercise_index = $4 AND scheme_index = $5 AND set_instance = $6;
         `,
