@@ -14,8 +14,8 @@ import { AthleteDayNavigator } from './athlete-tracking/AthleteDayNavigator';
 import { AthleteDayOverview } from './athlete-tracking/AthleteDayOverview';
 import { AthleteExerciseDetailScreen } from './athlete-tracking/AthleteExerciseDetailScreen';
 import { MobileWeekNavigator } from './athlete-tracking/MobileWeekNavigator';
-import { WorkoutFlow } from './athlete-tracking/workout-flow/WorkoutFlow';
-import type { GeneratedProgram, SessionExerciseBlock } from '../models/training';
+import type { SessionExerciseBlock } from '../models/training';
+import type { SetLogInput } from '../modules/assignments/types';
 import './AthleteTrainingView.css';
 import './OlympicEnginePanel.css';
 import './athlete-tracking/athlete-day-view.css';
@@ -24,12 +24,6 @@ import '../styles/interactive.css';
 interface AthleteTrainingViewProps {
   language: 'ES' | 'EN';
 }
-
-type WorkoutStartAt = {
-  exerciseIndex: number;
-  schemeIndex: number;
-  setInstance: number;
-};
 
 const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) => {
   const isEs = language === 'ES';
@@ -43,6 +37,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     updateSetLog,
     isSetComplete,
     getSetLog,
+    setLogTrackingKey,
     motorExercises,
     wlAthletes,
     planChangeNotifications,
@@ -57,10 +52,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const [week, setWeek] = useState(1);
   const [activeDay, setActiveDay] = useState(1);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
-  const [workoutDay, setWorkoutDay] = useState<GeneratedProgram['weeks'][number]['days'][number] | null>(
-    null,
-  );
-  const [workoutStartAt, setWorkoutStartAt] = useState<WorkoutStartAt | undefined>(undefined);
   const [exerciseDetailIndex, setExerciseDetailIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -218,32 +209,21 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     }
   }, [week, weekData?.days, firstIncompleteDayNumber]);
 
-  const completeSet = useCallback(
-    (dayNumber: number, input: WorkoutStartAt & { actualKg: number; actualReps: number; actualRpe: number }) => {
-      if (!activeAssignment || !weekData) return;
-      const payload = {
-        assignmentId: activeAssignment.id,
-        weekNumber: weekData.weekNumber,
-        dayNumber,
-        exerciseIndex: input.exerciseIndex,
-        schemeIndex: input.schemeIndex,
-        setInstance: input.setInstance,
-        actualKg: input.actualKg,
-        actualReps: input.actualReps,
-        actualRpe: input.actualRpe,
-      };
-      const alreadyDone = isSetComplete(
+  const persistSetLog = useCallback(
+    (payload: SetLogInput) => {
+      if (!activeAssignment || !weekData || !activeDayData || exerciseDetailIndex == null) return;
+      const exists = isSetComplete(
         activeAssignment.id,
         weekData.weekNumber,
-        dayNumber,
-        input.exerciseIndex,
-        input.schemeIndex,
-        input.setInstance,
+        activeDayData.dayNumber,
+        exerciseDetailIndex,
+        payload.schemeIndex,
+        payload.setInstance,
       );
-      if (alreadyDone) updateSetLog(payload);
+      if (exists) updateSetLog(payload);
       else toggleSetComplete(payload);
     },
-    [activeAssignment, weekData, isSetComplete, updateSetLog, toggleSetComplete],
+    [activeAssignment, weekData, activeDayData, exerciseDetailIndex, isSetComplete, updateSetLog, toggleSetComplete],
   );
 
   if (assignmentsLoading) {
@@ -343,10 +323,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
           )
         }
         onOpenExercise={setExerciseDetailIndex}
-        onStartWorkout={() => {
-          setWorkoutStartAt(undefined);
-          setWorkoutDay(activeDayData);
-        }}
       />
 
       {detailBlock && exerciseDetailIndex != null ? (
@@ -368,8 +344,18 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
             )
           }
           onClose={() => setExerciseDetailIndex(null)}
+          getSetTrackingKey={(schemeIndex, setInstance) =>
+            setLogTrackingKey({
+              assignmentId: activeAssignment.id,
+              weekNumber: weekData.weekNumber,
+              dayNumber: activeDayData.dayNumber,
+              exerciseIndex: exerciseDetailIndex,
+              schemeIndex,
+              setInstance,
+            })
+          }
           onSaveSet={(schemeIndex, setInstance, payload) => {
-            updateSetLog({
+            persistSetLog({
               assignmentId: activeAssignment.id,
               weekNumber: weekData.weekNumber,
               dayNumber: activeDayData.dayNumber,
@@ -400,26 +386,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
               });
             }
           }}
-        />
-      ) : null}
-
-      {workoutDay ? (
-        <WorkoutFlow
-          open={Boolean(workoutDay)}
-          day={workoutDay}
-          weekNumber={weekData.weekNumber}
-          assignmentId={activeAssignment.id}
-          athlete={athleteProfile}
-          exercises={motorExercises}
-          exName={exName}
-          setLogs={setLogs}
-          isEs={isEs}
-          startAt={workoutStartAt}
-          onClose={() => {
-            setWorkoutDay(null);
-            setWorkoutStartAt(undefined);
-          }}
-          onCompleteSet={(input) => completeSet(workoutDay.dayNumber, input)}
         />
       ) : null}
     </div>

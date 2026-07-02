@@ -506,10 +506,73 @@
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.wa-day-cta:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.48);
 }
 
 .wa-day-cta:active {
   transform: scale(0.98);
+}
+
+.wa-day-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wa-day-exercises__list .wolf-se-coach-day-card--athlete {
+  transition: transform 0.2s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.wa-day-exercises__list .wolf-se-coach-day-card--athlete .wolf-se-coach-day-card__shell--tappable {
+  transition: transform 0.18s ease, background 0.2s ease;
+}
+
+.wa-day-exercises__list .wolf-se-coach-day-card--athlete .wolf-se-coach-day-card__shell--tappable:active {
+  transform: scale(0.985);
+}
+
+@keyframes wa-rep-pop {
+  0% {
+    transform: scale(0.82);
+  }
+
+  60% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes wa-rep-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px);
+  }
+
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-day-cta,
+  .wa-day-exercises__list .wolf-se-coach-day-card--athlete,
+  .wa-detail-set-card,
+  .wa-rep-outcome__visual {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Exercise detail overlay */
@@ -716,6 +779,85 @@
   gap: 0.75rem;
 }
 
+.wa-exercise-detail__sets-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wa-exercise-detail__block {
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--color-bg-panel) 92%, #0c0a14);
+}
+
+.wa-exercise-detail__block--technique {
+  border-color: rgba(59, 130, 246, 0.32);
+  background: color-mix(in srgb, #3b82f6 7%, var(--color-bg-panel));
+}
+
+.wa-exercise-detail__block--work {
+  border-color: rgba(34, 197, 94, 0.32);
+  background: color-mix(in srgb, #22c55e 7%, var(--color-bg-panel));
+}
+
+.wa-exercise-detail__block--intensity {
+  border-color: rgba(249, 115, 22, 0.32);
+  background: color-mix(in srgb, #f97316 7%, var(--color-bg-panel));
+}
+
+.wa-exercise-detail__block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0 0.15rem;
+}
+
+.wa-exercise-detail__block-purpose {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.wa-exercise-detail__block-purpose-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.wa-exercise-detail__block-purpose--technique {
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+}
+
+.wa-exercise-detail__block-purpose--work {
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.wa-exercise-detail__block-purpose--intensity {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fdba74;
+}
+
+.wa-exercise-detail__block-rx {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .wa-detail-set-card {
   position: relative;
   display: flex;
@@ -728,6 +870,7 @@
   background: color-mix(in srgb, var(--color-bg-panel) 94%, #0c0a14);
   text-align: left;
   touch-action: manipulation;
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.2s ease;
 }
 
 .wa-detail-set-card--complex {
@@ -779,8 +922,20 @@
 
 .wa-detail-set-card--partial,
 .wa-detail-set-card--active {
-  border-color: color-mix(in srgb, #fb923c 55%, var(--color-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, #fb923c 18%, transparent);
+  border-color: color-mix(in srgb, var(--wa-detail-purpose-accent, #fb923c) 48%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--wa-detail-purpose-accent, #fb923c) 16%, transparent);
+}
+
+.wa-detail-set-card--purpose-technique {
+  --wa-detail-purpose-accent: #3b82f6;
+}
+
+.wa-detail-set-card--purpose-work {
+  --wa-detail-purpose-accent: #22c55e;
+}
+
+.wa-detail-set-card--purpose-intensity {
+  --wa-detail-purpose-accent: #f97316;
 }
 
 .wa-detail-set-card__accent {
@@ -789,16 +944,11 @@
   top: 0;
   bottom: 0;
   width: 5px;
-  background: color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--wa-detail-purpose-accent, color-mix(in srgb, var(--color-border) 80%, transparent));
 }
 
 .wa-detail-set-card--complete .wa-detail-set-card__accent {
   background: #4ade80;
-}
-
-.wa-detail-set-card--partial .wa-detail-set-card__accent,
-.wa-detail-set-card--active .wa-detail-set-card__accent {
-  background: #fb923c;
 }
 
 .wa-detail-set-card__num {
@@ -823,8 +973,8 @@
 
 .wa-detail-set-card--partial .wa-detail-set-card__num,
 .wa-detail-set-card--active .wa-detail-set-card__num {
-  background: color-mix(in srgb, #fb923c 18%, transparent);
-  color: #fb923c;
+  background: color-mix(in srgb, var(--wa-detail-purpose-accent, #fb923c) 18%, transparent);
+  color: var(--wa-detail-purpose-accent, #fb923c);
 }
 
 .wa-detail-set-card__segment-name {
@@ -898,17 +1048,23 @@
   border-radius: 999px;
   border: 2.5px solid color-mix(in srgb, var(--color-text-muted) 50%, transparent);
   background: transparent;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease;
 }
 
 .wa-rep-outcome--completed .wa-rep-outcome__visual {
   border-color: #4ade80;
   background: #4ade80;
+  animation: wa-rep-pop 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .wa-rep-outcome--failed .wa-rep-outcome__visual {
   border-color: #fb923c;
   background: color-mix(in srgb, #fb923c 14%, transparent);
+  animation: wa-rep-shake 0.38s ease;
 }
 
 .wa-rep-outcome__pending-dot {

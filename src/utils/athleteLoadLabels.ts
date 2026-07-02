@@ -4,9 +4,10 @@ import { formatAthleteKg } from '../components/session-editor/blockMetrics';
 export function formatSetCompactLabel(row: FlatSetRow, isEs: boolean): string {
   const reps = row.prescribedReps;
   const repsLabel = isEs ? 'reps' : 'reps';
+  const pctPrefix = row.percentage > 0 ? `${row.percentage}% • ` : '';
 
   if (row.prescribedKg > 0) {
-    return `${formatAthleteKg(row.prescribedKg)} kg • ${reps} ${repsLabel}`;
+    return `${pctPrefix}${formatAthleteKg(row.prescribedKg)} kg • ${reps} ${repsLabel}`;
   }
 
   return `${row.percentage}% • ${reps} ${repsLabel}`;
@@ -21,14 +22,16 @@ export function formatSegmentCompactLabel(
 ): string {
   const repsLabel = isEs ? 'reps' : 'reps';
   const repsText = repToken?.trim() || String(reps);
-  const load =
-    kg > 0
-      ? `${formatAthleteKg(kg)} kg`
-      : percentage && percentage > 0
-        ? `${percentage}%`
-        : null;
 
-  if (load) return `${load} • ${repsText} ${repsLabel}`;
+  if (kg > 0) {
+    const prefix = percentage && percentage > 0 ? `${percentage}% • ` : '';
+    return `${prefix}${formatAthleteKg(kg)} kg • ${repsText} ${repsLabel}`;
+  }
+
+  if (percentage && percentage > 0) {
+    return `${percentage}% • ${repsText} ${repsLabel}`;
+  }
+
   return `${repsText} ${repsLabel}`;
 }
 

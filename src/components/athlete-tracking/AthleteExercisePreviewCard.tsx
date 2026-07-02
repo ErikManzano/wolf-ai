@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Check, ChevronRight, Dumbbell, GitMerge } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
 import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
@@ -55,7 +56,13 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   const progressLabel = isEs ? 'series hechas' : 'sets done';
 
   return (
-    <li className="wolf-se-coach-day-card-item">
+    <motion.li
+      className="wolf-se-coach-day-card-item"
+      variants={{
+        hidden: { opacity: 0, y: 16 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
+      }}
+    >
       <article
         className={`wolf-se-coach-day-card wolf-se-coach-day-card--${accent} wolf-se-coach-day-card--mockup wolf-se-coach-day-card--athlete${complete ? ' wolf-se-coach-day-card--complete' : ''}`}
         data-accent={accent}
@@ -124,6 +131,6 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
           </span>
         </button>
       </article>
-    </li>
+    </motion.li>
   );
 };

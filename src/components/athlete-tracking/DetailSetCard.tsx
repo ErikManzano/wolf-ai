@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { RepOutcome, SetCompletionLog } from '../../models/training';
 import type { FlatSetRow } from '../../utils/athleteSetLogs';
+import { useWolfAlert } from '../../context/WolfAlertContext';
+import { useWlAssignments } from '../../modules/assignments';
 import {
   completedCountFromOutcomes,
   cycleRepOutcome,
@@ -12,6 +14,7 @@ import {
   segmentRepsFromOutcomes,
 } from '../../utils/setCompletionStatus';
 import { formatSetCompactLabel, formatSegmentCompactLabel } from '../../utils/athleteLoadLabels';
+import type { SetPurpose } from '../session-editor/spreadsheetPurposeUtils';
 import { cn } from '../../lib/utils';
 import { RepOutcomeRow } from './RepOutcomeRow';
 
@@ -30,6 +33,8 @@ export interface DetailSetCardProps {
   fullyComplete: boolean;
   active: boolean;
   isEs: boolean;
+  purpose?: SetPurpose;
+  trackingKey?: string;
   onSaveSet: (payload: DetailSetUpdatePayload) => void;
   onClearSet: () => void;
 }
@@ -41,9 +46,16 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
   fullyComplete,
   active,
   isEs,
+  purpose,
+  trackingKey,
   onSaveSet,
   onClearSet,
 }) => {
+  const { pushAlert } = useWolfAlert();
+  const { isTrackingPending, isTrackingFailed } = useWlAssignments();
+  const pendingRepRef = useRef<{ repIndex: number; outcome: RepOutcome } | null>(null);
+  const wasPendingRef = useRef(false);
+  const [repNotifyTick, setRepNotifyTick] = useState(0);
   const prescribedSegments = row.prescribedSegmentReps ?? [];
   const isComplex = row.isComplex && prescribedSegments.length > 0;
 
@@ -83,6 +95,63 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
     ? flattenSegmentOutcomes(normalizedComplexOutcomes)
     : simpleOutcomes;
   const tone = deriveSetCardTone(flatOutcomes, active, fullyComplete);
+  const trackingPending = trackingKey ? isTrackingPending(trackingKey) : false;
+  const trackingFailed = trackingKey ? isTrackingFailed(trackingKey) : false;
+
+  const notifyRep = (repIndex: number, outcome: RepOutcome) => {
+    const repNum = repIndex + 1;
+    if (outcome === 'completed') {
+      pushAlert({
+        tone: 'success',
+        title: isEs ? `Rep ${repNum}` : `Rep ${repNum}`,
+        message: isEs ? 'Registrada correctamente' : 'Logged successfully',
+        durationMs: 2400,
+      });
+      return;
+    }
+    if (outcome === 'failed') {
+      pushAlert({
+        tone: 'warning',
+        title: isEs ? `Rep ${repNum}` : `Rep ${repNum}`,
+        message: isEs ? 'Marcada como fallo' : 'Marked as missed',
+        durationMs: 2400,
+      });
+      return;
+    }
+    pushAlert({
+      tone: 'info',
+      title: isEs ? `Rep ${repNum}` : `Rep ${repNum}`,
+      message: isEs ? 'Rep pendiente' : 'Rep pending',
+      durationMs: 2000,
+    });
+  };
+
+  useEffect(() => {
+    if (!trackingKey || !pendingRepRef.current) return;
+    const pending = trackingPending;
+    const notify = pendingRepRef.current;
+
+    if (pending) {
+      wasPendingRef.current = true;
+      return;
+    }
+
+    if (wasPendingRef.current) {
+      if (!trackingFailed) {
+        notifyRep(notify.repIndex, notify.outcome);
+      }
+    } else {
+      notifyRep(notify.repIndex, notify.outcome);
+    }
+
+    pendingRepRef.current = null;
+    wasPendingRef.current = false;
+  }, [trackingKey, repNotifyTick, trackingPending, trackingFailed]);
+
+  const queueRepNotify = (repIndex: number, outcome: RepOutcome) => {
+    pendingRepRef.current = { repIndex, outcome };
+    setRepNotifyTick((tick) => tick + 1);
+  };
 
   const persistSimple = (next: RepOutcome[]) => {
     setSimpleOutcomes(next);
@@ -123,6 +192,7 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
         tone === 'partial' && 'wa-detail-set-card--partial',
         tone === 'pending' && 'wa-detail-set-card--pending',
         active && 'wa-detail-set-card--active',
+        purpose && `wa-detail-set-card--purpose-${purpose}`,
       )}
     >
       <div className="wa-detail-set-card__head">
@@ -173,6 +243,8 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
                           )
                         : segment,
                     );
+                    const nextOutcome = next[segIndex]?.[repIndex];
+                    if (nextOutcome) queueRepNotify(repIndex, nextOutcome);
                     persistComplex(next);
                   }}
                 />
@@ -187,6 +259,8 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
               const next = simpleOutcomes.map((outcome, index) =>
                 index === repIndex ? cycleRepOutcome(outcome) : outcome,
               );
+              const nextOutcome = next[repIndex];
+              if (nextOutcome) queueRepNotify(repIndex, nextOutcome);
               persistSimple(next);
             }}
           />

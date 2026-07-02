@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Clock, Crosshair, Dumbbell, Play, Timer } from 'lucide-react';
 import type { Athlete, Exercise, ExerciseGoal, ProgramDay, SetCompletionLog } from '../../models/training';
 import { isExerciseCompleteWithSets } from '../../utils/completionHelpers';
@@ -26,7 +27,6 @@ export interface AthleteDayOverviewProps {
   setLogs: SetCompletionLog[];
   isSetComplete: (exerciseIndex: number, schemeIndex: number, setInstance: number) => boolean;
   onOpenExercise: (exerciseIndex: number) => void;
-  onStartWorkout: () => void;
 }
 
 function ringDash(pct: number): string {
@@ -46,7 +46,6 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
   setLogs,
   isSetComplete,
   onOpenExercise,
-  onStartWorkout,
 }) => {
   const exerciseCount = day.session.exercises.length;
   const focusLabel = dayFocusBadge(day, primaryGoal, isEs);
@@ -81,9 +80,57 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
   const hasExercises = exerciseCount > 0;
   const exercisesUnit = isEs ? 'ejercicios' : 'exercises';
 
+  const firstIncompleteExerciseIndex = useMemo(() => {
+    return day.session.exercises.findIndex((block, bi) =>
+      !isExerciseCompleteWithSets(
+        completions,
+        setLogs,
+        assignmentId,
+        weekNumber,
+        day.dayNumber,
+        bi,
+        block,
+        athlete,
+        exercises,
+        exName,
+      ),
+    );
+  }, [
+    day,
+    completions,
+    setLogs,
+    assignmentId,
+    weekNumber,
+    athlete,
+    exercises,
+    exName,
+  ]);
+
+  const continueExerciseIndex =
+    firstIncompleteExerciseIndex >= 0 ? firstIncompleteExerciseIndex : exerciseCount > 0 ? 0 : -1;
+
+  const continueLabel =
+    progressPct >= 100
+      ? isEs
+        ? 'Revisar ejercicios'
+        : 'Review exercises'
+      : continueExerciseIndex >= 0
+        ? isEs
+          ? 'Continuar registro'
+          : 'Continue logging'
+        : isEs
+          ? 'Ver ejercicios'
+          : 'View exercises';
+
   return (
     <div className="wa-day-overview">
-      <section className="wa-day-summary" aria-label={isEs ? 'Resumen del día' : 'Day summary'}>
+      <motion.section
+        className="wa-day-summary"
+        aria-label={isEs ? 'Resumen del día' : 'Day summary'}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+      >
         <header className="wa-day-summary__head">
           <div className="wa-day-summary__head-main">
             <h2 className="wa-day-summary__title">{dayDisplayTitle(day, isEs)}</h2>
@@ -156,15 +203,25 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
           </div>
         </div>
 
-        {hasExercises ? (
-          <button type="button" className="wa-day-cta wa-day-summary__cta" onClick={onStartWorkout}>
+        {hasExercises && continueExerciseIndex >= 0 ? (
+          <button
+            type="button"
+            className="wa-day-cta wa-day-summary__cta"
+            onClick={() => onOpenExercise(continueExerciseIndex)}
+          >
             <Play size={18} fill="currentColor" aria-hidden />
-            {isEs ? 'Iniciar entrenamiento' : 'Start workout'}
+            {continueLabel}
           </button>
         ) : null}
-      </section>
+      </motion.section>
 
-      <section className="wa-day-exercises" aria-labelledby="wa-day-exercises-title">
+      <motion.section
+        className="wa-day-exercises"
+        aria-labelledby="wa-day-exercises-title"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.38, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+      >
         <h3 id="wa-day-exercises-title" className="wa-day-exercises__title">
           {isEs ? 'Ejercicios' : 'Exercises'}
         </h3>
@@ -173,7 +230,15 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
             {isEs ? 'Sin ejercicios en este día.' : 'No exercises this day.'}
           </p>
         ) : (
-          <ul className="wolf-se-coach-day__list wa-day-exercises__list">
+          <motion.ul
+            className="wolf-se-coach-day__list wa-day-exercises__list"
+            initial="hidden"
+            animate="show"
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
+            }}
+          >
             {day.session.exercises.map((block, bi) => (
               <AthleteExercisePreviewCard
                 key={`${block.exerciseId}-${bi}`}
@@ -201,9 +266,9 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
                 onOpen={() => onOpenExercise(bi)}
               />
             ))}
-          </ul>
+          </motion.ul>
         )}
-      </section>
+      </motion.section>
     </div>
   );
 };
