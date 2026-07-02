@@ -39,7 +39,7 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   const isComplex = blockKind === 'complex';
   const hasExercise = blockHasExercise(block);
   const { title: name } = blockExerciseTitle(block, exName);
-  const tonnage = blockTonnage(block, athlete, exercises);
+  const tonnage = athlete ? blockTonnage(block, athlete, exercises) : 0;
   const accent = ACCENT_KEYS[index % ACCENT_KEYS.length]!;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
   const isComplexReps = blockUsesComplexReps(block);

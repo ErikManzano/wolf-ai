@@ -64,8 +64,6 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   onMoveBlockDown,
   onDuplicateDay,
   canDuplicateDay,
-  onRemoveDay,
-  canRemoveDay,
   onChangeExercise,
   onDuplicateBlock,
 }) => {
