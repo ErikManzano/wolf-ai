@@ -5,6 +5,7 @@ import {
   exerciseDemoEmbedUrl,
   exerciseDemoThumbnailUrl,
 } from '../../config/exerciseDemoPlaceholder';
+import { WolfBrandIcon } from '../WolfBrandIcon';
 import './exercise-detail-mock.css';
 
 interface ExerciseDetailMockProps {
@@ -16,16 +17,7 @@ interface ExerciseDetailMockProps {
 }
 
 function WolfPlayMark() {
-  return (
-    <svg
-      className="wa-exercise-media__wolf-mark"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
-    </svg>
-  );
+  return <WolfBrandIcon className="wa-exercise-media__wolf-mark" size={24} />;
 }
 
 /** Demo video + coach note (per-exercise media will come from catalog/backend). */

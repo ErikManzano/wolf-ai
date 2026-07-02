@@ -9,19 +9,11 @@ import {
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMobileTopBarContext } from '../../context/MobileTopBarContext';
 import { NotificationsBell } from '../notifications/NotificationsBell';
+import { WolfBrandIcon } from '../WolfBrandIcon';
 import './mobile-top-bar.css';
 
 const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="mobile-header-logo"
-    aria-hidden
-  >
-    <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
-  </svg>
+  <WolfBrandIcon size={size} className="mobile-header-logo" />
 );
 
 type MobileTopBarProps = {

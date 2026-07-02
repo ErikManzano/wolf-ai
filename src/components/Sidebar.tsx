@@ -10,11 +10,10 @@ import {
   getVisibleNavItems,
   isNavItemVisible,
 } from '../navigation/appNavigation';
+import { WolfBrandIcon } from './WolfBrandIcon';
 
 const WolfIcon = ({ size = 28, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 22C12 22 5 18 3 11C2 8 3 4 3 4L8 7L12 2L16 7L21 4C21 4 22 8 21 11C19 18 12 22 12 22Z" />
-  </svg>
+  <WolfBrandIcon size={size} className={className} />
 );
 
 interface SidebarProps {
