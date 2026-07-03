@@ -2,12 +2,17 @@ import type { SessionCompletion, SetCompletionLog } from '../../models/training'
 import { completionMatches, isDayComplete } from '../../utils/completionHelpers';
 import type { SetLogInput } from './types';
 
+export type SetLogKey = Pick<
+  SetCompletionLog,
+  'assignmentId' | 'weekNumber' | 'dayNumber' | 'exerciseIndex' | 'schemeIndex' | 'setInstance'
+>;
+
 export type TrackingSnapshot = {
   setLogs: SetCompletionLog[];
   completions: SessionCompletion[];
 };
 
-export function setLogTrackingKey(input: SetLogInput): string {
+export function setLogTrackingKey(input: SetLogInput | SetLogKey): string {
   return [
     input.assignmentId,
     input.weekNumber,
@@ -44,7 +49,7 @@ export function snapshotTracking(setLogs: SetCompletionLog[], completions: Sessi
 
 function setLogMatches(
   l: SetCompletionLog,
-  input: SetLogInput,
+  input: SetLogInput | SetLogKey,
 ): boolean {
   return (
     l.assignmentId === input.assignmentId &&
@@ -142,6 +147,23 @@ export function applySetLogUpdateLocal(
     actualRpe: input.actualRpe ?? next[idx]!.actualRpe,
   };
   return next;
+}
+
+/** Merge API payload with in-memory logs; local entries win on key collision. */
+export function mergeSetLogsLoaded(
+  local: SetCompletionLog[],
+  fromApi: SetCompletionLog[],
+): SetCompletionLog[] {
+  if (!local.length) return fromApi;
+  if (!fromApi.length) return local;
+  const merged = new Map<string, SetCompletionLog>();
+  for (const log of fromApi) {
+    merged.set(setLogTrackingKey(log), log);
+  }
+  for (const log of local) {
+    merged.set(setLogTrackingKey(log), log);
+  }
+  return Array.from(merged.values());
 }
 
 /** Serializes async tracking mutations to avoid race on rapid taps. */

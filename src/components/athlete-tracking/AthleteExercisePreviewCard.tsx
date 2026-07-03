@@ -1,24 +1,27 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ChevronRight, Dumbbell, GitMerge } from 'lucide-react';
-import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
+import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../../models/training';
 import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
 import { blockTonnage } from '../session-editor/blockMetrics';
 import { blockHasExercise } from '../session-editor/sessionSheetUtils';
 import { blockExerciseTitle } from '../../utils/athleteDayMetrics';
-import { flattenBlockSets, type FlatSetRow } from '../../utils/athleteSetLogs';
+import { countBlockSetsDone, findSetLog, flattenBlockSets, type FlatSetRow } from '../../utils/athleteSetLogs';
+import { isSetAddressed } from '../../utils/setCompletionStatus';
 import './athlete-exercise-preview-card.css';
 
 export interface AthleteExercisePreviewCardProps {
   block: SessionExerciseBlock;
-  index: number;
+  exerciseIndex: number;
+  assignmentId: string;
+  weekNumber: number;
+  dayNumber: number;
+  setLogs: SetCompletionLog[];
   athlete?: Athlete;
   exercises: Exercise[];
   exName: (id: string) => string;
   isEs: boolean;
   isComplete: boolean;
-  isSetComplete: (schemeIndex: number, setInstance: number) => boolean;
-  isSetAddressed: (schemeIndex: number, setInstance: number) => boolean;
   onOpen: () => void;
 }
 
@@ -40,13 +43,16 @@ function formatAthleteCardSetLine(row: FlatSetRow): string {
 
 export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProps> = ({
   block,
-  index,
+  exerciseIndex,
+  assignmentId,
+  weekNumber,
+  dayNumber,
+  setLogs,
   athlete,
   exercises,
   exName,
   isEs,
   isComplete,
-  isSetAddressed,
   onOpen,
 }) => {
   const blockKind = getExerciseBlockKind(block);
@@ -57,17 +63,53 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   const tonnage = athlete ? blockTonnage(block, athlete, exercises) : 0;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
 
-  const { doneSets, totalSets, setLines } = useMemo(() => {
+  const { doneSets, totalSets, setLines, setDots } = useMemo(() => {
     const rows = flattenBlockSets(block, athlete, exercises, exName);
-    const total = rows.length;
-    const done = rows.filter((r) => isSetAddressed(r.schemeIndex, r.setInstance)).length;
+    const counts = countBlockSetsDone(
+      block,
+      setLogs,
+      assignmentId,
+      weekNumber,
+      dayNumber,
+      exerciseIndex,
+      athlete,
+      exercises,
+      exName,
+    );
+    const dots = rows.map((row) => {
+      const log = findSetLog(
+        setLogs,
+        assignmentId,
+        weekNumber,
+        dayNumber,
+        exerciseIndex,
+        row.schemeIndex,
+        row.setInstance,
+      );
+      return {
+        key: `${row.schemeIndex}-${row.setInstance}`,
+        addressed: isSetAddressed(row, log),
+      };
+    });
     return {
-      doneSets: done,
-      totalSets: total,
+      doneSets: counts.done,
+      totalSets: counts.total,
       setLines: rows.map((row) => formatAthleteCardSetLine(row)),
+      setDots: dots,
     };
-  }, [block, athlete, exercises, exName, isSetAddressed]);
+  }, [
+    block,
+    setLogs,
+    assignmentId,
+    weekNumber,
+    dayNumber,
+    exerciseIndex,
+    athlete,
+    exercises,
+    exName,
+  ]);
 
+  const activeDotIndex = setDots.findIndex((dot) => !dot.addressed);
   const complete = isComplete || (totalSets > 0 && doneSets === totalSets);
   const setsLabel = isEs ? 'Series hechas' : 'Sets done';
   const volumeTitle = isEs ? 'Volumen estimado' : 'Estimated volume';
@@ -91,7 +133,7 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
         >
           <div className="wa-athlete-ex-card__top">
             <span className="wa-athlete-ex-card__index" aria-hidden>
-              {index + 1}
+              {exerciseIndex + 1}
             </span>
             <span
               className={`wa-athlete-ex-card__icon${isComplex ? ' wa-athlete-ex-card__icon--complex' : ''}${blockKind === 'warmup' ? ' wa-athlete-ex-card__icon--warmup' : ''}${complete ? ' wa-athlete-ex-card__icon--done' : ''}`}
@@ -122,7 +164,7 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
               {setLines.length > 0 ? (
                 <ul className="wa-athlete-ex-card__rx-list" aria-label={isEs ? 'Series prescritas' : 'Prescribed sets'}>
                   {setLines.map((line, lineIndex) => (
-                    <li key={lineIndex} className="wa-athlete-ex-card__rx">
+                    <li key={setDots[lineIndex]?.key ?? lineIndex} className="wa-athlete-ex-card__rx">
                       {line}
                     </li>
                   ))}
@@ -144,10 +186,10 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
                     <span>/{totalSets || 0}</span>
                   </span>
                   <div className="wa-athlete-ex-card__set-dots" aria-hidden>
-                    {Array.from({ length: totalSets || 0 }, (_, dotIndex) => (
+                    {setDots.map((dot, dotIndex) => (
                       <span
-                        key={dotIndex}
-                        className={`wa-athlete-ex-card__set-dot${dotIndex < doneSets ? ' wa-athlete-ex-card__set-dot--done' : ''}${dotIndex === doneSets && !complete ? ' wa-athlete-ex-card__set-dot--active' : ''}`}
+                        key={dot.key}
+                        className={`wa-athlete-ex-card__set-dot${dot.addressed ? ' wa-athlete-ex-card__set-dot--done' : ''}${dotIndex === activeDotIndex && !complete ? ' wa-athlete-ex-card__set-dot--active' : ''}`}
                       />
                     ))}
                   </div>

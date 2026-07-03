@@ -70,23 +70,9 @@
 }
 
 .wa-day-summary__head {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
   padding-bottom: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-}
-
-.wa-day-summary__head-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.45rem 0.55rem;
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .wa-day-summary__title {
@@ -96,37 +82,6 @@
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
   line-height: 1.1;
-}
-
-.wa-day-summary__focus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.wa-day-summary__focus svg {
-  flex-shrink: 0;
-  opacity: 0.75;
-}
-
-.wa-day-summary__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, #7c3aed 22%, transparent);
-  border: 1px solid color-mix(in srgb, #a78bfa 35%, transparent);
-  color: #c4b5fd;
-  font-size: 0.72rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .wa-day-summary__metrics {

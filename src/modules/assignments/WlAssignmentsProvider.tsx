@@ -50,6 +50,7 @@ import {
   applySetToggleLocal,
   createTrackingQueue,
   exerciseTrackingKey,
+  mergeSetLogsLoaded,
   sessionTrackingKey,
   setLogTrackingKey,
   snapshotTracking,
@@ -177,7 +178,9 @@ export function WlAssignmentsProvider({
       const res = await assignmentApiFetch('/set-logs');
       if (!res.ok) return;
       const list = (await res.json()) as SetCompletionLog[];
-      if (Array.isArray(list)) setSetLogs(list);
+      if (Array.isArray(list)) {
+        setSetLogs((prev) => mergeSetLogsLoaded(prev, list));
+      }
     } catch {
       /* keep local */
     }

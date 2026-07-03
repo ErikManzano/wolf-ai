@@ -348,24 +348,12 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         day={activeDayData}
         weekNumber={weekData.weekNumber}
         assignmentId={activeAssignment.id}
-        primaryGoal={program.primaryGoal}
         athlete={athleteProfile}
         exercises={motorExercises}
         exName={exName}
         isEs={isEs}
         completions={completions}
         setLogs={setLogs}
-        isSetComplete={(exerciseIndex, schemeIndex, setInstance) =>
-          isSetComplete(
-            activeAssignment.id,
-            weekData.weekNumber,
-            activeDayData.dayNumber,
-            exerciseIndex,
-            schemeIndex,
-            setInstance,
-          )
-        }
-        isSetAddressed={isSetAddressedForExercise}
         onOpenExercise={setExerciseDetailIndex}
       />
 

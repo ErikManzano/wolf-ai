@@ -136,17 +136,22 @@ export function isSetAddressed(row: FlatSetRow, log?: SetCompletionLog): boolean
 
   const segments = row.prescribedSegmentReps;
   if (row.isComplex && segments?.length) {
-    if (log.actualSegmentRepOutcomes?.length) {
-      return log.actualSegmentRepOutcomes.every((seg, i) => {
-        const rx = segments[i] ?? 0;
-        return seg.length === rx && repOutcomesAddressed(seg);
-      });
+    if (log.actualSegmentRepOutcomes && log.actualSegmentRepOutcomes.length > 0) {
+      const outcomesMatch =
+        log.actualSegmentRepOutcomes.length === segments.length &&
+        log.actualSegmentRepOutcomes.every((seg, i) => {
+          const rx = segments[i] ?? 0;
+          return seg.length === rx && repOutcomesAddressed(seg);
+        });
+      if (outcomesMatch) return true;
     }
     return segments.every((rx, i) => (log.actualSegmentReps?.[i] ?? 0) === rx);
   }
 
-  if (log.actualRepOutcomes?.length) {
-    return log.actualRepOutcomes.length === row.prescribedReps && repOutcomesAddressed(log.actualRepOutcomes);
+  if (log.actualRepOutcomes && log.actualRepOutcomes.length > 0) {
+    if (log.actualRepOutcomes.length === row.prescribedReps) {
+      return repOutcomesAddressed(log.actualRepOutcomes);
+    }
   }
 
   return (log.actualReps ?? 0) === row.prescribedReps;

@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Crosshair, Dumbbell, Play, Timer } from 'lucide-react';
-import type { Athlete, Exercise, ExerciseGoal, ProgramDay, SetCompletionLog } from '../../models/training';
+import { Clock, Dumbbell, Play, Timer } from 'lucide-react';
+import type { Athlete, Exercise, ProgramDay, SetCompletionLog } from '../../models/training';
 import { isExerciseCompleteWithSets } from '../../utils/completionHelpers';
 import {
   dayDisplayTitle,
-  dayFocusBadge,
   estimateDayVolume,
   estimateSessionDuration,
   formatDurationRange,
@@ -18,15 +17,12 @@ export interface AthleteDayOverviewProps {
   day: ProgramDay;
   weekNumber: number;
   assignmentId: string;
-  primaryGoal: ExerciseGoal;
   athlete?: Athlete;
   exercises: Exercise[];
   exName: (id: string) => string;
   isEs: boolean;
   completions: SessionCompletion[];
   setLogs: SetCompletionLog[];
-  isSetComplete: (exerciseIndex: number, schemeIndex: number, setInstance: number) => boolean;
-  isSetAddressed: (exerciseIndex: number, schemeIndex: number, setInstance: number) => boolean;
   onOpenExercise: (exerciseIndex: number) => void;
 }
 
@@ -38,19 +34,15 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
   day,
   weekNumber,
   assignmentId,
-  primaryGoal,
   athlete,
   exercises,
   exName,
   isEs,
   completions,
   setLogs,
-  isSetComplete,
-  isSetAddressed,
   onOpenExercise,
 }) => {
   const exerciseCount = day.session.exercises.length;
-  const focusLabel = dayFocusBadge(day, primaryGoal, isEs);
 
   const completedExercises = useMemo(
     () =>
@@ -134,17 +126,7 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
         transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
       >
         <header className="wa-day-summary__head">
-          <div className="wa-day-summary__head-main">
-            <h2 className="wa-day-summary__title">{dayDisplayTitle(day, isEs)}</h2>
-            <span className="wa-day-summary__focus">
-              {focusLabel}
-              <Crosshair size={12} strokeWidth={2.25} aria-hidden />
-            </span>
-          </div>
-          <span className="wa-day-summary__badge">
-            <Crosshair size={12} strokeWidth={2.25} aria-hidden />
-            {focusLabel}
-          </span>
+          <h2 className="wa-day-summary__title">{dayDisplayTitle(day, isEs)}</h2>
         </header>
 
         <div className="wa-day-summary__metrics">
@@ -245,7 +227,11 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
               <AthleteExercisePreviewCard
                 key={`${block.exerciseId}-${bi}`}
                 block={block}
-                index={bi}
+                exerciseIndex={bi}
+                assignmentId={assignmentId}
+                weekNumber={weekNumber}
+                dayNumber={day.dayNumber}
+                setLogs={setLogs}
                 athlete={athlete}
                 exercises={exercises}
                 exName={exName}
@@ -262,12 +248,6 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
                   exercises,
                   exName,
                 )}
-                isSetComplete={(schemeIndex, setInstance) =>
-                  isSetComplete(bi, schemeIndex, setInstance)
-                }
-                isSetAddressed={(schemeIndex, setInstance) =>
-                  isSetAddressed(bi, schemeIndex, setInstance)
-                }
                 onOpen={() => onOpenExercise(bi)}
               />
             ))}
