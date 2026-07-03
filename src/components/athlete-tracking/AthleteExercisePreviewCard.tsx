@@ -4,10 +4,9 @@ import { Check, ChevronRight, Dumbbell, GitMerge } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
 import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
 import { blockTonnage } from '../session-editor/blockMetrics';
-import { blockUsesComplexReps, formatSchemeRepsToken } from '../session-editor/schemeFormat';
 import { blockHasExercise } from '../session-editor/sessionSheetUtils';
 import { blockExerciseTitle } from '../../utils/athleteDayMetrics';
-import { flattenBlockSets } from '../../utils/athleteSetLogs';
+import { flattenBlockSets, type FlatSetRow } from '../../utils/athleteSetLogs';
 import './athlete-exercise-preview-card.css';
 
 export interface AthleteExercisePreviewCardProps {
@@ -23,21 +22,20 @@ export interface AthleteExercisePreviewCardProps {
   onOpen: () => void;
 }
 
-function formatAthleteCardRx(block: SessionExerciseBlock, isComplexReps: boolean): string {
-  if (!block.sets.length) return '—';
+function formatAthleteCardSetLine(row: FlatSetRow): string {
+  const slash = row.prescribedRepsLabel.indexOf('/');
+  if (slash < 0) return row.prescribedRepsLabel;
 
-  if (block.sets.length === 1) {
-    const row = block.sets[0]!;
-    const reps = formatSchemeRepsToken(row, isComplexReps);
-    return row.percentage > 0 ? `${row.percentage}% · ${row.sets}x${reps}` : `${row.sets}x${reps}`;
-  }
+  const pct = row.prescribedRepsLabel.slice(0, slash);
+  const reps = row.prescribedRepsLabel.slice(slash + 1);
+  const repsDisplay = reps.includes('+')
+    ? reps
+        .split('+')
+        .map((token) => token.trim() || '0')
+        .join(' + ')
+    : reps;
 
-  return block.sets
-    .map((row) => {
-      const reps = formatSchemeRepsToken(row, isComplexReps);
-      return row.percentage > 0 ? `${row.percentage}% · ${row.sets}x${reps}` : `${row.sets}x${reps}`;
-    })
-    .join(' · ');
+  return `${pct} · ${repsDisplay}`;
 }
 
 export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProps> = ({
@@ -58,14 +56,16 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   const { title: name } = blockExerciseTitle(block, exName);
   const tonnage = athlete ? blockTonnage(block, athlete, exercises) : 0;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
-  const isComplexReps = blockUsesComplexReps(block);
-  const rxLabel = formatAthleteCardRx(block, isComplexReps);
 
-  const { doneSets, totalSets } = useMemo(() => {
+  const { doneSets, totalSets, setLines } = useMemo(() => {
     const rows = flattenBlockSets(block, athlete, exercises, exName);
     const total = rows.length;
     const done = rows.filter((r) => isSetAddressed(r.schemeIndex, r.setInstance)).length;
-    return { doneSets: done, totalSets: total };
+    return {
+      doneSets: done,
+      totalSets: total,
+      setLines: rows.map((row) => formatAthleteCardSetLine(row)),
+    };
   }, [block, athlete, exercises, exName, isSetAddressed]);
 
   const complete = isComplete || (totalSets > 0 && doneSets === totalSets);
@@ -119,7 +119,17 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
 
           <div className="wa-athlete-ex-card__body">
             <div className="wa-athlete-ex-card__left">
-              <p className="wa-athlete-ex-card__rx">{rxLabel}</p>
+              {setLines.length > 0 ? (
+                <ul className="wa-athlete-ex-card__rx-list" aria-label={isEs ? 'Series prescritas' : 'Prescribed sets'}>
+                  {setLines.map((line, lineIndex) => (
+                    <li key={lineIndex} className="wa-athlete-ex-card__rx">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="wa-athlete-ex-card__rx">—</p>
+              )}
             </div>
 
             <div className="wa-athlete-ex-card__metrics">
