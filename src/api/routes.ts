@@ -40,6 +40,9 @@ import type { PlanChangeNotification, ProgramEditContext } from '../models/notif
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
 import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
 import { randomUUID } from 'node:crypto';
+import { createProgramSyncQueue, type ProgramSyncQueue, type ProgramSyncPayload } from './programSyncQueue';
+import { incrementSaveMetric } from './saveMetrics';
+import { replaceProgramSession } from '../services/sessionMutations';
 
 export interface MockApiState {
   athletes: Athlete[];
@@ -324,15 +327,85 @@ async function userFromBearer(req: Request, state: MockApiState, store?: Postgre
  */
 export function createTrainingRouter(state: MockApiState, store?: PostgresStore, notify?: RealtimeNotifier): IRouter {
   const router = Router();
+
+  let programSyncQueue: ProgramSyncQueue | null = null;
+
+  const notifyAssignmentsPropagated = (
+    payload: ProgramSyncPayload,
+    assignmentIds: string[],
+  ) => {
+    if (assignmentIds.length === 0) return;
+    incrementSaveMetric('assignment_propagations', assignmentIds.length);
+    notify?.('assignments:changed', {
+      coachId: payload.coachId,
+      assignmentIds,
+      coachProgramId: payload.programId,
+    });
+  };
+
+  const mockPropagateProgram = async (payload: ProgramSyncPayload): Promise<string[]> => {
+    const program = state.coachPrograms.find((p) => p.id === payload.programId);
+    if (!program) return [];
+    const updatedIds: string[] = [];
+    for (const asg of state.assignments.filter((a) => a.coachProgramId === payload.programId)) {
+      const previousProgram = asg.program;
+      const cloned = cloneProgramForAthlete(payload.program, asg.athleteProfileId, {
+        name: payload.programName,
+      });
+      const hist: ProgramAssignmentVersion = {
+        version: asg.version,
+        editedAt: new Date().toISOString(),
+        program: asg.program,
+      };
+      asg.version += 1;
+      asg.program = cloned;
+      asg.versionHistory = [...(asg.versionHistory ?? []), hist];
+      updatedIds.push(asg.id);
+      if (payload.editContext && asg.athleteUserId) {
+        const notification = createMockPlanChangeNotification(state, {
+          coachId: payload.coachId,
+          recipientUserId: asg.athleteUserId,
+          athleteProfileId: asg.athleteProfileId,
+          assignmentId: asg.id,
+          coachProgramId: payload.programId,
+          programName: payload.programName,
+          editContext: payload.editContext,
+          previousProgram,
+          newProgram: cloned,
+        });
+        if (notification) notify?.('plan-change:created', notification);
+      }
+    }
+    return updatedIds;
+  };
+
   const coachService = store
     ? new CoachService({
         store,
-        onAssignmentsChanged: (coachId) => notify?.('assignments:changed', { coachId }),
+        enqueueProgramSync: (payload) => programSyncQueue?.enqueue(payload),
+        onAssignmentsChanged: (payload) => notify?.('assignments:changed', payload),
         onTemplatesChanged: (coachId) => notify?.('wl-templates:changed', { coachId }),
         onProgramsChanged: (coachId) => notify?.('coach-programs:changed', { coachId }),
         onPlanChangeCreated: (notification) => notify?.('plan-change:created', notification),
       })
     : null;
+
+  programSyncQueue = createProgramSyncQueue({
+    coalesceMs: 2500,
+    flush: async (payload) => {
+      const assignmentIds = coachService
+        ? await coachService.propagateProgramToAssignments(
+            payload.coachId,
+            payload.programId,
+            payload.program,
+            payload.editContext,
+            payload.programName,
+          )
+        : await mockPropagateProgram(payload);
+      return { assignmentIds };
+    },
+    onAfterFlush: (payload, { assignmentIds }) => notifyAssignmentsPropagated(payload, assignmentIds),
+  });
 
   router.get('/users', async (_req, res) => {
     const users = store ? await store.getUsers() : state.users;
@@ -1384,6 +1457,25 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json(match);
   });
 
+  router.get('/assignments/:id', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Unauthorized.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const match = await findAssignmentById(id, state, store);
+    if (!match) {
+      res.status(404).json({ error: 'Assignment not found.' });
+      return;
+    }
+    if (!canReadAssignment(actor, match)) {
+      res.status(403).json({ error: 'Forbidden.' });
+      return;
+    }
+    res.json(match);
+  });
+
   router.post('/assignments', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
     if (!actor) {
@@ -1930,6 +2022,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     if (store) {
       const updated = await store.patchSetLog(payload);
+      incrementSaveMetric('set_log_patches');
       res.json(updated);
       return;
     }
@@ -1960,10 +2053,104 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       completedAt: new Date().toISOString(),
     };
     state.setLogs.push(created);
+    incrementSaveMetric('set_log_patches');
     res.json(created);
     } catch (err) {
       console.error('[set-logs/patch]', err);
       res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to save set log.' });
+    }
+  });
+
+  router.patch('/set-logs/batch', async (req, res) => {
+    try {
+      const actor = await userFromBearer(req, state, store);
+      if (!actor) {
+        res.status(401).json({ error: 'Unauthorized.' });
+        return;
+      }
+      const items = (req.body ?? {}) as Parameters<typeof parseSetLogBody>[0][];
+      if (!Array.isArray(items) || items.length === 0) {
+        res.status(400).json({ error: 'Non-empty array of set log patches required.' });
+        return;
+      }
+
+      const results: SetCompletionLog[] = [];
+      for (const raw of items) {
+        const body = parseSetLogBody(raw);
+        if (
+          !body.assignmentId ||
+          body.weekNumber == null ||
+          body.dayNumber == null ||
+          body.exerciseIndex == null ||
+          body.schemeIndex == null ||
+          body.setInstance == null
+        ) {
+          res.status(400).json({ error: 'Each item requires assignmentId, weekNumber, dayNumber, exerciseIndex, schemeIndex, setInstance.' });
+          return;
+        }
+        const batchAssignment = await findAssignmentById(body.assignmentId, state, store);
+        if (!batchAssignment) {
+          res.status(404).json({ error: 'Assignment not found.' });
+          return;
+        }
+        if (!canLogAssignment(actor, batchAssignment)) {
+          res.status(403).json({ error: 'Forbidden.' });
+          return;
+        }
+        const payload = {
+          assignmentId: body.assignmentId,
+          weekNumber: body.weekNumber,
+          dayNumber: body.dayNumber,
+          exerciseIndex: body.exerciseIndex,
+          schemeIndex: body.schemeIndex,
+          setInstance: body.setInstance,
+          actualKg: body.actualKg,
+          actualReps: body.actualReps,
+          actualSegmentReps: body.actualSegmentReps,
+          actualRepOutcomes: body.actualRepOutcomes,
+          actualSegmentRepOutcomes: body.actualSegmentRepOutcomes,
+          actualRpe: body.actualRpe,
+        };
+        if (store) {
+          const updated = await store.patchSetLog(payload);
+          results.push(updated);
+          continue;
+        }
+        const match = (l: SetCompletionLog) =>
+          l.assignmentId === payload.assignmentId &&
+          l.weekNumber === payload.weekNumber &&
+          l.dayNumber === payload.dayNumber &&
+          l.exerciseIndex === payload.exerciseIndex &&
+          l.schemeIndex === payload.schemeIndex &&
+          l.setInstance === payload.setInstance;
+        const idx = state.setLogs.findIndex(match);
+        if (idx >= 0) {
+          state.setLogs[idx] = {
+            ...state.setLogs[idx]!,
+            actualKg: payload.actualKg ?? state.setLogs[idx]!.actualKg,
+            actualReps: payload.actualReps ?? state.setLogs[idx]!.actualReps,
+            actualSegmentReps: payload.actualSegmentReps ?? state.setLogs[idx]!.actualSegmentReps,
+            actualRepOutcomes: payload.actualRepOutcomes ?? state.setLogs[idx]!.actualRepOutcomes,
+            actualSegmentRepOutcomes:
+              payload.actualSegmentRepOutcomes ?? state.setLogs[idx]!.actualSegmentRepOutcomes,
+            actualRpe: payload.actualRpe ?? state.setLogs[idx]!.actualRpe,
+          };
+          results.push(state.setLogs[idx]!);
+        } else {
+          const created: SetCompletionLog = {
+            ...payload,
+            completedAt: new Date().toISOString(),
+          };
+          state.setLogs.push(created);
+          results.push(created);
+        }
+      }
+      incrementSaveMetric('set_log_batches');
+      incrementSaveMetric('set_log_patches', results.length);
+      res.json(results);
+    } catch (err) {
+      console.error('[set-logs/batch]', err);
+      res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to batch save set logs.' });
     }
   });
 
@@ -2463,6 +2650,9 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     if (coachService) {
       try {
         const updated = await coachService.updateProgram(coachId, id, patch);
+        if (patch.status === 'published') {
+          await programSyncQueue.flush(id);
+        }
         res.json(updated);
         return;
       } catch (err) {
@@ -2487,34 +2677,96 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       updatedAt: new Date().toISOString(),
     };
     state.coachPrograms[idx] = updated;
+    incrementSaveMetric('coach_program_saves');
     if (patch.program) {
-      for (const asg of state.assignments.filter((a) => a.coachProgramId === id)) {
-        const previousProgram = asg.program;
-        const cloned = cloneProgramForAthlete(patch.program, asg.athleteProfileId, { name: updated.name });
-        const hist: ProgramAssignmentVersion = {
-          version: asg.version,
-          editedAt: new Date().toISOString(),
-          program: asg.program,
-        };
-        asg.version += 1;
-        asg.program = cloned;
-        asg.versionHistory = [...(asg.versionHistory ?? []), hist];
-        if (patch.editContext && asg.athleteUserId) {
-          const notification = createMockPlanChangeNotification(state, {
-            coachId,
-            recipientUserId: asg.athleteUserId,
-            athleteProfileId: asg.athleteProfileId,
-            assignmentId: asg.id,
-            coachProgramId: id,
-            programName: updated.name,
-            editContext: patch.editContext,
-            previousProgram,
-            newProgram: cloned,
-          });
-          if (notification) notify?.('plan-change:created', notification);
-        }
+      const linked = state.assignments.filter((a) => a.coachProgramId === id);
+      if (linked.length > 0) {
+        programSyncQueue.enqueue({
+          coachId,
+          programId: id,
+          program: patch.program,
+          programName: updated.name,
+          editContext: patch.editContext,
+        });
       }
-      notify?.('assignments:changed', { coachId });
+    }
+    if (patch.status === 'published') {
+      await programSyncQueue.flush(id);
+    }
+    notify?.('coach-programs:changed', { coachId });
+    res.json(updated);
+  });
+
+  router.patch('/coach-programs/:id/weeks/:weekNumber/days/:dayNumber/session', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const coachId = coachProgramsScope(actor);
+    const { id, weekNumber, dayNumber } = req.params as {
+      id: string;
+      weekNumber: string;
+      dayNumber: string;
+    };
+    const week = Number(weekNumber);
+    const day = Number(dayNumber);
+    if (!Number.isFinite(week) || !Number.isFinite(day)) {
+      res.status(400).json({ error: 'Invalid weekNumber or dayNumber.' });
+      return;
+    }
+    const body = (req.body ?? {}) as { session?: Session; editContext?: ProgramEditContext };
+    if (!body.session) {
+      res.status(400).json({ error: 'session is required.' });
+      return;
+    }
+
+    if (coachService) {
+      try {
+        const existing = await coachService.getProgram(coachId, id);
+        if (!existing) {
+          res.status(404).json({ error: 'Not found.' });
+          return;
+        }
+        const mergedProgram = replaceProgramSession(existing.program, week, day, body.session);
+        const updated = await coachService.updateProgram(coachId, id, {
+          program: mergedProgram,
+          editContext: body.editContext,
+        });
+        res.json(updated);
+        return;
+      } catch (err) {
+        if (err instanceof CoachServiceError) {
+          res.status(err.code === 'PROGRAM_NOT_FOUND' ? 404 : 400).json({ error: err.message });
+          return;
+        }
+        throw err;
+      }
+    }
+
+    const idx = state.coachPrograms.findIndex((p) => p.id === id && p.coachId === coachId);
+    if (idx < 0) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    const current = state.coachPrograms[idx]!;
+    const mergedProgram = replaceProgramSession(current.program, week, day, body.session);
+    const updated: CoachProgram = {
+      ...current,
+      program: mergedProgram,
+      updatedAt: new Date().toISOString(),
+    };
+    state.coachPrograms[idx] = updated;
+    incrementSaveMetric('coach_program_saves');
+    const linked = state.assignments.filter((a) => a.coachProgramId === id);
+    if (linked.length > 0) {
+      programSyncQueue.enqueue({
+        coachId,
+        programId: id,
+        program: mergedProgram,
+        programName: updated.name,
+        editContext: body.editContext,
+      });
     }
     notify?.('coach-programs:changed', { coachId });
     res.json(updated);
@@ -2653,7 +2905,6 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     if (coachService) {
       try {
         const created = await coachService.assignProgramToAthletes(coachId, id, { athleteProfileIds }, resolveUser);
-        notify?.('assignments:changed', { coachId });
         notify?.('coach-programs:changed', { coachId });
         res.status(201).json(created);
         return;
@@ -2699,7 +2950,11 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       const idx = state.coachPrograms.findIndex((p) => p.id === id);
       if (idx >= 0) state.coachPrograms[idx] = { ...program, status: 'published', updatedAt: new Date().toISOString() };
     }
-    notify?.('assignments:changed', { coachId });
+    notify?.('assignments:changed', {
+      coachId,
+      assignmentIds: created.map((a) => a.id),
+      coachProgramId: id,
+    });
     notify?.('coach-programs:changed', { coachId });
     res.status(201).json(created);
   });

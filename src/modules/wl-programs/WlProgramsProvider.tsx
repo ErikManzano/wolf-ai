@@ -7,7 +7,8 @@ import {
   useState,
 } from 'react';
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../../models/coach-architecture';
-import type { ProgramAssignment, SessionCompletion } from '../../models/training';
+import type { ProgramAssignment, Session, SessionCompletion } from '../../models/training';
+import { replaceProgramSession } from '../../services/sessionMutations';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { filterAthletesForProgramAssign, getEnrollmentsForCoachProgram } from '../../utils/wlAssignmentRules';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
@@ -243,6 +244,47 @@ export function WlProgramsProvider({
     [apiMode, apiToken, scopedCoachId, rawPrograms, pushAlert],
   );
 
+  const updateProgramSession = useCallback(
+    async (
+      id: string,
+      weekNumber: number,
+      dayNumber: number,
+      session: Session,
+      editContext?: import('../../models/notifications').ProgramEditContext,
+    ): Promise<CoachProgram | null> => {
+      if (!scopedCoachId) return null;
+      if (!apiMode) {
+        const existing = rawPrograms.find((p) => p.id === id);
+        if (!existing) return null;
+        const updated: CoachProgram = {
+          ...existing,
+          program: replaceProgramSession(existing.program, weekNumber, dayNumber, session),
+          updatedAt: new Date().toISOString(),
+        };
+        upsertCoachProgramLocal(updated);
+        setRawPrograms(loadCoachProgramsLocal(scopedCoachId));
+        return updated;
+      }
+      if (!apiToken) return null;
+      const res = await wlProgramsApiFetch(
+        `/coach-programs/${id}/weeks/${weekNumber}/days/${dayNumber}/session`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session, editContext }),
+        },
+      );
+      if (!res.ok) {
+        pushAlert({ tone: 'error', title: 'Error', message: await readApiError(res) });
+        return null;
+      }
+      const saved = (await res.json()) as CoachProgram;
+      setRawPrograms((prev) => mergeSavedProgram(prev, saved));
+      return saved;
+    },
+    [apiMode, apiToken, scopedCoachId, rawPrograms, pushAlert],
+  );
+
   const deleteProgram = useCallback(
     async (id: string): Promise<boolean> => {
       if (!scopedCoachId) return false;
@@ -396,6 +438,7 @@ export function WlProgramsProvider({
       reloadProgramsFromApi: loadProgramsFromApi,
       createProgram,
       updateProgram,
+      updateProgramSession,
       deleteProgram,
       duplicateProgram,
       assignProgramToAthletes,
@@ -411,6 +454,7 @@ export function WlProgramsProvider({
       loadProgramsFromApi,
       createProgram,
       updateProgram,
+      updateProgramSession,
       deleteProgram,
       duplicateProgram,
       assignProgramToAthletes,

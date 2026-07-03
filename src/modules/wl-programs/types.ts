@@ -1,5 +1,6 @@
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../../models/coach-architecture';
-import type { GeneratedProgram, WolfUser } from '../../models/training';
+import type { GeneratedProgram, Session, WolfUser } from '../../models/training';
+import type { ProgramEditContext } from '../../models/notifications';
 
 export type WlProgramsView = 'hub' | 'editor';
 
@@ -15,7 +16,19 @@ export interface WlProgramsContextValue {
   createProgram: (name: string, program?: GeneratedProgram) => Promise<CoachProgram | null>;
   updateProgram: (
     id: string,
-    patch: { name?: string; program?: GeneratedProgram; status?: CoachProgramStatus },
+    patch: {
+      name?: string;
+      program?: GeneratedProgram;
+      status?: CoachProgramStatus;
+      editContext?: ProgramEditContext;
+    },
+  ) => Promise<CoachProgram | null>;
+  updateProgramSession: (
+    id: string,
+    weekNumber: number,
+    dayNumber: number,
+    session: Session,
+    editContext?: ProgramEditContext,
   ) => Promise<CoachProgram | null>;
   deleteProgram: (id: string) => Promise<boolean>;
   duplicateProgram: (id: string) => Promise<CoachProgram | null>;

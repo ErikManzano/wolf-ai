@@ -25,7 +25,7 @@ import {
   isApiEnabled,
   preferLocalDataFallback,
 } from './apiClient';
-import { subscribeAssignmentsRealtime, subscribeRealtimeEvent, PLAN_CHANGE_EVENT } from './realtimeClient';
+import { subscribeAssignmentsRealtime, subscribeRealtimeEvent, PLAN_CHANGE_EVENT, type AssignmentsChangedPayload } from './realtimeClient';
 import {
   athleteUserIdForProfile,
   initialAssignmentsState,
@@ -58,6 +58,7 @@ import {
 
 const WlAssignmentsContext = createContext<WlAssignmentsContextValue | null>(null);
 const FAILED_CLEAR_MS = 4000;
+const SET_LOG_DEBOUNCE_MS = 400;
 
 async function readApiError(res: Response): Promise<string> {
   try {
@@ -98,6 +99,9 @@ export function WlAssignmentsProvider({
   const [planChangeNotifications, setPlanChangeNotifications] = useState<PlanChangeNotification[]>([]);
   const planChangeToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPlanChangeToastRef = useRef<PlanChangeNotification | null>(null);
+  const myAssignmentIdsRef = useRef<string[]>([]);
+  const setLogDebounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const pendingSetLogPatchesRef = useRef<Map<string, SetLogInput>>(new Map());
 
   useEffect(() => {
     setLogsRef.current = setLogs;
@@ -160,6 +164,26 @@ export function WlAssignmentsProvider({
     }
   }, [apiMode, apiToken, pushAlert, allowLocalFallback]);
 
+  const loadAssignmentFromApi = useCallback(
+    async (assignmentId: string) => {
+      if (!apiMode || !apiToken) return;
+      try {
+        const res = await assignmentApiFetch(`/assignments/${encodeURIComponent(assignmentId)}`);
+        if (!res.ok) return;
+        const row = (await res.json()) as ProgramAssignment;
+        const normalized = normalizeAssignment(row);
+        setAssignments((prev) => {
+          const next = upsertAssignmentInList(prev, normalized);
+          if (allowLocalFallback) persistAssignmentsLocal(next);
+          return next;
+        });
+      } catch {
+        /* keep local */
+      }
+    },
+    [apiMode, apiToken, allowLocalFallback],
+  );
+
   const loadCompletionsFromApi = useCallback(async () => {
     if (!apiMode || !apiToken) return;
     try {
@@ -203,10 +227,28 @@ export function WlAssignmentsProvider({
 
   useEffect(() => {
     if (!apiMode || !apiToken) return;
-    return subscribeAssignmentsRealtime(() => {
-      void loadAssignmentsFromApi();
+    return subscribeAssignmentsRealtime((payload) => {
+      const p = (payload ?? {}) as AssignmentsChangedPayload;
+      const ids = p.assignmentIds ?? (p.id ? [p.id] : []);
+      const mine = myAssignmentIdsRef.current;
+      const affected = ids.filter((id) => mine.includes(id));
+      if (affected.length > 0) {
+        void Promise.all(affected.map((id) => loadAssignmentFromApi(id)));
+        return;
+      }
+      if (p.coachId && currentUser?.role === 'coach' && p.coachId === currentUser.id) {
+        void loadAssignmentsFromApi();
+        return;
+      }
+      if (p.coachId && athleteUser) {
+        void loadAssignmentsFromApi();
+        return;
+      }
+      if (ids.length === 0 && !p.coachId) {
+        void loadAssignmentsFromApi();
+      }
     });
-  }, [apiMode, apiToken, loadAssignmentsFromApi]);
+  }, [apiMode, apiToken, currentUser?.id, currentUser?.role, athleteUser, loadAssignmentFromApi, loadAssignmentsFromApi]);
 
   const loadPlanChangeNotifications = useCallback(async () => {
     if (!apiMode || !apiToken) return;
@@ -234,7 +276,11 @@ export function WlAssignmentsProvider({
         notification,
         ...prev.filter((n) => n.id !== notification.id),
       ]);
-      void loadAssignmentsFromApi();
+      if (notification.assignmentId) {
+        void loadAssignmentFromApi(notification.assignmentId);
+      } else {
+        void loadAssignmentsFromApi();
+      }
 
       pendingPlanChangeToastRef.current = notification;
       if (planChangeToastTimerRef.current) clearTimeout(planChangeToastTimerRef.current);
@@ -266,7 +312,7 @@ export function WlAssignmentsProvider({
         pendingPlanChangeToastRef.current = null;
       }, 1200);
     });
-  }, [apiMode, apiToken, athleteUser, pushAlert, loadAssignmentsFromApi]);
+  }, [apiMode, apiToken, athleteUser, pushAlert, loadAssignmentFromApi, loadAssignmentsFromApi]);
 
   useEffect(
     () => () => {
@@ -709,17 +755,30 @@ export function WlAssignmentsProvider({
   const updateSetLogFn = useCallback(
     (input: SetLogInput) => {
       const key = setLogTrackingKey(input);
-      runTrackingMutation(
+      setSetLogs((prev) => applySetLogUpdateLocal(prev, input));
+      pendingSetLogPatchesRef.current.set(key, input);
+
+      const existingTimer = setLogDebounceTimersRef.current.get(key);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      setLogDebounceTimersRef.current.set(
         key,
-        () => {
-          setSetLogs((prev) => applySetLogUpdateLocal(prev, input));
-        },
-        () =>
-          assignmentApiFetch('/set-logs', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input),
-          }),
+        setTimeout(() => {
+          setLogDebounceTimersRef.current.delete(key);
+          const patch = pendingSetLogPatchesRef.current.get(key);
+          if (!patch) return;
+          pendingSetLogPatchesRef.current.delete(key);
+          runTrackingMutation(
+            key,
+            () => {},
+            () =>
+              assignmentApiFetch('/set-logs', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(patch),
+              }),
+          );
+        }, SET_LOG_DEBOUNCE_MS),
       );
     },
     [runTrackingMutation],
@@ -752,6 +811,17 @@ export function WlAssignmentsProvider({
       (a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime(),
     );
   }, [assignments, athleteUser]);
+
+  useEffect(() => {
+    myAssignmentIdsRef.current = myAssignments.map((a) => a.id);
+  }, [myAssignments]);
+
+  useEffect(() => {
+    return () => {
+      setLogDebounceTimersRef.current.forEach((timer) => clearTimeout(timer));
+      setLogDebounceTimersRef.current.clear();
+    };
+  }, []);
 
   const myAssignment = useMemo(() => myAssignments[0], [myAssignments]);
 

@@ -147,7 +147,7 @@ const OlympicEnginePanel: React.FC<OlympicEnginePanelProps> = ({ language, onNav
       (assignmentId: string, p: GeneratedProgram, editContext?: import('../models/notifications').ProgramEditContext) => {
         updateAssignmentProgram(assignmentId, p, editContext);
       },
-      600,
+      1800,
     );
 
   useEffect(() => {

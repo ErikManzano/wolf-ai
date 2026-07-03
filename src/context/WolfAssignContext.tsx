@@ -203,6 +203,13 @@ interface WolfAssignContextValue {
       editContext?: import('../models/notifications').ProgramEditContext;
     },
   ) => Promise<import('../models/coach-architecture').CoachProgram | null>;
+  updateCoachProgramSession: (
+    id: string,
+    weekNumber: number,
+    dayNumber: number,
+    session: import('../models/training').Session,
+    editContext?: import('../models/notifications').ProgramEditContext,
+  ) => Promise<import('../models/coach-architecture').CoachProgram | null>;
   deleteCoachProgram: (id: string) => Promise<boolean>;
   duplicateCoachProgram: (id: string) => Promise<import('../models/coach-architecture').CoachProgram | null>;
   assignCoachProgramToAthletes: (programId: string, athleteProfileIds: string[]) => Promise<string[]>;
@@ -1536,6 +1543,7 @@ function WlTemplatesBridge({
     | 'reloadProgramsFromApi'
     | 'createCoachProgram'
     | 'updateCoachProgram'
+    | 'updateCoachProgramSession'
     | 'deleteCoachProgram'
     | 'duplicateCoachProgram'
     | 'assignCoachProgramToAthletes'
@@ -1651,6 +1659,7 @@ function WolfAssignMergedProvider({
     | 'reloadProgramsFromApi'
     | 'createCoachProgram'
     | 'updateCoachProgram'
+    | 'updateCoachProgramSession'
     | 'deleteCoachProgram'
     | 'duplicateCoachProgram'
     | 'assignCoachProgramToAthletes'
@@ -1714,6 +1723,7 @@ function WolfAssignMergedProvider({
     reloadProgramsFromApi: programsCtx.reloadProgramsFromApi,
     createCoachProgram: programsCtx.createProgram,
     updateCoachProgram: programsCtx.updateProgram,
+    updateCoachProgramSession: programsCtx.updateProgramSession,
     deleteCoachProgram: programsCtx.deleteProgram,
     duplicateCoachProgram: programsCtx.duplicateProgram,
     assignCoachProgramToAthletes: programsCtx.assignProgramToAthletes,

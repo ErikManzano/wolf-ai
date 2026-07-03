@@ -27,13 +27,22 @@ import type { PlanChangeNotification, ProgramEditContext } from '../models/notif
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
 import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
 import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
+import type { ProgramSyncPayload } from './programSyncQueue';
+import { incrementSaveMetric } from './saveMetrics';
+
+export type AssignmentsChangedPayload = {
+  coachId: string;
+  assignmentIds: string[];
+  coachProgramId?: string;
+};
 
 type CoachServiceDeps = {
   store: PostgresStore;
-  onAssignmentsChanged?: (coachId: string) => void;
+  onAssignmentsChanged?: (payload: AssignmentsChangedPayload) => void;
   onTemplatesChanged?: (coachId: string) => void;
   onProgramsChanged?: (coachId: string) => void;
   onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
+  enqueueProgramSync?: (payload: ProgramSyncPayload) => void;
 };
 
 function newId(prefix: string): string {
@@ -70,10 +79,11 @@ function emptyDraftProgram(name: string): GeneratedProgram {
 
 export class CoachService {
   private readonly store: PostgresStore;
-  private readonly onAssignmentsChanged?: (coachId: string) => void;
+  private readonly onAssignmentsChanged?: (payload: AssignmentsChangedPayload) => void;
   private readonly onTemplatesChanged?: (coachId: string) => void;
   private readonly onProgramsChanged?: (coachId: string) => void;
   private readonly onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
+  private readonly enqueueProgramSync?: (payload: ProgramSyncPayload) => void;
 
   constructor(deps: CoachServiceDeps) {
     this.store = deps.store;
@@ -81,6 +91,16 @@ export class CoachService {
     this.onTemplatesChanged = deps.onTemplatesChanged;
     this.onProgramsChanged = deps.onProgramsChanged;
     this.onPlanChangeCreated = deps.onPlanChangeCreated;
+    this.enqueueProgramSync = deps.enqueueProgramSync;
+  }
+
+  private notifyAssignmentsChanged(
+    coachId: string,
+    assignmentIds: string[],
+    coachProgramId?: string,
+  ): void {
+    if (assignmentIds.length === 0) return;
+    this.onAssignmentsChanged?.({ coachId, assignmentIds, coachProgramId });
   }
 
   private async maybeNotifyPlanChange(params: {
@@ -245,36 +265,75 @@ export class CoachService {
     if (!updated) {
       throw new CoachServiceError('UPDATE_FAILED', 'Could not update coach program.');
     }
+    incrementSaveMetric('coach_program_saves');
     if (patch.program) {
       const linked = await this.store.getAssignmentsByCoachProgramId(programId);
       if (linked.length > 0) {
-        await Promise.all(
-          linked.map(async (asg) => {
-            const previousProgram = asg.program;
-            const cloned = cloneProgramForAthlete(patch.program!, asg.athleteProfileId, {
-              name: updated.name,
-            });
-            await this.store.updateAssignmentProgram(asg.id, cloned, { skipVersionHistory: true });
-            if (input.editContext && asg.athleteUserId) {
-              await this.maybeNotifyPlanChange({
-                coachId,
-                recipientUserId: asg.athleteUserId,
-                athleteProfileId: asg.athleteProfileId,
-                assignmentId: asg.id,
-                coachProgramId: programId,
-                programName: updated.name,
-                editContext: input.editContext,
-                previousProgram,
-                newProgram: cloned,
-              });
-            }
-          }),
-        );
-        this.onAssignmentsChanged?.(coachId);
+        const syncPayload: ProgramSyncPayload = {
+          coachId,
+          programId,
+          program: patch.program,
+          programName: updated.name,
+          editContext: input.editContext,
+        };
+        if (this.enqueueProgramSync) {
+          this.enqueueProgramSync(syncPayload);
+        } else {
+          await this.propagateProgramToAssignments(
+            coachId,
+            programId,
+            patch.program,
+            input.editContext,
+            updated.name,
+          );
+        }
       }
     }
     this.onProgramsChanged?.(coachId);
     return updated;
+  }
+
+  /** Propagate template program to all linked athlete assignments (coalesced fan-out). */
+  async propagateProgramToAssignments(
+    coachId: string,
+    programId: string,
+    program: GeneratedProgram,
+    editContext?: ProgramEditContext,
+    programName?: string,
+  ): Promise<string[]> {
+    const linked = await this.store.getAssignmentsByCoachProgramId(programId);
+    if (linked.length === 0) return [];
+
+    const resolvedName =
+      programName ??
+      (await this.store.getCoachProgramById(coachId, programId))?.name ??
+      program.name;
+
+    const updatedIds: string[] = [];
+    await Promise.all(
+      linked.map(async (asg) => {
+        const previousProgram = asg.program;
+        const cloned = cloneProgramForAthlete(program, asg.athleteProfileId, {
+          name: resolvedName,
+        });
+        await this.store.updateAssignmentProgram(asg.id, cloned, { skipVersionHistory: true });
+        updatedIds.push(asg.id);
+        if (editContext && asg.athleteUserId) {
+          await this.maybeNotifyPlanChange({
+            coachId,
+            recipientUserId: asg.athleteUserId,
+            athleteProfileId: asg.athleteProfileId,
+            assignmentId: asg.id,
+            coachProgramId: programId,
+            programName: resolvedName,
+            editContext,
+            previousProgram,
+            newProgram: cloned,
+          });
+        }
+      }),
+    );
+    return updatedIds;
   }
 
   async deleteProgram(coachId: string, programId: string): Promise<void> {
@@ -356,7 +415,11 @@ export class CoachService {
       await this.store.updateCoachProgram(coachId, programId, { status: 'published' });
     }
 
-    this.onAssignmentsChanged?.(coachId);
+    this.notifyAssignmentsChanged(
+      coachId,
+      created.map((c) => c.id),
+      programId,
+    );
     this.onProgramsChanged?.(coachId);
     return created;
   }
@@ -403,7 +466,7 @@ export class CoachService {
       sourceTemplateId: templateId,
     });
 
-    this.onAssignmentsChanged?.(coachId);
+    this.notifyAssignmentsChanged(coachId, [assignment.id]);
     return mapAssignmentRow(assignment);
   }
 
@@ -428,7 +491,7 @@ export class CoachService {
       program: clonedProgram,
       coachProgramId,
     });
-    this.onAssignmentsChanged?.(coachId);
+    this.notifyAssignmentsChanged(coachId, [assignment.id], coachProgramId);
     return mapAssignmentRow(assignment);
   }
 
@@ -468,7 +531,7 @@ export class CoachService {
       });
     }
 
-    this.onAssignmentsChanged?.(coachId);
+    this.notifyAssignmentsChanged(coachId, [assignmentId], existing.coachProgramId);
     return mapAssignmentRow(updated);
   }
 }

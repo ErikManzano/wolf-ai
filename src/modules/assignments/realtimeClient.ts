@@ -9,6 +9,14 @@ export type RealtimeMessage = {
 const ASSIGNMENTS_EVENT = 'assignments:changed';
 export const PLAN_CHANGE_EVENT = 'plan-change:created';
 
+export type AssignmentsChangedPayload = {
+  coachId?: string;
+  assignmentIds?: string[];
+  coachProgramId?: string;
+  /** Legacy single-assignment id from older notify calls */
+  id?: string;
+};
+
 export function isAssignmentsChangedEvent(msg: RealtimeMessage): boolean {
   return msg.event === ASSIGNMENTS_EVENT;
 }

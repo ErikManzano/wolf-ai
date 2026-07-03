@@ -43,7 +43,7 @@ const REFERENCE_ATHLETE: Athlete = {
 };
 
 const PLAN_TITLE_MAX_LEN = WL_EDITOR_TITLE_MAX_LEN;
-const PROGRAM_AUTOSAVE_MS = 600;
+const PROGRAM_AUTOSAVE_MS = 1800;
 const WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID = 'wl-program-editor-toolbar-anchor';
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
@@ -53,6 +53,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const {
     getCoachProgramById,
     updateCoachProgram,
+    updateCoachProgramSession,
     rosterForCoach,
     currentUser,
     wlAthletes,
@@ -198,11 +199,28 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const athleteForEngine = athlete ?? REFERENCE_ATHLETE;
 
   const persistProgram = useCallback(
-    async (p: GeneratedProgram, seq: number) => {
+    async (p: GeneratedProgram, seq: number, structural = false) => {
       if (seq !== saveSeqRef.current) return;
       setSyncState('saving');
       try {
-        const saved = await updateCoachProgram(programId, { program: p, editContext: editContextRef.current });
+        const ctx = editContextRef.current;
+        let saved = null;
+        if (!structural && ctx) {
+          const week = p.weeks.find((w) => w.weekNumber === ctx.weekNumber);
+          const day = week?.days.find((d) => d.dayNumber === ctx.dayNumber);
+          if (day?.session) {
+            saved = await updateCoachProgramSession(
+              programId,
+              ctx.weekNumber,
+              ctx.dayNumber,
+              day.session,
+              ctx,
+            );
+          }
+        }
+        if (!saved) {
+          saved = await updateCoachProgram(programId, { program: p, editContext: ctx });
+        }
         if (seq !== saveSeqRef.current) return;
         if (!saved) {
           setSyncState('pending');
@@ -217,14 +235,14 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
         }
       }
     },
-    [programId, updateCoachProgram],
+    [programId, updateCoachProgram, updateCoachProgramSession],
   );
 
   const { run: debouncedSave, flush: flushAutosave, cancel: cancelAutosave } = useDebouncedCallbackWithControls(
     (p: GeneratedProgram) => {
       saveSeqRef.current += 1;
       const seq = saveSeqRef.current;
-      void persistProgram(p, seq);
+      void persistProgram(p, seq, false);
     },
     PROGRAM_AUTOSAVE_MS,
   );
@@ -271,7 +289,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
         cancelAutosave();
         saveSeqRef.current += 1;
         const seq = saveSeqRef.current;
-        void persistProgram(p, seq);
+        void persistProgram(p, seq, true);
         return;
       }
       debouncedSave(p);
@@ -285,7 +303,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     cancelAutosave();
     saveSeqRef.current += 1;
     const seq = saveSeqRef.current;
-    void persistProgram(latest, seq);
+    void persistProgram(latest, seq, true);
   }, [cancelAutosave, persistProgram]);
 
   const handleActiveDayContext = useCallback(
