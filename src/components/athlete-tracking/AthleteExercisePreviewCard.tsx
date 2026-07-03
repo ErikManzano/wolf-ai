@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Check, ChevronRight, Dumbbell, GitMerge } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetCompletionLog } from '../../models/training';
 import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
-import { blockTonnage, formatAthleteKg } from '../session-editor/blockMetrics';
+import { blockTonnage } from '../session-editor/blockMetrics';
 import { blockHasExercise } from '../session-editor/sessionSheetUtils';
 import { blockExerciseTitle } from '../../utils/athleteDayMetrics';
-import { countBlockSetsDone, findSetLog, flattenBlockSets, type FlatSetRow } from '../../utils/athleteSetLogs';
+import { buildSchemeCardSummaries } from '../../utils/schemeCardRx';
+import { countBlockSetsDone, findSetLog, flattenBlockSets } from '../../utils/athleteSetLogs';
 import { isSetAddressed } from '../../utils/setCompletionStatus';
 import './athlete-exercise-preview-card.css';
 
@@ -23,50 +24,6 @@ export interface AthleteExercisePreviewCardProps {
   isEs: boolean;
   isComplete: boolean;
   onOpen: () => void;
-}
-
-interface SchemeRxSummary {
-  key: string;
-  kgLabel: string | null;
-  percentage: number;
-  volumeLabel: string;
-}
-
-function repsTokenFromRow(row: FlatSetRow): string {
-  const slash = row.prescribedRepsLabel.indexOf('/');
-  const token = slash >= 0 ? row.prescribedRepsLabel.slice(slash + 1) : String(row.prescribedReps);
-  if (row.isComplex && token.includes('+')) {
-    return token
-      .split('+')
-      .map((part) => part.trim() || '0')
-      .join(' + ');
-  }
-  return token;
-}
-
-function buildSchemeSummaries(rows: FlatSetRow[]): SchemeRxSummary[] {
-  const seen = new Set<number>();
-  const summaries: SchemeRxSummary[] = [];
-
-  for (const row of rows) {
-    if (seen.has(row.schemeIndex)) continue;
-    seen.add(row.schemeIndex);
-
-    const repsToken = repsTokenFromRow(row);
-    const volumeLabel =
-      row.isComplex && repsToken.includes('+')
-        ? repsToken
-        : `${row.schemeSetCount}×${repsToken}`;
-
-    summaries.push({
-      key: `scheme-${row.schemeIndex}`,
-      kgLabel: row.prescribedKg > 0 ? `${formatAthleteKg(row.prescribedKg)} kg` : null,
-      percentage: row.percentage,
-      volumeLabel,
-    });
-  }
-
-  return summaries;
 }
 
 export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProps> = ({
@@ -122,7 +79,7 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
     return {
       doneSets: counts.done,
       totalSets: counts.total,
-      schemeSummaries: buildSchemeSummaries(rows),
+      schemeSummaries: buildSchemeCardSummaries(block, athlete, exercises),
       setDots: dots,
     };
   }, [

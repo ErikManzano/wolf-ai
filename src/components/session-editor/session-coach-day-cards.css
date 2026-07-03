@@ -498,6 +498,39 @@
   list-style: none;
 }
 
+.wolf-se-coach-day-card__rx-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  width: 100%;
+  margin: 0 0 10px;
+}
+
+.wolf-se-coach-day-card__rx {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-se-coach-day-card__rx-kg {
+  color: #fb923c;
+  font-weight: 750;
+}
+
+.wolf-se-coach-day-card__rx-kg--complex {
+  color: #38bdf8;
+}
+
+.wolf-se-coach-day-card__rx-meta {
+  color: #94a3b8;
+  font-weight: 650;
+}
+
 .wolf-se-coach-day-card__set-row {
   display: block;
   font-size: 0.86rem;
@@ -657,6 +690,10 @@
 .wolf-se-coach-day-add:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.wolf-se-coach-day-add:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent, #f97316) 10%, transparent);
 }
 
 .wolf-se-coach-day-add:active:not(:disabled) {

@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronRight, Dumbbell, GitMerge, GripVertical, MoreVertical, Plus } from 'lucide-react';
+import { ChevronRight, Dumbbell, GitMerge, GripVertical, MoreVertical } from 'lucide-react';
 import { Reorder, useDragControls, motion, useReducedMotion } from 'framer-motion';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { blockTonnage, estimateBlockRpe } from './blockMetrics';
-import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from './schemeFormat';
 import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
+import { buildSchemeCardSummaries } from '../../utils/schemeCardRx';
 import { coachListItemMotion, coachListStagger } from './coachMobileMotion';
 import { CoachDayHeaderStrip } from './CoachDayHeaderStrip';
 import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
 import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
+import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
 import './session-coach-day-cards.css';
 import './exercise-coach-actions-sheet.css';
 import './exercise-delete-confirm-modal.css';
@@ -83,8 +84,8 @@ function CoachDayCard({
   const tonnage = blockTonnage(block, athlete, exercises);
   const accent = ACCENT_KEYS[index % ACCENT_KEYS.length]!;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
-  const isComplexReps = blockUsesComplexReps(block);
   const estimatedRpe = estimateBlockRpe(block);
+  const schemeSummaries = buildSchemeCardSummaries(block, athlete, exercises);
 
   return (
     <article
@@ -132,21 +133,32 @@ function CoachDayCard({
           ) : null}
         </div>
 
-        {block.sets.length > 0 ? (
-          <ul className="wolf-se-coach-day-card__sets" aria-label={isEs ? 'Bloques prescritos' : 'Prescribed blocks'}>
-            {block.sets.map((scheme, si) => (
-              <li key={si}>
-                <code className="wolf-se-coach-day-card__set-row">
-                  {formatSetPrescriptionCoachMobile(scheme, isComplexReps)}
-                </code>
-              </li>
+        {schemeSummaries.length > 0 ? (
+          <div
+            className="wolf-se-coach-day-card__rx-block"
+            aria-label={isEs ? 'Prescripción' : 'Prescription'}
+          >
+            {schemeSummaries.map((scheme) => (
+              <p key={scheme.key} className="wolf-se-coach-day-card__rx">
+                {scheme.kgLabel ? (
+                  <span
+                    className={`wolf-se-coach-day-card__rx-kg${isComplex ? ' wolf-se-coach-day-card__rx-kg--complex' : ''}`}
+                  >
+                    {scheme.kgLabel}
+                  </span>
+                ) : null}
+                {scheme.percentage > 0 ? (
+                  <span className="wolf-se-coach-day-card__rx-meta">{scheme.percentage}%</span>
+                ) : null}
+                <span className="wolf-se-coach-day-card__rx-meta">{scheme.volumeLabel}</span>
+              </p>
             ))}
-          </ul>
-        ) : (
+          </div>
+        ) : block.sets.length === 0 ? (
           <p className="wolf-se-coach-day-card__empty-sets">
             {isEs ? 'Sin bloques prescritos' : 'No prescribed blocks'}
           </p>
-        )}
+        ) : null}
 
         <button type="button" className="wolf-se-coach-day-card__footer" onClick={onSelect}>
           {estimatedRpe != null ? (
@@ -319,17 +331,11 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
       )}
 
       {onAddExercise ? (
-        <button
-          type="button"
-          className="wolf-se-coach-day-add"
+        <CoachDayAddExerciseButton
+          isEs={isEs}
           disabled={!canAddExercise}
           onClick={onAddExercise}
-        >
-          <span className="wolf-se-coach-day-add__icon" aria-hidden>
-            <Plus size={20} strokeWidth={2.25} />
-          </span>
-          {isEs ? 'Añadir ejercicio' : 'Add exercise'}
-        </button>
+        />
       ) : null}
 
       <ExerciseCoachActionsSheet

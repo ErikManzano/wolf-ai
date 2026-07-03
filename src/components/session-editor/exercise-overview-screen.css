@@ -102,6 +102,190 @@
   background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 18%, transparent);
 }
 
+.wolf-se-exercise-overview__movement-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated, #1a1a1a) 90%, transparent);
+  color: var(--color-text-secondary, #a3a3a3);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wolf-se-exercise-overview__movement-pick:active {
+  background: var(--color-bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.wolf-se-exercise-overview__chain {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated, #1a1a1a) 88%, transparent);
+}
+
+.wolf-se-exercise-overview__chain-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wolf-se-exercise-overview__chain-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-exercise-overview__chain-count {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--color-text-muted);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-hover) 60%, transparent);
+}
+
+.wolf-se-exercise-overview__chain-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 8%, transparent);
+  color: var(--wolf-se-coach-accent, #f97316);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wolf-se-exercise-overview__chain-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-style: solid;
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.wolf-se-exercise-overview__chain-add:not(:disabled):active {
+  background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 16%, transparent);
+}
+
+.wolf-se-exercise-overview__chain-remove {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.wolf-se-exercise-overview__chain-remove:active {
+  color: var(--color-text-secondary);
+}
+
+.wolf-se-exercise-overview__chain-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.wolf-se-exercise-overview__chain-arrow {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.wolf-se-exercise-overview__chain-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg-hover) 40%, transparent);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wolf-se-exercise-overview__chain-node:disabled {
+  cursor: default;
+}
+
+.wolf-se-exercise-overview__chain-node:not(:disabled):active {
+  background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 12%, transparent);
+  border-color: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 35%, var(--color-border));
+}
+
+.wolf-se-exercise-overview__chain-chev {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.wolf-se-exercise-overview__chain-idx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--wolf-se-coach-accent, #f97316) 22%, transparent);
+  color: var(--wolf-se-coach-accent, #f97316);
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.wolf-se-exercise-overview__chain-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-se-coach-set-block__segments {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.wolf-se-coach-set-block__segments-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 .wolf-se-exercise-overview__tags {
   display: flex;
   flex-wrap: wrap;

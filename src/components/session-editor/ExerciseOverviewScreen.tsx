@@ -7,13 +7,16 @@ import {
   addSetToBlock,
   duplicateSetAt,
   removeSetFromBlock,
+  updateSegmentRepAt,
   updateSetSchemeField,
   WL_SESSION_LIMITS,
 } from '../../services/sessionMutations';
+import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   blockTonnage,
   blockTotalReps,
   blockTotalSets,
+  exerciseName,
   findCatalogExercise,
   kgForExercise,
   schemeRowTonnage,
@@ -44,6 +47,9 @@ export interface ExerciseOverviewScreenProps {
   canDuplicateExercise?: boolean;
   initialExpandedSetIndex?: number | null;
   onChangeExercise?: () => void;
+  onChangeSegmentExercise?: (segmentIndex: number) => void;
+  onAddSegment?: () => void;
+  onRemoveLastSegment?: () => void;
 }
 
 interface CoachBlockSummaryCardProps {
@@ -130,6 +136,9 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   hideHeaderBack = false,
   initialExpandedSetIndex = null,
   onChangeExercise,
+  onChangeSegmentExercise,
+  onAddSegment,
+  onRemoveLastSegment,
 }) => {
   const apply = onApply;
   const reduceMotion = useReducedMotion();
@@ -147,6 +156,9 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   }, [expandedSetIndex, block.sets.length]);
 
   const hasExercise = blockHasExercise(block);
+  const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  const segments = block.segments ?? [];
+  const atMaxSegments = segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS;
   const title = blockDisplayName(block, exercises, isEs);
   const tonnage = blockTonnage(block, athlete, exercises);
   const totalSets = blockTotalSets(block);
@@ -186,6 +198,81 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
           </button>
         ) : null}
 
+        {isComplex && segments.length > 0 ? (
+          <section
+            className="wolf-se-exercise-overview__chain"
+            aria-label={isEs ? 'Cadena del complejo' : 'Complex chain'}
+          >
+            <div className="wolf-se-exercise-overview__chain-head">
+              <h3 className="wolf-se-exercise-overview__chain-title">
+                {isEs ? 'Cadena del complejo' : 'Complex chain'}
+              </h3>
+              <span className="wolf-se-exercise-overview__chain-count">
+                {segments.length}/{WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
+              </span>
+            </div>
+            <div className="wolf-se-exercise-overview__chain-nodes">
+              {segments.map((seg, segIdx) => (
+                <React.Fragment key={`${seg.exerciseId}-${segIdx}`}>
+                  {segIdx > 0 ? (
+                    <span className="wolf-se-exercise-overview__chain-arrow" aria-hidden>
+                      →
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="wolf-se-exercise-overview__chain-node"
+                    disabled={!onChangeSegmentExercise}
+                    onClick={() => onChangeSegmentExercise?.(segIdx)}
+                  >
+                    <span className="wolf-se-exercise-overview__chain-idx">{segIdx + 1}</span>
+                    <span className="wolf-se-exercise-overview__chain-name">
+                      {exerciseName(exercises, seg.exerciseId)}
+                    </span>
+                    {onChangeSegmentExercise ? (
+                      <ChevronRight className="wolf-se-exercise-overview__chain-chev" size={16} aria-hidden />
+                    ) : null}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+            {onAddSegment ? (
+              <button
+                type="button"
+                className="wolf-se-exercise-overview__chain-add"
+                disabled={atMaxSegments}
+                onClick={onAddSegment}
+              >
+                <Plus size={18} aria-hidden />
+                {atMaxSegments
+                  ? isEs
+                    ? 'Máximo 4 movimientos'
+                    : 'Maximum 4 movements'
+                  : isEs
+                    ? 'Añadir movimiento al complejo'
+                    : 'Add movement to complex'}
+              </button>
+            ) : null}
+            {onRemoveLastSegment && segments.length > 2 ? (
+              <button
+                type="button"
+                className="wolf-se-exercise-overview__chain-remove"
+                onClick={onRemoveLastSegment}
+              >
+                {isEs ? 'Quitar último movimiento' : 'Remove last movement'}
+              </button>
+            ) : null}
+          </section>
+        ) : hasExercise && onChangeExercise ? (
+          <button
+            type="button"
+            className="wolf-se-exercise-overview__movement-pick"
+            onClick={onChangeExercise}
+          >
+            {isEs ? 'Cambiar movimiento' : 'Change movement'}
+          </button>
+        ) : null}
+
         {block.sets.length > 0 ? (
           <motion.div
             className="wolf-se-exercise-overview__blocks-stack"
@@ -195,7 +282,9 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
           >
             {block.sets.map((scheme, si) => {
               const kg =
-                catalogEx && scheme ? kgForExercise(athlete, catalogEx, scheme.percentage) : '—';
+                !isComplex && catalogEx && scheme
+                  ? kgForExercise(athlete, catalogEx, scheme.percentage)
+                  : '—';
               const expanded = expandedSetIndex === si;
               return (
                 <motion.div
@@ -223,6 +312,10 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
                       isEs={isEs}
                       variant="panel"
                       compactPanel
+                      isComplex={isComplex}
+                      block={block}
+                      athlete={athlete}
+                      exercises={exercises}
                       canDuplicate={block.sets.length < WL_SESSION_LIMITS.MAX_ROWS_PER_BLOCK}
                       canRemove={block.sets.length > 1}
                       onDuplicate={() =>
@@ -249,6 +342,11 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
                       onRestChange={(v) =>
                         apply((current) =>
                           updateSetSchemeField(current, bi, si, 'restSec', v, athlete, exercises),
+                        )
+                      }
+                      onSegmentRepChange={(segIdx, val) =>
+                        apply((current) =>
+                          updateSegmentRepAt(current, bi, si, segIdx, val, athlete, exercises),
                         )
                       }
                     />

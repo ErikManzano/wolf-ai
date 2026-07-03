@@ -29,6 +29,7 @@ import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChange
 import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
 import type { ProgramSyncPayload } from './programSyncQueue';
 import { incrementSaveMetric } from './saveMetrics';
+import { buildStarterProgramDraft } from '../utils/programSchedule';
 
 export type AssignmentsChangedPayload = {
   coachId: string;
@@ -65,16 +66,12 @@ function mapAssignmentRow(row: ProgramAssignment): ActiveAssignment {
 }
 
 function emptyDraftProgram(name: string): GeneratedProgram {
-  return {
-    id: `prog-${randomUUID()}`,
+  return buildStarterProgramDraft({
     name,
-    athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
-    createdAt: new Date().toISOString(),
+    startDate: new Date().toISOString().slice(0, 10),
     totalWeeks: 4,
     daysPerWeek: 3,
-    primaryGoal: 'strength',
-    weeks: [],
-  };
+  });
 }
 
 export class CoachService {

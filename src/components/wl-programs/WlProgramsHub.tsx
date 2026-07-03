@@ -84,6 +84,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     duplicateCoachProgram,
     deleteCoachProgram,
     removeAssignment,
+    motorExercises,
   } = useWolfAssign();
   const { pushAlert } = useWolfAlert();
 
@@ -303,6 +304,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const createSheet = showCreateSheet ? (
     <WlProgramCreateSheet
       isEs={isEs}
+      exercises={motorExercises}
       onClose={() => setShowCreateSheet(false)}
       onCreate={handleCreate}
     />

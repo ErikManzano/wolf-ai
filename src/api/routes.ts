@@ -43,6 +43,7 @@ import { randomUUID } from 'node:crypto';
 import { createProgramSyncQueue, type ProgramSyncQueue, type ProgramSyncPayload } from './programSyncQueue';
 import { incrementSaveMetric } from './saveMetrics';
 import { replaceProgramSession } from '../services/sessionMutations';
+import { buildStarterProgramDraft } from '../utils/programSchedule';
 
 export interface MockApiState {
   athletes: Athlete[];
@@ -2562,16 +2563,12 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       try {
         const created = await coachService.createProgram(coachId, {
           name: body.name.trim(),
-          program: body.program ?? {
-            id: `prog-${Date.now()}`,
+          program: body.program ?? buildStarterProgramDraft({
             name: body.name.trim(),
-            athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
-            createdAt: new Date().toISOString(),
+            startDate: new Date().toISOString().slice(0, 10),
             totalWeeks: 4,
             daysPerWeek: 3,
-            primaryGoal: 'strength',
-            weeks: [],
-          },
+          }),
           status: body.status,
         });
         res.status(201).json(created);
@@ -2589,16 +2586,12 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       id: `cpr-${Date.now()}`,
       coachId,
       name: body.name.trim(),
-      program: body.program ?? {
-        id: `prog-${Date.now()}`,
+      program: body.program ?? buildStarterProgramDraft({
         name: body.name.trim(),
-        athleteId: TEMPLATE_PROGRAM_ATHLETE_ID,
-        createdAt: now,
+        startDate: now.slice(0, 10),
         totalWeeks: 4,
         daysPerWeek: 3,
-        primaryGoal: 'strength',
-        weeks: [],
-      },
+      }),
       status: body.status ?? 'draft',
       createdAt: now,
       updatedAt: now,

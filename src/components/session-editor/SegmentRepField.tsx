@@ -11,6 +11,7 @@ interface SegmentRepFieldProps {
   min?: number;
   max?: number;
   variant?: 'default' | 'premium';
+  coachMobile?: boolean;
   suffix?: string;
   'aria-label'?: string;
 }
@@ -22,11 +23,13 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
   min = 1,
   max = 30,
   variant = 'premium',
+  coachMobile = false,
   suffix,
   'aria-label': ariaLabel,
 }) => {
   const parsed = parseRepTokens(value);
   const numeric = parsed >= min ? Math.min(max, parsed) : min;
+  const coachClass = coachMobile ? 'wolf-se-combo-select--coach-mobile' : undefined;
 
   if (variant === 'premium') {
     return (
@@ -37,6 +40,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
         onChange={(n) => onChange(String(n))}
         suffix={suffix}
         aria-label={ariaLabel}
+        className={coachClass}
         menuClassName={SPREADSHEET_COMBO_MENU_CLASS}
       />
     );
@@ -54,6 +58,7 @@ export const SegmentRepField: React.FC<SegmentRepFieldProps> = ({
       options={options}
       onChange={(n) => onChange(String(n))}
       suffix={suffix}
+      className={coachClass}
       aria-label={ariaLabel}
     />
   );

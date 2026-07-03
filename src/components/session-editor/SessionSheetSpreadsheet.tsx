@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Reorder } from 'framer-motion';
-import { Plus } from 'lucide-react';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';
 import { ExerciseSheetRow, SortableExerciseSheetGroup } from './ExerciseSheetRow';
 import { rowsFromExerciseBlocks, type SortableExerciseRow } from './spreadsheetSortable';
 import { SessionSheetSummary } from './SessionSheetSummary';
 import { AppBreadcrumb, type AppBreadcrumbItem } from '../wl-shared/AppBreadcrumb';
+import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
 import '../wl-shared/app-breadcrumb.css';
 import './session-sheet-spreadsheet.css';
 import './set-rows.css';
@@ -236,14 +236,7 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
       </div>
 
       {canAddExercise ? (
-        <button
-          type="button"
-          className={`wolf-se-spreadsheet__add-row${compactHeaders ? ' btn-primary' : ''}`}
-          onClick={onAddExercise}
-        >
-          <Plus size={16} aria-hidden />
-          {isEs ? 'Agregar ejercicio' : 'Add exercise'}
-        </button>
+        <CoachDayAddExerciseButton isEs={isEs} onClick={onAddExercise} />
       ) : null}
     </section>
   );

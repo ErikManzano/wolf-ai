@@ -4,18 +4,22 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
 import type { SessionApplyFn, SessionCatalogProps } from './session-editor/types';
 import {
+  addComplexSegment,
   addExerciseBlock,
   duplicateExerciseBlock,
   moveExerciseBlock,
+  removeComplexSegment,
   removeExerciseBlock,
   setBlockExercise,
   setExerciseBlockOrder,
+  setSegmentExercise,
   WL_SESSION_LIMITS,
 } from '../services/sessionMutations';
 import { normalizeBlockType } from '../services/trainingEngine';
 import { BlockKindBadges, ExerciseBlockCard } from './session-editor/ExerciseBlockCard';
 import { ExerciseOverviewScreen } from './session-editor/ExerciseOverviewScreen';
 import { SessionDayEditor } from './session-editor/SessionDayEditor';
+import { CoachDayAddExerciseButton } from './session-editor/CoachDayAddExerciseButton';
 import { SessionDayHero } from './session-editor/SessionDayHero';
 import { coachScreenMotion, type CoachNavDirection } from './session-editor/coachMobileMotion';
 import { blockDisplayName } from './session-editor/sessionSheetUtils';
@@ -102,7 +106,8 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
   const [focusBlockIndex, setFocusBlockIndex] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerPurpose, setPickerPurpose] = useState<'add' | 'change'>('add');
+  const [pickerPurpose, setPickerPurpose] = useState<'add' | 'change' | 'changeSegment' | 'addSegment'>('add');
+  const [pickerSegmentIndex, setPickerSegmentIndex] = useState<number | null>(null);
   const [overviewExpandSetIndex, setOverviewExpandSetIndex] = useState<number | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 1024px)');
@@ -183,7 +188,14 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   }, [apply, athlete, exercises, useMobileCoachFlow]);
 
   const openChangeExercisePicker = useCallback(() => {
+    setPickerSegmentIndex(null);
     setPickerPurpose('change');
+    setPickerOpen(true);
+  }, []);
+
+  const openChangeSegmentExercisePicker = useCallback((segmentIndex: number) => {
+    setPickerSegmentIndex(segmentIndex);
+    setPickerPurpose('changeSegment');
     setPickerOpen(true);
   }, []);
 
@@ -201,9 +213,38 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     [apply, athlete, exercises],
   );
 
+  const openAddSegmentPicker = useCallback(() => {
+    setPickerSegmentIndex(null);
+    setPickerPurpose('addSegment');
+    setPickerOpen(true);
+  }, []);
+
   const handlePickerSelect = useCallback(
     (exerciseId: string) => {
       setPickerOpen(false);
+      if (pickerPurpose === 'addSegment' && editingBlockIndex != null) {
+        apply((current) =>
+          addComplexSegment(current, editingBlockIndex, exerciseId, athlete, exercises),
+        );
+        return;
+      }
+      if (pickerPurpose === 'changeSegment' && editingBlockIndex != null && pickerSegmentIndex != null) {
+        apply((current) => {
+          if (pickerSegmentIndex === 0) {
+            return setBlockExercise(current, editingBlockIndex, exerciseId, athlete, exercises);
+          }
+          return setSegmentExercise(
+            current,
+            editingBlockIndex,
+            pickerSegmentIndex,
+            exerciseId,
+            athlete,
+            exercises,
+          );
+        });
+        setPickerSegmentIndex(null);
+        return;
+      }
       if (pickerPurpose === 'change' && editingBlockIndex != null) {
         apply((current) => setBlockExercise(current, editingBlockIndex, exerciseId, athlete, exercises));
         return;
@@ -219,8 +260,18 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
       setOverviewExpandSetIndex(0);
       setEditorView('exerciseOverview');
     },
-    [apply, athlete, exercises, editingBlockIndex, pickerPurpose, setEditorView],
+    [apply, athlete, exercises, editingBlockIndex, pickerPurpose, pickerSegmentIndex, setEditorView],
   );
+
+  const handleAddComplexSegment = openAddSegmentPicker;
+
+  const handleRemoveLastComplexSegment = useCallback(() => {
+    if (editingBlockIndex == null) return;
+    const block = sessionRef.current.exercises[editingBlockIndex];
+    const lastIdx = (block?.segments?.length ?? 0) - 1;
+    if (lastIdx < 2) return;
+    apply((current) => removeComplexSegment(current, editingBlockIndex, lastIdx, athlete, exercises));
+  }, [apply, athlete, exercises, editingBlockIndex]);
 
   const handleReorderBlocks = useCallback(
     (orderedBlocks: Session['exercises']) => {
@@ -368,10 +419,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           </div>
           {canAddExercise ? (
             <div className="wolf-se-sheet-footer">
-              <button type="button" className="wolf-se-sets-premium__add-row wolf-se-sheet-add" onClick={handleAddExercise}>
-                <Plus size={14} aria-hidden />
-                {isEs ? 'Añadir ejercicio' : 'Add exercise'}
-              </button>
+              <CoachDayAddExerciseButton isEs={isEs} onClick={handleAddExercise} />
             </div>
           ) : null}
         </div>
@@ -447,6 +495,11 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
                 initialExpandedSetIndex={overviewExpandSetIndex}
                 onRemoveBlock={() => handleRemoveBlock(editingBlockIndex)}
                 onChangeExercise={!editingIsComplex ? openChangeExercisePicker : undefined}
+                onChangeSegmentExercise={
+                  editingIsComplex ? openChangeSegmentExercisePicker : undefined
+                }
+                onAddSegment={editingIsComplex ? handleAddComplexSegment : undefined}
+                onRemoveLastSegment={editingIsComplex ? handleRemoveLastComplexSegment : undefined}
                 onDuplicateExercise={handleDuplicateExercise}
                 canDuplicateExercise={session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
                 onMoveBlockUp={handleMoveEditingBlockUp}
@@ -523,16 +576,32 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           options={catalog.pickerOptions}
-          value={pickerPurpose === 'change' ? (editingBlock?.exerciseId ?? '') : ''}
+          value={
+            pickerPurpose === 'changeSegment' &&
+            editingBlock &&
+            pickerSegmentIndex != null
+              ? (editingBlock.segments?.[pickerSegmentIndex]?.exerciseId ?? '')
+              : pickerPurpose === 'change'
+                ? (editingBlock?.exerciseId ?? '')
+                : ''
+          }
           isEs={isEs}
           title={
-            pickerPurpose === 'change'
+            pickerPurpose === 'addSegment'
               ? isEs
-                ? 'Cambiar ejercicio'
-                : 'Change exercise'
-              : isEs
-                ? 'Agregar ejercicio'
-                : 'Add exercise'
+                ? 'Añadir movimiento al complejo'
+                : 'Add movement to complex'
+              : pickerPurpose === 'changeSegment'
+                ? isEs
+                  ? 'Cambiar movimiento'
+                  : 'Change movement'
+                : pickerPurpose === 'change'
+                  ? isEs
+                    ? 'Cambiar ejercicio'
+                    : 'Change exercise'
+                  : isEs
+                    ? 'Agregar ejercicio'
+                    : 'Add exercise'
           }
           recentIds={catalog.recentIds}
           keepOpenOnSelect={false}

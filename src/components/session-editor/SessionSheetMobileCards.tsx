@@ -18,6 +18,7 @@ import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { SpreadsheetBlockTypeSelect } from './SpreadsheetBlockTypeSelect';
 import { ExerciseSheetExpandPanel } from './ExerciseSheetExpandPanel';
 import { AppBreadcrumb, type AppBreadcrumbItem } from '../wl-shared/AppBreadcrumb';
+import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
 import { SessionSheetSummary } from './SessionSheetSummary';
 import '../wl-shared/app-breadcrumb.css';
 import './session-sheet-spreadsheet.css';
@@ -400,10 +401,7 @@ export const SessionSheetMobileCards: React.FC<SessionSheetMobileCardsProps> = (
       )}
 
       {canAddExercise ? (
-        <button type="button" className="wolf-se-spreadsheet__add-row" onClick={onAddExercise}>
-          <Plus size={16} aria-hidden />
-          {isEs ? 'Agregar ejercicio' : 'Add exercise'}
-        </button>
+        <CoachDayAddExerciseButton isEs={isEs} onClick={onAddExercise} />
       ) : null}
     </section>
   );

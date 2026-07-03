@@ -1,5 +1,6 @@
-import type { ExerciseGoal, GeneratedProgram } from '../models/training';
+import type { Athlete, Exercise, GeneratedProgram, SessionExerciseBlock, SessionGoal } from '../models/training';
 import { TEMPLATE_PROGRAM_ATHLETE_ID } from '../models/coach-architecture';
+import { buildSessionFromBlocks, getExercisePoolForGoal } from '../services/sessionGenerator';
 
 export interface ProgramDraftInput {
   name: string;
@@ -7,6 +8,69 @@ export interface ProgramDraftInput {
   totalWeeks: number;
   daysPerWeek: number;
   primaryGoal?: ExerciseGoal;
+}
+
+const TEMPLATE_ATHLETE: Athlete = {
+  id: TEMPLATE_PROGRAM_ATHLETE_ID,
+  name: 'Template',
+  level: 'intermediate',
+  bodyweight: 80,
+  oneRM: { snatch: 80, cleanJerk: 100, backSquat: 140, frontSquat: 120 },
+  fatigueScore: 20,
+  readinessScore: 80,
+};
+
+function defaultStarterScheme() {
+  return { percentage: 75, reps: 3, sets: 1, targetRir: 2, restSec: 150 };
+}
+
+/** One simple + one complex block for day 1 (coach fills/changes exercises in editor). */
+export function buildStarterDayBlocks(
+  exercises: Exercise[],
+  primaryGoal: SessionGoal = 'strength',
+): SessionExerciseBlock[] {
+  const pool = exercises.length > 0 ? getExercisePoolForGoal(primaryGoal, exercises) : [];
+  const firstId = pool[0]?.id ?? '';
+  const secondId = pool[1]?.id ?? firstId;
+  const scheme = defaultStarterScheme();
+
+  return [
+    {
+      exerciseId: firstId,
+      blockType: 'single',
+      sets: [scheme],
+    },
+    {
+      exerciseId: firstId,
+      blockType: 'complex',
+      segments: [{ exerciseId: firstId }, { exerciseId: secondId }],
+      sets: [{ ...scheme, segmentReps: ['1', '1'], reps: 2 }],
+    },
+  ];
+}
+
+export function buildStarterProgramDraft(
+  input: ProgramDraftInput,
+  exercises: Exercise[] = [],
+): GeneratedProgram {
+  const base = buildProgramDraft(input);
+  const blocks = buildStarterDayBlocks(exercises, base.primaryGoal);
+  const session = buildSessionFromBlocks(
+    TEMPLATE_PROGRAM_ATHLETE_ID,
+    blocks,
+    TEMPLATE_ATHLETE,
+    exercises,
+  );
+
+  return {
+    ...base,
+    weeks: [
+      {
+        weekNumber: 1,
+        days: [{ dayNumber: 1, label: 'Día 1', session }],
+      },
+    ],
+  };
 }
 
 /** ISO date (YYYY-MM-DD) + calendar days. */

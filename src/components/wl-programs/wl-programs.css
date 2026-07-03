@@ -2394,28 +2394,6 @@
   opacity: 1;
 }
 
-/* Add exercise — primary CTA (embedded only via btn-primary class) */
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary {
-  border: none;
-  border-radius: 12px;
-  background: var(--color-accent-gradient);
-  color: #fff;
-  box-shadow: 0 4px 12px var(--color-accent-glow);
-  font-weight: 700;
-}
-
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  background: var(--color-accent-gradient);
-  color: #fff;
-}
-
-.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__add-row.btn-primary:active:not(:disabled) {
-  filter: brightness(0.95);
-  transform: translateY(0);
-}
-
 .wl-programs-embedded-plan .wolf-program-day-board > .wolf-program-day-stats {
   margin: 0 0 12px;
   flex-shrink: 0;

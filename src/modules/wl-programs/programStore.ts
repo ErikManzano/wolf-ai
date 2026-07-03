@@ -1,10 +1,10 @@
 import type { CoachProgram, CoachProgramRow } from '../../models/coach-architecture';
-import { buildProgramDraft } from '../../utils/programSchedule';
+import { buildStarterProgramDraft } from '../../utils/programSchedule';
 
 const STORAGE_KEY = 'wolf_coach_programs_v1';
 
 function emptyProgram(name: string): CoachProgram['program'] {
-  return buildProgramDraft({
+  return buildStarterProgramDraft({
     name: name.trim(),
     startDate: new Date().toISOString().slice(0, 10),
     totalWeeks: 4,

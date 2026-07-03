@@ -1,11 +1,13 @@
 import React, { useCallback, useRef } from 'react';
 import { ChevronDown, Copy, Trash2 } from 'lucide-react';
-import type { SetScheme } from '../../models/training';
+import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
 import { WL_PCT_MAX, WL_PCT_MIN } from '../../services/trainingEngine';
 import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
+import { complexSetRowTonnage, exerciseName, findCatalogExercise, kgForExercise } from './blockMetrics';
 import { ComboNumberField } from './ComboNumberField';
 import { ComboPresetField } from './ComboPresetField';
 import { dispatchCoachMobileOpen } from './comboMenuPortal';
+import { SegmentRepField } from './SegmentRepField';
 import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import { DEFAULT_REST_SEC, formatRestSec } from './setSchemeUtils';
 import './exercise-sets-coach-screen.css';
@@ -27,10 +29,16 @@ export interface CoachSetBlockEditorProps {
   variant?: 'full' | 'inline' | 'panel';
   /** Hide block header when parent already shows block title (overview accordion). */
   compactPanel?: boolean;
+  /** Complex block: per-segment reps instead of a single reps field. */
+  isComplex?: boolean;
+  block?: SessionExerciseBlock;
+  athlete?: Athlete;
+  exercises?: Exercise[];
   onPctChange: (value: number) => void;
   onRepsChange: (value: number) => void;
   onSetsChange: (value: number) => void;
   onRestChange: (value: number) => void;
+  onSegmentRepChange?: (segIndex: number, value: string) => void;
   onDuplicate?: () => void;
   onRemove?: () => void;
   canDuplicate?: boolean;
@@ -38,14 +46,14 @@ export interface CoachSetBlockEditorProps {
 }
 
 function openCoachMobilePicker(root: HTMLElement) {
-  const combo = root.querySelector('.wolf-se-combo-select');
-  if (combo) {
-    dispatchCoachMobileOpen(combo);
-    return;
-  }
   const presetTrigger = root.querySelector<HTMLButtonElement>('button.wolf-se-combo-preset__trigger');
   if (presetTrigger) {
     presetTrigger.click();
+    return;
+  }
+  const coachCombo = root.querySelector('.wolf-se-combo-select--coach-mobile');
+  if (coachCombo) {
+    dispatchCoachMobileOpen(coachCombo);
     return;
   }
   const input = root.querySelector<HTMLInputElement>('input.wolf-se-combo-select__input');
@@ -94,7 +102,8 @@ function MobileFieldRow({
             <span className="wolf-se-coach-mobile-row__value">{value}</span>
             {suffix ? (
               <span className="wolf-se-coach-mobile-row__suffix">{suffix}</span>
-            ) : showChevron ? (
+            ) : null}
+            {showChevron ? (
               <ChevronDown size={18} className="wolf-se-coach-mobile-row__chev" aria-hidden />
             ) : null}
           </div>
@@ -188,11 +197,16 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
   onRepsChange,
   onSetsChange,
   onRestChange,
+  onSegmentRepChange,
   onDuplicate,
   onRemove,
   canDuplicate = true,
   canRemove = true,
   compactPanel = false,
+  isComplex = false,
+  block,
+  athlete,
+  exercises = [],
 }) => {
   const purpose = purposeForScheme(scheme);
   const restSec = scheme.restSec ?? DEFAULT_REST_SEC;
@@ -200,6 +214,11 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
   const isPanel = variant === 'panel';
   const showHead = variant === 'full' || variant === 'panel';
   const showFooterRest = variant === 'full';
+  const segments = isComplex && block?.segments?.length ? block.segments : [];
+  const tonnageKg =
+    isComplex && block && athlete
+      ? complexSetRowTonnage(block, scheme, athlete, exercises)
+      : kg;
 
   if (isPanel) {
     const showPanelHead = showHead && !compactPanel;
@@ -293,7 +312,6 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
           <MobileFieldRow
             value={String(scheme.percentage)}
             suffix="%"
-            showChevron={false}
             wide
             label={isEs ? 'Intensidad' : 'Intensity'}
             ariaLabel={isEs ? `Intensidad bloque ${si + 1}` : `Intensity block ${si + 1}`}
@@ -314,7 +332,6 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
 
           <MobileFieldRow
             value={String(scheme.sets)}
-            showChevron={false}
             label={isEs ? 'Series' : 'Sets'}
             ariaLabel={isEs ? `Series bloque ${si + 1}` : `Sets block ${si + 1}`}
           >
@@ -331,24 +348,66 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
             />
           </MobileFieldRow>
 
-          <MobileFieldRow
-            value={String(scheme.reps)}
-            showChevron={false}
-            label="Reps"
-            ariaLabel={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
-          >
-            <ComboNumberField
-              variant="premium"
-              className="wolf-se-combo-select--coach-mobile"
-              value={scheme.reps}
-              min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
-              max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
-              step={1}
-              options={[...REP_PRESETS_LIST]}
-              onChange={onRepsChange}
-              aria-label={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
-            />
-          </MobileFieldRow>
+          {isComplex && segments.length > 0 ? (
+            <div className="wolf-se-coach-set-block__segments">
+              <p className="wolf-se-coach-set-block__segments-title">
+                {isEs ? 'Reps por movimiento' : 'Reps per movement'}
+              </p>
+              {segments.map((seg, segIdx) => {
+                const name = exerciseName(exercises, seg.exerciseId);
+                const exSeg = findCatalogExercise(exercises, seg.exerciseId);
+                const segKg = athlete && exSeg ? kgForExercise(athlete, exSeg, scheme.percentage) : '—';
+                const segReps = scheme.segmentReps?.[segIdx] ?? '1';
+                return (
+                  <div key={`${seg.exerciseId}-${segIdx}`} className="wolf-se-complex-segment">
+                    <div className="wolf-se-complex-segment__head">
+                      <span className="wolf-se-complex-segment__badge">{segIdx + 1}</span>
+                      <span className="wolf-se-complex-segment__name">{name}</span>
+                    </div>
+                    <div className="wolf-se-complex-segment__grid wolf-se-complex-segment__grid--compact">
+                      <div className="wolf-se-complex-segment__field">
+                        <MobileFieldRow
+                          value={segReps}
+                          label="Reps"
+                          ariaLabel={isEs ? `Reps ${name}` : `Reps ${name}`}
+                        >
+                          <SegmentRepField
+                            variant="premium"
+                            coachMobile
+                            value={segReps}
+                            onChange={(v) => onSegmentRepChange?.(segIdx, v)}
+                            aria-label={isEs ? `Reps ${name}` : `Reps ${name}`}
+                          />
+                        </MobileFieldRow>
+                      </div>
+                      <div className="wolf-se-complex-segment__field wolf-se-complex-segment__field--load">
+                        <span className="wolf-se-complex-segment__label">{isEs ? 'Carga' : 'Load'}</span>
+                        <strong className="wolf-se-complex-segment__kg">{segKg} kg</strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <MobileFieldRow
+              value={String(scheme.reps)}
+              label="Reps"
+              ariaLabel={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
+            >
+              <ComboNumberField
+                variant="premium"
+                className="wolf-se-combo-select--coach-mobile"
+                value={scheme.reps}
+                min={WL_SESSION_LIMITS.MIN_REPS_PER_SET}
+                max={WL_SESSION_LIMITS.MAX_REPS_PER_SET}
+                step={1}
+                options={[...REP_PRESETS_LIST]}
+                onChange={onRepsChange}
+                aria-label={isEs ? `Reps bloque ${si + 1}` : `Reps block ${si + 1}`}
+              />
+            </MobileFieldRow>
+          )}
 
           <CoachRestMetricRow
             restSec={restSec}
@@ -364,7 +423,7 @@ export const CoachSetBlockEditor: React.FC<CoachSetBlockEditorProps> = ({
                 <div className="wolf-se-coach-mobile-metric__value-row">
                   <div className="wolf-se-coach-mobile-metric__value-stack">
                     <span className="wolf-se-coach-mobile-metric__value">
-                      {kg}
+                      {tonnageKg}
                       <span className="wolf-se-coach-mobile-metric__unit"> kg</span>
                     </span>
                     <span className="wolf-se-coach-mobile-metric__readonly-hint">

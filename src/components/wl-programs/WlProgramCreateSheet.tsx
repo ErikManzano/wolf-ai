@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { Save } from 'lucide-react';
 import { WlFormSheet } from '../wl-shared/WlFormSheet';
 import { WlFormNumberStepper } from '../wl-shared/WlFormNumberStepper';
+import type { Exercise } from '../../models/training';
 import {
-  buildProgramDraft,
+  buildStarterProgramDraft,
   computeProgramEndDate,
   todayIsoDate,
   totalTrainingDays,
@@ -11,14 +12,20 @@ import {
 
 export interface WlProgramCreateSheetProps {
   isEs: boolean;
+  exercises?: Exercise[];
   onClose: () => void;
   onCreate: (input: {
     name: string;
-    program: ReturnType<typeof buildProgramDraft>;
+    program: ReturnType<typeof buildStarterProgramDraft>;
   }) => Promise<void>;
 }
 
-const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({ isEs, onClose, onCreate }) => {
+const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
+  isEs,
+  exercises = [],
+  onClose,
+  onCreate,
+}) => {
   const [name, setName] = useState(isEs ? 'Nuevo mesociclo' : 'New mesocycle');
   const [startDate, setStartDate] = useState(todayIsoDate);
   const [totalWeeks, setTotalWeeks] = useState(4);
@@ -41,12 +48,15 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({ isEs, onClo
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      const program = buildProgramDraft({
-        name: name.trim(),
-        startDate,
-        totalWeeks,
-        daysPerWeek,
-      });
+      const program = buildStarterProgramDraft(
+        {
+          name: name.trim(),
+          startDate,
+          totalWeeks,
+          daysPerWeek,
+        },
+        exercises,
+      );
       await onCreate({ name: name.trim(), program });
       onClose();
     } finally {
