@@ -37,6 +37,7 @@ export interface DetailSetCardProps {
   trackingKey?: string;
   onSaveSet: (payload: DetailSetUpdatePayload) => void;
   onClearSet: () => void;
+  onSetAddressed?: (fullyComplete: boolean) => void;
 }
 
 export const DetailSetCard: React.FC<DetailSetCardProps> = ({
@@ -50,11 +51,13 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
   trackingKey,
   onSaveSet,
   onClearSet,
+  onSetAddressed,
 }) => {
   const { pushAlert } = useWolfAlert();
   const { isTrackingPending, isTrackingFailed } = useWlAssignments();
   const pendingRepRef = useRef<{ repIndex: number; outcome: RepOutcome } | null>(null);
   const wasPendingRef = useRef(false);
+  const wasAddressedRef = useRef(addressed);
   const [repNotifyTick, setRepNotifyTick] = useState(0);
   const prescribedSegments = row.prescribedSegmentReps ?? [];
   const isComplex = row.isComplex && prescribedSegments.length > 0;
@@ -85,6 +88,10 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
   useEffect(() => {
     setComplexOutcomes(initialComplex);
   }, [initialComplex]);
+
+  useEffect(() => {
+    wasAddressedRef.current = addressed;
+  }, [addressed]);
 
   const normalizedComplexOutcomes = useMemo(
     () => ensureSegmentOutcomes(prescribedSegments, complexOutcomes),
@@ -153,12 +160,21 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
     setRepNotifyTick((tick) => tick + 1);
   };
 
+  const maybeNotifySetAddressed = (outcomes: RepOutcome[]) => {
+    if (!outcomes.every((outcome) => outcome !== 'pending')) return;
+    if (wasAddressedRef.current) return;
+    wasAddressedRef.current = true;
+    onSetAddressed?.(outcomes.every((outcome) => outcome === 'completed'));
+  };
+
   const persistSimple = (next: RepOutcome[]) => {
     setSimpleOutcomes(next);
     if (next.every((outcome) => outcome === 'pending')) {
       if (addressed || log) onClearSet();
+      wasAddressedRef.current = false;
       return;
     }
+    maybeNotifySetAddressed(next);
     onSaveSet({
       actualKg: log?.actualKg ?? row.prescribedKg,
       actualReps: completedCountFromOutcomes(next),
@@ -172,8 +188,10 @@ export const DetailSetCard: React.FC<DetailSetCardProps> = ({
     const flat = flattenSegmentOutcomes(aligned);
     if (flat.every((outcome) => outcome === 'pending')) {
       if (addressed || log) onClearSet();
+      wasAddressedRef.current = false;
       return;
     }
+    maybeNotifySetAddressed(flat);
     const segmentReps = segmentRepsFromOutcomes(aligned);
     onSaveSet({
       actualKg: log?.actualKg ?? row.prescribedKg,

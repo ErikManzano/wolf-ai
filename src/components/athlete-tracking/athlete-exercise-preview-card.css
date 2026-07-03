@@ -1,0 +1,356 @@
+.wa-athlete-ex-card-item {
+  list-style: none;
+}
+
+.wa-athlete-ex-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, #f97316 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-bg-panel) 94%, #120a04);
+  overflow: hidden;
+}
+
+.wa-athlete-ex-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #f97316;
+}
+
+.wa-athlete-ex-card--complex {
+  border-color: color-mix(in srgb, #38bdf8 28%, var(--color-border));
+}
+
+.wa-athlete-ex-card--complex::before {
+  background: #38bdf8;
+}
+
+.wa-athlete-ex-card--warmup {
+  border-color: color-mix(in srgb, #eab308 28%, var(--color-border));
+}
+
+.wa-athlete-ex-card--warmup::before {
+  background: #eab308;
+}
+
+.wa-athlete-ex-card--complete {
+  border-color: color-mix(in srgb, #22c55e 32%, var(--color-border));
+}
+
+.wa-athlete-ex-card--complete::before {
+  background: #22c55e;
+}
+
+.wa-athlete-ex-card__shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.85rem 0.9rem 0.9rem 1rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.wa-athlete-ex-card__shell:active {
+  transform: scale(0.992);
+  background: color-mix(in srgb, var(--color-bg-hover) 45%, transparent);
+}
+
+.wa-athlete-ex-card__top {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.wa-athlete-ex-card__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, #f97316 14%, var(--color-bg-secondary));
+  border: 1px solid color-mix(in srgb, #f97316 28%, transparent);
+  color: #fdba74;
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-athlete-ex-card--complex .wa-athlete-ex-card__index {
+  background: color-mix(in srgb, #38bdf8 14%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, #38bdf8 28%, transparent);
+  color: #7dd3fc;
+}
+
+.wa-athlete-ex-card--complete .wa-athlete-ex-card__index {
+  background: color-mix(in srgb, #22c55e 14%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, #22c55e 28%, transparent);
+  color: #86efac;
+}
+
+.wa-athlete-ex-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, #f97316 35%, var(--color-border));
+  background: color-mix(in srgb, #f97316 10%, var(--color-bg-secondary));
+  color: #f97316;
+}
+
+.wa-athlete-ex-card__icon--complex {
+  border-color: color-mix(in srgb, #38bdf8 35%, var(--color-border));
+  background: color-mix(in srgb, #38bdf8 10%, var(--color-bg-secondary));
+  color: #38bdf8;
+}
+
+.wa-athlete-ex-card__icon--warmup {
+  border-color: color-mix(in srgb, #eab308 35%, var(--color-border));
+  background: color-mix(in srgb, #eab308 10%, var(--color-bg-secondary));
+  color: #eab308;
+}
+
+.wa-athlete-ex-card__icon--done {
+  border-color: color-mix(in srgb, #22c55e 35%, var(--color-border));
+  background: color-mix(in srgb, #22c55e 10%, var(--color-bg-secondary));
+  color: #22c55e;
+}
+
+.wa-athlete-ex-card__title-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.wa-athlete-ex-card__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.wa-athlete-ex-card__name--missing {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.wa-athlete-ex-card__kind {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.wa-athlete-ex-card__kind--simple {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.35);
+  color: #fdba74;
+}
+
+.wa-athlete-ex-card__kind--complex {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #7dd3fc;
+}
+
+.wa-athlete-ex-card__kind--warmup {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.35);
+  color: #fde047;
+}
+
+.wa-athlete-ex-card__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(148px, 42%);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.wa-athlete-ex-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  justify-content: center;
+  min-width: 0;
+}
+
+.wa-athlete-ex-card__rx {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-athlete-ex-card__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.wa-athlete-ex-card__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.wa-athlete-ex-card__metric-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.wa-athlete-ex-card__metric-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wa-athlete-ex-card__chev {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+.wa-athlete-ex-card__metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wa-athlete-ex-card__sets-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-athlete-ex-card__sets-count strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.wa-athlete-ex-card__sets-count span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.wa-athlete-ex-card--complete .wa-athlete-ex-card__sets-count strong {
+  color: #4ade80;
+}
+
+.wa-athlete-ex-card__set-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wa-athlete-ex-card__set-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+  background: transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.wa-athlete-ex-card__set-dot--done {
+  border-color: #f97316;
+  background: #f97316;
+}
+
+.wa-athlete-ex-card--complete .wa-athlete-ex-card__set-dot--done {
+  border-color: #22c55e;
+  background: #22c55e;
+}
+
+.wa-athlete-ex-card__set-dot--active {
+  border-color: #f97316;
+  background: color-mix(in srgb, #f97316 35%, transparent);
+  transform: scale(1.08);
+}
+
+.wa-athlete-ex-card__metric-divider {
+  height: 1px;
+  background: color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+.wa-athlete-ex-card__volume {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-athlete-ex-card__volume--on {
+  color: #f97316;
+}
+
+.wa-athlete-ex-card--complete .wa-athlete-ex-card__volume--on {
+  color: #4ade80;
+}
+
+.wa-day-exercises__list .wa-athlete-ex-card-item + .wa-athlete-ex-card-item {
+  margin-top: 0;
+}
+
+@media (max-width: 380px) {
+  .wa-athlete-ex-card__body {
+    grid-template-columns: 1fr;
+  }
+
+  .wa-athlete-ex-card__metrics {
+    padding-left: 0;
+    border-left: none;
+    padding-top: 0.65rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-athlete-ex-card__shell,
+  .wa-athlete-ex-card__set-dot {
+    transition: none;
+  }
+}

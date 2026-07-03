@@ -7,6 +7,7 @@ import {
   repsPerRoundForScheme,
   syncBlockSetSchemes,
 } from '../services/trainingEngine';
+import { isSetAddressed } from './setCompletionStatus';
 
 export interface FlatSetRow {
   schemeIndex: number;
@@ -137,19 +138,18 @@ export function isBlockFullyLogged(
 ): boolean {
   const flat = flattenBlockSets(block, athlete, exercises, exName);
   if (flat.length === 0) return false;
-  return flat.every((s) =>
-    Boolean(
-      findSetLog(
-        logs,
-        assignmentId,
-        weekNumber,
-        dayNumber,
-        exerciseIndex,
-        s.schemeIndex,
-        s.setInstance,
-      ),
-    ),
-  );
+  return flat.every((row) => {
+    const log = findSetLog(
+      logs,
+      assignmentId,
+      weekNumber,
+      dayNumber,
+      exerciseIndex,
+      row.schemeIndex,
+      row.setInstance,
+    );
+    return isSetAddressed(row, log);
+  });
 }
 
 export function countBlockSetsDone(
@@ -164,17 +164,18 @@ export function countBlockSetsDone(
   exName: (id: string) => string,
 ): { done: number; total: number } {
   const flat = flattenBlockSets(block, athlete, exercises, exName);
-  const done = flat.filter((s) =>
-    findSetLog(
+  const done = flat.filter((row) => {
+    const log = findSetLog(
       logs,
       assignmentId,
       weekNumber,
       dayNumber,
       exerciseIndex,
-      s.schemeIndex,
-      s.setInstance,
-    ),
-  ).length;
+      row.schemeIndex,
+      row.setInstance,
+    );
+    return isSetAddressed(row, log);
+  }).length;
   return { done, total: flat.length };
 }
 

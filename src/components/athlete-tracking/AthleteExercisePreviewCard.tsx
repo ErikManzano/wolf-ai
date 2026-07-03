@@ -4,11 +4,11 @@ import { Check, ChevronRight, Dumbbell, GitMerge } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock } from '../../models/training';
 import { getExerciseBlockKind, exerciseBlockKindLabel } from '../../services/sessionMutations';
 import { blockTonnage } from '../session-editor/blockMetrics';
-import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from '../session-editor/schemeFormat';
+import { blockUsesComplexReps, formatSchemeRepsToken } from '../session-editor/schemeFormat';
 import { blockHasExercise } from '../session-editor/sessionSheetUtils';
 import { blockExerciseTitle } from '../../utils/athleteDayMetrics';
 import { flattenBlockSets } from '../../utils/athleteSetLogs';
-import '../session-editor/session-coach-day-cards.css';
+import './athlete-exercise-preview-card.css';
 
 export interface AthleteExercisePreviewCardProps {
   block: SessionExerciseBlock;
@@ -19,10 +19,26 @@ export interface AthleteExercisePreviewCardProps {
   isEs: boolean;
   isComplete: boolean;
   isSetComplete: (schemeIndex: number, setInstance: number) => boolean;
+  isSetAddressed: (schemeIndex: number, setInstance: number) => boolean;
   onOpen: () => void;
 }
 
-const ACCENT_KEYS = ['orange', 'blue', 'amber', 'violet'] as const;
+function formatAthleteCardRx(block: SessionExerciseBlock, isComplexReps: boolean): string {
+  if (!block.sets.length) return '—';
+
+  if (block.sets.length === 1) {
+    const row = block.sets[0]!;
+    const reps = formatSchemeRepsToken(row, isComplexReps);
+    return row.percentage > 0 ? `${row.percentage}% · ${row.sets}x${reps}` : `${row.sets}x${reps}`;
+  }
+
+  return block.sets
+    .map((row) => {
+      const reps = formatSchemeRepsToken(row, isComplexReps);
+      return row.percentage > 0 ? `${row.percentage}% · ${row.sets}x${reps}` : `${row.sets}x${reps}`;
+    })
+    .join(' · ');
+}
 
 export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProps> = ({
   block,
@@ -32,7 +48,7 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   exName,
   isEs,
   isComplete,
-  isSetComplete,
+  isSetAddressed,
   onOpen,
 }) => {
   const blockKind = getExerciseBlockKind(block);
@@ -41,41 +57,44 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
   const hasExercise = blockHasExercise(block);
   const { title: name } = blockExerciseTitle(block, exName);
   const tonnage = athlete ? blockTonnage(block, athlete, exercises) : 0;
-  const accent = ACCENT_KEYS[index % ACCENT_KEYS.length]!;
   const volumeLabel = tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—';
   const isComplexReps = blockUsesComplexReps(block);
+  const rxLabel = formatAthleteCardRx(block, isComplexReps);
 
   const { doneSets, totalSets } = useMemo(() => {
     const rows = flattenBlockSets(block, athlete, exercises, exName);
     const total = rows.length;
-    const done = rows.filter((r) => isSetComplete(r.schemeIndex, r.setInstance)).length;
+    const done = rows.filter((r) => isSetAddressed(r.schemeIndex, r.setInstance)).length;
     return { doneSets: done, totalSets: total };
-  }, [block, athlete, exercises, exName, isSetComplete]);
+  }, [block, athlete, exercises, exName, isSetAddressed]);
 
   const complete = isComplete || (totalSets > 0 && doneSets === totalSets);
-  const progressLabel = isEs ? 'series hechas' : 'sets done';
+  const setsLabel = isEs ? 'Series hechas' : 'Sets done';
+  const volumeTitle = isEs ? 'Volumen estimado' : 'Estimated volume';
 
   return (
     <motion.li
-      className="wolf-se-coach-day-card-item"
+      className="wa-athlete-ex-card-item"
       variants={{
         hidden: { opacity: 0, y: 16 },
         show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
       }}
     >
       <article
-        className={`wolf-se-coach-day-card wolf-se-coach-day-card--${accent} wolf-se-coach-day-card--mockup wolf-se-coach-day-card--athlete${complete ? ' wolf-se-coach-day-card--complete' : ''}`}
-        data-accent={accent}
+        className={`wa-athlete-ex-card wa-athlete-ex-card--${blockKind}${complete ? ' wa-athlete-ex-card--complete' : ''}`}
       >
         <button
           type="button"
-          className="wolf-se-coach-day-card__shell wolf-se-coach-day-card__shell--tappable"
+          className="wa-athlete-ex-card__shell"
           onClick={onOpen}
-          aria-label={`${name}. ${kindLabel}. ${doneSets}/${totalSets} ${progressLabel}`}
+          aria-label={`${name}. ${kindLabel}. ${doneSets}/${totalSets} ${setsLabel}`}
         >
-          <div className="wolf-se-coach-day-card__header">
+          <div className="wa-athlete-ex-card__top">
+            <span className="wa-athlete-ex-card__index" aria-hidden>
+              {index + 1}
+            </span>
             <span
-              className={`wolf-se-coach-day-card__icon${isComplex ? ' wolf-se-coach-day-card__icon--complex' : ''}${blockKind === 'warmup' ? ' wolf-se-coach-day-card__icon--warmup' : ''}${complete ? ' wolf-se-coach-day-card__icon--done' : ''}`}
+              className={`wa-athlete-ex-card__icon${isComplex ? ' wa-athlete-ex-card__icon--complex' : ''}${blockKind === 'warmup' ? ' wa-athlete-ex-card__icon--warmup' : ''}${complete ? ' wa-athlete-ex-card__icon--done' : ''}`}
               aria-hidden
             >
               {complete ? (
@@ -86,49 +105,60 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
                 <Dumbbell size={20} strokeWidth={2} />
               )}
             </span>
-            <div className="wolf-se-coach-day-card__title-wrap">
-              <div className="wolf-se-coach-day-card__title-row">
-                <h3
-                  className={`wolf-se-coach-day-card__name${hasExercise ? '' : ' wolf-se-coach-day-card__name--missing'}`}
-                >
-                  {name}
-                </h3>
-                <span
-                  className={`wolf-se-coach-day-card__kind wolf-se-coach-day-card__kind--${blockKind}`}
-                >
-                  <span className="wolf-se-coach-day-card__kind-dot" aria-hidden />
-                  {kindLabel}
-                </span>
-              </div>
+            <div className="wa-athlete-ex-card__title-wrap">
+              <h3
+                className={`wa-athlete-ex-card__name${hasExercise ? '' : ' wa-athlete-ex-card__name--missing'}`}
+              >
+                {name}
+              </h3>
+              <span className={`wa-athlete-ex-card__kind wa-athlete-ex-card__kind--${blockKind}`}>
+                {kindLabel}
+              </span>
             </div>
           </div>
 
-          {block.sets.length > 0 ? (
-            <ul className="wolf-se-coach-day-card__sets" aria-label={isEs ? 'Bloques prescritos' : 'Prescribed blocks'}>
-              {block.sets.map((scheme, si) => (
-                <li key={si}>
-                  <code className="wolf-se-coach-day-card__set-row">
-                    {formatSetPrescriptionCoachMobile(scheme, isComplexReps)}
-                  </code>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="wolf-se-coach-day-card__empty-sets">
-              {isEs ? 'Sin bloques prescritos' : 'No prescribed blocks'}
-            </p>
-          )}
+          <div className="wa-athlete-ex-card__body">
+            <div className="wa-athlete-ex-card__left">
+              <p className="wa-athlete-ex-card__rx">{rxLabel}</p>
+            </div>
 
-          <span className="wolf-se-coach-day-card__footer wolf-se-coach-day-card__footer--athlete">
-            <span className="wolf-se-coach-day-card__progress">
-              <strong>{doneSets}</strong>/{totalSets || 0} {progressLabel}
-            </span>
-            <span className="wolf-se-coach-day-card__footer-vol">
-              {isEs ? 'Volumen' : 'Volume'}{' '}
-              <strong className={tonnage > 0 ? 'wolf-se-coach-day-card__vol--on' : ''}>{volumeLabel}</strong>
-              <ChevronRight className="wolf-se-coach-day-card__chev" size={18} strokeWidth={2} aria-hidden />
-            </span>
-          </span>
+            <div className="wa-athlete-ex-card__metrics">
+              <div className="wa-athlete-ex-card__metric">
+                <div className="wa-athlete-ex-card__metric-head">
+                  <span className="wa-athlete-ex-card__metric-label">{setsLabel}</span>
+                  <ChevronRight size={16} aria-hidden className="wa-athlete-ex-card__chev" />
+                </div>
+                <div className="wa-athlete-ex-card__metric-row">
+                  <span className="wa-athlete-ex-card__sets-count">
+                    <strong>{doneSets}</strong>
+                    <span>/{totalSets || 0}</span>
+                  </span>
+                  <div className="wa-athlete-ex-card__set-dots" aria-hidden>
+                    {Array.from({ length: totalSets || 0 }, (_, dotIndex) => (
+                      <span
+                        key={dotIndex}
+                        className={`wa-athlete-ex-card__set-dot${dotIndex < doneSets ? ' wa-athlete-ex-card__set-dot--done' : ''}${dotIndex === doneSets && !complete ? ' wa-athlete-ex-card__set-dot--active' : ''}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="wa-athlete-ex-card__metric-divider" aria-hidden />
+
+              <div className="wa-athlete-ex-card__metric">
+                <div className="wa-athlete-ex-card__metric-head">
+                  <span className="wa-athlete-ex-card__metric-label">{volumeTitle}</span>
+                  <ChevronRight size={16} aria-hidden className="wa-athlete-ex-card__chev" />
+                </div>
+                <strong
+                  className={`wa-athlete-ex-card__volume${tonnage > 0 ? ' wa-athlete-ex-card__volume--on' : ''}`}
+                >
+                  {volumeLabel}
+                </strong>
+              </div>
+            </div>
+          </div>
         </button>
       </article>
     </motion.li>

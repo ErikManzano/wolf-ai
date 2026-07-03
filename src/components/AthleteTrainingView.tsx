@@ -10,6 +10,8 @@ import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../utils
 import {
   isDayCompleteWithSets,
 } from '../utils/completionHelpers';
+import { flattenBlockSets } from '../utils/athleteSetLogs';
+import { isSetAddressed } from '../utils/setCompletionStatus';
 import { AthleteDayNavigator } from './athlete-tracking/AthleteDayNavigator';
 import { AthleteDayOverview } from './athlete-tracking/AthleteDayOverview';
 import { AthleteExerciseDetailScreen } from './athlete-tracking/AthleteExerciseDetailScreen';
@@ -183,7 +185,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
-    if (!program || !activeAssignment) return;
+    if (!program || !activeAssignment || exerciseDetailIndex != null) return;
     for (const w of program.weeks) {
       for (const d of w.days) {
         if (!isDayDone(w.weekNumber, d.dayNumber, d.session.exercises)) {
@@ -193,7 +195,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         }
       }
     }
-  }, [program, activeAssignment, isDayDone]);
+  }, [program, activeAssignment, isDayDone, exerciseDetailIndex]);
 
   useEffect(() => {
     setWeek(1);
@@ -202,12 +204,56 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   }, [activeAssignment?.id]);
 
   useEffect(() => {
+    if (exerciseDetailIndex != null) return;
     if (firstIncompleteDayNumber != null) {
       setActiveDay(firstIncompleteDayNumber);
     } else if (weekData?.days[0]) {
       setActiveDay(weekData.days[0].dayNumber);
     }
-  }, [week, weekData?.days, firstIncompleteDayNumber]);
+  }, [week, weekData?.days, firstIncompleteDayNumber, exerciseDetailIndex]);
+
+  const isSetAddressedForExercise = useCallback(
+    (exerciseIndex: number, schemeIndex: number, setInstance: number) => {
+      if (!activeAssignment || !weekData || !activeDayData) return false;
+      const block = activeDayData.session.exercises[exerciseIndex];
+      if (!block) return false;
+      const row = flattenBlockSets(block, athleteProfile, motorExercises, exName).find(
+        (r) => r.schemeIndex === schemeIndex && r.setInstance === setInstance,
+      );
+      if (!row) return false;
+      const log = getSetLog(
+        activeAssignment.id,
+        weekData.weekNumber,
+        activeDayData.dayNumber,
+        exerciseIndex,
+        schemeIndex,
+        setInstance,
+      );
+      return isSetAddressed(row, log);
+    },
+    [activeAssignment, weekData, activeDayData, athleteProfile, motorExercises, exName, getSetLog],
+  );
+
+  const nextIncompleteExerciseIndex = useMemo(() => {
+    if (!activeDayData || exerciseDetailIndex == null) return null;
+    for (let i = exerciseDetailIndex + 1; i < activeDayData.session.exercises.length; i += 1) {
+      const block = activeDayData.session.exercises[i];
+      if (!block) continue;
+      const rows = flattenBlockSets(block, athleteProfile, motorExercises, exName);
+      const allAddressed = rows.every((row) =>
+        isSetAddressedForExercise(i, row.schemeIndex, row.setInstance),
+      );
+      if (!allAddressed) return i;
+    }
+    return null;
+  }, [
+    activeDayData,
+    exerciseDetailIndex,
+    athleteProfile,
+    motorExercises,
+    exName,
+    isSetAddressedForExercise,
+  ]);
 
   const persistSetLog = useCallback(
     (payload: SetLogInput) => {
@@ -319,6 +365,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
             setInstance,
           )
         }
+        isSetAddressed={isSetAddressedForExercise}
         onOpenExercise={setExerciseDetailIndex}
       />
 
@@ -341,6 +388,11 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
             )
           }
           onClose={() => setExerciseDetailIndex(null)}
+          onGoToNextExercise={
+            nextIncompleteExerciseIndex != null
+              ? () => setExerciseDetailIndex(nextIncompleteExerciseIndex)
+              : undefined
+          }
           getSetTrackingKey={(schemeIndex, setInstance) =>
             setLogTrackingKey({
               assignmentId: activeAssignment.id,

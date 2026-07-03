@@ -26,6 +26,7 @@ export interface AthleteDayOverviewProps {
   completions: SessionCompletion[];
   setLogs: SetCompletionLog[];
   isSetComplete: (exerciseIndex: number, schemeIndex: number, setInstance: number) => boolean;
+  isSetAddressed: (exerciseIndex: number, schemeIndex: number, setInstance: number) => boolean;
   onOpenExercise: (exerciseIndex: number) => void;
 }
 
@@ -45,6 +46,7 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
   completions,
   setLogs,
   isSetComplete,
+  isSetAddressed,
   onOpenExercise,
 }) => {
   const exerciseCount = day.session.exercises.length;
@@ -231,7 +233,7 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
           </p>
         ) : (
           <motion.ul
-            className="wolf-se-coach-day__list wa-day-exercises__list"
+            className="wa-day-exercises__list"
             initial="hidden"
             animate="show"
             variants={{
@@ -262,6 +264,9 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
                 )}
                 isSetComplete={(schemeIndex, setInstance) =>
                   isSetComplete(bi, schemeIndex, setInstance)
+                }
+                isSetAddressed={(schemeIndex, setInstance) =>
+                  isSetAddressed(bi, schemeIndex, setInstance)
                 }
                 onOpen={() => onOpenExercise(bi)}
               />
