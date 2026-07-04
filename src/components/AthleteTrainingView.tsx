@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ClipboardList } from 'lucide-react';
 import { AthletePlanSelect } from './athlete-tracking/AthletePlanSwitcher';
@@ -55,6 +55,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   const [activeDay, setActiveDay] = useState(1);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
   const [exerciseDetailIndex, setExerciseDetailIndex] = useState<number | null>(null);
+  const autoNavForAssignmentRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (myAssignments.length === 0) {
@@ -108,14 +109,6 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     [completions, setLogs, activeAssignment, athleteProfile, motorExercises, exName],
   );
 
-  const firstIncompleteDayNumber = useMemo(() => {
-    if (!weekData) return null;
-    const incomplete = weekData.days.find(
-      (d) => !isDayDone(weekData.weekNumber, d.dayNumber, d.session.exercises),
-    );
-    return incomplete?.dayNumber ?? weekData.days[0]?.dayNumber ?? null;
-  }, [weekData, isDayDone]);
-
   const activeDayPlanNotice = useMemo(() => {
     if (!activeAssignment) return null;
     return (
@@ -153,6 +146,11 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     );
   }, [myAssignments, activeAssignment, isEs]);
 
+  const handleWeekChange = useCallback((nextWeek: number) => {
+    setWeek(nextWeek);
+    setExerciseDetailIndex(null);
+  }, []);
+
   const weekNavigator = useMemo(() => {
     if (!program) return null;
     return (
@@ -167,10 +165,10 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
           if (!dd) return false;
           return isDayDone(w, d, dd.session.exercises);
         }}
-        onWeekChange={setWeek}
+        onWeekChange={handleWeekChange}
       />
     );
-  }, [program, week, isEs, isDayDone]);
+  }, [program, week, isEs, isDayDone, handleWeekChange]);
 
   const mobileTopBar = useMemo(() => {
     if (!activeAssignment || myAssignments.length === 0) {
@@ -185,7 +183,17 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
   useMobileTopBar(mobileTopBar);
 
   useEffect(() => {
-    if (!program || !activeAssignment || exerciseDetailIndex != null) return;
+    autoNavForAssignmentRef.current = null;
+    setExerciseDetailIndex(null);
+  }, [activeAssignment?.id]);
+
+  /** Once per assignment load — never re-run when set logs change (avoids jumping to day 1 on each rep). */
+  useEffect(() => {
+    if (assignmentsLoading || !program || !activeAssignment) return;
+    if (autoNavForAssignmentRef.current === activeAssignment.id) return;
+
+    autoNavForAssignmentRef.current = activeAssignment.id;
+
     for (const w of program.weeks) {
       for (const d of w.days) {
         if (!isDayDone(w.weekNumber, d.dayNumber, d.session.exercises)) {
@@ -195,22 +203,24 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
         }
       }
     }
-  }, [program, activeAssignment, isDayDone, exerciseDetailIndex]);
 
-  useEffect(() => {
-    setWeek(1);
-    setActiveDay(1);
-    setExerciseDetailIndex(null);
-  }, [activeAssignment?.id]);
+    setWeek(program.weeks[0]?.weekNumber ?? 1);
+    setActiveDay(program.weeks[0]?.days[0]?.dayNumber ?? 1);
+  }, [assignmentsLoading, program, activeAssignment, isDayDone]);
 
+  /** When switching week, keep the same day number if it exists in the new week. */
   useEffect(() => {
-    if (exerciseDetailIndex != null) return;
-    if (firstIncompleteDayNumber != null) {
-      setActiveDay(firstIncompleteDayNumber);
-    } else if (weekData?.days[0]) {
-      setActiveDay(weekData.days[0].dayNumber);
-    }
-  }, [week, weekData?.days, firstIncompleteDayNumber, exerciseDetailIndex]);
+    if (!program) return;
+    const wd = program.weeks.find((w) => w.weekNumber === week);
+    if (!wd) return;
+    setActiveDay((prev) => {
+      if (wd.days.some((d) => d.dayNumber === prev)) return prev;
+      const incomplete = wd.days.find(
+        (d) => !isDayDone(wd.weekNumber, d.dayNumber, d.session.exercises),
+      );
+      return incomplete?.dayNumber ?? wd.days[0]?.dayNumber ?? 1;
+    });
+  }, [week, program]);
 
   const isSetAddressedForExercise = useCallback(
     (exerciseIndex: number, schemeIndex: number, setInstance: number) => {
