@@ -9,12 +9,14 @@ import {
 import type { Athlete, GeneratedProgram, SessionGoal } from '../../models/training';
 import { useAppContext } from '../../context/AppContext';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
+import { useWolfAlert } from '../../context/WolfAlertContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useDebouncedCallback, useDebouncedCallbackWithControls } from '../../hooks/useDebouncedCallback';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
+import { WlProgramPublishButton } from './WlProgramPublishButton';
 import { countBlocksInProgramDay, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
@@ -50,6 +52,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const isEs = language === 'ES';
   const isMobileLayout = useMediaQuery('(max-width: 1024px)');
   const { intakes } = useAppContext();
+  const { pushAlert } = useWolfAlert();
   const {
     getCoachProgramById,
     updateCoachProgram,
@@ -70,6 +73,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [createActions, setCreateActions] = useState<OlympicProgramPlanCreateActions | null>(null);
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
+  const [publishing, setPublishing] = useState(false);
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
   const [mobilePinnedChrome, setMobilePinnedChrome] = useState<React.ReactNode>(null);
   const [mobileExerciseFocus, setMobileExerciseFocus] = useState<{
@@ -315,24 +319,81 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     [],
   );
 
+  const enrolledCount = coachProgram?.enrolledAthletes?.length ?? 0;
+  const isPublished = coachProgram?.status === 'published';
+
+  const publishDockHint = useMemo(() => {
+    if (!hasProgram || isPublished) return null;
+    if (enrolledCount > 0) {
+      return isEs
+        ? `${enrolledCount} atleta${enrolledCount === 1 ? '' : 's'} inscrito${enrolledCount === 1 ? '' : 's'} — publica para que vean los cambios.`
+        : `${enrolledCount} enrolled athlete${enrolledCount === 1 ? '' : 's'} — publish so they receive updates.`;
+    }
+    if (syncState === 'pending') {
+      return isEs
+        ? 'Tienes cambios sin guardar. Publicar los incluirá.'
+        : 'You have unsaved changes. Publishing will include them.';
+    }
+    return isEs
+      ? 'Marca el plan como listo para asignar.'
+      : 'Mark the plan as ready to assign.';
+  }, [hasProgram, isPublished, enrolledCount, syncState, isEs]);
+
   const handlePublish = async () => {
     const latest = programRef.current;
-    if (!latest) return;
+    if (!latest || publishing) return;
     cancelAutosave();
     saveSeqRef.current += 1;
     const seq = saveSeqRef.current;
+    setPublishing(true);
     await persistProgram(latest, seq);
-    if (seq !== saveSeqRef.current) return;
+    if (seq !== saveSeqRef.current) {
+      setPublishing(false);
+      return;
+    }
     try {
-      await updateCoachProgram(programId, { program: latest, status: 'published' });
+      const saved = await updateCoachProgram(programId, { program: latest, status: 'published' });
+      if (!saved) {
+        pushAlert({
+          tone: 'error',
+          title: isEs ? 'No se pudo publicar' : 'Could not publish',
+          message: isEs
+            ? 'Revisa tu conexión e inténtalo de nuevo.'
+            : 'Check your connection and try again.',
+        });
+        setSyncState('pending');
+        return;
+      }
       dirtyRef.current = false;
       setSyncState('saved');
+      const athletes = saved.enrolledAthletes?.length ?? enrolledCount;
+      pushAlert({
+        tone: 'success',
+        title: isEs ? 'Plan publicado' : 'Plan published',
+        message:
+          athletes > 0
+            ? isEs
+              ? `Los ${athletes} atleta${athletes === 1 ? '' : 's'} inscrito${athletes === 1 ? '' : 's'} recibirán este plan actualizado.`
+              : `${athletes} enrolled athlete${athletes === 1 ? '' : 's'} will receive this updated plan.`
+            : isEs
+              ? 'El plan está listo. Asigna atletas cuando quieras.'
+              : 'Plan is ready. Assign athletes whenever you like.',
+      });
     } catch {
       setSyncState('pending');
+      pushAlert({
+        tone: 'error',
+        title: isEs ? 'No se pudo publicar' : 'Could not publish',
+        message: isEs
+          ? 'Guarda los cambios e inténtalo otra vez.'
+          : 'Save your changes and try again.',
+      });
+    } finally {
+      if (seq === saveSeqRef.current) {
+        setPublishing(false);
+      }
     }
   };
-
-  const enrolledCount = coachProgram?.enrolledAthletes?.length ?? 0;
 
   const saving = syncState === 'saving';
   const syncHint = useMemo(() => {
@@ -388,7 +449,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     );
   }
 
-  const isPublished = coachProgram.status === 'published';
   const showActionDock = !hasProgram || !isPublished;
   const useStickyDesktopHead = !isMobileLayout;
   const portalToolbarToHead = useStickyDesktopHead && hasProgram;
@@ -538,7 +598,11 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
           className={`wl-programs-action-dock${hasProgram ? ' wl-programs-action-dock--compact' : ''}`}
           aria-label={isEs ? 'Acciones del paso' : 'Step actions'}
         >
-          {!hasProgram ? <p className="wl-programs-action-dock__hint">{actionDockHint}</p> : null}
+          {!hasProgram ? (
+            <p className="wl-programs-action-dock__hint">{actionDockHint}</p>
+          ) : publishDockHint ? (
+            <p className="wl-programs-action-dock__publish-hint">{publishDockHint}</p>
+          ) : null}
           <div className="wl-programs-action-dock__actions">
             {!hasProgram ? (
               <>
@@ -563,14 +627,12 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                className="btn-primary wl-programs-action-dock__publish"
+              <WlProgramPublishButton
+                isEs={isEs}
                 disabled={saving || !hasProgram}
+                loading={publishing}
                 onClick={() => void handlePublish()}
-              >
-                {isEs ? 'Publicar' : 'Publish'}
-              </button>
+              />
             )}
           </div>
         </footer>
