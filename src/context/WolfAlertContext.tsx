@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 import WolfAlertHost from '../components/WolfAlertHost';
 
 export type WolfAlertTone = 'success' | 'error' | 'info' | 'warning';
@@ -27,13 +27,26 @@ const WolfAlertContext = createContext<WolfAlertContextValue | null>(null);
 
 export function WolfAlertProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<WolfAlertItem[]>([]);
+  const dismissTimerRef = useRef<number | null>(null);
 
   const dismissAlert = useCallback((id: string) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    setAlerts((prev) => {
+      if (!prev.some((a) => a.id === id)) return prev;
+      if (dismissTimerRef.current) {
+        window.clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
+      return [];
+    });
   }, []);
 
   const pushAlert = useCallback(
     (input: PushWolfAlertInput): string => {
+      if (dismissTimerRef.current) {
+        window.clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
+
       const id = `wolf-alert-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       const item: WolfAlertItem = {
         id,
@@ -41,10 +54,13 @@ export function WolfAlertProvider({ children }: { children: ReactNode }) {
         title: input.title,
         message: input.message,
       };
-      setAlerts((prev) => [...prev, item]);
+      setAlerts([item]);
       const duration = input.durationMs ?? 4500;
       if (duration > 0) {
-        window.setTimeout(() => dismissAlert(id), duration);
+        dismissTimerRef.current = window.setTimeout(() => {
+          dismissTimerRef.current = null;
+          dismissAlert(id);
+        }, duration);
       }
       return id;
     },
