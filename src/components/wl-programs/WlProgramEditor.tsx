@@ -366,7 +366,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       }
       dirtyRef.current = false;
       setSyncState('saved');
-      const athletes = saved.enrolledAthletes?.length ?? enrolledCount;
+      const athletes = enrolledCount;
       pushAlert({
         tone: 'success',
         title: isEs ? 'Plan publicado' : 'Plan published',

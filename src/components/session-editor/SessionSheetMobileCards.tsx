@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Copy, GripVertical, Trash2 } from 'lucide-react';
 import { Reorder, useDragControls } from 'framer-motion';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../models/training';
 import type { SessionApplyFn, SessionCatalogProps } from './session-editor/types';
 import {

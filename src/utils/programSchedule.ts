@@ -7,7 +7,7 @@ export interface ProgramDraftInput {
   startDate: string;
   totalWeeks: number;
   daysPerWeek: number;
-  primaryGoal?: ExerciseGoal;
+  primaryGoal?: SessionGoal;
 }
 
 const TEMPLATE_ATHLETE: Athlete = {

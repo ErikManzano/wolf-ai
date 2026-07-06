@@ -30,7 +30,7 @@ import { adaptSession } from '../services/adaptiveEngine';
 import { simulateMicrocycle } from '../services/simulateMicrocycle';
 import { PostgresStore } from './postgresStore';
 import { CoachService, CoachServiceError } from './coach-service';
-import { cloneProgramForAthlete, TEMPLATE_PROGRAM_ATHLETE_ID } from '../models/coach-architecture';
+import { cloneProgramForAthlete } from '../models/coach-architecture';
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../models/coach-architecture';
 import { getEnrollmentsForCoachProgram, upsertAssignmentInList } from '../utils/wlAssignmentRules';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
@@ -2114,7 +2114,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         };
         if (store) {
           const updated = await store.patchSetLog(payload);
-          results.push(updated);
+          if (updated) results.push(updated);
           continue;
         }
         const match = (l: SetCompletionLog) =>

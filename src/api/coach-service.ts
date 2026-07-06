@@ -20,7 +20,6 @@ import type {
 import {
   cloneProgramForAthlete,
   normalizeProgramForTemplate,
-  TEMPLATE_PROGRAM_ATHLETE_ID,
 } from '../models/coach-architecture';
 import type { GeneratedProgram, ProgramAssignment, ProgramAssignmentVersion, WolfUser } from '../models/training';
 import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
