@@ -469,6 +469,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       duplicateDayBlocked: isEs
         ? `No se puede duplicar: máximo ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} días por semana.`
         : `Cannot duplicate: maximum ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} days per week.`,
+      addWeekDone: isEs ? 'Semana añadida al plan.' : 'Week added to the plan.',
+      addDayDone: isEs ? 'Día añadido a la semana.' : 'Day added to the week.',
     }),
     [isEs, athlete.name],
   );
@@ -605,7 +607,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     (
       next: GeneratedProgram,
       selection?: { week?: number; day?: number },
-      options?: { skipHistory?: boolean; immediateHistory?: boolean },
+      options?: { skipHistory?: boolean; immediateHistory?: boolean; forceProgramSave?: boolean },
     ) => {
       const current = programRef.current;
       if (current && !options?.skipHistory) {
@@ -622,10 +624,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       const wk = selection?.week ?? selectedWeek;
       const dy = selection?.day ?? selectedDay;
       const dayLabel = next.weeks.find((w) => w.weekNumber === wk)?.days.find((d) => d.dayNumber === dy)?.label;
+      const forceProgramSave = options?.forceProgramSave ?? Boolean(options?.immediateHistory);
       const ctx = {
         weekNumber: wk,
         dayNumber: dy,
         dayLabel,
+        ...(forceProgramSave ? { forceProgramSave: true as const } : {}),
       };
       onProgramChange(next, ctx);
       writeEditDraft(next);
@@ -666,8 +670,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const dayNumber = selectedDayRef.current;
     runWithoutRecording(() => {
       pushRedoSnapshot(current);
-      applyProgramUpdate(prev, undefined, { skipHistory: true });
+      applyProgramUpdate(prev, undefined, { skipHistory: true, forceProgramSave: true });
     });
+    onFlushAutosave?.();
     pushAlert({
       tone: 'info',
       title: t.undo,
@@ -684,6 +689,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     t.undoEmpty,
     t.undoDone,
     historyScopeLabel,
+    onFlushAutosave,
   ]);
 
   const handleRedo = useCallback(() => {
@@ -698,8 +704,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const dayNumber = selectedDayRef.current;
     runWithoutRecording(() => {
       pushUndoSnapshot(current);
-      applyProgramUpdate(next, undefined, { skipHistory: true });
+      applyProgramUpdate(next, undefined, { skipHistory: true, forceProgramSave: true });
     });
+    onFlushAutosave?.();
     pushAlert({
       tone: 'info',
       title: t.redo,
@@ -715,6 +722,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     t.redoEmpty,
     t.redoDone,
     historyScopeLabel,
+    onFlushAutosave,
   ]);
 
   useEffect(() => {
@@ -800,21 +808,63 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
 
   const handleAddWeek = useCallback(() => {
     const current = programRef.current;
-    if (!current || !canAddWeek) return;
+    if (!current) return;
+    if (!canAddWeek) {
+      pushAlert({ tone: 'warning', title: t.addWeek, message: t.maxWeeks });
+      return;
+    }
     const next = addWeekToGeneratedProgram(current, athleteForEngine, motorExercises);
-    applyProgramUpdate(next, { week: next.weeks[next.weeks.length - 1]!.weekNumber, day: 1 }, { immediateHistory: true });
-  }, [athleteForEngine, motorExercises, canAddWeek, applyProgramUpdate]);
+    if (next === current) return;
+    const newWeek = next.weeks[next.weeks.length - 1]!.weekNumber;
+    applyProgramUpdate(next, { week: newWeek, day: 1 }, { immediateHistory: true });
+    pushAlert({
+      tone: 'success',
+      title: t.addWeek,
+      message: `${t.addWeekDone} ${historyScopeLabel(newWeek, 1)}.`,
+    });
+  }, [
+    athleteForEngine,
+    motorExercises,
+    canAddWeek,
+    applyProgramUpdate,
+    pushAlert,
+    t.addWeek,
+    t.maxWeeks,
+    t.addWeekDone,
+    historyScopeLabel,
+  ]);
 
   const handleAddDay = useCallback(() => {
     const current = programRef.current;
-    if (!current || !canAddDay) return;
+    if (!current) return;
+    if (!canAddDay) {
+      pushAlert({ tone: 'warning', title: t.addDay, message: t.maxDays });
+      return;
+    }
     const week = current.weeks.find((w) => w.weekNumber === selectedWeek);
     if (!week) return;
     const next = addDayToGeneratedWeek(current, selectedWeek, athleteForEngine, motorExercises);
+    if (next === current) return;
     const updatedWeek = next.weeks.find((w) => w.weekNumber === selectedWeek);
     const newDay = updatedWeek?.days[updatedWeek.days.length - 1]?.dayNumber ?? 1;
     applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
-  }, [selectedWeek, athleteForEngine, motorExercises, canAddDay, applyProgramUpdate]);
+    pushAlert({
+      tone: 'success',
+      title: t.addDay,
+      message: `${t.addDayDone} ${historyScopeLabel(selectedWeek, newDay)}.`,
+    });
+  }, [
+    selectedWeek,
+    athleteForEngine,
+    motorExercises,
+    canAddDay,
+    applyProgramUpdate,
+    pushAlert,
+    t.addDay,
+    t.maxDays,
+    t.addDayDone,
+    historyScopeLabel,
+  ]);
 
   const handleDuplicateDay = useCallback(() => {
     const current = programRef.current;

@@ -3,6 +3,8 @@ export type ProgramEditContext = {
   weekNumber: number;
   dayNumber: number;
   dayLabel?: string;
+  /** Requiere PATCH del programa completo (cuadrícula, undo/redo, etc.). */
+  forceProgramSave?: boolean;
 };
 
 export type PlanChangeNotification = {

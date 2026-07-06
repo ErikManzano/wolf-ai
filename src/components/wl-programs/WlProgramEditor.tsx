@@ -17,7 +17,7 @@ import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../ut
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
 import { WlProgramPublishButton } from './WlProgramPublishButton';
-import { countBlocksInProgramDay, type ProgramSyncState } from './programSync';
+import { countBlocksInProgramDay, isStructuralProgramChange, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
 import { WlProgramMobileHeaderTitle } from './WlProgramMobileHeaderTitle';
@@ -86,6 +86,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const saveSeqRef = useRef(0);
   const editContextRef = useRef<import('../../models/notifications').ProgramEditContext | undefined>(undefined);
   const sessionBlockCountRef = useRef<number | null>(null);
+  const lastPersistedProgramRef = useRef<GeneratedProgram | null>(null);
 
   useEffect(() => {
     programRef.current = program;
@@ -98,14 +99,10 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     saveSeqRef.current = 0;
     if (coachProgram) {
       setProgram(coachProgram.program);
+      lastPersistedProgramRef.current = coachProgram.program;
       setSyncState('saved');
     }
   }, [programId, coachProgram?.id]);
-
-  useEffect(() => {
-    if (!coachProgram || dirtyRef.current) return;
-    setProgram(coachProgram.program);
-  }, [coachProgram?.updatedAt, coachProgram?.id]);
 
   useEffect(() => {
     if (!coachProgram || dirtyRef.current) return;
@@ -208,8 +205,12 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       setSyncState('saving');
       try {
         const ctx = editContextRef.current;
+        const needsFullProgram =
+          structural ||
+          ctx?.forceProgramSave === true ||
+          isStructuralProgramChange(lastPersistedProgramRef.current, p);
         let saved = null;
-        if (!structural && ctx) {
+        if (!needsFullProgram && ctx) {
           const week = p.weeks.find((w) => w.weekNumber === ctx.weekNumber);
           const day = week?.days.find((d) => d.dayNumber === ctx.dayNumber);
           if (day?.session) {
@@ -230,7 +231,20 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
           setSyncState('pending');
           return;
         }
+        if (needsFullProgram && isStructuralProgramChange(p, saved.program)) {
+          pushAlert({
+            tone: 'error',
+            title: isEs ? 'No se guardó el plan' : 'Plan not saved',
+            message: isEs
+              ? 'El servidor no aplicó el cambio de estructura. Reintenta guardar.'
+              : 'The server did not apply the structure change. Try saving again.',
+          });
+          setSyncState('pending');
+          return;
+        }
+        lastPersistedProgramRef.current = saved.program;
         dirtyRef.current = false;
+        setProgram(saved.program);
         setLastSavedAt(new Date().toISOString());
         setSyncState('saved');
       } catch {
@@ -239,7 +253,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
         }
       }
     },
-    [programId, updateCoachProgram, updateCoachProgramSession],
+    [programId, updateCoachProgram, updateCoachProgramSession, pushAlert, isEs],
   );
 
   const { run: debouncedSave, flush: flushAutosave, cancel: cancelAutosave } = useDebouncedCallbackWithControls(
@@ -278,11 +292,14 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       }
       if (editContext) editContextRef.current = editContext;
       const ctx = editContext ?? editContextRef.current;
+      const prevProgram = programRef.current;
       const blockCount =
         ctx != null ? countBlocksInProgramDay(p, ctx.weekNumber, ctx.dayNumber) : null;
       const prevCount = sessionBlockCountRef.current;
       const structural =
-        blockCount != null && prevCount != null && blockCount !== prevCount;
+        ctx?.forceProgramSave === true ||
+        isStructuralProgramChange(prevProgram, p) ||
+        (blockCount != null && prevCount != null && blockCount !== prevCount);
       if (blockCount != null) sessionBlockCountRef.current = blockCount;
 
       dirtyRef.current = true;
