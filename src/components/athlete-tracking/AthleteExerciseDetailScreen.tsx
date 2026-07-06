@@ -11,7 +11,6 @@ import {
   blockSummaryStats,
   formatRestLabel,
 } from '../../utils/athleteDayMetrics';
-import { useWolfAlert } from '../../context/WolfAlertContext';
 import { ExerciseDetailMock } from './ExerciseDetailMock';
 import { DetailSetCard } from './DetailSetCard';
 import { isSetAddressed, isSetFullyComplete } from '../../utils/setCompletionStatus';
@@ -55,7 +54,6 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
   onSaveSet,
   onClearSet,
 }) => {
-  const { pushAlert } = useWolfAlert();
   const { title, isComplex } = blockExerciseTitle(block, exName);
   const blockKind = getExerciseBlockKind(block);
   const kindLabel = exerciseBlockKindLabel(blockKind, isEs);
@@ -140,18 +138,9 @@ export const AthleteExerciseDetailScreen: React.FC<AthleteExerciseDetailScreenPr
   }, [stats.flat, block.sets, isComplexReps]);
 
   const notifySetAddressed = (setInstance: number, fullyComplete: boolean) => {
-    pushAlert({
-      tone: fullyComplete ? 'success' : 'info',
-      title: isEs ? `Serie ${setInstance}` : `Set ${setInstance}`,
-      message: fullyComplete
-        ? isEs
-          ? 'Serie completada'
-          : 'Set completed'
-        : isEs
-          ? 'Serie registrada'
-          : 'Set logged',
-      durationMs: 2200,
-    });
+    /* Rep-level toasts in DetailSetCard already give feedback; skip per-set toast to avoid double alerts. */
+    void setInstance;
+    void fullyComplete;
   };
 
   return createPortal(

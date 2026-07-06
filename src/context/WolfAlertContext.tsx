@@ -26,17 +26,17 @@ type WolfAlertContextValue = {
 const WolfAlertContext = createContext<WolfAlertContextValue | null>(null);
 
 export function WolfAlertProvider({ children }: { children: ReactNode }) {
-  const [alerts, setAlerts] = useState<WolfAlertItem[]>([]);
+  const [activeAlert, setActiveAlert] = useState<WolfAlertItem | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
 
   const dismissAlert = useCallback((id: string) => {
-    setAlerts((prev) => {
-      if (!prev.some((a) => a.id === id)) return prev;
+    setActiveAlert((prev) => {
+      if (!prev || prev.id !== id) return prev;
       if (dismissTimerRef.current) {
         window.clearTimeout(dismissTimerRef.current);
         dismissTimerRef.current = null;
       }
-      return [];
+      return null;
     });
   }, []);
 
@@ -54,7 +54,7 @@ export function WolfAlertProvider({ children }: { children: ReactNode }) {
         title: input.title,
         message: input.message,
       };
-      setAlerts([item]);
+      setActiveAlert(item);
       const duration = input.durationMs ?? 4500;
       if (duration > 0) {
         dismissTimerRef.current = window.setTimeout(() => {
@@ -72,7 +72,7 @@ export function WolfAlertProvider({ children }: { children: ReactNode }) {
   return (
     <WolfAlertContext.Provider value={value}>
       {children}
-      <WolfAlertHost alerts={alerts} onDismiss={dismissAlert} />
+      <WolfAlertHost alert={activeAlert} onDismiss={dismissAlert} />
     </WolfAlertContext.Provider>
   );
 }

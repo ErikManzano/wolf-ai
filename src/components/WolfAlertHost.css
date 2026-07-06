@@ -13,6 +13,17 @@
   margin-right: auto;
 }
 
+.wolf-alert-host__slot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wolf-alert-host__slot > .wolf-alert {
+  pointer-events: auto;
+}
+
 @media (min-width: 640px) {
   .wolf-alert-host {
     left: auto;

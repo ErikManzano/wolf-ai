@@ -363,75 +363,95 @@
   margin-top: 0;
 }
 
-/* Mobile — single horizontal row (no stacked metrics) */
-@media (max-width: 640px) {
+/* Mobile — single horizontal row (athlete day view) */
+@media (max-width: 1024px) {
   .wa-athlete-ex-card__shell {
-    grid-template-columns: auto minmax(0, 1fr) minmax(76px, 34%) auto;
-    gap: 0.4rem 0.45rem;
-    padding: 0.62rem 0.55rem 0.62rem 0.72rem;
+    grid-template-columns: auto minmax(0, 1fr) minmax(72px, 30%) auto;
+    gap: 0.35rem 0.4rem;
+    padding: 0.55rem 0.5rem 0.55rem 0.65rem;
     align-items: center;
   }
 
   .wa-athlete-ex-card__lead {
-    gap: 0.32rem;
+    gap: 0.28rem;
   }
 
   .wa-athlete-ex-card__index {
-    width: 22px;
-    height: 22px;
-    font-size: 0.68rem;
-    border-radius: 6px;
+    display: none;
   }
 
   .wa-athlete-ex-card__icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
   .wa-athlete-ex-card__icon svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+  }
+
+  .wa-athlete-ex-card__main {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.3rem 0.4rem;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .wa-athlete-ex-card__name {
-    font-size: 0.86rem;
+    flex: 0 1 auto;
+    font-size: 0.82rem;
+    max-width: 34%;
   }
 
   .wa-athlete-ex-card__kind {
-    font-size: 0.5rem;
+    flex: 0 0 auto;
+    font-size: 0.48rem;
     padding: 1px 5px;
+  }
+
+  .wa-athlete-ex-card__rx-block {
+    flex: 1 1 auto;
+    display: block;
+    min-width: 0;
+    margin: 0;
   }
 
   .wa-athlete-ex-card__rx-block .wa-athlete-ex-card__rx:not(:first-child) {
     display: none;
   }
 
-  .wa-athlete-ex-card__rx {
-    font-size: 0.72rem;
-    gap: 0.28rem 0.38rem;
+  .wa-athlete-ex-card__rx,
+  .wa-athlete-ex-card__rx--empty {
+    font-size: 0.68rem;
+    gap: 0.22rem 0.32rem;
+    margin: 0;
   }
 
   .wa-athlete-ex-card__metrics {
-    gap: 0.28rem;
-    padding-left: 0.42rem;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-left: 0.38rem;
     border-left: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
   }
 
   .wa-athlete-ex-card__metric-label {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     letter-spacing: 0.03em;
   }
 
   .wa-athlete-ex-card__metric-row {
-    gap: 0.2rem;
+    gap: 0.15rem;
   }
 
   .wa-athlete-ex-card__sets-count strong {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 
   .wa-athlete-ex-card__sets-count span {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
   }
 
   .wa-athlete-ex-card__set-dots {
@@ -445,7 +465,7 @@
   }
 
   .wa-athlete-ex-card__volume {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
   }
 
   .wa-athlete-ex-card__chev {

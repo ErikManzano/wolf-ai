@@ -1,11 +1,11 @@
 import React from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Info, X, AlertTriangle } from 'lucide-react';
 import type { WolfAlertItem, WolfAlertTone } from '../context/WolfAlertContext';
 import './WolfAlertHost.css';
 
 interface WolfAlertHostProps {
-  alerts: WolfAlertItem[];
+  alert: WolfAlertItem | null;
   onDismiss: (id: string) => void;
 }
 
@@ -22,43 +22,41 @@ function toneIcon(tone: WolfAlertTone) {
   }
 }
 
-const WolfAlertHost: React.FC<WolfAlertHostProps> = ({ alerts, onDismiss }) => {
+const WolfAlertHost: React.FC<WolfAlertHostProps> = ({ alert, onDismiss }) => {
   const reduceMotion = useReducedMotion();
-  const active = alerts[alerts.length - 1];
 
   return (
     <div className="wolf-alert-host" aria-live="polite" aria-relevant="additions text">
-      <AnimatePresence initial={false} mode="wait">
-        {active ? (
+      <div className="wolf-alert-host__slot">
+        {alert ? (
           <motion.div
-            key={active.id}
-            className={`wolf-alert wolf-alert--${active.tone}`}
+            key={alert.id}
+            className={`wolf-alert wolf-alert--${alert.tone}`}
             role="status"
-            initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: -8, scale: 0.98 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+                : { duration: 0.16, ease: [0.22, 1, 0.36, 1] }
             }
           >
-            <span className="wolf-alert__icon">{toneIcon(active.tone)}</span>
+            <span className="wolf-alert__icon">{toneIcon(alert.tone)}</span>
             <div className="wolf-alert__body">
-              {active.title ? <p className="wolf-alert__title">{active.title}</p> : null}
-              <p className="wolf-alert__message">{active.message}</p>
+              {alert.title ? <p className="wolf-alert__title">{alert.title}</p> : null}
+              <p className="wolf-alert__message">{alert.message}</p>
             </div>
             <button
               type="button"
               className="wolf-alert__close"
-              onClick={() => onDismiss(active.id)}
+              onClick={() => onDismiss(alert.id)}
               aria-label="Close"
             >
               <X size={18} strokeWidth={2} aria-hidden />
             </button>
           </motion.div>
         ) : null}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };
