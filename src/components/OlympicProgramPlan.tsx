@@ -52,6 +52,7 @@ import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
 import { SessionWeekStatsPanel } from './session-editor/SessionWeekStatsPanel';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
 import { useWolfAssign } from '../context/WolfAssignContext';
+import { useWolfAlert } from '../context/WolfAlertContext';
 
 const STORAGE_KEY = 'wolf_olympic_program_v1';
 
@@ -252,6 +253,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   selectedDayRef.current = selectedDay;
   const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingHistoryRef = useRef<GeneratedProgram | null>(null);
+  const [hasPendingHistory, setHasPendingHistory] = useState(false);
+  const { pushAlert } = useWolfAlert();
   const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles, assignments, completions, setLogs } =
     useWolfAssign();
 
@@ -305,28 +308,47 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [],
   );
 
+  const clearPendingHistory = useCallback(() => {
+    pendingHistoryRef.current = null;
+    setHasPendingHistory(false);
+  }, []);
+
+  const resetEditorHistory = useCallback(() => {
+    if (historyTimerRef.current) {
+      clearTimeout(historyTimerRef.current);
+      historyTimerRef.current = null;
+    }
+    clearPendingHistory();
+    resetHistory();
+  }, [resetHistory, clearPendingHistory]);
+
   const scheduleHistorySnapshot = useCallback(
     (snapshot: GeneratedProgram) => {
-      pendingHistoryRef.current = snapshot;
+      if (!pendingHistoryRef.current) {
+        pendingHistoryRef.current = snapshot;
+        setHasPendingHistory(true);
+      }
       if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
       historyTimerRef.current = setTimeout(() => {
         const pending = pendingHistoryRef.current;
-        pendingHistoryRef.current = null;
+        clearPendingHistory();
         historyTimerRef.current = null;
         if (pending) recordSnapshot(pending);
       }, 450);
     },
-    [recordSnapshot],
+    [recordSnapshot, clearPendingHistory],
   );
 
   const flushHistorySnapshot = useCallback(() => {
-    if (!historyTimerRef.current) return;
-    clearTimeout(historyTimerRef.current);
-    historyTimerRef.current = null;
+    if (historyTimerRef.current) {
+      clearTimeout(historyTimerRef.current);
+      historyTimerRef.current = null;
+    }
     const pending = pendingHistoryRef.current;
-    pendingHistoryRef.current = null;
-    if (pending) recordSnapshot(pending);
-  }, [recordSnapshot]);
+    if (!pending) return;
+    clearPendingHistory();
+    recordSnapshot(pending);
+  }, [recordSnapshot, clearPendingHistory]);
 
   useEffect(() => {
     if (skipNavFlushRef.current) {
@@ -379,8 +401,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   }, [customizeSubview]);
 
   useEffect(() => {
-    resetHistory();
-  }, [editingAssignmentId, athleteId, resetHistory]);
+    resetEditorHistory();
+  }, [editingAssignmentId, athleteId, resetEditorHistory]);
 
   const showCreate = mode === 'full' || mode === 'create';
   const showCustomize = mode === 'full' || mode === 'customize';
@@ -439,6 +461,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       redo: isEs ? 'Rehacer' : 'Redo',
       undoShortcut: isEs ? 'Deshacer (Ctrl+Z)' : 'Undo (Ctrl+Z)',
       redoShortcut: isEs ? 'Rehacer (Ctrl+Shift+Z)' : 'Redo (Ctrl+Shift+Z)',
+      undoEmpty: isEs ? 'No hay cambios para deshacer.' : 'Nothing to undo.',
+      redoEmpty: isEs ? 'No hay cambios para rehacer.' : 'Nothing to redo.',
+      undoDone: isEs ? 'Última edición deshecha.' : 'Last edit undone.',
+      redoDone: isEs ? 'Última edición rehecha.' : 'Last edit redone.',
+      duplicateDayDone: isEs ? 'Día duplicado en la semana actual.' : 'Day duplicated in the current week.',
+      duplicateDayBlocked: isEs
+        ? `No se puede duplicar: máximo ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} días por semana.`
+        : `Cannot duplicate: maximum ${PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK} days per week.`,
     }),
     [isEs, athlete.name],
   );
@@ -540,14 +570,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setSelectedWeek(1);
     setSelectedDay(1);
     onProgramGenerated?.();
-    resetHistory();
+    resetEditorHistory();
     persist(p);
-  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate, motorExercises, resetHistory]);
+  }, [athleteId, athleteForEngine, totalWeeks, daysPerWeek, primaryGoal, trimmedPlanName, onProgramGenerated, persist, canGenerate, motorExercises, resetEditorHistory]);
 
   const handleClearProgram = useCallback(() => {
-    resetHistory();
+    resetEditorHistory();
     persist(null);
-  }, [persist, resetHistory]);
+  }, [persist, resetEditorHistory]);
 
   useEffect(() => {
     if (!externalCreateActions || !showCreate) {
@@ -617,27 +647,75 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     ],
   );
 
+  const historyScopeLabel = useCallback(
+    (weekNumber: number, dayNumber: number) =>
+      isEs ? `Semana ${weekNumber}, día ${dayNumber}` : `Week ${weekNumber}, day ${dayNumber}`,
+    [isEs],
+  );
+
   const handleUndo = useCallback(() => {
+    flushHistorySnapshot();
     const current = programRef.current;
     if (!current) return;
     const prev = undo();
-    if (!prev) return;
+    if (!prev) {
+      pushAlert({ tone: 'info', title: t.undo, message: t.undoEmpty });
+      return;
+    }
+    const weekNumber = selectedWeekRef.current;
+    const dayNumber = selectedDayRef.current;
     runWithoutRecording(() => {
       pushRedoSnapshot(current);
       applyProgramUpdate(prev, undefined, { skipHistory: true });
     });
-  }, [undo, pushRedoSnapshot, applyProgramUpdate, runWithoutRecording]);
+    pushAlert({
+      tone: 'info',
+      title: t.undo,
+      message: `${t.undoDone} ${historyScopeLabel(weekNumber, dayNumber)}.`,
+    });
+  }, [
+    flushHistorySnapshot,
+    undo,
+    pushRedoSnapshot,
+    applyProgramUpdate,
+    runWithoutRecording,
+    pushAlert,
+    t.undo,
+    t.undoEmpty,
+    t.undoDone,
+    historyScopeLabel,
+  ]);
 
   const handleRedo = useCallback(() => {
     const current = programRef.current;
     if (!current) return;
     const next = redo();
-    if (!next) return;
+    if (!next) {
+      pushAlert({ tone: 'info', title: t.redo, message: t.redoEmpty });
+      return;
+    }
+    const weekNumber = selectedWeekRef.current;
+    const dayNumber = selectedDayRef.current;
     runWithoutRecording(() => {
       pushUndoSnapshot(current);
       applyProgramUpdate(next, undefined, { skipHistory: true });
     });
-  }, [redo, pushUndoSnapshot, applyProgramUpdate, runWithoutRecording]);
+    pushAlert({
+      tone: 'info',
+      title: t.redo,
+      message: `${t.redoDone} ${historyScopeLabel(weekNumber, dayNumber)}.`,
+    });
+  }, [
+    redo,
+    pushUndoSnapshot,
+    applyProgramUpdate,
+    runWithoutRecording,
+    pushAlert,
+    t.redo,
+    t.redoEmpty,
+    t.redoDone,
+    historyScopeLabel,
+  ]);
 
   useEffect(() => {
     if (!showCustomize || !program) return;
@@ -740,13 +818,32 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
 
   const handleDuplicateDay = useCallback(() => {
     const current = programRef.current;
-    if (!current || !canAddDay) return;
+    if (!current) return;
+    if (!canAddDay) {
+      pushAlert({ tone: 'warning', title: t.duplicateDay, message: t.duplicateDayBlocked });
+      return;
+    }
     const next = duplicateDayInGeneratedWeek(current, selectedWeek, selectedDay);
     if (next === current) return;
     const weekAfter = next.weeks.find((w) => w.weekNumber === selectedWeek);
     const newDay = weekAfter?.days[weekAfter.days.length - 1]?.dayNumber ?? selectedDay;
     applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
-  }, [selectedWeek, selectedDay, canAddDay, applyProgramUpdate]);
+    pushAlert({
+      tone: 'success',
+      title: t.duplicateDay,
+      message: `${t.duplicateDayDone} ${historyScopeLabel(selectedWeek, newDay)}.`,
+    });
+  }, [
+    selectedWeek,
+    selectedDay,
+    canAddDay,
+    applyProgramUpdate,
+    pushAlert,
+    t.duplicateDay,
+    t.duplicateDayBlocked,
+    t.duplicateDayDone,
+    historyScopeLabel,
+  ]);
 
   const handleRemoveWeek = useCallback(
     (weekNumber: number) => {
@@ -954,7 +1051,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       <button
         type="button"
         className="wolf-program-history-btn"
-        disabled={!canUndo}
+        disabled={!canUndo && !hasPendingHistory}
         title={t.undoShortcut}
         aria-label={t.undoShortcut}
         onClick={handleUndo}
