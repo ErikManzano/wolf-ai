@@ -135,14 +135,16 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
           </div>
 
           <div className="wa-athlete-ex-card__main">
-            <h3
-              className={`wa-athlete-ex-card__name${hasExercise ? '' : ' wa-athlete-ex-card__name--missing'}`}
-            >
-              {name}
-            </h3>
-            <span className={`wa-athlete-ex-card__kind wa-athlete-ex-card__kind--${blockKind}`}>
-              {kindLabel}
-            </span>
+            <div className="wa-athlete-ex-card__title-row">
+              <h3
+                className={`wa-athlete-ex-card__name${hasExercise ? '' : ' wa-athlete-ex-card__name--missing'}`}
+              >
+                {name}
+              </h3>
+              <span className={`wa-athlete-ex-card__kind wa-athlete-ex-card__kind--${blockKind}`}>
+                {kindLabel}
+              </span>
+            </div>
             {schemeSummaries.length > 0 ? (
               <div className="wa-athlete-ex-card__rx-block" aria-label={isEs ? 'Prescripción' : 'Prescription'}>
                 {schemeSummaries.map((scheme) => (
