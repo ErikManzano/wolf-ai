@@ -1,0 +1,77 @@
+.wolf-se-coach-block-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wolf-se-coach-block-type--panel {
+  padding: 0 2px 4px;
+}
+
+.wolf-se-coach-block-type__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary, #111) 88%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.wolf-se-coach-block-type__chip.is-active {
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.wolf-se-coach-block-type__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.wolf-se-coach-block-type__chip--simple.is-active {
+  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.42);
+  color: #fdba74;
+}
+
+.wolf-se-coach-block-type__chip--complex.is-active {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.42);
+  color: #7dd3fc;
+}
+
+.wolf-se-coach-block-type__chip--warmup.is-active {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.42);
+  color: #fde047;
+}
+
+.wolf-se-coach-block-type__chip:not(.is-active):hover {
+  border-color: color-mix(in srgb, var(--color-accent, #f97316) 28%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-se-coach-block-type__chip:focus-visible {
+  outline: 2px solid var(--color-accent, #f97316);
+  outline-offset: 2px;
+}

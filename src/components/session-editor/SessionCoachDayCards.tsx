@@ -3,7 +3,7 @@ import { ChevronRight, Dumbbell, GitMerge, GripVertical, MoreVertical } from 'lu
 import { Reorder, useDragControls, motion, useReducedMotion } from 'framer-motion';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
-import { WL_SESSION_LIMITS } from '../../services/sessionMutations';
+import { WL_SESSION_LIMITS, getExerciseBlockKind, setExerciseBlockKind } from '../../services/sessionMutations';
 import { blockTonnage, estimateBlockRpe } from './blockMetrics';
 import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
 import { buildSchemeCardSummaries } from '../../utils/schemeCardRx';
@@ -12,9 +12,13 @@ import { CoachDayHeaderStrip } from './CoachDayHeaderStrip';
 import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
 import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
 import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
+import { CoachBlockTypePicker } from './CoachBlockTypePicker';
 import './session-coach-day-cards.css';
+import './coach-block-type-picker.css';
 import './exercise-coach-actions-sheet.css';
 import './exercise-delete-confirm-modal.css';
+
+const DEFAULT_COMPLEX_SECOND_ID = 'ex-022';
 
 export interface SessionCoachDayCardsProps {
   session: Session;
@@ -35,6 +39,7 @@ export interface SessionCoachDayCardsProps {
   onMoveBlockUp?: (index: number) => void;
   onMoveBlockDown?: (index: number) => void;
   onChangeExercise?: (index: number) => void;
+  onApply?: (fn: (session: Session) => Session) => void;
 }
 
 type SortableRow = { id: string; block: SessionExerciseBlock };
@@ -63,6 +68,7 @@ interface CoachDayCardProps {
   isEs: boolean;
   onSelect?: () => void;
   onOpenMenu?: () => void;
+  onApply?: (fn: (session: Session) => Session) => void;
   sortable?: boolean;
   onDragStart?: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
@@ -75,10 +81,12 @@ function CoachDayCard({
   isEs,
   onSelect,
   onOpenMenu,
+  onApply,
   sortable,
   onDragStart,
 }: CoachDayCardProps) {
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
+  const blockKind = getExerciseBlockKind(block);
   const hasExercise = blockHasExercise(block);
   const name = blockDisplayName(block, exercises, isEs);
   const tonnage = blockTonnage(block, athlete, exercises);
@@ -132,6 +140,27 @@ function CoachDayCard({
             </button>
           ) : null}
         </div>
+
+        {onApply ? (
+          <CoachBlockTypePicker
+            kind={blockKind}
+            isEs={isEs}
+            className="wolf-se-coach-day-card__type-picker"
+            onChange={(kind) => {
+              onApply((current) =>
+                setExerciseBlockKind(
+                  current,
+                  index,
+                  kind,
+                  athlete,
+                  exercises,
+                  DEFAULT_COMPLEX_SECOND_ID,
+                ),
+              );
+              if (kind === 'complex') onSelect?.();
+            }}
+          />
+        ) : null}
 
         {schemeSummaries.length > 0 ? (
           <div
@@ -239,6 +268,7 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
   onMoveBlockUp,
   onMoveBlockDown,
   onChangeExercise,
+  onApply,
 }) => {
   const canSort = sortable && Boolean(onReorderBlocks) && session.exercises.length > 1;
   const reduceMotion = useReducedMotion();
@@ -277,6 +307,7 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
     exercises,
     athlete,
     isEs,
+    onApply,
     onSelect: () => onSelectBlock?.(index),
     onOpenMenu: onRemoveBlock || onDuplicateBlock || onMoveBlockUp || onMoveBlockDown ? () => setActionsIndex(index) : undefined,
   });

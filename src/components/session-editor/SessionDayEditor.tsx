@@ -90,6 +90,7 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
         onMoveBlockUp={onMoveBlockUp}
         onMoveBlockDown={onMoveBlockDown}
         onChangeExercise={onChangeExercise}
+        onApply={(transform) => onApply(() => transform(session))}
       />
     );
   }

@@ -6,10 +6,12 @@ import type { SessionApplyFn } from './types';
 import {
   addSetToBlock,
   duplicateSetAt,
+  getExerciseBlockKind,
   removeSetFromBlock,
   updateSegmentRepAt,
   updateSetSchemeField,
   WL_SESSION_LIMITS,
+  type ExerciseBlockKind,
 } from '../../services/sessionMutations';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
@@ -25,9 +27,11 @@ import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
 import { blockUsesComplexReps, formatSetPrescriptionCoachMobile } from './schemeFormat';
 import { purposeForScheme, purposeLabel } from './spreadsheetPurposeUtils';
 import { CoachSetBlockEditor } from './CoachSetBlockEditor';
+import { CoachBlockTypePicker } from './CoachBlockTypePicker';
 import { coachBlockExpandMotion, coachListItemMotion, coachListStagger } from './coachMobileMotion';
 import './exercise-overview-screen.css';
 import './exercise-sets-coach-screen.css';
+import './coach-block-type-picker.css';
 
 export interface ExerciseOverviewScreenProps {
   block: SessionExerciseBlock;
@@ -50,6 +54,7 @@ export interface ExerciseOverviewScreenProps {
   onChangeSegmentExercise?: (segmentIndex: number) => void;
   onAddSegment?: () => void;
   onRemoveLastSegment?: () => void;
+  onBlockKindChange?: (kind: ExerciseBlockKind) => void;
 }
 
 interface CoachBlockSummaryCardProps {
@@ -139,6 +144,7 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   onChangeSegmentExercise,
   onAddSegment,
   onRemoveLastSegment,
+  onBlockKindChange,
 }) => {
   const apply = onApply;
   const reduceMotion = useReducedMotion();
@@ -156,6 +162,7 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   }, [expandedSetIndex, block.sets.length]);
 
   const hasExercise = blockHasExercise(block);
+  const blockKind = getExerciseBlockKind(block);
   const isComplex = normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const segments = block.segments ?? [];
   const atMaxSegments = segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS;
@@ -192,6 +199,16 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
       )}
 
       <div className="wolf-se-exercise-overview__body">
+        {onBlockKindChange ? (
+          <CoachBlockTypePicker
+            kind={blockKind}
+            isEs={isEs}
+            variant="panel"
+            className="wolf-se-exercise-overview__type-picker"
+            onChange={onBlockKindChange}
+          />
+        ) : null}
+
         {!hasExercise && onChangeExercise ? (
           <button type="button" className="wolf-se-exercise-overview__pick-exercise" onClick={onChangeExercise}>
             {isEs ? 'Elegir ejercicio' : 'Choose exercise'}

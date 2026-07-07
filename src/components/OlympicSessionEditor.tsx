@@ -11,6 +11,7 @@ import {
   removeComplexSegment,
   removeExerciseBlock,
   setBlockExercise,
+  setExerciseBlockKind,
   setExerciseBlockOrder,
   setSegmentExercise,
   WL_SESSION_LIMITS,
@@ -500,6 +501,18 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
                 }
                 onAddSegment={editingIsComplex ? handleAddComplexSegment : undefined}
                 onRemoveLastSegment={editingIsComplex ? handleRemoveLastComplexSegment : undefined}
+                onBlockKindChange={(kind) => {
+                  apply((current) =>
+                    setExerciseBlockKind(
+                      current,
+                      editingBlockIndex,
+                      kind,
+                      athlete,
+                      exercises,
+                      DEFAULT_COMPLEX_SECOND_ID,
+                    ),
+                  );
+                }}
                 onDuplicateExercise={handleDuplicateExercise}
                 canDuplicateExercise={session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION}
                 onMoveBlockUp={handleMoveEditingBlockUp}

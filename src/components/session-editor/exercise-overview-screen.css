@@ -357,6 +357,10 @@
   padding-inline: 16px;
 }
 
+.wolf-se-exercise-overview__type-picker {
+  margin-bottom: 2px;
+}
+
 .wolf-se-exercise-overview__editor {
   display: flex;
   flex-direction: column;
