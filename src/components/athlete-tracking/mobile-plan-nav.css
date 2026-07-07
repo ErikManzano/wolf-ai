@@ -1,0 +1,214 @@
+/* Shared mobile week/day navigation — athlete tracking + coach program editor */
+
+.wolf-athlete-week-section {
+  min-width: 0;
+}
+
+.wolf-athlete-week-section--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+}
+
+.wolf-athlete-week-select__row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wolf-athlete-week-select__row--coach {
+  grid-template-columns: 40px minmax(0, 1fr) 40px auto auto;
+}
+
+.wolf-athlete-week-select__field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.wolf-athlete-week-select.wolf-week-select-mobile {
+  display: block;
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap {
+  width: 100%;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 36px 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.wolf-athlete-week-select .wolf-select-wrap select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.wolf-athlete-week-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.wolf-athlete-week-arrow:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  color: var(--color-text-primary);
+}
+
+.wolf-athlete-week-arrow:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.wolf-athlete-week-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wolf-coach-week-nav__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--color-bg-panel);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-coach-week-nav__tool--add {
+  border-style: dashed;
+  color: color-mix(in srgb, var(--color-accent, #f97316) 75%, var(--color-text-muted));
+  border-color: color-mix(in srgb, var(--color-accent, #f97316) 32%, var(--color-border));
+}
+
+.wolf-coach-week-nav__tool--remove {
+  border-style: dashed;
+  color: color-mix(in srgb, #f87171 80%, var(--color-text-muted));
+  border-color: color-mix(in srgb, #ef4444 26%, var(--color-border));
+}
+
+.wa-day-nav {
+  min-width: 0;
+}
+
+.wa-day-nav__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.wa-day-nav__strip {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 0.45rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wa-day-nav__strip::-webkit-scrollbar {
+  display: none;
+}
+
+.wa-day-nav__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wa-day-tab {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.wa-day-tab.active {
+  border-color: #7c3aed;
+  background: #7c3aed;
+  color: #fff;
+}
+
+.wa-day-tab--done:not(.active) {
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+  color: color-mix(in srgb, var(--color-success) 85%, var(--color-text-secondary));
+}
+
+.wolf-coach-day-nav .wa-day-tab.active {
+  border-color: var(--color-accent, #f97316);
+  background: var(--color-accent, #f97316);
+  color: #0a0a0a;
+}
+
+.wolf-coach-day-nav__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--color-accent, #f97316) 32%, var(--color-border));
+  background: transparent;
+  color: color-mix(in srgb, var(--color-accent, #f97316) 75%, var(--color-text-muted));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-coach-day-nav__tool--remove {
+  border-color: color-mix(in srgb, #ef4444 26%, var(--color-border));
+  color: color-mix(in srgb, #f87171 80%, var(--color-text-muted));
+}

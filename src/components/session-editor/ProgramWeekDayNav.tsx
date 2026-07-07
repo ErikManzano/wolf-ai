@@ -3,6 +3,9 @@ import { Reorder, useReducedMotion } from 'framer-motion';
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import ConfirmationModal from '../ConfirmationModal';
+import { AthleteDayNavigator } from '../athlete-tracking/AthleteDayNavigator';
+import { MobileWeekNavigator } from '../athlete-tracking/MobileWeekNavigator';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatWeekTonnageLabel } from './sessionSheetUtils';
 import { programNavConfirmCopy, type ProgramNavConfirmKind } from './programNavConfirmCopy';
 import {
@@ -263,6 +266,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 }) => {
   const reduceMotion = useReducedMotion();
   const isEditorDensity = density === 'editor';
+  const useAthleteMobileNav = isEditorDensity && useMediaQuery('(max-width: 1024px)');
   const isStatsNav = statsContext != null;
   const showDayNav = !isStatsNav || statsContext === 'day';
   const hideWeekContext = isEditorDensity && Boolean(weekHeadLeading);
@@ -418,7 +422,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 
   return (
     <div
-      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}`}
+      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}`}
     >
       <ConfirmationModal
         open={pendingConfirm != null}
@@ -448,6 +452,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             />
           ) : null}
 
+        {!useAthleteMobileNav ? (
         <div className="wolf-week-select-mobile">
           <div className="wolf-week-select-mobile__row">
             <span className="wolf-week-select-mobile__icon" aria-hidden>
@@ -493,7 +498,26 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             ) : null}
           </div>
         </div>
+        ) : null}
 
+        {useAthleteMobileNav ? (
+          <MobileWeekNavigator
+            variant="coach"
+            weeks={program.weeks}
+            activeWeek={selectedWeek}
+            isEs={isEs}
+            onWeekChange={onSelectWeek}
+            labelMode="simple"
+            canAddWeek={!isStatsNav && canAddWeek}
+            onAddWeek={onAddWeek}
+            addWeekTitle={canAddWeek ? labels.addWeek : labels.maxWeeks}
+            canRemoveWeek={!isStatsNav && canRemoveWeek}
+            onRemoveWeek={
+              canRemoveWeek && onRemoveWeek ? () => requestRemoveWeek(selectedWeek) : undefined
+            }
+            removeWeekTitle={labels.removeWeek}
+          />
+        ) : (
         <div className="wolf-week-carousel">
           <button
             type="button"
@@ -567,6 +591,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
           </button>
         </div>
+        )}
         </div>
 
         {showDayNav ? (
@@ -588,6 +613,43 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             />
           ) : null}
           <div className="wolf-day-tabs-section">
+          {useAthleteMobileNav && selectedWeekData ? (
+            <AthleteDayNavigator
+              days={selectedWeekData.days}
+              activeDay={selectedDay}
+              isEs={isEs}
+              isDayComplete={() => false}
+              onDayChange={onSelectDay}
+              className="wolf-coach-day-nav"
+              trailing={
+                !isStatsNav ? (
+                  <>
+                    <button
+                      type="button"
+                      className="wolf-coach-day-nav__tool"
+                      onClick={onAddDay}
+                      disabled={!canAddDay}
+                      title={canAddDay ? labels.addDay : labels.maxDays}
+                      aria-label={labels.addDay}
+                    >
+                      <Plus size={16} strokeWidth={2.25} aria-hidden />
+                    </button>
+                    {canRemoveDay && onRemoveDay ? (
+                      <button
+                        type="button"
+                        className="wolf-coach-day-nav__tool wolf-coach-day-nav__tool--remove"
+                        onClick={() => requestRemoveDay(selectedDay)}
+                        aria-label={labels.removeDay}
+                        title={labels.removeDay}
+                      >
+                        <Trash2 size={14} strokeWidth={2} aria-hidden />
+                      </button>
+                    ) : null}
+                  </>
+                ) : undefined
+              }
+            />
+          ) : (
           <div
             className="wolf-day-tabs-strip"
             ref={dayStripRef}
@@ -637,6 +699,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               </button>
             ) : null}
           </div>
+          )}
           </div>
         </section>
         ) : null}

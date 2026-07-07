@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import type { ProgramDay } from '../../models/training';
 import { cn } from '../../lib/utils';
+import './mobile-plan-nav.css';
 
 export interface AthleteDayNavigatorProps {
   days: ProgramDay[];
@@ -8,6 +9,8 @@ export interface AthleteDayNavigatorProps {
   isEs: boolean;
   isDayComplete: (dayNumber: number) => boolean;
   onDayChange: (dayNumber: number) => void;
+  className?: string;
+  trailing?: React.ReactNode;
 }
 
 function dayTabLabel(day: ProgramDay): string {
@@ -28,6 +31,8 @@ export const AthleteDayNavigator: React.FC<AthleteDayNavigatorProps> = ({
   isEs,
   isDayComplete,
   onDayChange,
+  className,
+  trailing,
 }) => {
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -37,24 +42,30 @@ export const AthleteDayNavigator: React.FC<AthleteDayNavigatorProps> = ({
   }, [activeDay, days.length]);
 
   return (
-    <section className="wa-day-nav" aria-label={isEs ? 'Días de la semana' : 'Week days'}>
-      <div className="wa-day-nav__strip" ref={stripRef} role="tablist">
-        {days.map((day) => {
-          const active = day.dayNumber === activeDay;
-          const done = isDayComplete(day.dayNumber);
-          return (
-            <button
-              key={day.dayNumber}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              className={cn('wa-day-tab', active && 'active', done && !active && 'wa-day-tab--done')}
-              onClick={() => onDayChange(day.dayNumber)}
-            >
-              {dayTabLabel(day)}
-            </button>
-          );
-        })}
+    <section
+      className={cn('wa-day-nav', className)}
+      aria-label={isEs ? 'Días de la semana' : 'Week days'}
+    >
+      <div className="wa-day-nav__row">
+        <div className="wa-day-nav__strip" ref={stripRef} role="tablist">
+          {days.map((day) => {
+            const active = day.dayNumber === activeDay;
+            const done = isDayComplete(day.dayNumber);
+            return (
+              <button
+                key={day.dayNumber}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={cn('wa-day-tab', active && 'active', done && !active && 'wa-day-tab--done')}
+                onClick={() => onDayChange(day.dayNumber)}
+              >
+                {dayTabLabel(day)}
+              </button>
+            );
+          })}
+        </div>
+        {trailing ? <div className="wa-day-nav__actions">{trailing}</div> : null}
       </div>
     </section>
   );
