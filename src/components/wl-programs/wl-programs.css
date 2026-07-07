@@ -5875,10 +5875,15 @@
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-day-board__head {
     border: none;
     border-radius: 0;
-    padding: 6px 10px 2px;
+    padding: 6px;
   }
 
   /* Athlete-style week select + day pills (coach mobile editor) */
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-day-board__head .wolf-program-nav--athlete-mobile {
+    gap: 0;
+    padding: 0;
+  }
+
   .wl-programs-editor--mobile-plan .wolf-program-nav--athlete-mobile .wolf-coach-week-nav-wrap {
     width: 100%;
     padding-bottom: 4px;
@@ -5890,17 +5895,28 @@
 
   .wl-programs-editor--mobile-plan .wolf-program-nav--athlete-mobile .wolf-coach-day-nav {
     margin: 0;
-    padding-bottom: 4px;
+    padding: 0;
   }
 
-  .wl-programs-editor--mobile-plan .wolf-program-nav--athlete-mobile .wolf-program-nav-compact {
-    gap: 4px;
-  }
-
-  /* Legacy chip nav — desktop / non-athlete-mobile fallback */
+  .wl-programs-editor--mobile-plan .wolf-program-nav--athlete-mobile .wolf-program-nav-compact,
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-nav-compact {
-    gap: 6px;
+    gap: 0;
     width: 100%;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-nav-section--days,
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-nav-section--weeks + .wolf-program-nav-section--days {
+    gap: 0;
+    height: fit-content;
+    padding: 0;
+    justify-content: flex-start;
+    align-items: flex-start;
+    border-top: none;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-day-tabs-section {
+    padding: 0 !important;
+    gap: 0 !important;
   }
 
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-week-carousel,
