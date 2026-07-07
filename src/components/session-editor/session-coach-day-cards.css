@@ -375,6 +375,11 @@
 .wolf-se-coach-day-card__type-picker {
   padding: 0;
   margin-top: -2px;
+  width: 100%;
+}
+
+.wolf-se-coach-day-card__type-picker.wolf-se-coach-block-type {
+  gap: 5px;
 }
 
 .wolf-se-coach-day-card--mockup .wolf-se-coach-day-card__header {

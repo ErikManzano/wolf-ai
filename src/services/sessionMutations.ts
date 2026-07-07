@@ -231,6 +231,18 @@ export function exerciseBlockKindLabel(kind: ExerciseBlockKind, isEs: boolean): 
   }
 }
 
+/** Shorter labels for narrow mobile chip rows. */
+export function exerciseBlockKindLabelShort(kind: ExerciseBlockKind, isEs: boolean): string {
+  switch (kind) {
+    case 'warmup':
+      return isEs ? 'Calent.' : 'Warm-up';
+    case 'complex':
+      return 'Compl.';
+    default:
+      return isEs ? 'Simple' : 'Single';
+  }
+}
+
 /** Simple, complejo o calentamiento (mutuamente excluyentes en la hoja). */
 export function setExerciseBlockKind(
   session: Session,

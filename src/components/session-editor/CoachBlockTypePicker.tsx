@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ExerciseBlockKind } from '../../services/sessionMutations';
-import { exerciseBlockKindLabel } from '../../services/sessionMutations';
+import { exerciseBlockKindLabel, exerciseBlockKindLabelShort } from '../../services/sessionMutations';
 import './coach-block-type-picker.css';
 
 const KINDS: readonly ExerciseBlockKind[] = ['simple', 'complex', 'warmup'];
@@ -51,7 +51,12 @@ export const CoachBlockTypePicker: React.FC<CoachBlockTypePickerProps> = ({
             }}
           >
             <span className="wolf-se-coach-block-type__dot" aria-hidden />
-            {exerciseBlockKindLabel(value, isEs)}
+            <span className="wolf-se-coach-block-type__label wolf-se-coach-block-type__label--full">
+              {exerciseBlockKindLabel(value, isEs)}
+            </span>
+            <span className="wolf-se-coach-block-type__label wolf-se-coach-block-type__label--short" aria-hidden>
+              {exerciseBlockKindLabelShort(value, isEs)}
+            </span>
           </button>
         );
       })}
