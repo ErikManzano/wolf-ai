@@ -515,6 +515,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               values={weekRows}
               onReorder={handleWeekReorder}
               className="wolf-week-carousel__track"
+              style={{ '--nav-chip-count': weekRows.length } as React.CSSProperties}
               role="tablist"
               aria-label={labels.weeksRow}
             >
@@ -525,7 +526,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   isActive={selectedWeek === row.weekNumber}
                   tonnage={weekTonnages[row.weekNumber] ?? 0}
                   isEs={isEs}
-                  compactLabel={isEditorDensity}
+                  compactLabel={false}
                   canReorder={canReorderWeeks}
                   reduceMotion={reduceMotion}
                   onSelect={onSelectWeek}
@@ -591,7 +592,11 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             />
           ) : null}
           <div className="wolf-day-tabs-section">
-          <div className="wolf-day-tabs-strip" ref={dayStripRef}>
+          <div
+            className="wolf-day-tabs-strip"
+            ref={dayStripRef}
+            style={{ '--nav-chip-count': dayRows.length } as React.CSSProperties}
+          >
             <Reorder.Group
               as="div"
               axis="x"

@@ -82,17 +82,22 @@
 
 @media (max-width: 520px) {
   .wolf-se-coach-block-type {
-    flex-wrap: nowrap;
-    gap: 5px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .wolf-se-coach-block-type__chip {
-    flex: 1 1 0;
+    flex: unset;
     min-width: 0;
     min-height: 36px;
-    padding: 6px 5px;
-    font-size: 0.64rem;
-    letter-spacing: 0.02em;
+    padding: 5px 2px;
+    font-size: clamp(0.5rem, 2.6vw, 0.62rem);
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.15;
+    white-space: normal;
+    text-align: center;
     border-radius: 9px;
     gap: 0;
   }
@@ -102,10 +107,10 @@
   }
 
   .wolf-se-coach-block-type__label--full {
-    display: none;
+    display: inline;
   }
 
   .wolf-se-coach-block-type__label--short {
-    display: inline;
+    display: none;
   }
 }
