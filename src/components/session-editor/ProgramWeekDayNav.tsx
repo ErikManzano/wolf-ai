@@ -141,7 +141,6 @@ interface SortableWeekTabProps {
   isActive: boolean;
   tonnage: number;
   isEs: boolean;
-  compactLabel?: boolean;
   canReorder: boolean;
   reduceMotion: boolean | null;
   onSelect: (weekNumber: number) => void;
@@ -152,18 +151,12 @@ const SortableWeekTab: React.FC<SortableWeekTabProps> = ({
   isActive,
   tonnage,
   isEs,
-  compactLabel = false,
   canReorder,
   reduceMotion,
   onSelect,
 }) => {
-  const weekLabel = compactLabel
-    ? isEs
-      ? `S${row.weekNumber}`
-      : `W${row.weekNumber}`
-    : isEs
-      ? `Semana ${row.weekNumber}`
-      : `Week ${row.weekNumber}`;
+  const weekLabelFull = isEs ? `Semana ${row.weekNumber}` : `Week ${row.weekNumber}`;
+  const weekLabelShort = isEs ? `S${row.weekNumber}` : `W${row.weekNumber}`;
 
   return (
     <Reorder.Item
@@ -184,9 +177,13 @@ const SortableWeekTab: React.FC<SortableWeekTabProps> = ({
         aria-selected={isActive}
         aria-controls={`wolf-week-panel-${row.weekNumber}`}
         className={`wolf-week-tab-card${isActive ? ' active' : ''}`}
+        aria-label={weekLabelFull}
         onClick={() => onSelect(row.weekNumber)}
       >
-        <span className="wolf-week-tab-card__title">{weekLabel}</span>
+        <span className="wolf-week-tab-card__title wolf-week-tab-card__title--full">{weekLabelFull}</span>
+        <span className="wolf-week-tab-card__title wolf-week-tab-card__title--short" aria-hidden>
+          {weekLabelShort}
+        </span>
         <span className="wolf-week-tab-card__load">{formatWeekTonnageLabel(tonnage, isEs)}</span>
       </button>
     </Reorder.Item>
@@ -526,7 +523,6 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   isActive={selectedWeek === row.weekNumber}
                   tonnage={weekTonnages[row.weekNumber] ?? 0}
                   isEs={isEs}
-                  compactLabel={false}
                   canReorder={canReorderWeeks}
                   reduceMotion={reduceMotion}
                   onSelect={onSelectWeek}

@@ -3149,6 +3149,10 @@
   line-height: 1.2;
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card__title--short {
+  display: none;
+}
+
 .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card__load {
   display: none !important;
 }
@@ -5928,18 +5932,20 @@
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-week-tab-card__title {
     display: block;
     width: 100%;
-    font-size: clamp(
-      0.5rem,
-      calc((100vw - 10.5rem) / max(var(--nav-chip-count, 7), 1)),
-      0.8rem
-    ) !important;
     font-weight: 700 !important;
     letter-spacing: 0;
     line-height: 1.15;
     text-align: center;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-week-tab-card__title--full {
+    display: none;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-week-tab-card__title--short {
+    display: block;
+    font-size: 0.82rem !important;
   }
 
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tabs-strip,
