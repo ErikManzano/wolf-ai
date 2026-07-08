@@ -25,6 +25,7 @@ import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import '../wl-management/wl-management.css';
 import './wl-programs.css';
+import '../../styles/wl-editor-tokens.css';
 
 interface WlProgramEditorProps {
   language: 'ES' | 'EN';
