@@ -23,6 +23,7 @@ import {
   SIDEBAR_WIDTH_MAX,
   useSidebarResize,
 } from './hooks/useSidebarResize';
+import { DesktopTooltipLayer } from './components/ui/DesktopTooltipLayer';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
 
@@ -405,6 +406,7 @@ function AppShell() {
             setLogoutConfirmOpen(false);
           }}
         />
+        <DesktopTooltipLayer />
       </div>
   );
 }

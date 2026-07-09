@@ -43,6 +43,8 @@ export const ProgramStatsScopeControls: React.FC<ProgramStatsScopeControlsProps>
           disabled={disabled}
           className={`wolf-program-stats-scope__btn${statsScope === 'day' ? ' is-active' : ''}`}
           onClick={() => onStatsScopeChange('day')}
+          aria-label={isEs ? 'Estadísticas del día' : 'Day statistics'}
+          data-wl-tooltip={isEs ? 'Estadísticas del día' : 'Day statistics'}
         >
           {isEs ? 'Día' : 'Day'}
         </button>
@@ -53,6 +55,8 @@ export const ProgramStatsScopeControls: React.FC<ProgramStatsScopeControlsProps>
           disabled={disabled}
           className={`wolf-program-stats-scope__btn${statsScope === 'week' ? ' is-active' : ''}`}
           onClick={() => onStatsScopeChange('week')}
+          aria-label={isEs ? 'Estadísticas de la semana' : 'Week statistics'}
+          data-wl-tooltip={isEs ? 'Estadísticas de la semana' : 'Week statistics'}
         >
           {isEs ? 'Semana' : 'Week'}
         </button>
@@ -63,6 +67,8 @@ export const ProgramStatsScopeControls: React.FC<ProgramStatsScopeControlsProps>
           disabled={disabled}
           className={`wolf-program-stats-scope__btn${statsScope === 'program' ? ' is-active' : ''}`}
           onClick={() => onStatsScopeChange('program')}
+          aria-label={isEs ? 'Estadísticas del programa' : 'Program statistics'}
+          data-wl-tooltip={isEs ? 'Estadísticas del programa' : 'Program statistics'}
         >
           {isEs ? 'Programa' : 'Program'}
         </button>

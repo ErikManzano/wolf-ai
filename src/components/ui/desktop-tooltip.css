@@ -1,0 +1,62 @@
+.wl-tooltip-host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wl-tooltip-host > button[disabled] {
+  pointer-events: none;
+}
+
+.wl-desktop-tooltip {
+  position: fixed;
+  z-index: 12000;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: color-mix(in srgb, #12151c 92%, #000);
+  color: var(--color-text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 8px));
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  animation: wl-desktop-tooltip-in 0.14s ease-out;
+}
+
+.wl-desktop-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@keyframes wl-desktop-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 4px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 8px));
+  }
+}
+
+@media not all and (hover: hover) and (pointer: fine) and (min-width: 1025px) {
+  .wl-desktop-tooltip {
+    display: none;
+  }
+}

@@ -1041,6 +1041,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           aria-controls="wolf-program-panel-editor"
           className={`wolf-program-customize-tab${customizeSubview === 'editor' ? ' is-active' : ''}`}
           onClick={() => switchCustomizeSubview('editor')}
+          aria-label={t.customizeViewEditor}
         >
           <PenLine size={14} aria-hidden />
           {t.customizeViewEditor}
@@ -1053,6 +1054,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           aria-controls="wolf-program-panel-table"
           className={`wolf-program-customize-tab${customizeSubview === 'table' ? ' is-active' : ''}`}
           onClick={() => switchCustomizeSubview('table')}
+          aria-label={t.customizeViewTable}
         >
           <Table2 size={14} aria-hidden />
           {t.customizeViewTable}
@@ -1065,6 +1067,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           aria-controls="wolf-program-panel-stats"
           className={`wolf-program-customize-tab${customizeSubview === 'stats' ? ' is-active' : ''}`}
           onClick={() => switchCustomizeSubview('stats')}
+          aria-label={t.customizeViewStats}
         >
           <BarChart3 size={14} aria-hidden />
           {t.customizeViewStats}
@@ -1088,36 +1091,39 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       role="group"
       aria-label={isEs ? 'Historial de edición' : 'Edit history'}
     >
+      <span className="wl-tooltip-host" data-wl-tooltip-host data-wl-tooltip={t.duplicateDay}>
       <button
         type="button"
         className="wolf-program-history-btn"
         disabled={!canAddDay}
-        title={t.duplicateDay}
         aria-label={t.duplicateDay}
         onClick={handleDuplicateDay}
       >
         <Copy size={15} aria-hidden />
       </button>
+      </span>
+      <span className="wl-tooltip-host" data-wl-tooltip-host data-wl-tooltip={t.undoShortcut}>
       <button
         type="button"
         className="wolf-program-history-btn"
         disabled={!canUndo && !hasPendingHistory}
-        title={t.undoShortcut}
         aria-label={t.undoShortcut}
         onClick={handleUndo}
       >
         <Undo2 size={15} aria-hidden />
       </button>
+      </span>
+      <span className="wl-tooltip-host" data-wl-tooltip-host data-wl-tooltip={t.redoShortcut}>
       <button
         type="button"
         className="wolf-program-history-btn"
         disabled={!canRedo}
-        title={t.redoShortcut}
         aria-label={t.redoShortcut}
         onClick={handleRedo}
       >
         <Redo2 size={15} aria-hidden />
       </button>
+      </span>
     </div>
   );
 
