@@ -143,39 +143,86 @@
   border-color: color-mix(in srgb, #3b82f6 22%, var(--color-border));
 }
 
-/* ── 4. Segmented tabs (Editor / Tabla / Estadísticas) ── */
+/* ── 4. Underline tabs (Editor / Tabla / Estadísticas) ── */
 
 .wl-programs-editor .wolf-program-customize-tabs {
-  padding: 3px;
-  gap: 0;
-  border-radius: var(--wl-radius-md);
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--wl-space-6);
+  padding: 0;
   border: none;
-  background: var(--wl-editor-segment-bg);
+  border-radius: 0;
+  background: transparent;
 }
 
 .wl-programs-editor .wolf-program-customize-tab {
-  min-height: 34px;
-  padding: 0 var(--wl-space-4);
-  border-radius: calc(var(--wl-radius-md) - 2px);
+  position: relative;
+  min-height: 40px;
+  padding: var(--wl-space-2) 2px var(--wl-space-3);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-muted);
   font-size: var(--wl-editor-body);
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-weight: 500;
+  box-shadow: none;
   transition:
-    color var(--wl-motion-fast) var(--wl-ease-out),
-    background var(--wl-motion-fast) var(--wl-ease-out),
-    box-shadow var(--wl-motion-fast) var(--wl-ease-out),
+    color var(--wl-motion-fast) var(--wl-ease-out);
+}
+
+.wl-programs-editor .wolf-program-customize-tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: var(--wl-radius-pill);
+  background: var(--color-accent);
+  opacity: 0;
+  transform: scaleX(0.72);
+  transition:
+    opacity var(--wl-motion-fast) var(--wl-ease-out),
     transform var(--wl-motion-fast) var(--wl-ease-out);
 }
 
 .wl-programs-editor .wolf-program-customize-tab:hover:not(.is-active) {
-  color: var(--color-text-primary);
-  background: color-mix(in srgb, #fafafa 4%, transparent);
+  color: color-mix(in srgb, var(--color-text-primary) 72%, var(--color-text-muted));
+  background: transparent;
 }
 
 .wl-programs-editor .wolf-program-customize-tab.is-active {
-  color: #0a0a0a;
-  background: var(--color-accent);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  background: transparent;
   box-shadow: none;
+}
+
+.wl-programs-editor .wolf-program-customize-tab.is-active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.wl-programs-editor .wolf-program-day-board__stats-chrome .wolf-program-customize-tabs,
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tabs {
+  gap: var(--wl-space-8);
+  max-width: none;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-customize-tab,
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: var(--wl-space-2) 2px var(--wl-space-3);
+  border-radius: 0;
+  font-size: var(--wl-editor-body);
+  font-weight: 500;
+  gap: 6px;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-customize-tab.is-active,
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab.is-active {
+  font-weight: 700;
 }
 
 .wl-programs-editor .wolf-program-stats-scope {
@@ -455,44 +502,22 @@
   border-spacing: 0 var(--wl-space-4);
 }
 
-/* Compact metric headers only — exercise/type/blocks headers collapsed */
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th {
-  position: static;
-  top: auto;
-  z-index: 1;
-  min-height: 0;
-  padding: 0 var(--wl-space-3) var(--wl-space-2);
-  font-size: var(--wl-editor-label);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  vertical-align: bottom;
+/* Hide spreadsheet column headers — labels live inside metric cells */
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead {
+  display: none;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-idx,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-exercise,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-type,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-blocks,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-actions {
-  padding: 0;
-  height: 0;
-  min-height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  border: none;
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-metric {
+  width: 88px;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-metric {
-  text-align: right;
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-metric--vol {
+  width: 108px;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td {
   padding: var(--wl-space-4);
-  vertical-align: top;
+  vertical-align: middle;
   border-top: 1px solid var(--wl-editor-border-subtle);
   border-bottom: 1px solid var(--wl-editor-border-subtle);
   background: var(--wl-editor-surface-raised);
@@ -563,25 +588,29 @@
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td.wolf-se-spreadsheet__metric {
-  padding-top: var(--wl-space-4);
-  text-align: right;
-  font-size: var(--wl-editor-metric);
+  padding: var(--wl-space-4) var(--wl-space-3);
+  vertical-align: middle;
+  text-align: left;
+  font-size: 1.35rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
-  background: transparent;
+  background: transparent !important;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start::after,
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric:not(.wolf-se-spreadsheet__metric--zone-start):not(.wolf-se-spreadsheet__metric--vol)::after,
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol::after {
   display: block;
-  margin-top: var(--wl-space-1);
-  font-size: var(--wl-editor-label);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--color-text-muted);
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: color-mix(in srgb, var(--color-text-muted) 88%, var(--color-text-secondary));
   line-height: 1.2;
 }
 
@@ -598,11 +627,20 @@
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol {
-  color: color-mix(in srgb, var(--color-accent) 88%, var(--color-text-primary));
+  color: var(--color-accent);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-badge,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td.wolf-se-spreadsheet__col-actions {
+  vertical-align: middle;
+  padding-inline: var(--wl-space-3);
+  width: 80px;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-summary {
+  display: none;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-badge {
   padding: 3px var(--wl-space-2);
   border-radius: var(--wl-radius-sm);
   font-size: var(--wl-editor-label);
@@ -610,6 +648,19 @@
   border: 1px solid var(--wl-editor-border-subtle);
   background: transparent;
   color: var(--color-text-secondary);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip {
+  padding: 5px 10px;
+  border-radius: var(--wl-radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+  color: color-mix(in srgb, var(--color-accent) 82%, var(--color-text-primary));
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-badge--simple,
@@ -981,6 +1032,25 @@
   text-transform: uppercase;
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__h-bars,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__line-chart,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__status {
+  border-radius: var(--wl-radius-lg);
+  border: 1px solid var(--wl-editor-border-subtle);
+  background: var(--wl-editor-surface-raised);
+  box-shadow: none;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__h-bar-fill {
+  background: linear-gradient(90deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 70%, #fff) 100%);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__line-chart-path,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-stats__line-chart-dot {
+  stroke: var(--color-accent);
+  fill: var(--color-accent);
+}
+
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-day-summary {
   padding: var(--wl-space-4);
   border-radius: var(--wl-radius-lg);
@@ -1053,7 +1123,6 @@
 /* ── 14. Micro-interactions ── */
 
 @media (prefers-reduced-motion: no-preference) {
-  .wl-programs-editor .wolf-program-customize-tab:hover:not(.is-active),
   .wl-programs-editor .wolf-program-stats-scope__btn:hover:not(.is-active),
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover td,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn:hover:not(:disabled) {
@@ -1064,7 +1133,6 @@
     transition: transform var(--wl-motion-fast) var(--wl-ease-out);
   }
 
-  .wl-programs-editor .wolf-program-customize-tab,
   .wl-programs-editor .wolf-program-stats-scope__btn,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tab {
@@ -1072,6 +1140,12 @@
       color var(--wl-motion-fast) var(--wl-ease-out),
       background var(--wl-motion-fast) var(--wl-ease-out),
       box-shadow var(--wl-motion-fast) var(--wl-ease-out),
+      transform var(--wl-motion-fast) var(--wl-ease-out);
+  }
+
+  .wl-programs-editor .wolf-program-customize-tab::after {
+    transition:
+      opacity var(--wl-motion-fast) var(--wl-ease-out),
       transform var(--wl-motion-fast) var(--wl-ease-out);
   }
 }

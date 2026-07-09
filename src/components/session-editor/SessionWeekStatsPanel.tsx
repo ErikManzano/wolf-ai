@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import type { Athlete, Exercise, ProgramWeek } from '../../models/training';
 import { computeWeekAggregateMetrics } from './programWeekStats';
 import {
-  buildDayKpiCards,
+  buildWeekScopeKpiCards,
   ProgramStatsDashboardLayout,
   ProgramStatsDataTable,
   ProgramStatsDayCards,
   ProgramStatsDetailSection,
-  ProgramStatsDonutChart,
+  ProgramStatsHorizontalBars,
   ProgramStatsKpiGrid,
+  ProgramStatsMiniLineChart,
   ProgramStatsPurposeBlock,
 } from './programStatsShared';
 import {
@@ -87,15 +88,25 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
     return sessionPurposeTonnageBreakdown(blocks, athlete, exercises);
   }, [weekData, athlete, exercises]);
 
-  const kpiCards = buildDayKpiCards(isEs, {
+  const intensityLinePoints = useMemo(
+    () =>
+      metrics.dayRows.map((row) => ({
+        key: row.dayNumber,
+        label: row.label,
+        value: row.avgPct,
+      })),
+    [metrics.dayRows],
+  );
+
+  const kpiCards = buildWeekScopeKpiCards(isEs, {
     tonnage: metrics.tonnage,
-    weekSharePct: 0,
     avgPct: metrics.avgPct,
     intensityMin: intensityRange.min,
     intensityMax: intensityRange.max,
     sets: metrics.sets,
     reps: metrics.reps,
-    exerciseCount: metrics.exerciseVolumes.length,
+    dayCount: metrics.dayCount,
+    minutes: metrics.minutes,
     execution: execution
       ? {
           completedSets: execution.completedSets,
@@ -114,32 +125,41 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
     >
       <ProgramStatsDashboardLayout
         dashboard={dashboard}
+        variant="week"
         kpis={<ProgramStatsKpiGrid cards={kpiCards} />}
-        charts={
-          <>
-            <ProgramStatsDonutChart
-              title={isEs ? 'Volumen por ejercicio (semana)' : 'Volume by exercise (week)'}
-              centerLabel={`${metrics.tonnage.toLocaleString()} kg`}
-              slices={metrics.exerciseVolumes}
-              isEs={isEs}
-              maxSlices={dashboard ? 6 : undefined}
-            />
-            <ProgramStatsPurposeBlock
-              purpose={metrics.purpose}
-              purposeTonnage={purposeTonnage}
-              avgPct={metrics.avgPct}
-              isEs={isEs}
-              title={isEs ? 'Distribución por intensidad (semana)' : 'Intensity distribution (week)'}
-            />
-          </>
-        }
-        timeline={
+        primary={
           <ProgramStatsDayCards
             title={isEs ? `Volumen por día (${weekLabel})` : `Volume by day (${weekLabel})`}
             days={weekDays}
             isEs={isEs}
             onSelectDay={onSelectDay}
           />
+        }
+        charts={
+          <>
+            <ProgramStatsMiniLineChart
+              title={isEs ? 'Intensidad por día' : 'Intensity by day'}
+              points={intensityLinePoints}
+              isEs={isEs}
+            />
+            <ProgramStatsPurposeBlock
+              purpose={metrics.purpose}
+              purposeTonnage={purposeTonnage}
+              avgPct={metrics.avgPct}
+              isEs={isEs}
+              title={isEs ? 'Balance técnica / trabajo / intensidad' : 'Technique / work / intensity balance'}
+            />
+          </>
+        }
+        breakdown={
+          metrics.exerciseVolumes.length > 0 ? (
+            <ProgramStatsHorizontalBars
+              title={isEs ? 'Top ejercicios de la semana' : 'Top exercises this week'}
+              slices={metrics.exerciseVolumes}
+              isEs={isEs}
+              maxSlices={6}
+            />
+          ) : null
         }
         detail={
           metrics.dayRows.length > 0 ? (

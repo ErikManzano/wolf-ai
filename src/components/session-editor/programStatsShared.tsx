@@ -115,12 +115,6 @@ function IntensityRing({ pct, label, size = 46 }: { pct: number; label: string; 
   );
 }
 
-const KPI_SPARK_BARS: Record<string, number[]> = {
-  volume: [42, 68, 55, 82, 74, 91, 78],
-  sets: [30, 45, 38, 62, 55, 70, 88],
-  exercises: [55, 40, 65, 50, 72, 48, 60],
-};
-
 function KpiCardVisual({
   accent,
   intensityPct,
@@ -132,21 +126,7 @@ function KpiCardVisual({
     return <IntensityRing pct={intensityPct} label={`${intensityPct}%`} size={38} />;
   }
 
-  const heights = KPI_SPARK_BARS[accent === 'volume' || accent === 'sets' || accent === 'exercises' ? accent : 'volume']!;
-  const toneClass =
-    accent === 'sets'
-      ? 'wolf-program-day-stats__kpi-spark--sets'
-      : accent === 'exercises'
-        ? 'wolf-program-day-stats__kpi-spark--exercises'
-        : 'wolf-program-day-stats__kpi-spark--volume';
-
-  return (
-    <div className={`wolf-program-day-stats__kpi-spark ${toneClass}`} aria-hidden>
-      {heights.map((height, index) => (
-        <span key={index} style={{ height: `${height}%` }} />
-      ))}
-    </div>
-  );
+  return null;
 }
 
 export interface ProgramStatsPurposeBlockProps {
@@ -380,8 +360,129 @@ export interface ProgramStatsKpiCard {
   sub?: string;
   subAccent?: 'volume' | 'success' | 'muted';
   visualValue?: number;
-  accent?: 'volume' | 'intensity' | 'sets' | 'exercises' | 'default';
+  accent?: 'volume' | 'intensity' | 'sets' | 'duration' | 'sessions' | 'exercises' | 'default';
 }
+
+export interface ProgramStatsBarSlice {
+  label: string;
+  tonnage: number;
+  pct: number;
+}
+
+function truncateBarLabel(label: string, max = 28): string {
+  if (label.length <= max) return label;
+  return `${label.slice(0, max - 1)}…`;
+}
+
+export const ProgramStatsHorizontalBars: React.FC<{
+  title: string;
+  slices: ProgramStatsBarSlice[];
+  isEs: boolean;
+  maxSlices?: number;
+  labelMaxLen?: number;
+}> = ({ title, slices, isEs, maxSlices = 6, labelMaxLen = 28 }) => {
+  const visible = maxSlices > 0 ? slices.slice(0, maxSlices) : slices;
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="wolf-program-day-stats__h-bars">
+      {title ? <p className="wolf-program-day-stats__section-label">{title}</p> : null}
+      <ul
+        className="wolf-program-day-stats__h-bars-list"
+        aria-label={isEs ? 'Distribución de volumen' : 'Volume distribution'}
+      >
+        {visible.map((slice) => (
+          <li key={slice.label} className="wolf-program-day-stats__h-bar-row">
+            <span className="wolf-program-day-stats__h-bar-label" title={slice.label}>
+              {truncateBarLabel(slice.label, labelMaxLen)}
+            </span>
+            <div className="wolf-program-day-stats__h-bar-track" aria-hidden>
+              <span
+                className="wolf-program-day-stats__h-bar-fill"
+                style={{ width: `${Math.max(slice.pct, 4)}%` }}
+              />
+            </div>
+            <span className="wolf-program-day-stats__h-bar-value">
+              {slice.tonnage > 0 ? `${slice.tonnage.toLocaleString()} kg` : '—'}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export interface ProgramStatsLinePoint {
+  key: string | number;
+  label: string;
+  value: number;
+}
+
+export const ProgramStatsMiniLineChart: React.FC<{
+  title: string;
+  points: ProgramStatsLinePoint[];
+  isEs: boolean;
+  unit?: string;
+}> = ({ title, points, isEs, unit = '%' }) => {
+  if (points.length < 2) return null;
+
+  const width = 280;
+  const height = 88;
+  const padX = 8;
+  const padY = 12;
+  const chartW = width - padX * 2;
+  const chartH = height - padY * 2;
+
+  const values = points.map((p) => p.value);
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const range = Math.max(1, maxVal - minVal);
+  const yPad = range * 0.12;
+
+  const coords = points.map((point, index) => {
+    const x = padX + (index / Math.max(1, points.length - 1)) * chartW;
+    const normalized = (point.value - (minVal - yPad)) / (range + yPad * 2);
+    const y = padY + chartH - normalized * chartH;
+    return { x, y, point };
+  });
+
+  const polyline = coords.map((c) => `${c.x},${c.y}`).join(' ');
+  const ariaLabel = points.map((p) => `${p.label} ${p.value}${unit}`).join(', ');
+
+  return (
+    <div className="wolf-program-day-stats__line-chart">
+      <p className="wolf-program-day-stats__section-label">{title}</p>
+      <div className="wolf-program-day-stats__line-chart-body">
+        <svg
+          className="wolf-program-day-stats__line-chart-svg"
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label={ariaLabel}
+        >
+          <polyline
+            className="wolf-program-day-stats__line-chart-path"
+            fill="none"
+            points={polyline}
+          />
+          {coords.map((c) => (
+            <circle
+              key={c.point.key}
+              className="wolf-program-day-stats__line-chart-dot"
+              cx={c.x}
+              cy={c.y}
+              r={3.5}
+            />
+          ))}
+        </svg>
+        <ul className="wolf-program-day-stats__line-chart-labels" aria-hidden>
+          {points.map((point) => (
+            <li key={point.key}>{point.label}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 export const ProgramStatsKpiGrid: React.FC<{ cards: ProgramStatsKpiCard[] }> = ({ cards }) => {
   if (cards.length === 0) return null;
@@ -638,23 +739,57 @@ export const ProgramStatsFooterRow: React.FC<{
   </div>
 );
 
+export type ProgramStatsDashboardVariant = 'day' | 'week' | 'program';
+
 export const ProgramStatsDashboardLayout: React.FC<{
   kpis: React.ReactNode;
-  charts: React.ReactNode;
-  timeline: React.ReactNode;
+  /** Main chart row — day/week cards for week/program scopes. */
+  primary?: React.ReactNode;
+  /** Coaching verdict or status (day scope). */
+  status?: React.ReactNode;
+  charts?: React.ReactNode;
+  /** Exercise volume bars or similar breakdown. */
+  breakdown?: React.ReactNode;
   footer?: React.ReactNode;
   detail?: React.ReactNode;
   /** Fit all widgets in the visible panel (GA-style grid, no page scroll). */
   dashboard?: boolean;
-}> = ({ kpis, charts, timeline, footer, detail, dashboard = false }) => (
+  variant?: ProgramStatsDashboardVariant;
+  /** @deprecated Use primary/breakdown slots instead. */
+  timeline?: React.ReactNode;
+}> = ({
+  kpis,
+  primary,
+  status,
+  charts,
+  breakdown,
+  footer,
+  detail,
+  dashboard = false,
+  variant = 'day',
+  timeline,
+}) => (
   <div
-    className={`wolf-program-day-stats__dashboard${
+    className={`wolf-program-day-stats__dashboard wolf-program-day-stats__dashboard--${variant}${
       dashboard ? ' wolf-program-day-stats__dashboard--viewport' : ''
     }`}
   >
     <div className="wolf-program-day-stats__row wolf-program-day-stats__row--kpis">{kpis}</div>
-    <div className="wolf-program-day-stats__row wolf-program-day-stats__row--charts">{charts}</div>
-    <div className="wolf-program-day-stats__row wolf-program-day-stats__row--timeline">{timeline}</div>
+    {status ? (
+      <div className="wolf-program-day-stats__row wolf-program-day-stats__row--status">{status}</div>
+    ) : null}
+    {primary ? (
+      <div className="wolf-program-day-stats__row wolf-program-day-stats__row--primary">{primary}</div>
+    ) : null}
+    {timeline ? (
+      <div className="wolf-program-day-stats__row wolf-program-day-stats__row--timeline">{timeline}</div>
+    ) : null}
+    {charts ? (
+      <div className="wolf-program-day-stats__row wolf-program-day-stats__row--charts">{charts}</div>
+    ) : null}
+    {breakdown ? (
+      <div className="wolf-program-day-stats__row wolf-program-day-stats__row--breakdown">{breakdown}</div>
+    ) : null}
     {footer ? (
       <div className="wolf-program-day-stats__row wolf-program-day-stats__row--footer">{footer}</div>
     ) : null}
@@ -744,6 +879,212 @@ export const ProgramStatsSummaryStrip: React.FC<{
   );
 };
 
+function intensityRangeSub(
+  isEs: boolean,
+  intensityMin: number,
+  intensityMax: number,
+): string | undefined {
+  if (intensityMin > 0 && intensityMax > intensityMin) {
+    const range = `${intensityMin}% – ${intensityMax}%`;
+    return isEs ? `Rango: ${range}` : `Range: ${range}`;
+  }
+  return undefined;
+}
+
+function executionSetsSub(
+  isEs: boolean,
+  execution: { completedSets: number; completionPct: number } | null | undefined,
+  reps: number,
+): { sub: string; subAccent?: ProgramStatsKpiCard['subAccent'] } {
+  if (execution) {
+    return {
+      sub: isEs
+        ? `Completadas: ${execution.completedSets} (${execution.completionPct}%)`
+        : `Completed: ${execution.completedSets} (${execution.completionPct}%)`,
+      subAccent: 'success',
+    };
+  }
+  return {
+    sub: isEs ? `${reps} reps totales` : `${reps} total reps`,
+    subAccent: 'muted',
+  };
+}
+
+/** Day scope — volume, intensity, sets, estimated duration. */
+export function buildDayScopeKpiCards(
+  isEs: boolean,
+  params: {
+    tonnage: number;
+    weekSharePct: number;
+    avgPct: number;
+    intensityMin: number;
+    intensityMax: number;
+    sets: number;
+    reps: number;
+    minutes: number;
+    execution?: { completedSets: number; prescribedSets: number; completionPct: number } | null;
+  },
+): ProgramStatsKpiCard[] {
+  const setsMeta = executionSetsSub(isEs, params.execution, params.reps);
+  const durationSub = isEs ? 'Tiempo estimado' : 'Estimated time';
+  const durationBuffer = 15;
+
+  return [
+    {
+      id: 'volume',
+      label: isEs ? 'Volumen total' : 'Total volume',
+      value: params.tonnage > 0 ? `${params.tonnage.toLocaleString()} kg` : '—',
+      sub:
+        params.weekSharePct > 0 && params.weekSharePct < 100
+          ? isEs
+            ? `${params.weekSharePct}% del volumen semanal`
+            : `${params.weekSharePct}% of weekly volume`
+          : undefined,
+      subAccent: params.weekSharePct > 0 ? 'volume' : 'muted',
+      accent: 'volume',
+    },
+    {
+      id: 'intensity',
+      label: isEs ? 'Intensidad promedio' : 'Average intensity',
+      value: `${params.avgPct}% 1RM`,
+      sub: intensityRangeSub(isEs, params.intensityMin, params.intensityMax),
+      subAccent: 'muted',
+      visualValue: params.avgPct,
+      accent: 'intensity',
+    },
+    {
+      id: 'sets',
+      label: isEs ? 'Series totales' : 'Total sets',
+      value: String(params.sets),
+      sub: setsMeta.sub,
+      subAccent: setsMeta.subAccent,
+      accent: 'sets',
+    },
+    {
+      id: 'duration',
+      label: isEs ? 'Duración' : 'Duration',
+      value:
+        params.minutes > 0
+          ? `${params.minutes}–${params.minutes + durationBuffer} min`
+          : '—',
+      sub: durationSub,
+      subAccent: 'muted',
+      accent: 'duration',
+    },
+  ];
+}
+
+/** Week scope — volume, intensity, sessions, duration. */
+export function buildWeekScopeKpiCards(
+  isEs: boolean,
+  params: {
+    tonnage: number;
+    avgPct: number;
+    intensityMin: number;
+    intensityMax: number;
+    sets: number;
+    reps: number;
+    dayCount: number;
+    minutes: number;
+    execution?: { completedSets: number; prescribedSets: number; completionPct: number } | null;
+  },
+): ProgramStatsKpiCard[] {
+  const setsMeta = executionSetsSub(isEs, params.execution, params.reps);
+  const estimatedMinutes = params.minutes + params.dayCount * 15;
+
+  return [
+    {
+      id: 'volume',
+      label: isEs ? 'Volumen semanal' : 'Weekly volume',
+      value: params.tonnage > 0 ? `${params.tonnage.toLocaleString()} kg` : '—',
+      accent: 'volume',
+    },
+    {
+      id: 'intensity',
+      label: isEs ? 'Intensidad promedio' : 'Average intensity',
+      value: `${params.avgPct}% 1RM`,
+      sub: intensityRangeSub(isEs, params.intensityMin, params.intensityMax),
+      subAccent: 'muted',
+      visualValue: params.avgPct,
+      accent: 'intensity',
+    },
+    {
+      id: 'sessions',
+      label: isEs ? 'Sesiones' : 'Sessions',
+      value: String(params.dayCount),
+      sub: isEs
+        ? `${params.dayCount === 1 ? 'día programado' : 'días programados'}`
+        : `${params.dayCount === 1 ? 'scheduled day' : 'scheduled days'}`,
+      subAccent: 'muted',
+      accent: 'sessions',
+    },
+    {
+      id: 'duration',
+      label: isEs ? 'Duración' : 'Duration',
+      value: formatStatsDuration(estimatedMinutes),
+      sub: setsMeta.sub,
+      subAccent: setsMeta.subAccent,
+      accent: 'duration',
+    },
+  ];
+}
+
+/** Program scope — total volume, intensity, weeks/sessions, duration. */
+export function buildProgramScopeKpiCards(
+  isEs: boolean,
+  params: {
+    tonnage: number;
+    avgPct: number;
+    intensityMin: number;
+    intensityMax: number;
+    weekCount: number;
+    sessionCount: number;
+    minutes: number;
+    execution?: { completedSets: number; prescribedSets: number; completionPct: number } | null;
+  },
+): ProgramStatsKpiCard[] {
+  const estimatedMinutes = params.minutes + params.sessionCount * 15;
+
+  return [
+    {
+      id: 'volume',
+      label: isEs ? 'Volumen total' : 'Total volume',
+      value: params.tonnage > 0 ? `${params.tonnage.toLocaleString()} kg` : '—',
+      accent: 'volume',
+    },
+    {
+      id: 'intensity',
+      label: isEs ? 'Intensidad promedio' : 'Average intensity',
+      value: `${params.avgPct}% 1RM`,
+      sub: intensityRangeSub(isEs, params.intensityMin, params.intensityMax),
+      subAccent: 'muted',
+      visualValue: params.avgPct,
+      accent: 'intensity',
+    },
+    {
+      id: 'weeks',
+      label: isEs ? 'Semanas' : 'Weeks',
+      value: String(params.weekCount),
+      sub: isEs ? `${params.sessionCount} sesiones` : `${params.sessionCount} sessions`,
+      subAccent: 'muted',
+      accent: 'sessions',
+    },
+    {
+      id: 'duration',
+      label: isEs ? 'Duración' : 'Duration',
+      value: formatStatsDuration(estimatedMinutes),
+      sub: params.execution
+        ? isEs
+          ? `Completadas: ${params.execution.completionPct}%`
+          : `Completed: ${params.execution.completionPct}%`
+        : undefined,
+      subAccent: params.execution ? 'success' : 'muted',
+      accent: 'duration',
+    },
+  ];
+}
+
+/** @deprecated Use buildDayScopeKpiCards */
 export function buildDayKpiCards(
   isEs: boolean,
   params: {
@@ -756,65 +1097,19 @@ export function buildDayKpiCards(
     reps: number;
     exerciseCount: number;
     workExerciseCount?: number;
+    minutes?: number;
     execution?: { completedSets: number; prescribedSets: number; completionPct: number } | null;
   },
 ): ProgramStatsKpiCard[] {
-  const intensitySub =
-    params.intensityMin > 0 && params.intensityMax > params.intensityMin
-      ? `${params.intensityMin}% – ${params.intensityMax}%`
-      : undefined;
-
-  const setsSub = params.execution
-    ? isEs
-      ? `Completadas: ${params.execution.completedSets} (${params.execution.completionPct}%)`
-      : `Completed: ${params.execution.completedSets} (${params.execution.completionPct}%)`
-    : undefined;
-
-  return [
-    {
-      id: 'volume',
-      label: isEs ? 'Volumen total' : 'Total volume',
-      value: params.tonnage > 0 ? `${params.tonnage.toLocaleString()} kg` : '—',
-      sub:
-        params.weekSharePct > 0 && params.weekSharePct < 100
-          ? isEs
-            ? `${params.weekSharePct}% del volumen semanal`
-            : `${params.weekSharePct}% of weekly volume`
-          : params.weekSharePct === 100
-            ? isEs
-              ? '100% del alcance'
-              : '100% of scope'
-            : undefined,
-      subAccent: params.weekSharePct > 0 ? 'volume' : 'muted',
-      accent: 'volume',
-    },
-    {
-      id: 'intensity',
-      label: isEs ? 'Intensidad promedio' : 'Average intensity',
-      value: `${params.avgPct}% 1RM`,
-      sub: intensitySub
-        ? isEs
-          ? `Rango: ${intensitySub}`
-          : `Range: ${intensitySub}`
-        : undefined,
-      subAccent: 'muted',
-      visualValue: params.avgPct,
-      accent: 'intensity',
-    },
-    {
-      id: 'sets',
-      label: isEs ? 'Series totales' : 'Total sets',
-      value: String(params.sets),
-      sub: setsSub ?? (isEs ? `${params.reps} reps totales` : `${params.reps} total reps`),
-      subAccent: params.execution ? 'success' : 'muted',
-      accent: 'sets',
-    },
-    {
-      id: 'exercises',
-      label: isEs ? 'Ejercicios' : 'Exercises',
-      value: String(params.exerciseCount),
-      sub: isEs ? `Programados: ${params.exerciseCount}` : `Planned: ${params.exerciseCount}`,
-      accent: 'exercises',
-    },
-  ];
+  return buildDayScopeKpiCards(isEs, {
+    tonnage: params.tonnage,
+    weekSharePct: params.weekSharePct,
+    avgPct: params.avgPct,
+    intensityMin: params.intensityMin,
+    intensityMax: params.intensityMax,
+    sets: params.sets,
+    reps: params.reps,
+    minutes: params.minutes ?? 0,
+    execution: params.execution,
+  });
 }

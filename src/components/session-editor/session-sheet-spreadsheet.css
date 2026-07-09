@@ -1502,6 +1502,18 @@
   align-items: stretch;
 }
 
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__dashboard--day .wolf-program-day-stats__row--charts {
+  grid-template-columns: 1fr;
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__row--primary .wolf-program-day-stats__day-cards {
+  padding: clamp(10px, 1.2vw, 14px);
+}
+
+.wolf-program-day-stats--dashboard .wolf-program-day-stats__row--breakdown .wolf-program-day-stats__h-bars {
+  padding: clamp(10px, 1.2vw, 14px);
+}
+
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1678,6 +1690,18 @@
   .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-card {
     flex-basis: min(72vw, 160px);
   }
+
+  .wolf-program-day-stats__h-bar-row {
+    grid-template-columns: minmax(56px, 0.42fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .wolf-program-day-stats__h-bar-value {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    font-size: 0.66rem;
+  }
 }
 
 .wolf-program-day-stats__row--charts {
@@ -1685,6 +1709,10 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: 12px;
   align-items: stretch;
+}
+
+.wolf-program-day-stats__row--charts > :only-child {
+  grid-column: 1 / -1;
 }
 
 .wolf-program-day-stats__detail {
@@ -2136,7 +2164,9 @@
 .wolf-program-day-stats__purpose-row--dashboard,
 .wolf-program-day-stats__day-cards,
 .wolf-program-day-stats__summary-strip,
-.wolf-program-day-stats__status {
+.wolf-program-day-stats__status,
+.wolf-program-day-stats__h-bars,
+.wolf-program-day-stats__line-chart {
   border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--color-border) 62%, transparent);
   background: color-mix(in srgb, #161616 88%, var(--color-bg-panel));
@@ -2534,6 +2564,132 @@
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   background: color-mix(in srgb, var(--color-bg-main) 60%, transparent);
   color: var(--color-text-primary);
+}
+
+/* Horizontal volume bars */
+.wolf-program-day-stats__h-bars {
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.wolf-program-day-stats__h-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wolf-program-day-stats__h-bar-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 0.34fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.wolf-program-day-stats__h-bar-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-program-day-stats__h-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 55%, transparent);
+  overflow: hidden;
+}
+
+.wolf-program-day-stats__h-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff6b1a 0%, #ff8f4d 100%);
+}
+
+.wolf-program-day-stats__h-bar-value {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Mini intensity line chart */
+.wolf-program-day-stats__line-chart {
+  padding: 14px 16px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wolf-program-day-stats__line-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wolf-program-day-stats__line-chart-svg {
+  width: 100%;
+  height: auto;
+  min-height: 72px;
+  max-height: 100px;
+}
+
+.wolf-program-day-stats__line-chart-path {
+  stroke: var(--color-accent, #ff6b1a);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.wolf-program-day-stats__line-chart-dot {
+  fill: var(--color-accent, #ff6b1a);
+  stroke: color-mix(in srgb, var(--color-bg-panel) 80%, #000);
+  stroke-width: 1.5;
+}
+
+.wolf-program-day-stats__line-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.wolf-program-day-stats__line-chart-labels li {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-program-day-stats__row--status .wolf-program-day-stats__status {
+  width: 100%;
+}
+
+.wolf-program-day-stats__detail + .wolf-program-day-stats__detail {
+  margin-top: 8px;
+}
+
+.wolf-program-day-stats__detail-body .wolf-program-day-stats__h-bars {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 .wolf-program-day-stats__summary-strip {

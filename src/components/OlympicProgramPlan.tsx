@@ -1397,10 +1397,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                       isEs={isEs}
                       weekNumber={selectedWeek}
                       dayNumber={selectedDay}
-                      dayLabel={selectedDayLabel}
                       weekTonnage={weekTonnages[selectedWeek] ?? 0}
-                      weekData={selectedWeekData}
-                      onSelectDay={handleWeekStatsDaySelect}
                       executionContext={statsExecutionContext}
                       dashboard
                     />

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import type { Athlete, Exercise, ProgramWeek, Session } from '../../models/training';
-import { calcularCargaTotal } from '../../services/trainingEngine';
+import type { Athlete, Exercise, Session } from '../../models/training';
 import {
   estimateSessionMinutes,
   sessionAvgIntensity,
@@ -12,23 +11,20 @@ import {
   sessionExerciseVolumes,
   sessionPurposeBreakdown,
   sessionPurposeTonnageBreakdown,
-  sessionWorkExerciseCount,
 } from './sessionSummaryMetrics';
 import {
-  buildDayKpiCards,
+  buildDayScopeKpiCards,
   ProgramStatsDashboardLayout,
-  ProgramStatsDataTable,
-  ProgramStatsDayCards,
-  ProgramStatsDetailSection,
-  ProgramStatsDonutChart,
+  ProgramStatsHorizontalBars,
   ProgramStatsKpiGrid,
   ProgramStatsPurposeBlock,
+  ProgramStatsStatusCard,
 } from './programStatsShared';
 import {
   computeSessionExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
-import { sessionIntensityRange } from './programStatsVerdict';
+import { evaluateDayVerdict, sessionIntensityRange } from './programStatsVerdict';
 
 export interface SessionDayStatsPanelProps {
   session: Session;
@@ -39,7 +35,6 @@ export interface SessionDayStatsPanelProps {
   dayNumber: number;
   dayLabel?: string;
   weekTonnage: number;
-  weekData?: ProgramWeek;
   onSelectDay?: (dayNumber: number) => void;
   executionContext?: SessionExecutionContext;
   /** GA-style viewport grid — all widgets visible without page scroll. */
@@ -54,8 +49,6 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   weekNumber,
   dayNumber,
   weekTonnage,
-  weekData,
-  onSelectDay,
   executionContext,
   dashboard = false,
 }) => {
@@ -79,8 +72,6 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
       minutes: estimateSessionMinutes(session),
       purpose: sessionPurposeBreakdown(blocks),
       purposeTonnage: sessionPurposeTonnageBreakdown(blocks, athlete, exercises),
-      exerciseCount: blocks.length,
-      workExerciseCount: sessionWorkExerciseCount(blocks),
       intensityRange: sessionIntensityRange(blocks),
     }),
     [blocks, session, athlete, exercises],
@@ -94,31 +85,17 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     [executionContext, session, weekNumber, dayNumber],
   );
 
-  const weekDays = useMemo(() => {
-    if (!weekData?.days.length) return [];
-    return weekData.days.map((day) => {
-      const dayExecution = executionContext?.assignmentId
-        ? computeSessionExecution(day.session, weekNumber, day.dayNumber, executionContext)
-        : null;
-      return {
-        dayNumber: day.dayNumber,
-        label: day.label?.trim() || (isEs ? `Día ${day.dayNumber}` : `Day ${day.dayNumber}`),
-        tonnage: calcularCargaTotal(day.session, athlete, exercises),
-        exerciseCount: day.session.exercises.length,
-        isSelected: day.dayNumber === dayNumber,
-        executionStatus: dayExecution?.status ?? 'none',
-      };
-    });
-  }, [weekData, athlete, exercises, dayNumber, weekNumber, isEs, executionContext]);
+  const verdict = useMemo(
+    () => evaluateDayVerdict(session, athlete, exercises, isEs),
+    [session, athlete, exercises, isEs],
+  );
 
   const exerciseRows = useMemo(
     () => sessionExerciseVolumes(blocks, athlete, exercises, 6),
     [blocks, athlete, exercises],
   );
 
-  const weekLabel = isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`;
-
-  const kpiCards = buildDayKpiCards(isEs, {
+  const kpiCards = buildDayScopeKpiCards(isEs, {
     tonnage: dayTonnage,
     weekSharePct: daySharePct,
     avgPct: sessionMetrics.avgPct,
@@ -126,8 +103,7 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     intensityMax: sessionMetrics.intensityRange.max,
     sets: sessionMetrics.sets,
     reps: sessionMetrics.reps,
-    exerciseCount: sessionMetrics.exerciseCount,
-    workExerciseCount: sessionMetrics.workExerciseCount,
+    minutes: sessionMetrics.minutes,
     execution: execution
       ? {
           completedSets: execution.completedSets,
@@ -146,55 +122,41 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     >
       <ProgramStatsDashboardLayout
         dashboard={dashboard}
+        variant="day"
         kpis={<ProgramStatsKpiGrid cards={kpiCards} />}
-        charts={
-          <>
-            <ProgramStatsDonutChart
-              title={isEs ? 'Volumen por ejercicio (hoy)' : 'Volume by exercise (today)'}
-              centerLabel={dayTonnage > 0 ? `${dayTonnage.toLocaleString()} kg` : '—'}
-              slices={exerciseRows}
-              isEs={isEs}
-              maxSlices={dashboard ? 6 : undefined}
-            />
-            <ProgramStatsPurposeBlock
-              purpose={sessionMetrics.purpose}
-              purposeTonnage={sessionMetrics.purposeTonnage}
-              avgPct={sessionMetrics.avgPct}
-              isEs={isEs}
-              title={isEs ? 'Distribución por intensidad (hoy)' : 'Intensity distribution (today)'}
-            />
-          </>
-        }
-        timeline={
-          <ProgramStatsDayCards
-            title={
-              isEs
-                ? `Volumen por día de la semana (${weekLabel})`
-                : `Volume by day of the week (${weekLabel})`
-            }
-            days={weekDays}
+        status={
+          <ProgramStatsStatusCard
+            title={verdict.title}
+            message={verdict.message}
+            tone={verdict.tone}
             isEs={isEs}
-            onSelectDay={onSelectDay}
+            compact
+            executionLabel={
+              execution
+                ? isEs
+                  ? `${execution.completionPct}% completado`
+                  : `${execution.completionPct}% completed`
+                : undefined
+            }
           />
         }
-        detail={
+        charts={
+          <ProgramStatsPurposeBlock
+            purpose={sessionMetrics.purpose}
+            purposeTonnage={sessionMetrics.purposeTonnage}
+            avgPct={sessionMetrics.avgPct}
+            isEs={isEs}
+            title={isEs ? 'Distribución por intensidad (hoy)' : 'Intensity distribution (today)'}
+          />
+        }
+        breakdown={
           exerciseRows.length > 0 ? (
-            <ProgramStatsDetailSection
-              title={isEs ? 'Detalle por ejercicio' : 'Exercise breakdown'}
-            >
-              <ProgramStatsDataTable
-                title=""
-                columns={[
-                  { key: 'exercise', label: isEs ? 'Ejercicio' : 'Exercise' },
-                  { key: 'volume', label: isEs ? 'Volumen' : 'Volume', align: 'right' },
-                  { key: 'pct', label: isEs ? '% del día' : '% of day', align: 'right' },
-                ]}
-                rows={exerciseRows.map((row, index) => ({
-                  key: `${row.label}-${index}`,
-                  cells: [row.label, `${row.tonnage.toLocaleString()} kg`, `${row.pct}%`],
-                }))}
-              />
-            </ProgramStatsDetailSection>
+            <ProgramStatsHorizontalBars
+              title={isEs ? 'Carga por ejercicio' : 'Load by exercise'}
+              slices={exerciseRows}
+              isEs={isEs}
+              maxSlices={6}
+            />
           ) : null
         }
       />
