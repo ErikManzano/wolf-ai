@@ -455,20 +455,44 @@
   border-spacing: 0 var(--wl-space-4);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+/* Compact metric headers only — exercise/type/blocks headers collapsed */
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th {
+  position: static;
+  top: auto;
+  z-index: 1;
+  min-height: 0;
+  padding: 0 var(--wl-space-3) var(--wl-space-2);
+  font-size: var(--wl-editor-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  vertical-align: bottom;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-idx,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-exercise,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-type,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-blocks,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-actions {
   padding: 0;
-  margin: -1px;
+  height: 0;
+  min-height: 0;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  visibility: hidden;
+  border: none;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table thead th.wolf-se-spreadsheet__col-metric {
+  text-align: right;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td {
   padding: var(--wl-space-4);
+  vertical-align: top;
   border-top: 1px solid var(--wl-editor-border-subtle);
   border-bottom: 1px solid var(--wl-editor-border-subtle);
   background: var(--wl-editor-surface-raised);
@@ -499,6 +523,22 @@
   background: color-mix(in srgb, var(--color-bg-hover) 20%, var(--wl-editor-surface-raised));
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td:first-child {
+  border-bottom-left-radius: 0;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td:last-child {
+  border-bottom-right-radius: 0;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td.wolf-se-spreadsheet__metric {
+  background: transparent;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover td.wolf-se-spreadsheet__metric {
+  background: transparent;
+}
+
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td.wolf-se-spreadsheet__col-idx {
   box-shadow: none;
 }
@@ -522,22 +562,43 @@
   font-weight: 700;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td.wolf-se-spreadsheet__metric {
+  padding-top: var(--wl-space-4);
+  text-align: right;
+  font-size: var(--wl-editor-metric);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start::after,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric:not(.wolf-se-spreadsheet__metric--zone-start):not(.wolf-se-spreadsheet__metric--vol)::after,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol::after {
+  display: block;
+  margin-top: var(--wl-space-1);
   font-size: var(--wl-editor-label);
-  color: var(--color-text-muted);
   font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start::after {
+  content: 'Series';
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric:not(.wolf-se-spreadsheet__metric--zone-start):not(.wolf-se-spreadsheet__metric--vol)::after {
+  content: 'Reps';
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol::after {
+  content: 'Vol. total';
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 2px var(--wl-space-2);
-  border-radius: var(--wl-radius-sm);
-  font-size: var(--wl-editor-metric);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: color-mix(in srgb, var(--color-accent) 88%, var(--color-text-primary));
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-badge,
@@ -559,32 +620,35 @@
   border-color: var(--wl-editor-border-subtle);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row-actions {
+/* Exercise row actions — reveal on hover only */
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td .wolf-se-spreadsheet__row-actions {
   opacity: 0;
   transition: opacity var(--wl-motion-fast) var(--wl-ease-out);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover .wolf-se-spreadsheet__row-actions,
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:focus-within .wolf-se-spreadsheet__row-actions {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover > td .wolf-se-spreadsheet__row-actions,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:focus-within > td .wolf-se-spreadsheet__row-actions {
   opacity: 1;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__icon-btn {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td .wolf-se-spreadsheet__icon-btn {
   width: 32px;
   height: 32px;
   border-radius: var(--wl-radius-sm);
-  border: none;
-  background: transparent;
+  border: 1px solid var(--wl-editor-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-panel) 80%, transparent);
   color: var(--color-text-muted);
   transition:
     color var(--wl-motion-fast) var(--wl-ease-out),
     background var(--wl-motion-fast) var(--wl-ease-out),
+    border-color var(--wl-motion-fast) var(--wl-ease-out),
     transform var(--wl-motion-fast) var(--wl-ease-out);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__icon-btn:hover:not(:disabled) {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td .wolf-se-spreadsheet__icon-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, #fafafa 4%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, #fafafa 6%, transparent);
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__detail-panel {
@@ -653,15 +717,14 @@
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table {
-  border-spacing: 0;
+  border-spacing: 0 var(--wl-space-2);
   font-size: var(--wl-editor-body);
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table thead th {
   position: static;
-  padding: 0 var(--wl-space-3) var(--wl-space-2);
+  padding: var(--wl-space-2) var(--wl-space-3);
   min-height: 0;
-  height: auto;
   font-size: var(--wl-editor-label);
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -669,23 +732,76 @@
   color: var(--color-text-muted);
   background: transparent;
   border: none;
+  border-bottom: 1px solid var(--wl-editor-border-subtle);
   box-shadow: none;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody td {
-  padding: var(--wl-space-4) var(--wl-space-3);
-  border: none;
-  border-bottom: 1px solid var(--wl-editor-border-subtle);
-  background: transparent;
+  padding: var(--wl-space-3) var(--wl-space-3);
+  border: 1px solid var(--wl-editor-border-subtle);
+  border-bottom: none;
+  background: color-mix(in srgb, var(--color-bg-panel) 92%, var(--color-bg-main));
   vertical-align: middle;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:hover td {
-  background: color-mix(in srgb, #fafafa 2%, transparent);
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr td:first-child {
+  border-top-left-radius: var(--wl-radius-md);
+  border-bottom-left-radius: var(--wl-radius-md);
+  border-right: none;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:last-child td {
-  border-bottom: none;
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr td:last-child {
+  border-top-right-radius: var(--wl-radius-md);
+  border-bottom-right-radius: var(--wl-radius-md);
+  border-left: none;
+  width: 72px;
+  min-width: 72px;
+  padding-inline: var(--wl-space-2);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr td:not(:first-child):not(:last-child) {
+  border-left: none;
+  border-right: none;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:hover td {
+  background: color-mix(in srgb, var(--color-bg-hover) 35%, var(--color-bg-panel));
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table .wolf-se-spreadsheet__row-actions {
+  opacity: 1;
+  display: flex;
+  gap: var(--wl-space-1);
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table .wolf-se-spreadsheet__icon-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--wl-radius-sm);
+  border: 1px solid var(--wl-editor-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-main) 90%, var(--color-bg-panel));
+  color: var(--color-text-secondary);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table .wolf-se-spreadsheet__icon-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table .wolf-se-spreadsheet__icon-btn--danger:hover:not(:disabled) {
+  color: var(--color-danger, #f87171);
+  border-color: color-mix(in srgb, var(--color-danger, #f87171) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger, #f87171) 8%, var(--color-bg-panel));
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__vol {
+  font-size: var(--wl-editor-body);
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-accent) 85%, var(--color-text-primary));
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks .wolf-se-combo-select--premium .wolf-se-combo-select__input,
@@ -882,10 +998,17 @@
   font-size: var(--wl-editor-label);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome {
-  padding: var(--wl-space-2) 0;
-  border-bottom: none;
-  gap: var(--wl-space-3);
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome--layout {
+  padding: var(--wl-space-2) 0 var(--wl-space-3);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  gap: var(--wl-space-4);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome-end {
+  gap: var(--wl-space-2);
 }
 
 /* ── 13. Global inputs & icon sizing ── */
