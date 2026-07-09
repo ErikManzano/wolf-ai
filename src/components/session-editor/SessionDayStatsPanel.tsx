@@ -123,41 +123,41 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
       <ProgramStatsDashboardLayout
         dashboard={dashboard}
         variant="day"
-        kpis={<ProgramStatsKpiGrid cards={kpiCards} />}
-        status={
-          <ProgramStatsStatusCard
-            title={verdict.title}
-            message={verdict.message}
-            tone={verdict.tone}
-            isEs={isEs}
-            compact
-            executionLabel={
-              execution
-                ? isEs
-                  ? `${execution.completionPct}% completado`
-                  : `${execution.completionPct}% completed`
-                : undefined
-            }
-          />
+        kpis={
+          <div className="wolf-program-day-stats__day-top-grid">
+            <ProgramStatsKpiGrid cards={kpiCards} />
+            <ProgramStatsStatusCard
+              title={verdict.title}
+              message={verdict.message}
+              tone={verdict.tone}
+              isEs={isEs}
+              compact
+              executionLabel={
+                execution
+                  ? isEs
+                    ? `${execution.completionPct}% completado`
+                    : `${execution.completionPct}% completed`
+                  : undefined
+              }
+            />
+          </div>
         }
         charts={
-          <ProgramStatsPurposeBlock
-            purpose={sessionMetrics.purpose}
-            purposeTonnage={sessionMetrics.purposeTonnage}
-            avgPct={sessionMetrics.avgPct}
-            isEs={isEs}
-            title={isEs ? 'Distribución por intensidad (hoy)' : 'Intensity distribution (today)'}
-          />
-        }
-        breakdown={
-          exerciseRows.length > 0 ? (
+          <>
+            <ProgramStatsPurposeBlock
+              purpose={sessionMetrics.purpose}
+              purposeTonnage={sessionMetrics.purposeTonnage}
+              avgPct={sessionMetrics.avgPct}
+              isEs={isEs}
+              title={isEs ? 'Distribución por intensidad (hoy)' : 'Intensity distribution (today)'}
+            />
             <ProgramStatsHorizontalBars
               title={isEs ? 'Carga por ejercicio' : 'Load by exercise'}
               slices={exerciseRows}
               isEs={isEs}
               maxSlices={6}
             />
-          ) : null
+          </>
         }
       />
     </section>

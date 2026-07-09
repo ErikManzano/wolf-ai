@@ -1520,6 +1520,23 @@
   gap: clamp(6px, 1vw, 12px);
 }
 
+.wolf-program-day-stats__day-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(220px, 1fr);
+  gap: clamp(8px, 1vw, 12px);
+  align-items: stretch;
+}
+
+.wolf-program-day-stats__day-top-grid > .wolf-program-day-stats__kpi-grid {
+  min-width: 0;
+}
+
+.wolf-program-day-stats__day-top-grid > .wolf-program-day-stats__status {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-card {
   min-height: unset;
   min-width: 0;
@@ -1610,6 +1627,10 @@
 @media (max-width: 1280px) {
   .wolf-program-day-stats--dashboard .wolf-program-day-stats__kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wolf-program-day-stats__day-top-grid {
+    grid-template-columns: 1fr;
   }
 }
 

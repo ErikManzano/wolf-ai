@@ -447,7 +447,10 @@ export const ProgramStatsMiniLineChart: React.FC<{
   });
 
   const polyline = coords.map((c) => `${c.x},${c.y}`).join(' ');
-  const ariaLabel = points.map((p) => `${p.label} ${p.value}${unit}`).join(', ');
+  const pointLabels = points.map((p) => `${p.label} ${p.value}${unit}`).join(', ');
+  const ariaLabel = isEs
+    ? `Evolución de intensidad: ${pointLabels}`
+    : `Intensity trend: ${pointLabels}`;
 
   return (
     <div className="wolf-program-day-stats__line-chart">
