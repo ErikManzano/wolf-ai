@@ -1,3 +1,17 @@
+.wl-desktop-tooltip {
+  --wl-tooltip-bg: #292524;
+  --wl-tooltip-fg: #fafaf9;
+  --wl-tooltip-border: rgba(255, 255, 255, 0.16);
+  --wl-tooltip-shadow: 0 10px 28px rgba(28, 25, 23, 0.24);
+}
+
+:root[data-theme='dark'] .wl-desktop-tooltip {
+  --wl-tooltip-bg: #f1f5f9;
+  --wl-tooltip-fg: #111827;
+  --wl-tooltip-border: rgba(15, 23, 42, 0.18);
+  --wl-tooltip-shadow: 0 12px 32px rgba(0, 0, 0, 0.52);
+}
+
 .wl-tooltip-host {
   display: inline-flex;
   align-items: center;
@@ -14,19 +28,18 @@
   max-width: min(280px, calc(100vw - 24px));
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  background: color-mix(in srgb, #12151c 92%, #000);
-  color: var(--color-text-primary);
-  font-size: 0.72rem;
+  border: 1px solid var(--wl-tooltip-border);
+  background: var(--wl-tooltip-bg);
+  color: var(--wl-tooltip-fg);
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0.01em;
   text-align: center;
+  overflow-wrap: anywhere;
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 8px));
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  box-shadow: var(--wl-tooltip-shadow);
   animation: wl-desktop-tooltip-in 0.14s ease-out;
 }
 
@@ -38,9 +51,18 @@
   width: 10px;
   height: 10px;
   background: inherit;
-  border-right: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-right: 1px solid var(--wl-tooltip-border);
+  border-bottom: 1px solid var(--wl-tooltip-border);
   transform: translateX(-50%) rotate(45deg);
+}
+
+@media (forced-colors: active) {
+  .wl-desktop-tooltip {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
 }
 
 @keyframes wl-desktop-tooltip-in {

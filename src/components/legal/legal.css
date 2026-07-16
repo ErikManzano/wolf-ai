@@ -1,0 +1,42 @@
+.wl-legal-doc {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+  color: var(--color-text-primary, #e8eaed);
+}
+
+.wl-legal-doc__back {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-accent, #7dd3fc);
+  font-size: 0.875rem;
+  padding: 0;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.wl-legal-doc__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.wl-legal-doc__updated {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin: 0 0 1.5rem;
+}
+
+.wl-legal-doc__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  opacity: 0.92;
+}
+
+.wl-legal-doc__body p {
+  margin: 0;
+}

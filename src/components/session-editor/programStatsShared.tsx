@@ -568,12 +568,11 @@ export const ProgramStatsDonutChart: React.FC<{
 
   if (visibleSlices.length === 0) return null;
 
-  let cursor = 0;
   const gradientParts = visibleSlices.map((slice, index) => {
-    const start = cursor;
-    cursor += slice.pct;
+    const start = visibleSlices.slice(0, index).reduce((sum, item) => sum + item.pct, 0);
+    const end = start + slice.pct;
     const color = DONUT_COLORS[index % DONUT_COLORS.length]!;
-    return `${color} ${start}% ${cursor}%`;
+    return `${color} ${start}% ${end}%`;
   });
 
   return (

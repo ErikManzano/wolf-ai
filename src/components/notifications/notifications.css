@@ -71,7 +71,7 @@
 .wolf-notifications-panel {
   background: var(--color-bg-panel, #111318);
   border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+  box-shadow: var(--v2-shadow-md);
 }
 
 .wolf-notifications-panel--dropdown {

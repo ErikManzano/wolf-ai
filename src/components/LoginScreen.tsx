@@ -19,6 +19,7 @@ import './LoginScreen.css';
 import '../styles/interactive.css';
 import { DEMO_QUICK_PROFILES } from '../config/demoQuickLogin';
 import { allowPublicRegister, showDemoQuickLogin } from '../config/productionAuth';
+import { LegalDocumentView, type LegalDocId } from './legal/LegalDocumentView';
 
 const MOBILE_MQ = '(max-width: 900px)';
 const ONB_STORAGE_KEY = 'wolf-mobile-onb';
@@ -50,6 +51,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const [tab, setTab] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
+  const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
@@ -717,6 +719,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
 
   return (
     <div className="wolf-login">
+      {legalDoc ? (
+        <div className="wolf-login-legal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'auto', background: 'var(--color-bg-primary, #0b0f14)' }}>
+          <LegalDocumentView isEs={isEs} doc={legalDoc} onBack={() => setLegalDoc(null)} />
+        </div>
+      ) : null}
       <div className="wolf-login-shell">
         <aside className="wolf-login-brand">
           <div className="wolf-login-brand-top">
@@ -763,6 +770,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           >
             {formBody}
           </form>
+          <p className="wolf-login-mobile-footer" style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <button type="button" className="wolf-login-link wolf-login-link--inline" onClick={() => setLegalDoc('terms')}>
+              {isEs ? 'Términos' : 'Terms'}
+            </button>
+            {' · '}
+            <button type="button" className="wolf-login-link wolf-login-link--inline" onClick={() => setLegalDoc('privacy')}>
+              {isEs ? 'Privacidad' : 'Privacy'}
+            </button>
+          </p>
         </main>
       </div>
     </div>

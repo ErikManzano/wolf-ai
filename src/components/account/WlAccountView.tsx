@@ -2,24 +2,38 @@ import type { ReactNode } from 'react';
 import {
   Bell,
   ChevronRight,
+  CreditCard,
   FileText,
   Globe,
   LogOut,
-  Shield,
+  Moon,
   ShieldCheck,
-  SlidersHorizontal,
+  Sun,
 } from 'lucide-react';
 import type { AppViewId } from '../../navigation/appNavigation';
 import { useAppContext } from '../../context/AppContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import { useTheme } from '../../context/ThemeContext';
+import {
+  BILLING_PLAN_LABEL,
+  BILLING_PRO_PRICE_USD,
+  athleteLimitLabel,
+  resolveCoachPlan,
+  setLocalCoachPlan,
+  stripeCheckoutEnabled,
+  stripeCheckoutUrl,
+  type BillingPlanId,
+} from '../../config/billing';
 import './wl-account.css';
+
+type AccountNavTarget = AppViewId | 'legal-terms' | 'legal-privacy';
 
 type WlAccountViewProps = {
   isEs: boolean;
   language: 'ES' | 'EN';
   setLanguage: (lang: 'ES' | 'EN') => void;
   onLogout: () => void;
-  onNavigate: (view: AppViewId) => void;
+  onNavigate: (view: AccountNavTarget) => void;
 };
 
 function roleLabel(
@@ -40,8 +54,10 @@ export function WlAccountView({
   onNavigate,
 }: WlAccountViewProps) {
   const { userRole } = useAppContext();
-  const { persona, currentUser } = useWolfAssign();
+  const { theme, setTheme } = useTheme();
+  const { persona, currentUser, rosterForCoach, coachPrograms } = useWolfAssign();
   const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isCoach = currentUser?.role === 'coach' || isSuperAdmin;
 
   const displayName = currentUser?.name ?? (persona === 'athlete' ? 'Atleta' : 'Coach');
   const loginId = currentUser?.email ?? currentUser?.username ?? currentUser?.id ?? '—';
@@ -51,6 +67,22 @@ export function WlAccountView({
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
+
+  const plan: BillingPlanId = resolveCoachPlan(currentUser?.id, currentUser?.billingPlan);
+  const rosterCount = rosterForCoach(currentUser).length;
+  const activePrograms =
+    coachPrograms?.filter((p) => p.status === 'published' || p.status === 'draft').length ?? 0;
+
+  const handleUpgrade = () => {
+    if (!currentUser?.id) return;
+    const checkout = stripeCheckoutUrl();
+    if (stripeCheckoutEnabled() && checkout) {
+      window.open(checkout, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setLocalCoachPlan(currentUser.id, 'pro');
+    window.location.reload();
+  };
 
   return (
     <section className="wl-account-view">
@@ -67,6 +99,28 @@ export function WlAccountView({
 
       <div className="wl-account-sections">
         <AccountSection title={isEs ? 'Preferencias' : 'Preferences'}>
+          <AccountRow
+            icon={theme === 'light' ? Sun : Moon}
+            label={isEs ? 'Apariencia' : 'Appearance'}
+            hint={isEs ? 'Tema de la interfaz' : 'Interface theme'}
+          >
+            <div className="wl-account-lang" role="group" aria-label={isEs ? 'Tema' : 'Theme'}>
+              <button
+                type="button"
+                className={`wl-account-lang__btn${theme === 'light' ? ' is-active' : ''}`}
+                onClick={() => setTheme('light')}
+              >
+                {isEs ? 'Claro' : 'Light'}
+              </button>
+              <button
+                type="button"
+                className={`wl-account-lang__btn${theme === 'dark' ? ' is-active' : ''}`}
+                onClick={() => setTheme('dark')}
+              >
+                {isEs ? 'Oscuro' : 'Dark'}
+              </button>
+            </div>
+          </AccountRow>
           <AccountRow
             icon={Globe}
             label={isEs ? 'Idioma' : 'Language'}
@@ -92,38 +146,49 @@ export function WlAccountView({
           <AccountRow
             icon={Bell}
             label={isEs ? 'Notificaciones' : 'Notifications'}
-            hint={isEs ? 'Próximamente' : 'Coming soon'}
+            hint={
+              isEs
+                ? 'Las alertas de cambio de plan ya llegan a atletas'
+                : 'Plan-change alerts already reach athletes'
+            }
             disabled
           />
         </AccountSection>
 
-        <AccountSection title={isEs ? 'Ajustes' : 'Settings'}>
-          <AccountRow
-            icon={SlidersHorizontal}
-            label={isEs ? 'Configuración general' : 'General settings'}
-            hint={isEs ? 'Próximamente' : 'Coming soon'}
-            disabled
-          />
-          <AccountRow
-            icon={Shield}
-            label={isEs ? 'Privacidad y seguridad' : 'Privacy & security'}
-            hint={isEs ? 'Próximamente' : 'Coming soon'}
-            disabled
-          />
-        </AccountSection>
+        {isCoach ? (
+          <AccountSection title={isEs ? 'Plan' : 'Plan'}>
+            <AccountRow
+              icon={CreditCard}
+              label={isEs ? `Plan ${BILLING_PLAN_LABEL[plan].es}` : `${BILLING_PLAN_LABEL[plan].en} plan`}
+              hint={
+                isEs
+                  ? `Atletas ${rosterCount}/${athleteLimitLabel(plan, true)} · Programas ${activePrograms}${plan === 'free' ? '/1' : ''}`
+                  : `Athletes ${rosterCount}/${athleteLimitLabel(plan, false)} · Programs ${activePrograms}${plan === 'free' ? '/1' : ''}`
+              }
+            >
+              {plan === 'free' ? (
+                <button type="button" className="wl-account-lang__btn is-active" onClick={handleUpgrade}>
+                  {isEs ? `Upgrade Pro ($${BILLING_PRO_PRICE_USD}/mes)` : `Upgrade Pro ($${BILLING_PRO_PRICE_USD}/mo)`}
+                </button>
+              ) : (
+                <span className="wl-account-row__hint">{isEs ? 'Activo' : 'Active'}</span>
+              )}
+            </AccountRow>
+          </AccountSection>
+        ) : null}
 
         <AccountSection title={isEs ? 'Legal' : 'Legal'}>
           <AccountRow
             icon={FileText}
             label={isEs ? 'Términos de uso' : 'Terms of use'}
-            hint={isEs ? 'Próximamente' : 'Coming soon'}
-            disabled
+            hint={isEs ? 'Leer documento' : 'Read document'}
+            onClick={() => onNavigate('legal-terms')}
           />
           <AccountRow
             icon={FileText}
             label={isEs ? 'Política de privacidad' : 'Privacy policy'}
-            hint={isEs ? 'Próximamente' : 'Coming soon'}
-            disabled
+            hint={isEs ? 'Leer documento' : 'Read document'}
+            onClick={() => onNavigate('legal-privacy')}
           />
         </AccountSection>
 
@@ -144,7 +209,7 @@ export function WlAccountView({
           <LogOut size={18} aria-hidden />
           {isEs ? 'Cerrar sesión' : 'Log out'}
         </button>
-        <p className="wl-account-version">Wolf AI · v0.0.0</p>
+        <p className="wl-account-version">Wolf · v0.1.0</p>
       </footer>
     </section>
   );

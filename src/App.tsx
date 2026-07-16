@@ -24,11 +24,22 @@ import {
   useSidebarResize,
 } from './hooks/useSidebarResize';
 import { DesktopTooltipLayer } from './components/ui/DesktopTooltipLayer';
+import { ThemeProvider } from './context/ThemeContext';
+import {
+  isAppViewId,
+  parseHashDeepLink,
+  writeHashDeepLink,
+} from './navigation/deepLinks';
 
 const AUTH_STORAGE = 'wolf_auth_v1';
 
 function AppShell() {
-  const [activeView, setActiveView] = useState('programs');
+  const [activeView, setActiveView] = useState<string>(() => {
+    const link = typeof window !== 'undefined' ? parseHashDeepLink() : null;
+    if (link && isAppViewId(link.view)) return link.view;
+    if (link?.view === 'legal-terms' || link?.view === 'legal-privacy') return link.view;
+    return 'dashboard';
+  });
   const [language, setLanguage] = useState<'ES' | 'EN'>('ES');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
@@ -51,7 +62,7 @@ function AppShell() {
   /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
   const initialViewUserIdRef = useRef<string | null>(null);
 
-  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, programsView, editingProgramId } = useWolfAssign();
+  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, programsView, editingProgramId, openProgramEditor } = useWolfAssign();
   const { config: mobileTopBarConfig } = useMobileTopBarContext();
   const { setUserRole } = useAppContext();
 
@@ -70,14 +81,66 @@ function AppShell() {
     setUserRole(appRoleFromWolf(currentUser.role));
     if (initialViewUserIdRef.current === currentUser.id) return;
     initialViewUserIdRef.current = currentUser.id;
+
+    const link = parseHashDeepLink();
+    if (link) {
+      if (link.view === 'legal-terms' || link.view === 'legal-privacy') {
+        setActiveView(link.view);
+        return;
+      }
+      if (isAppViewId(link.view)) {
+        setActiveView(link.view);
+        if (link.programId && (currentUser.role === 'coach' || currentUser.role === 'super_admin')) {
+          openProgramEditor(link.programId);
+        }
+        return;
+      }
+    }
+
     setActiveView(
       currentUser.role === 'athlete'
         ? 'dashboard'
         : currentUser.role === 'super_admin'
           ? 'admin-users'
-          : 'programs',
+          : 'dashboard',
     );
-  }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole]);
+  }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole, openProgramEditor]);
+
+  /** Keep hash URL in sync with view (shareable deep links). */
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (activeView === 'legal-terms') {
+      writeHashDeepLink({ view: 'legal-terms' }, true);
+      return;
+    }
+    if (activeView === 'legal-privacy') {
+      writeHashDeepLink({ view: 'legal-privacy' }, true);
+      return;
+    }
+    if (activeView === 'programs' && editingProgramId) {
+      writeHashDeepLink({ view: 'programs', programId: editingProgramId }, true);
+      return;
+    }
+    if (isAppViewId(activeView as AppViewId) || activeView === 'programs') {
+      writeHashDeepLink({ view: activeView as AppViewId }, true);
+    }
+  }, [activeView, editingProgramId, isAuthenticated]);
+
+  useEffect(() => {
+    const onHash = () => {
+      const link = parseHashDeepLink();
+      if (!link) return;
+      if (link.view === 'legal-terms' || link.view === 'legal-privacy') {
+        setActiveView(link.view);
+        return;
+      }
+      if (!isAppViewId(link.view)) return;
+      setActiveView(link.view);
+      if (link.programId) openProgramEditor(link.programId);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [openProgramEditor]);
 
   useEffect(() => {
     return () => {
@@ -118,7 +181,11 @@ function AppShell() {
     return () => media.removeEventListener('change', apply);
   }, []);
 
-  const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
+  const isProgramEditorActive =
+    activeView === 'programs' && programsView === 'editor' && Boolean(editingProgramId);
+  const effectiveSidebarCollapsed = isNarrowLayout
+    ? false
+    : sidebarCollapsed || isProgramEditorActive;
   const sidebarResizeEnabled = !isNarrowLayout;
   const {
     width: sidebarWidth,
@@ -149,10 +216,7 @@ function AppShell() {
 
   const lockMobileEdgeSwipe =
     Boolean(mobileTopBarConfig?.lockEdgeSwipe) ||
-    (isNarrowLayout &&
-      activeView === 'programs' &&
-      programsView === 'editor' &&
-      Boolean(editingProgramId));
+    (isNarrowLayout && isProgramEditorActive);
 
   const sidebarUsesCustomWidth = sidebarResizeEnabled && (!showSidebarCollapsed || sidebarResizing);
   const appContainerStyle = sidebarUsesCustomWidth
@@ -194,7 +258,7 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${lockMobileEdgeSwipe ? ' app-container--program-editor' : ''}`}
+        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${isProgramEditorActive ? ' app-container--program-editor' : ''}`}
         style={appContainerStyle}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
@@ -413,15 +477,17 @@ function AppShell() {
 
 function App() {
   return (
-    <AppProvider>
-      <WolfAlertProvider>
-        <WolfAssignProvider>
-          <MobileTopBarProvider>
-            <AppShell />
-          </MobileTopBarProvider>
-        </WolfAssignProvider>
-      </WolfAlertProvider>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <WolfAlertProvider>
+          <WolfAssignProvider>
+            <MobileTopBarProvider>
+              <AppShell />
+            </MobileTopBarProvider>
+          </WolfAssignProvider>
+        </WolfAlertProvider>
+      </AppProvider>
+    </ThemeProvider>
   );
 }
 

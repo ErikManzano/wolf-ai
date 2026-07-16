@@ -118,6 +118,8 @@ export interface SessionExerciseBlock {
 /** Usuario de la app (coach, atleta o super admin). */
 export type WolfAppRole = 'coach' | 'athlete' | 'super_admin';
 
+export type BillingPlanId = 'free' | 'pro';
+
 export interface WolfUser {
   id: string;
   name: string;
@@ -132,6 +134,8 @@ export interface WolfUser {
   passwordHash?: string;
   /** @deprecated Usar `passwordHash`; solo compatibilidad con seeds antiguos. */
   password?: string;
+  /** Commercial tier — coaches only; default free when unset. */
+  billingPlan?: BillingPlanId;
 }
 
 /** Programa generado asignado por el coach a un atleta (usuario). */

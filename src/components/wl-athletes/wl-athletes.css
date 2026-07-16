@@ -8,13 +8,13 @@
   --wl-dash-text: var(--wl-text-primary, #fafafa);
   --wl-dash-muted: var(--wl-text-muted, #71717a);
   --wl-dash-accent: var(--wl-text-accent, #ff6b1a);
-  --wl-dash-accent-hover: #ff8a3d;
-  --wl-dash-accent-glow: rgba(255, 107, 26, 0.18);
-  --wl-list-surface: #111318;
-  --wl-list-border: #27272a;
-  --wl-list-text: #fafafa;
-  --wl-list-muted: #a1a1aa;
-  --wl-list-accent: #ff6b1a;
+  --wl-dash-accent-hover: var(--v2-accent-hover);
+  --wl-dash-accent-glow: var(--v2-accent-ring);
+  --wl-list-surface: var(--v2-surface);
+  --wl-list-border: var(--v2-border);
+  --wl-list-text: var(--v2-text);
+  --wl-list-muted: var(--v2-text-muted);
+  --wl-list-accent: var(--v2-accent);
 }
 
 .wl-athletes-section .wl-athletes-header {

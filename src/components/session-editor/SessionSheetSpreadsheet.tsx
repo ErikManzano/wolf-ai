@@ -96,7 +96,7 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
     [onReorderBlocks],
   );
 
-  const colCount = 8;
+  const colCount = 7;
 
   return (
     <section
@@ -117,28 +117,17 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
           <colgroup>
             <col className="wolf-se-spreadsheet__col-idx" />
             <col className="wolf-se-spreadsheet__col-exercise" />
-            <col className="wolf-se-spreadsheet__col-type" />
-            <col className="wolf-se-spreadsheet__col-blocks" />
+            <col className="wolf-se-spreadsheet__col-actions" />
             <col className="wolf-se-spreadsheet__col-metric" />
             <col className="wolf-se-spreadsheet__col-metric" />
             <col className="wolf-se-spreadsheet__col-metric wolf-se-spreadsheet__col-metric--vol" />
-            <col className="wolf-se-spreadsheet__col-actions" />
+            <col className="wolf-se-spreadsheet__col-blocks" />
           </colgroup>
           <thead>
             <tr>
               <th className="wolf-se-spreadsheet__col-idx">#</th>
               <th className="wolf-se-spreadsheet__col-exercise">{isEs ? 'Ejercicio' : 'Exercise'}</th>
-              <th className="wolf-se-spreadsheet__col-type">{isEs ? 'Tipo' : 'Type'}</th>
-              <th className="wolf-se-spreadsheet__col-blocks">
-                {compactHeaders ? (
-                  isEs ? 'Bloques' : 'Blocks'
-                ) : (
-                  <span className="wolf-se-spreadsheet__th-stack">
-                    <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Bloques' : 'Blocks'}</span>
-                    <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'de series' : 'of sets'}</span>
-                  </span>
-                )}
-              </th>
+              <th className="wolf-se-spreadsheet__col-actions" aria-hidden />
               <th className="wolf-se-spreadsheet__col-metric wolf-se-spreadsheet__col-metric--zone">
                 {compactHeaders ? (
                   isEs ? 'Series' : 'Sets'
@@ -169,7 +158,16 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
                   </span>
                 )}
               </th>
-              <th className="wolf-se-spreadsheet__col-actions" aria-hidden />
+              <th className="wolf-se-spreadsheet__col-blocks">
+                {compactHeaders ? (
+                  isEs ? 'Bloques' : 'Blocks'
+                ) : (
+                  <span className="wolf-se-spreadsheet__th-stack">
+                    <span className="wolf-se-spreadsheet__th-primary">{isEs ? 'Bloques' : 'Blocks'}</span>
+                    <span className="wolf-se-spreadsheet__th-secondary">{isEs ? 'de series' : 'of sets'}</span>
+                  </span>
+                )}
+              </th>
             </tr>
           </thead>
           {session.exercises.length === 0 ? (
@@ -233,11 +231,11 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
             </tbody>
           )}
         </table>
-      </div>
 
-      {canAddExercise ? (
-        <CoachDayAddExerciseButton isEs={isEs} onClick={onAddExercise} />
-      ) : null}
+        {canAddExercise ? (
+          <CoachDayAddExerciseButton isEs={isEs} onClick={onAddExercise} />
+        ) : null}
+      </div>
     </section>
   );
 };

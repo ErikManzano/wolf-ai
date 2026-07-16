@@ -1,4 +1,4 @@
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Moon, Sun } from 'lucide-react';
 import {
   APP_NAV_ITEMS,
   getNavLabel,
@@ -8,6 +8,7 @@ import {
 } from '../../navigation/appNavigation';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMobileTopBarContext } from '../../context/MobileTopBarContext';
+import { useTheme } from '../../context/ThemeContext';
 import { NotificationsBell } from '../notifications/NotificationsBell';
 import { WolfBrandIcon } from '../WolfBrandIcon';
 import './mobile-top-bar.css';
@@ -38,6 +39,7 @@ export function MobileTopBar({
   const isEs = language === 'ES';
   const { config } = useMobileTopBarContext();
   const { persona, currentUser } = useWolfAssign();
+  const { theme, toggleTheme } = useTheme();
   const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
   const showAccount =
     accountItem && isNavItemVisible('account', persona, currentUser?.role);
@@ -75,6 +77,18 @@ export function MobileTopBar({
         {config?.headerActions ? (
           <div className="mobile-header-custom-actions">{config.headerActions}</div>
         ) : null}
+        <button
+          type="button"
+          className="mobile-header-btn mobile-header-btn--theme"
+          onClick={toggleTheme}
+          aria-label={
+            theme === 'light'
+              ? isEs ? 'Activar tema oscuro' : 'Use dark theme'
+              : isEs ? 'Activar tema claro' : 'Use light theme'
+          }
+        >
+          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
         <NotificationsBell
           variant="mobile"
           isEs={isEs}

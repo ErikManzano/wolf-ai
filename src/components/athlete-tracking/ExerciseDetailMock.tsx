@@ -40,7 +40,7 @@ export const ExerciseDetailMock: React.FC<ExerciseDetailMockProps> = ({
       ? `On ${exerciseName}, stay stable before the next movement. Coach wants smooth transitions between segments without a long rack pause.`
       : `On ${exerciseName}, position over speed. Stay close, full extension, active catch.`;
 
-  const handlePlay = useCallback(() => setPlaying(true), []);
+  const handlePlay = useCallback(() => setPlaying(true), [setPlaying]);
 
   return (
     <section className="wa-exercise-media" aria-label={isEs ? 'Detalle del ejercicio' : 'Exercise detail'}>

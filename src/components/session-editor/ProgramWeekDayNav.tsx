@@ -55,6 +55,8 @@ export interface ProgramWeekDayNavProps {
   density?: 'default' | 'editor';
   /** Minimal picker for stats dashboard — hides editors chrome and day row unless scope is day. */
   statsContext?: ProgramStatsScope;
+  /** Allows the unified desktop header to keep weeks while days stay above the exercise sheet. */
+  sections?: 'all' | 'weeks' | 'days';
 }
 
 function scrollActiveIntoView(
@@ -263,12 +265,16 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   weekHeadLeading,
   density = 'default',
   statsContext,
+  sections = 'all',
 }) => {
   const reduceMotion = useReducedMotion();
   const isEditorDensity = density === 'editor';
-  const useAthleteMobileNav = isEditorDensity && useMediaQuery('(max-width: 1024px)');
+  const isMobileLayout = useMediaQuery('(max-width: 1024px)');
+  const useAthleteMobileNav = isEditorDensity && isMobileLayout;
   const isStatsNav = statsContext != null;
   const showDayNav = !isStatsNav || statsContext === 'day';
+  const showWeeks = sections !== 'days';
+  const showDays = sections !== 'weeks' && showDayNav;
   const hideWeekContext = isEditorDensity && Boolean(weekHeadLeading);
   const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStripRef = useRef<HTMLDivElement>(null);
@@ -422,7 +428,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 
   return (
     <div
-      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}`}
+      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}${sections === 'weeks' ? ' wolf-program-nav--weeks-only' : sections === 'days' ? ' wolf-program-nav--days-only' : ''}`}
     >
       <ConfirmationModal
         open={pendingConfirm != null}
@@ -435,6 +441,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         onCancel={() => setPendingConfirm(null)}
       />
       <div className="wolf-program-nav-compact">
+        {showWeeks ? (
         <div className="wolf-program-nav-section wolf-program-nav-section--weeks">
           {!isStatsNav && !hideMobileWeekHead ? (
             <NavSectionHead
@@ -555,6 +562,16 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             </Reorder.Group>
           </div>
 
+          <button
+            type="button"
+            className="wolf-week-carousel__arrow"
+            disabled={!canGoNextWeek}
+            onClick={goNextWeek}
+            aria-label={isEs ? 'Semana siguiente' : 'Next week'}
+          >
+            <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
+          </button>
+
           {!isStatsNav ? (
             <button
               type="button"
@@ -580,21 +597,12 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               <Trash2 size={14} strokeWidth={2} aria-hidden />
             </button>
           ) : null}
-
-          <button
-            type="button"
-            className="wolf-week-carousel__arrow"
-            disabled={!canGoNextWeek}
-            onClick={goNextWeek}
-            aria-label={isEs ? 'Semana siguiente' : 'Next week'}
-          >
-            <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
-          </button>
         </div>
         )}
         </div>
+        ) : null}
 
-        {showDayNav ? (
+        {showDays ? (
         <section
           className="wolf-program-nav-section wolf-program-nav-section--days"
           aria-label={labels.daysRow}

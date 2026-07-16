@@ -1,10 +1,8 @@
 /**
  * Contrato MVP — datos en cliente (sin backend obligatorio en deploy).
  *
- * - **Origen:** JSON embebidos (`src/data/*.json`) vía `loadMockData`, más estado en
- *   `localStorage` (p. ej. asignaciones WL, intakes en AppContext).
- * - **Netlify / drag-and-drop `dist`:** válido; no hace falta levantar Express en producción.
- * - **`npm run server`:** API mock opcional para desarrollo o futura integración; el front
- *   actual no la consume.
+ * Histórico: Netlify / drag-and-drop `dist` podía funcionar sin Express.
+ * **Actualización Julio 2026:** con `VITE_API_URL` el front consume la API (WolfAssignContext).
+ * Sin `VITE_API_URL`, sigue el fallback localStorage/demo.
  */
-export const MVP_CLIENT_USES_MOCK_DATA_ONLY = true as const;
+export const MVP_CLIENT_USES_MOCK_DATA_ONLY = false as const;

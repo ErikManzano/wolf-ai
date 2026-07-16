@@ -4,13 +4,13 @@
   gap: 14px;
   width: 100%;
   color: var(--color-text-primary);
-  --se-sheet-surface: color-mix(in srgb, var(--color-bg-panel) 94%, #0c0c0e);
-  --se-sheet-surface-raised: color-mix(in srgb, var(--color-bg-hover) 38%, var(--color-bg-panel));
-  --se-sheet-border: color-mix(in srgb, var(--color-border) 88%, #fff 4%);
-  --se-sheet-header-bg: color-mix(in srgb, var(--color-bg-hover) 55%, #121216);
-  --se-sheet-metric-bg: color-mix(in srgb, var(--color-bg-hover) 22%, transparent);
-  --se-sheet-row-alt: color-mix(in srgb, var(--color-bg-hover) 28%, transparent);
-  --se-sheet-row-hover: color-mix(in srgb, var(--color-bg-hover) 52%, transparent);
+  --se-sheet-surface: var(--v2-surface);
+  --se-sheet-surface-raised: var(--v2-surface-raised);
+  --se-sheet-border: var(--v2-border);
+  --se-sheet-header-bg: var(--v2-surface-subtle);
+  --se-sheet-metric-bg: color-mix(in srgb, var(--v2-accent) 4%, var(--v2-surface));
+  --se-sheet-row-alt: color-mix(in srgb, var(--v2-canvas) 55%, var(--v2-surface));
+  --se-sheet-row-hover: var(--v2-surface-hover);
 }
 
 .wolf-se-spreadsheet__head {
@@ -25,9 +25,7 @@
   border: 1px solid var(--se-sheet-border);
   border-radius: 16px;
   background: var(--se-sheet-surface);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent),
-    0 10px 28px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--v2-shadow-sm);
   /* Rounded corners + overflow clip the top of thead — pad to keep labels visible */
   padding-top: 2px;
 }
@@ -128,7 +126,7 @@
   background: var(--se-sheet-header-bg);
   background-clip: padding-box;
   border-bottom: 2px solid color-mix(in srgb, var(--color-border) 92%, transparent);
-  box-shadow: 0 2px 0 color-mix(in srgb, #000 12%, transparent);
+  box-shadow: 0 1px 0 var(--v2-border);
   vertical-align: middle;
   overflow: visible;
   white-space: normal;

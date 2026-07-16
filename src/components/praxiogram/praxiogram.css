@@ -325,15 +325,15 @@
 
 /* Matrix shell — mirrors wolf-program-matrix */
 .prx-matrix {
-  --prx-bg: #0a0c10;
-  --prx-surface: #12151c;
-  --prx-surface-2: #171b24;
-  --prx-border: #2a3140;
-  --prx-border-soft: #1e2430;
-  --prx-accent: #f97316;
+  --prx-bg: var(--v2-surface);
+  --prx-surface: var(--v2-surface-subtle);
+  --prx-surface-2: var(--v2-surface-raised);
+  --prx-border: var(--v2-border);
+  --prx-border-soft: var(--v2-border);
+  --prx-accent: var(--v2-accent);
   --prx-violet: #a78bfa;
-  --prx-text: #f8fafc;
-  --prx-muted: #94a3b8;
+  --prx-text: var(--v2-text);
+  --prx-muted: var(--v2-text-secondary);
 
   flex: none;
   min-height: 0;
@@ -345,9 +345,7 @@
     radial-gradient(ellipse 120% 80% at 100% -30%, rgba(167, 139, 250, 0.08), transparent 55%),
     radial-gradient(ellipse 80% 60% at 0% 100%, rgba(249, 115, 22, 0.06), transparent 50%),
     var(--prx-bg);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 4%, transparent) inset,
-    0 12px 32px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--v2-shadow-sm);
 }
 
 .prx-matrix-scroll {

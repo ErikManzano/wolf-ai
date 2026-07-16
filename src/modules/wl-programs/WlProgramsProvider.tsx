@@ -10,6 +10,7 @@ import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../../mo
 import type { ProgramAssignment, Session, SessionCompletion } from '../../models/training';
 import { replaceProgramSession } from '../../services/sessionMutations';
 import { useWolfAlert } from '../../context/WolfAlertContext';
+import { canCreateActiveProgram, resolveCoachPlan } from '../../config/billing';
 import { filterAthletesForProgramAssign, getEnrollmentsForCoachProgram } from '../../utils/wlAssignmentRules';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, preferLocalDataFallback, wlProgramsApiFetch } from './apiClient';
@@ -178,6 +179,16 @@ export function WlProgramsProvider({
   const createProgram = useCallback(
     async (name: string, program?: CoachProgram['program']): Promise<CoachProgram | null> => {
       if (!scopedCoachId) return null;
+      const plan = resolveCoachPlan(currentUser?.id, currentUser?.billingPlan);
+      const activeCount = rawPrograms.filter((p) => p.status !== 'archived').length;
+      if (!canCreateActiveProgram(plan, activeCount)) {
+        pushAlert({
+          tone: 'warning',
+          title: 'Límite Free',
+          message: 'Plan Free: máximo 1 programa activo. Actualiza a Pro en Cuenta.',
+        });
+        return null;
+      }
       if (!apiMode) {
         const created = createCoachProgramLocal(scopedCoachId, name);
         if (program) created.program = program;
@@ -199,7 +210,7 @@ export function WlProgramsProvider({
       await loadProgramsFromApi();
       return created;
     },
-    [apiMode, apiToken, scopedCoachId, pushAlert, loadProgramsFromApi],
+    [apiMode, apiToken, scopedCoachId, pushAlert, loadProgramsFromApi, currentUser, rawPrograms],
   );
 
   const updateProgram = useCallback(

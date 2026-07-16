@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type { Athlete } from '../../models/training';
 import { useWolfAlert } from '../../context/WolfAlertContext';
+import { canAddAthlete, resolveCoachPlan } from '../../config/billing';
 import { subscribeRealtimeEvent } from '../assignments/realtimeClient';
 import { isApiEnabled, preferLocalDataFallback, wlAthletesApiFetch } from './apiClient';
 import {
@@ -165,8 +166,20 @@ export function WlAthletesProvider({
         return null;
       }
 
+      const plan = resolveCoachPlan(currentUser?.id, currentUser?.billingPlan);
+      if (!canAddAthlete(plan, athletes.length)) {
+        pushAlert({
+          tone: 'warning',
+          title: 'Límite Free',
+          message: 'Plan Free: máximo 3 atletas. Actualiza a Pro en Cuenta.',
+        });
+        return null;
+      }
+
+      const { inviteEmail, invitePassword, coachId: _coachFromInput, ...athleteFields } = input;
+
       const payload: Athlete = {
-        ...input,
+        ...athleteFields,
         fatigueScore: input.fatigueScore ?? 40,
         readinessScore: input.readinessScore ?? 70,
       };
@@ -187,10 +200,16 @@ export function WlAthletesProvider({
         return null;
       }
 
-      const res = await wlAthletesApiFetch('/wl-athletes', {
+      const path = inviteEmail && invitePassword ? '/wl-athletes/invite' : '/wl-athletes';
+      const body =
+        inviteEmail && invitePassword
+          ? { ...payload, coachId, email: inviteEmail, password: invitePassword }
+          : { ...payload, coachId };
+
+      const res = await wlAthletesApiFetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, coachId }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -199,12 +218,17 @@ export function WlAthletesProvider({
         return null;
       }
 
-      const created = normalizeAthleteFromApi(await res.json());
+      const json = await res.json();
+      const created = normalizeAthleteFromApi(json.athlete ?? json);
       setAthletes((prev) => [...prev.filter((a) => a.id !== created.id), created]);
-      pushAlert({ tone: 'success', title: 'Atleta creado', message: created.name });
+      pushAlert({
+        tone: 'success',
+        title: inviteEmail ? 'Atleta invitado' : 'Atleta creado',
+        message: created.name,
+      });
       return created;
     },
-    [apiMode, apiToken, currentUser, canEditWlRoster, pushAlert],
+    [apiMode, apiToken, currentUser, canEditWlRoster, pushAlert, athletes.length],
   );
 
   const updateAthlete = useCallback(

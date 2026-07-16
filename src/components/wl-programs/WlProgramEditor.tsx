@@ -48,6 +48,7 @@ const REFERENCE_ATHLETE: Athlete = {
 const PLAN_TITLE_MAX_LEN = WL_EDITOR_TITLE_MAX_LEN;
 const PROGRAM_AUTOSAVE_MS = 1800;
 const WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID = 'wl-program-editor-toolbar-anchor';
+const WL_PROGRAM_EDITOR_CHROME_PORTAL_ID = 'wl-program-editor-chrome-anchor';
 
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
@@ -515,11 +516,6 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 backLabel={isEs ? 'Programas' : 'Programs'}
                 items={[]}
               />
-            </div>
-            {(portalToolbarToHead || !hasProgram) ? (
-              <div className="wl-programs-editor-sticky-head__status">{editorProgramMeta}</div>
-            ) : null}
-            <div className="wl-programs-editor-sticky-head__main">
               <WlEditorTitleField
                 isEs={isEs}
                 value={programTitle}
@@ -531,6 +527,11 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 required
                 className="wl-programs-editor-sticky-title"
               />
+            </div>
+            {(portalToolbarToHead || !hasProgram) ? (
+              <div className="wl-programs-editor-sticky-head__status">{editorProgramMeta}</div>
+            ) : null}
+            <div className="wl-programs-editor-sticky-head__main">
               {portalToolbarToHead ? (
                 <div
                   id={WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID}
@@ -538,6 +539,12 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 />
               ) : null}
             </div>
+            {portalToolbarToHead ? (
+              <div
+                id={WL_PROGRAM_EDITOR_CHROME_PORTAL_ID}
+                className="wl-programs-editor-chrome-anchor wl-programs-embedded-plan"
+              />
+            ) : null}
           </>
         ) : (
           <>
@@ -597,6 +604,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 programName={programTitle}
                 onProgramNameChange={handleProgramTitleChange}
                 customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
+                customizeChromePortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_CHROME_PORTAL_ID : null}
                 customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
                 coachProgramId={programId}
                 programSyncState={syncState}

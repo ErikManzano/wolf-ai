@@ -1,10 +1,10 @@
 /* El scroll principal es .workspace-area; aquí el contenido fluye en altura natural (evita “compresión” del editor). */
 .wolf-engine {
-  --wolf-motor-bg: #1a1a1a;
-  --wolf-motor-surface: #222222;
-  --wolf-motor-border: #333333;
-  --wolf-motor-accent: #ff6600;
-  --wolf-motor-accent-glow: rgba(255, 102, 0, 0.45);
+  --wolf-motor-bg: var(--v2-canvas);
+  --wolf-motor-surface: var(--v2-surface);
+  --wolf-motor-border: var(--v2-border);
+  --wolf-motor-accent: var(--v2-accent);
+  --wolf-motor-accent-glow: var(--v2-accent-ring);
   --wolf-motor-radius: 10px;
 
   display: flex;
@@ -78,7 +78,7 @@
 }
 
 .wolf-select-wrap select {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 .wolf-select-wrap select:hover {
@@ -3522,13 +3522,13 @@ tr.is-active-week .wolf-program-matrix-week-load {
   background-color: var(--color-bg-panel);
   color: var(--color-text-primary);
   font-size: 0.9rem;
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 .wolf-session-editor select {
   background-color: var(--color-bg-panel);
   color: var(--color-text-primary);
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 .wolf-session-editor select option,
@@ -3607,7 +3607,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
   background-color: var(--color-bg-panel);
   color: var(--color-text-primary);
   font-size: 0.85rem;
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 .wolf-se-mini-wide {

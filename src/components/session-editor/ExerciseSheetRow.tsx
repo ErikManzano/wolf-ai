@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
-import { ChevronDown, Copy, Link2, Trash2 } from 'lucide-react';
+import { ChevronDown, Copy, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../../models/training';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
@@ -74,6 +74,9 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   const tonnage = blockTonnage(block, athlete, exercises);
   const blockCount = block.sets.length;
   const blockKind = getExerciseBlockKind(block);
+  const complexSegments = block.segments?.length
+    ? block.segments
+    : [{ exerciseId: block.exerciseId }];
   const summaryLine = isEs
     ? `${workSets} series · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`
     : `${workSets} sets · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`;
@@ -105,69 +108,59 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
         </td>
         <td className="wolf-se-spreadsheet__col-exercise" data-block-index={blockIndex}>
           <div className="wolf-se-spreadsheet__exercise-cell">
-            {isComplex ? (
-              <div className="wolf-se-spreadsheet__complex-name">
-                <Link2 size={14} className="wolf-se-spreadsheet__complex-icon" aria-hidden />
-                <span className="wolf-se-spreadsheet__exercise-name-text">
-                  {blockDisplayName(block, exercises)}
-                </span>
-              </div>
-            ) : (
-              <ExerciseAutocomplete
-                options={pickerOptions}
-                value={block.exerciseId}
+            <div className="wolf-se-spreadsheet__exercise-main">
+              {isComplex ? (
+                <div className="wolf-se-spreadsheet__complex-name">
+                  {complexSegments.map((segment, segmentIndex) => (
+                    <React.Fragment key={`${segment.exerciseId}-${segmentIndex}`}>
+                      {segmentIndex > 0 ? (
+                        <span className="wolf-se-spreadsheet__complex-plus" aria-hidden>
+                          <Plus size={12} strokeWidth={2.5} />
+                        </span>
+                      ) : null}
+                      <span className="wolf-se-spreadsheet__complex-movement">
+                        {segment.label?.trim() ||
+                          exercises.find((exercise) => exercise.id === segment.exerciseId)?.name ||
+                          blockDisplayName(block, exercises)}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <ExerciseAutocomplete
+                  options={pickerOptions}
+                  value={block.exerciseId}
+                  isEs={isEs}
+                  compact
+                  panelMatchCard={false}
+                  autoFocus={focusBlockIndex === blockIndex}
+                  placeholder={isEs ? 'Elegir ejercicio…' : 'Pick exercise…'}
+                  onChange={(id) =>
+                    onApply(() => setBlockExercise(session, blockIndex, id, athlete, exercises))
+                  }
+                />
+              )}
+              <SpreadsheetBlockTypeSelect
+                kind={blockKind}
                 isEs={isEs}
-                compact
-                panelMatchCard={false}
-                autoFocus={focusBlockIndex === blockIndex}
-                placeholder={isEs ? 'Elegir ejercicio…' : 'Pick exercise…'}
-                onChange={(id) =>
-                  onApply(() => setBlockExercise(session, blockIndex, id, athlete, exercises))
-                }
+                onChange={(kind) => {
+                  onApply(() =>
+                    setExerciseBlockKind(
+                      session,
+                      blockIndex,
+                      kind,
+                      athlete,
+                      exercises,
+                      DEFAULT_COMPLEX_SECOND_ID,
+                    ),
+                  );
+                  if (kind === 'complex') onExpandBlock(blockIndex);
+                }}
               />
-            )}
+            </div>
             <BlockPrescriptionRx block={block} />
             <span className="wolf-se-spreadsheet__exercise-summary">{summaryLine}</span>
           </div>
-        </td>
-        <td className="wolf-se-spreadsheet__col-type">
-          <SpreadsheetBlockTypeSelect
-            kind={blockKind}
-            isEs={isEs}
-            onChange={(kind) => {
-              onApply(() =>
-                setExerciseBlockKind(
-                  session,
-                  blockIndex,
-                  kind,
-                  athlete,
-                  exercises,
-                  DEFAULT_COMPLEX_SECOND_ID,
-                ),
-              );
-              if (kind === 'complex') onExpandBlock(blockIndex);
-            }}
-          />
-        </td>
-        <td className="wolf-se-spreadsheet__col-blocks">
-          <button
-            type="button"
-            className={`wolf-se-spreadsheet__blocks-toggle${expanded ? ' is-open' : ''}`}
-            aria-expanded={expanded}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleExpanded(blockIndex);
-            }}
-          >
-            {blockCount}{' '}
-            {isEs ? (blockCount === 1 ? 'bloque' : 'bloques') : blockCount === 1 ? 'block' : 'blocks'}
-            <ChevronDown size={14} aria-hidden />
-          </button>
-        </td>
-        <td className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--zone-start">{workSets}</td>
-        <td className="wolf-se-spreadsheet__metric">{repsSummary}</td>
-        <td className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--vol">
-          {tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}
         </td>
         <td className="wolf-se-spreadsheet__col-actions">
           <div className="wolf-se-spreadsheet__row-actions">
@@ -196,6 +189,39 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
               <Trash2 size={14} aria-hidden />
             </button>
           </div>
+        </td>
+        <td
+          className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--zone-start"
+          data-metric-label={isEs ? 'Series' : 'Sets'}
+        >
+          {workSets}
+        </td>
+        <td className="wolf-se-spreadsheet__metric" data-metric-label="Reps">
+          {repsSummary}
+        </td>
+        <td
+          className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--vol"
+          data-metric-label={isEs ? 'Vol. total' : 'Total vol.'}
+        >
+          {tonnage > 0 ? `${tonnage.toLocaleString()}kg` : '—'}
+        </td>
+        <td className="wolf-se-spreadsheet__col-blocks">
+          <button
+            type="button"
+            className={`wolf-se-spreadsheet__blocks-toggle${expanded ? ' is-open' : ''}`}
+            aria-expanded={expanded}
+            aria-label={
+              isEs
+                ? `${blockCount} ${blockCount === 1 ? 'bloque' : 'bloques'}`
+                : `${blockCount} ${blockCount === 1 ? 'block' : 'blocks'}`
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpanded(blockIndex);
+            }}
+          >
+            <ChevronDown size={14} aria-hidden />
+          </button>
         </td>
       </tr>
       {expanded ? (

@@ -18,10 +18,10 @@
     145deg,
     color-mix(in srgb, var(--color-bg-panel) 88%, var(--color-accent) 12%) 0%,
     var(--color-bg-panel) 55%,
-    color-mix(in srgb, var(--color-bg-panel) 92%, #0a0c10) 100%
+    color-mix(in srgb, var(--color-bg-panel) 92%, var(--v2-canvas)) 100%
   );
   border: 1px solid color-mix(in srgb, var(--color-border) 70%, var(--color-accent) 30%);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--v2-shadow-md);
   overflow: hidden;
 }
 

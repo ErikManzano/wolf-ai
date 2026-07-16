@@ -151,8 +151,10 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const canAddExercise = session.exercises.length < WL_SESSION_LIMITS.MAX_BLOCKS_PER_SESSION;
 
   const sessionRef = useRef(session);
-  sessionRef.current = session;
-  const coachNavRef = useRef<CoachNavDirection>('forward');
+  const [coachNavDirection, setCoachNavDirection] = useState<CoachNavDirection>('forward');
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
   const reduceMotion = useReducedMotion();
 
   const apply = useCallback<SessionApplyFn>(
@@ -167,7 +169,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const openExerciseOverview = useCallback(
     (index: number, expandSetIndex: number | null = null) => {
       if (index < 0 || index >= session.exercises.length) return;
-      coachNavRef.current = 'forward';
+      setCoachNavDirection('forward');
       setEditingBlockIndex(index);
       setOverviewExpandSetIndex(expandSetIndex);
       setEditorView(useMobileCoachFlow ? 'exerciseOverview' : 'exerciseSets');
@@ -256,7 +258,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
         newIndex = next.exercises.length - 1;
         return next;
       });
-      coachNavRef.current = 'forward';
+      setCoachNavDirection('forward');
       setEditingBlockIndex(newIndex);
       setOverviewExpandSetIndex(0);
       setEditorView('exerciseOverview');
@@ -285,7 +287,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
     (index: number) => {
       apply((current) => removeExerciseBlock(current, index, athlete, exercises));
       if (editingBlockIndex === index) {
-        coachNavRef.current = 'back';
+        setCoachNavDirection('back');
         setEditingBlockIndex(null);
         setEditorView('sheet');
       }
@@ -336,7 +338,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   }, [apply, athlete, exercises, editingBlockIndex]);
 
   const backToSheet = useCallback(() => {
-    coachNavRef.current = 'back';
+    setCoachNavDirection('back');
     setEditorView('sheet');
     setEditingBlockIndex(null);
     setOverviewExpandSetIndex(null);
@@ -472,7 +474,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             <motion.div
               key="coach-sheet"
               className="wolf-se-coach-stage"
-              {...coachScreenMotion(reduceMotion, 'sheet', coachNavRef.current)}
+              {...coachScreenMotion(reduceMotion, 'sheet', coachNavDirection)}
             >
               {sheetView}
             </motion.div>
@@ -481,7 +483,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             <motion.div
               key={`coach-overview-${editingBlockIndex}`}
               className="wolf-se-coach-stage"
-              {...coachScreenMotion(reduceMotion, 'overview', coachNavRef.current)}
+              {...coachScreenMotion(reduceMotion, 'overview', coachNavDirection)}
             >
               <ExerciseOverviewScreen
                 block={editingBlock}

@@ -2236,6 +2236,95 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json(listMockWlAthletes(actor, state));
   });
 
+  /** Coach self-serve invite: create WL profile + athlete login linked to coach. */
+  router.post('/wl-athletes/invite', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const body = (req.body ?? {}) as Partial<Athlete> & {
+      id?: string;
+      coachId?: string;
+      email?: string;
+      password?: string;
+    };
+    const coachId = actor!.role === 'coach' ? actor!.id : body.coachId?.trim();
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password?.trim();
+    if (!coachId) {
+      res.status(400).json({ error: 'coachId is required.' });
+      return;
+    }
+    if (!body.name?.trim() || !body.level || !body.oneRM) {
+      res.status(400).json({ error: 'name, level and oneRM are required.' });
+      return;
+    }
+    if (!email || !password || password.length < 6) {
+      res.status(400).json({ error: 'email and password (min 6) are required for invite.' });
+      return;
+    }
+    const users = store ? await store.getUsers() : state.users;
+    if (users.some((u) => u.email?.toLowerCase() === email)) {
+      res.status(409).json({ error: 'Email already registered.' });
+      return;
+    }
+    const id = body.id?.trim() || `ath-${Date.now()}`;
+    const athlete: Athlete = {
+      id,
+      name: body.name.trim(),
+      level: body.level,
+      bodyweight: Number(body.bodyweight ?? 70),
+      oneRM: body.oneRM,
+      fatigueScore: Number(body.fatigueScore ?? 40),
+      readinessScore: Number(body.readinessScore ?? 70),
+    };
+
+    let profile = athlete;
+    if (store) {
+      const created = await store.createAthleteProfile(coachId, athlete);
+      const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...rest } = created;
+      profile = rest as Athlete;
+      await store.createUser({
+        id: `user-${Date.now()}`,
+        name: athlete.name,
+        role: 'athlete',
+        email,
+        password,
+        coachId,
+        linkedAthleteId: profile.id,
+      });
+      notify?.('wl-athletes:changed', { coachId });
+      res.status(201).json({
+        athlete: profile,
+        login: { email, temporaryPassword: password },
+      });
+      return;
+    }
+
+    if (state.athletes.some((a) => a.id === id)) {
+      res.status(409).json({ error: 'Athlete id already exists.' });
+      return;
+    }
+    state.athletes.push(athlete);
+    state.wlAthleteCoachById[id] = coachId;
+    const loginUser: WolfUser = {
+      id: `user-${Date.now()}`,
+      name: athlete.name,
+      role: 'athlete',
+      email,
+      passwordHash: hashPassword(password),
+      coachId,
+      linkedAthleteId: id,
+    };
+    state.users.push(loginUser);
+    notify?.('wl-athletes:changed', { coachId });
+    res.status(201).json({
+      athlete: { ...athlete, coachId },
+      login: { email, temporaryPassword: password },
+    });
+  });
+
   router.post('/wl-athletes', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
     if (!isCoachOrAdmin(actor)) {

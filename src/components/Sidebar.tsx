@@ -1,9 +1,10 @@
 import React from 'react';
-import { Bot, LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
+import { Bot, LogOut, Moon, PanelLeftClose, PanelLeftOpen, ShieldCheck, Sun } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   APP_NAV_ITEMS,
   getMobileSecondaryNavItems,
@@ -47,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
   const { persona, currentUser } = useWolfAssign();
+  const { theme, toggleTheme } = useTheme();
 
   const visibleMenuItems = getVisibleNavItems(persona, currentUser?.role);
   const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
@@ -103,17 +105,31 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-theme-btn"
+          onClick={toggleTheme}
+          aria-label={
+            theme === 'light'
+              ? isEs ? 'Activar tema oscuro' : 'Use dark theme'
+              : isEs ? 'Activar tema claro' : 'Use light theme'
+          }
+          title={theme === 'light' ? (isEs ? 'Tema oscuro' : 'Dark theme') : (isEs ? 'Tema claro' : 'Light theme')}
+        >
+          {theme === 'light' ? <Moon size={collapsed ? 14 : 16} /> : <Sun size={collapsed ? 14 : 16} />}
+          <span>{theme === 'light' ? (isEs ? 'Oscuro' : 'Dark') : (isEs ? 'Claro' : 'Light')}</span>
+        </button>
         {showAssistantEntry && onToggleAssistant ? (
           <button
             type="button"
             className={`sidebar-assistant-btn${assistantOpen ? ' active' : ''}`}
             onClick={onToggleAssistant}
             aria-expanded={assistantOpen}
-            aria-label={isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}
-            title={isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}
+            aria-label={isEs ? 'Asistente de tips' : 'Tips assistant'}
+            title={isEs ? 'Asistente de tips' : 'Tips assistant'}
           >
             <Bot size={collapsed ? 14 : 16} aria-hidden />
-            <span>{collapsed ? (isEs ? 'AI' : 'AI') : isEs ? 'Asistente AI' : 'AI assistant'}</span>
+            <span>{collapsed ? (isEs ? 'Tips' : 'Tips') : isEs ? 'Asistente' : 'Assistant'}</span>
           </button>
         ) : null}
         <div

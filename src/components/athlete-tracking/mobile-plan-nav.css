@@ -11,31 +11,63 @@
 }
 
 .wolf-athlete-week-select__row {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .wolf-athlete-week-select__row--coach {
-  grid-template-columns: 40px minmax(0, 1fr) 40px auto auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-athlete-week-select__row--coach > .wolf-athlete-week-arrow,
+.wolf-athlete-week-select__row--coach > .wolf-coach-week-nav__tool {
+  flex: 0 0 auto;
+}
+
+.wolf-athlete-week-select__row--coach > .wolf-athlete-week-select__field {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .wolf-athlete-week-select__field {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
+  display: block;
 }
 
 .wolf-athlete-week-select.wolf-week-select-mobile {
   display: block;
+  width: 100%;
+  min-width: 0;
   padding: 0;
   border-bottom: none;
   background: transparent;
 }
 
+.wolf-coach-week-nav-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
 .wolf-athlete-week-select .wolf-select-wrap {
   width: 100%;
+  min-width: 0;
+}
+
+.wolf-athlete-week-select .wolf-week-select-mobile__field,
+.wolf-athlete-week-select__field.wolf-week-select-mobile__field {
+  display: block;
+  flex-direction: unset;
 }
 
 .wolf-athlete-week-select .wolf-select-wrap select {

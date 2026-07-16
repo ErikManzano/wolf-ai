@@ -1,7 +1,11 @@
 import type { Athlete, WolfUser } from '../../models/training';
 
 export type CreateWlAthleteInput = Omit<Athlete, 'fatigueScore' | 'readinessScore'> &
-  Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>> & { coachId?: string };
+  Partial<Pick<Athlete, 'fatigueScore' | 'readinessScore'>> & {
+    coachId?: string;
+    inviteEmail?: string;
+    invitePassword?: string;
+  };
 
 export interface WlAthletesContextValue {
   athletes: Athlete[];

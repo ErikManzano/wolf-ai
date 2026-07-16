@@ -1,6 +1,6 @@
 .app-container {
   --chat-rail-width: 52px;
-  --sidebar-compact-width: 84px;
+  --sidebar-compact-width: 44px;
   --sidebar-motion: 0.42s cubic-bezier(0.22, 1, 0.36, 1);
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
@@ -11,6 +11,26 @@
   background: var(--color-bg-main);
   overflow: hidden;
   transition: grid-template-columns var(--sidebar-motion);
+}
+
+/* Wolf V2 shell */
+:root[data-theme='light'] .app-container {
+  background: var(--v2-canvas);
+}
+
+:root[data-theme='light'] .sidebar-area {
+  background: var(--v2-surface);
+  border-right-color: var(--v2-border);
+}
+
+:root[data-theme='light'] .workspace-area {
+  background: var(--v2-canvas);
+}
+
+:root[data-theme='light'] .central-panel {
+  border-color: var(--v2-border);
+  background: var(--v2-surface);
+  box-shadow: var(--v2-shadow-xs);
 }
 
 .app-container.app-container--sidebar-collapsed {
@@ -221,6 +241,17 @@
   .app-container .workspace-area:has(.prx-page) {
     padding-left: max(10px, var(--safe-left));
     padding-right: max(10px, var(--safe-right));
+  }
+
+  .app-container--program-editor .workspace-area {
+    padding: 0 !important;
+    background: var(--v2-canvas);
+  }
+
+  .app-container--program-editor .central-panel {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .chat-area {

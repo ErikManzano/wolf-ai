@@ -149,7 +149,7 @@ async function main() {
   assert(athleteBefore.some((a) => a.id === assignmentId), 'athlete missing assignment before save');
   console.log(`✓ athlete sees assignment (${athleteBefore.length} total)`);
 
-  let program = created.program;
+  const program = created.program;
   const block = program.weeks[0]!.days[0]!.session.exercises[0]!;
   block.sets = [
     ...block.sets,

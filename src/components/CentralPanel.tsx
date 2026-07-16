@@ -35,8 +35,8 @@ import {
   type DashboardAlert,
 } from '../utils/dashboardStats';
 import type { AthleteLevel } from '../models/training';
-import type { AppViewId } from '../navigation/appNavigation';
 import { WlAccountView } from './account/WlAccountView';
+import { LegalDocumentView } from './legal/LegalDocumentView';
 
 interface CentralPanelProps {
   language: 'ES' | 'EN';
@@ -1611,7 +1611,21 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
           language={language}
           setLanguage={setLanguage}
           onLogout={onRequestLogout}
-          onNavigate={(view: AppViewId) => setActiveView(view)}
+          onNavigate={(view) => setActiveView(view)}
+        />
+      )}
+      {activeView === 'legal-terms' && (
+        <LegalDocumentView
+          isEs={isEs}
+          doc="terms"
+          onBack={() => setActiveView('account')}
+        />
+      )}
+      {activeView === 'legal-privacy' && (
+        <LegalDocumentView
+          isEs={isEs}
+          doc="privacy"
+          onBack={() => setActiveView('account')}
         />
       )}
       {activeView === 'aicoach' && renderPlaceholder(isEs ? 'InteractÃºa en el panel derecho' : 'Interact on the right panel', <Settings2 size={64} />)}

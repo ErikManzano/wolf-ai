@@ -76,7 +76,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [open, selectedIndex]);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => setOpen(false), [setOpen]);
 
   const pickOption = useCallback(
     (index: number) => {
@@ -85,19 +85,19 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
       onChange(opt.value);
       setOpen(false);
     },
-    [onChange, options],
+    [onChange, options, setOpen],
   );
 
   const moveActive = useCallback(
     (delta: number) => {
       setActiveIndex((i) => wrapOptionIndex(i + delta, options.length));
     },
-    [options.length],
+    [options.length, setActiveIndex],
   );
 
   const toggleOpen = useCallback(() => {
     setOpen((v) => !v);
-  }, []);
+  }, [setOpen]);
 
   const onTriggerKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -121,7 +121,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
         triggerRef.current?.blur();
       }
     },
-    [activeIndex, moveActive, open, pickOption],
+    [activeIndex, moveActive, open, pickOption, setOpen],
   );
 
   const ariaLabel = isEs ? 'Tipo de ejercicio' : 'Exercise type';

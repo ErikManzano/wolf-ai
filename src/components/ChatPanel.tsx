@@ -1,14 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Send,
-  Bot,
-  User,
-  X,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Bot, Send, User, X } from 'lucide-react';
 import './ChatPanel.css';
-import { useAppContext } from '../context/AppContext';
-import { useWolfAssign } from '../context/WolfAssignContext';
-import { buildExerciseFeatureVector } from '../services/exercise';
 
 interface ChatPanelProps {
   language: 'ES' | 'EN';
@@ -18,11 +10,15 @@ interface ChatPanelProps {
 
 interface Message {
   id: number;
-  sender: 'ai' | 'user';
+  sender: 'assistant' | 'user';
   text: string;
   actions?: string[];
 }
 
+/**
+ * Honest coaching tips panel — NOT generative AI.
+ * See docs/IA_STRATEGY.md: we do not fake athlete analysis until real action-layer AI ships.
+ */
 const ChatPanel: React.FC<ChatPanelProps> = ({
   language,
   variant = 'panel',
@@ -30,102 +26,88 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 }) => {
   const isEs = language === 'ES';
   const isDrawer = variant === 'drawer';
-
-  const { applyDeload, reduceVolume } = useAppContext();
-  const { motorExerciseDefinitions, exerciseRelationships } = useWolfAssign();
   const [inputText, setInputText] = useState('');
 
-  const initialMessages: Message[] = [
-    {
-      id: 1,
-      sender: 'ai',
-      text: isEs
-        ? '¡Hola Coach! He analizado los datos del atleta de esta semana. Veo un aumento atípico en la fatiga y el RPE reportado ayer fue 9/10 en sentadillas. ¿Cómo quieres proceder?'
-        : "Hello Coach! I have analyzed the athlete's data this week. I see an atypical increase in fatigue and yesterday's reported RPE was 9/10 on squats. How would you like to proceed?",
-      actions: isEs
-        ? ['Ajustar cargas', 'Reducir volumen', 'Agregar deload']
-        : ['Adjust loads', 'Reduce volume', 'Add deload'],
-    },
-  ];
+  const tips = useMemo(
+    () =>
+      isEs
+        ? [
+            'Duplica una semana desde el editor (icono calendario) para clonar microciclos sin regenerar contenido.',
+            'Copia un día a otra semana con el atajo «Copiar día a…» (formato semana.día, p. ej. 4.2).',
+            'Las estadísticas del día muestran tonnage y K-value — úsalas antes de subir intensidad.',
+            'Invita atletas desde Atletas → Añadir; en Free el límite es 3 atletas.',
+          ]
+        : [
+            'Duplicate a week from the editor (calendar icon) to clone microcycles without regenerating content.',
+            'Copy a day to another week with “Copy day to…” (week.day format, e.g. 4.2).',
+            'Day stats show tonnage and K-value — check them before raising intensity.',
+            'Invite athletes from Athletes → Add; Free plan is capped at 3 athletes.',
+          ],
+    [isEs],
+  );
+
+  const initialMessages: Message[] = useMemo(
+    () => [
+      {
+        id: 1,
+        sender: 'assistant',
+        text: isEs
+          ? 'Hola Coach. Soy el asistente de tips de Wolf (aún sin IA generativa). Elige un tip o pregunta por funciones del editor.'
+          : 'Hi Coach. I’m the Wolf tips assistant (no generative AI yet). Pick a tip or ask about editor features.',
+        actions: isEs
+          ? ['Duplicar semana', 'Copiar día', 'K-value', 'Límite Free']
+          : ['Duplicate week', 'Copy day', 'K-value', 'Free limit'],
+      },
+    ],
+    [isEs],
+  );
 
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const msgIdRef = useRef(2);
+  const msgIdRef = React.useRef(2);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMessages(initialMessages);
     msgIdRef.current = 2;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset copy when locale changes
-  }, [isEs]);
+  }, [initialMessages]);
+
+  const tipReply = (query: string): string => {
+    const lower = query.toLowerCase();
+    if (lower.includes('duplic') || lower.includes('semana') || lower.includes('week')) {
+      return tips[0]!;
+    }
+    if (lower.includes('copiar') || lower.includes('copy') || lower.includes('día') || lower.includes('day')) {
+      return tips[1]!;
+    }
+    if (lower.includes('k-value') || lower.includes('k value') || lower.includes('tonnage') || lower.includes('stat')) {
+      return tips[2]!;
+    }
+    if (lower.includes('free') || lower.includes('límite') || lower.includes('limit') || lower.includes('pro') || lower.includes('atleta')) {
+      return tips[3]!;
+    }
+    return isEs
+      ? 'Todavía no hay IA que analice fatiga o cambie tu programa. Tips disponibles: duplicar semana, copiar día, K-value, plan Free. La IA con acciones reales llegará cuando pase el criterio de docs/IA_STRATEGY.md.'
+      : 'There is no AI that analyzes fatigue or edits your program yet. Available tips: duplicate week, copy day, K-value, Free plan. Real action-layer AI ships when we meet docs/IA_STRATEGY.md.';
+  };
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-
     const userId = msgIdRef.current++;
-    const newUserMsg: Message = {
-      id: userId,
-      sender: 'user',
-      text: inputText,
-    };
-
-    setMessages((prev) => [...prev, newUserMsg]);
+    const text = inputText.trim();
+    setMessages((prev) => [...prev, { id: userId, sender: 'user', text }]);
     setInputText('');
-
-    const lower = inputText.toLowerCase();
-    const wantsExerciseRec =
-      lower.includes('ejercicio') ||
-      lower.includes('exercise') ||
-      lower.includes('snatch') ||
-      lower.includes('arranque');
-
-    setTimeout(() => {
-      let reply = isEs
-        ? 'Entendido. He aplicado los cambios. ¿Hay algo más en lo que pueda ayudar?'
-        : 'Understood. I have applied the changes. Is there anything else I can help with?';
-
-      if (wantsExerciseRec && motorExerciseDefinitions.length) {
-        const technical = motorExerciseDefinitions.filter((d) => d.objective === 'technique').slice(0, 3);
-        const names = technical.map((d) => d.displayName).join(', ');
-        const vec = technical[0] ? buildExerciseFeatureVector(technical[0]) : null;
-        reply = isEs
-          ? `Catálogo WL (${motorExerciseDefinitions.length} defs). Sugerencia técnica: ${names}. Reglas activas: ${exerciseRelationships.filter((r) => r.isActive).length}. Feature vector dims: ${vec ? Object.keys(vec.familyOneHot).length : 0} familias.`
-          : `WL catalog (${motorExerciseDefinitions.length} defs). Technical picks: ${names}. Active rules: ${exerciseRelationships.filter((r) => r.isActive).length}. Feature vector families: ${vec ? Object.keys(vec.familyOneHot).length : 0}.`;
-      }
-
-      const newAiMsg: Message = {
-        id: msgIdRef.current++,
-        sender: 'ai',
-        text: reply,
-      };
-      setMessages((prev) => [...prev, newAiMsg]);
-    }, 1000);
+    const replyId = msgIdRef.current++;
+    setMessages((prev) => [
+      ...prev,
+      { id: replyId, sender: 'assistant', text: tipReply(text) },
+    ]);
   };
 
   const handleAction = (actionStr: string) => {
-    const newUserMsg: Message = {
-      id: msgIdRef.current++,
-      sender: 'user',
-      text: actionStr,
-    };
-    setMessages((prev) => [...prev, newUserMsg]);
-
-    if (actionStr.toLowerCase().includes('deload') || actionStr.toLowerCase().includes('descarga')) {
-      applyDeload();
-    } else if (actionStr.toLowerCase().includes('volum')) {
-      reduceVolume();
-    } else {
-      reduceVolume();
-    }
-
-    setTimeout(() => {
-      const newAiMsg: Message = {
-        id: msgIdRef.current++,
-        sender: 'ai',
-        text: isEs
-          ? `Listo Coach. Se han actualizado los parámetros para el microciclo basados en la acción: "${actionStr}".`
-          : `Done Coach. The parameters for the microcycle have been updated based on the action: "${actionStr}".`,
-      };
-      setMessages((prev) => [...prev, newAiMsg]);
-    }, 800);
+    setMessages((prev) => [
+      ...prev,
+      { id: msgIdRef.current++, sender: 'user', text: actionStr },
+      { id: msgIdRef.current++, sender: 'assistant', text: tipReply(actionStr) },
+    ]);
   };
 
   return (
@@ -133,7 +115,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       <div className="chat-header">
         <div className="chat-header-title">
           <Bot size={18} aria-hidden />
-          <span>{isEs ? 'Asistente Wolf AI' : 'Wolf AI assistant'}</span>
+          <span>{isEs ? 'Asistente (tips)' : 'Tips assistant'}</span>
         </div>
         <div className="chat-header-trailing">
           {isDrawer && onClose ? (
@@ -147,18 +129,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <X size={18} />
             </button>
           ) : null}
-          <span className="status-dot" aria-hidden />
         </div>
       </div>
 
       <div className="chat-body">
         <div className="chat-messages">
           {messages.map((msg) => (
-            <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
+            <div key={msg.id} className={`message-wrapper ${msg.sender === 'assistant' ? 'ai' : 'user'}`}>
               <div className="message-bubble">
                 <div className="message-sender">
-                  {msg.sender === 'ai' ? <Bot size={14} /> : <User size={14} />}
-                  <span>{msg.sender === 'ai' ? 'Wolf AI' : 'Coach'}</span>
+                  {msg.sender === 'assistant' ? <Bot size={14} /> : <User size={14} />}
+                  <span>{msg.sender === 'assistant' ? (isEs ? 'Tips' : 'Tips') : 'Coach'}</span>
                 </div>
                 <p className="message-text">{msg.text}</p>
               </div>
@@ -180,7 +161,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           <div className="input-wrapper">
             <input
               type="text"
-              placeholder={isEs ? 'Pregúntale a tu Coach IA...' : 'Ask your AI Coach...'}
+              placeholder={isEs ? 'Pregunta por una función del editor…' : 'Ask about an editor feature…'}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -189,22 +170,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <Send size={18} />
             </button>
           </div>
-          <div className="prompt-suggestions">
-            <span
-              className="suggestion"
-              role="button"
-              tabIndex={0}
-              onClick={() =>
-                setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
-              }
-              onKeyDown={(e) =>
-                e.key === 'Enter' &&
-                setInputText(isEs ? 'Convierte este mesociclo en peaking' : 'Convert this mesocycle to peaking')
-              }
-            >
-              {isEs ? '"Convierte este mesociclo en peaking"' : '"Convert this mesocycle to peaking"'}
-            </span>
-          </div>
+          <p className="prompt-suggestions" style={{ opacity: 0.75, fontSize: '0.75rem' }}>
+            {isEs
+              ? 'Sin análisis inventado. Sin mutaciones de programa. Ver docs/IA_STRATEGY.md.'
+              : 'No invented analysis. No program mutations. See docs/IA_STRATEGY.md.'}
+          </p>
         </div>
       </div>
     </div>

@@ -1,11 +1,11 @@
 .wolf-login {
-  --wolf-login-bg: #0c0c0e;
-  --wolf-login-panel-left: #111113;
-  --wolf-login-panel-right: #18181b;
-  --wolf-login-border: #2a2a2e;
-  --wolf-login-muted: #a1a1aa;
-  --wolf-login-orange: #f97316;
-  --wolf-login-orange-hover: #ea580c;
+  --wolf-login-bg: var(--v2-canvas);
+  --wolf-login-panel-left: var(--v2-surface);
+  --wolf-login-panel-right: var(--v2-surface-subtle);
+  --wolf-login-border: var(--v2-border);
+  --wolf-login-muted: var(--v2-text-muted);
+  --wolf-login-orange: var(--v2-accent);
+  --wolf-login-orange-hover: var(--v2-accent-hover);
 
   min-height: 100vh;
   min-height: 100dvh;
@@ -23,13 +23,13 @@
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--wolf-login-border);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--v2-shadow-md);
   background: var(--wolf-login-panel-left);
 }
 
 .wolf-login-brand {
   padding: 40px 36px 36px;
-  color: #fafafa;
+  color: var(--v2-text);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -51,7 +51,7 @@
   font-size: 1rem;
   letter-spacing: -0.02em;
   margin-bottom: 28px;
-  color: #fafafa;
+  color: var(--v2-text);
 }
 
 .wolf-login-logo svg {
@@ -65,7 +65,7 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  color: #fafafa;
+  color: var(--v2-text);
 }
 
 .wolf-login-headline-dot {
@@ -76,7 +76,7 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.55;
-  color: rgba(250, 250, 250, 0.88);
+  color: var(--v2-text-secondary);
   max-width: 38ch;
 }
 
@@ -146,7 +146,7 @@
   font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #fafafa;
+  color: var(--v2-text);
 }
 
 .wolf-login-form-header p {
@@ -175,15 +175,15 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--wolf-login-border);
-  background: #121214;
-  color: #fafafa;
+  background: var(--v2-surface);
+  color: var(--v2-text);
   border-radius: 8px;
   padding: 12px 14px;
   font-size: 0.95rem;
 }
 
 .wolf-login-form .wolf-login-label input::placeholder {
-  color: #71717a;
+  color: var(--v2-text-muted);
 }
 
 .wolf-login-form .wolf-login-label select {
@@ -212,7 +212,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #71717a;
+  color: var(--v2-text-muted);
   cursor: pointer;
 }
 
@@ -293,7 +293,7 @@
   border: 1px solid var(--wolf-login-border);
   border-radius: 8px;
   background: transparent;
-  color: #fafafa;
+  color: var(--v2-text);
   font-weight: 600;
   font-size: 0.95rem;
   padding: 13px 16px;
@@ -302,20 +302,20 @@
 }
 
 .wolf-login-btn-secondary:hover {
-  border-color: #3f3f46;
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--v2-border-strong);
+  background: var(--v2-surface-hover);
 }
 
 .wolf-login-error {
   margin: 0;
   font-size: 0.84rem;
-  color: #f87171;
+  color: var(--v2-danger);
 }
 
 .wolf-login-success {
   margin: 0;
   font-size: 0.84rem;
-  color: #4ade80;
+  color: var(--v2-success);
 }
 
 .wolf-login-hint {

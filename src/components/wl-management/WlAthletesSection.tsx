@@ -16,6 +16,7 @@ import { WlAthletesToolbar } from '../wl-athletes/WlAthletesToolbar';
 import WlAthleteCreateSheet from '../wl-athletes/WlAthleteCreateSheet';
 import WlAthleteEditPrSheet from '../wl-athletes/WlAthleteEditPrSheet';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
+import { canAddAthlete, resolveCoachPlan } from '../../config/billing';
 import '../wl-shared/app-breadcrumb.css';
 import '../wl-shared/wl-list-toolbar.css';
 import '../wl-athletes/wl-athletes.css';
@@ -45,6 +46,13 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const roster = useMemo(() => rosterForCoach(currentUser), [rosterForCoach, currentUser]);
+  const plan = resolveCoachPlan(currentUser?.id, currentUser?.billingPlan);
+  const atAthleteLimit = !canAddAthlete(plan, roster.length);
+  const limitReachedMessage = atAthleteLimit
+    ? isEs
+      ? 'Plan Free: máximo 3 atletas. Ve a Cuenta → Upgrade Pro para continuar.'
+      : 'Free plan: max 3 athletes. Go to Account → Upgrade Pro to continue.'
+    : null;
   const rows = useMemo(
     () => buildWlAthleteRosterRows(roster, users, assignments, completions, currentUser?.id),
     [roster, users, assignments, completions, currentUser?.id],
@@ -167,6 +175,7 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
         <WlAthleteCreateSheet
           isEs={isEs}
           onClose={() => setShowAdd(false)}
+          limitReachedMessage={limitReachedMessage}
           onCreate={async (input) => {
             const created = await createWlAthlete(input);
             if (created) void reloadWlAthletesFromApi();

@@ -9,6 +9,8 @@ export const PROGRAM_STRUCTURE_LIMITS = {
   MAX_DAYS_PER_WEEK: 7,
 } as const;
 
+export type ProgramDaySlot = { weekNumber: number; dayNumber: number };
+
 function cloneProgram(program: GeneratedProgram): GeneratedProgram {
   return JSON.parse(JSON.stringify(program)) as GeneratedProgram;
 }
@@ -176,6 +178,64 @@ export function duplicateDayInGeneratedWeek(
   return syncProgramMeta(next);
 }
 
+/**
+ * Deep-clones an entire week and inserts it immediately after the source week.
+ * Unlike `addWeekToGeneratedProgram`, this does not auto-generate new sessions.
+ */
+export function duplicateWeekInGeneratedProgram(
+  program: GeneratedProgram,
+  weekNumber: number,
+): GeneratedProgram {
+  if (program.weeks.length >= PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS) return program;
+
+  const next = cloneProgram(program);
+  const srcIdx = next.weeks.findIndex((w) => w.weekNumber === weekNumber);
+  if (srcIdx < 0) return program;
+
+  const src = next.weeks[srcIdx]!;
+  const clone: ProgramWeek = JSON.parse(JSON.stringify(src)) as ProgramWeek;
+  next.weeks.splice(srcIdx + 1, 0, clone);
+  next.weeks = renumberWeeks(next.weeks);
+  return syncProgramMeta(next);
+}
+
+/**
+ * Copies a day's session + label onto another week/day slot (overwrite destination).
+ * Creates the destination day if the target week has fewer days (up to MAX_DAYS).
+ */
+export function copyDayAcrossProgram(
+  program: GeneratedProgram,
+  from: ProgramDaySlot,
+  to: ProgramDaySlot,
+): GeneratedProgram {
+  if (from.weekNumber === to.weekNumber && from.dayNumber === to.dayNumber) return program;
+
+  const next = cloneProgram(program);
+  const fromWeek = next.weeks.find((w) => w.weekNumber === from.weekNumber);
+  const toWeek = next.weeks.find((w) => w.weekNumber === to.weekNumber);
+  if (!fromWeek || !toWeek) return program;
+
+  const src = fromWeek.days.find((d) => d.dayNumber === from.dayNumber);
+  if (!src) return program;
+
+  const dest = toWeek.days.find((d) => d.dayNumber === to.dayNumber);
+  if (!dest) {
+    if (toWeek.days.length >= PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK) return program;
+    const newDay: ProgramDay = {
+      dayNumber: to.dayNumber,
+      label: src.label,
+      session: JSON.parse(JSON.stringify(src.session)) as typeof src.session,
+    };
+    toWeek.days.push(newDay);
+    toWeek.days = renumberDays(toWeek.days);
+    return syncProgramMeta(next);
+  }
+
+  dest.session = JSON.parse(JSON.stringify(src.session)) as typeof src.session;
+  dest.label = src.label;
+  return syncProgramMeta(next);
+}
+
 export function removeDayFromGeneratedWeek(
   program: GeneratedProgram,
   weekNumber: number,
@@ -247,8 +307,6 @@ export function reorderDaysAcrossProgram(
   }
   return next;
 }
-
-export type ProgramDaySlot = { weekNumber: number; dayNumber: number };
 
 export function swapProgramDaySlots(
   program: GeneratedProgram,

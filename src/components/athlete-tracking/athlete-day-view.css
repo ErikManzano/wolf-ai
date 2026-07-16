@@ -37,8 +37,8 @@
 }
 
 .wa-day-tab.active {
-  border-color: #7c3aed;
-  background: #7c3aed;
+  border-color: var(--v2-accent);
+  background: var(--v2-accent);
   color: #fff;
 }
 
@@ -64,8 +64,9 @@
   flex-direction: column;
   gap: 12px;
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 90%, #7c3aed 10%);
-  background: color-mix(in srgb, var(--color-bg-panel) 94%, #0c0a14);
+  border: 1px solid var(--v2-border);
+  background: var(--v2-surface);
+  box-shadow: var(--v2-shadow-xs);
   padding: 1.1rem 1rem 1rem;
 }
 

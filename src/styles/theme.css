@@ -1,0 +1,148 @@
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Wolf V2 semantic palette */
+  --v2-canvas: #f5f5f4;
+  --v2-surface: #ffffff;
+  --v2-surface-subtle: #fafaf9;
+  --v2-surface-raised: #ffffff;
+  --v2-surface-hover: #f4f4f3;
+  --v2-surface-active: #fff7ed;
+  --v2-border: #e7e5e4;
+  --v2-border-strong: #d6d3d1;
+  --v2-text: #292524;
+  --v2-text-secondary: #57534e;
+  --v2-text-muted: #a8a29e;
+  --v2-accent: #f97316;
+  --v2-accent-hover: #ea580c;
+  --v2-accent-soft: #fff1e7;
+  --v2-accent-ring: rgba(249, 115, 22, 0.22);
+  --v2-success: #15803d;
+  --v2-success-soft: #ecfdf3;
+  --v2-warning: #b45309;
+  --v2-warning-soft: #fffbeb;
+  --v2-danger: #dc2626;
+  --v2-danger-soft: #fef2f2;
+  --v2-info: #2563eb;
+  --v2-info-soft: #eff6ff;
+  --v2-overlay: rgba(28, 25, 23, 0.38);
+  --v2-shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --v2-shadow-sm: 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --v2-shadow-md: 0 10px 30px rgba(28, 25, 23, 0.09);
+  --v2-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.85) inset, var(--v2-shadow-sm);
+
+  /* Compatibility aliases used throughout V1 */
+  --color-bg-main: var(--v2-canvas);
+  --color-bg-panel: var(--v2-surface);
+  --color-bg-secondary: var(--v2-surface-subtle);
+  --color-bg-hover: var(--v2-surface-hover);
+  --color-text-primary: var(--v2-text);
+  --color-text-secondary: var(--v2-text-secondary);
+  --color-text-muted: var(--v2-text-muted);
+  --color-accent: var(--v2-accent);
+  --color-accent-hover: var(--v2-accent-hover);
+  --color-accent-glow: var(--v2-accent-ring);
+  --color-accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+  --color-success: var(--v2-success);
+  --color-warning: var(--v2-warning);
+  --color-danger: var(--v2-danger);
+  --color-error: var(--v2-danger);
+  --color-border: var(--v2-border);
+
+  --wl-surface-main: var(--v2-canvas);
+  --wl-surface-board: var(--v2-surface);
+  --wl-surface-elevated: var(--v2-surface-raised);
+  --wl-border-subtle: var(--v2-border);
+  --wl-text-primary: var(--v2-text);
+  --wl-text-secondary: var(--v2-text-secondary);
+  --wl-text-muted: var(--v2-text-muted);
+  --wl-text-accent: var(--v2-accent);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --v2-canvas: #0a0c10;
+  --v2-surface: #14171d;
+  --v2-surface-subtle: #12151c;
+  --v2-surface-raised: #1a1f28;
+  --v2-surface-hover: #1e222a;
+  --v2-surface-active: rgba(249, 115, 22, 0.12);
+  --v2-border: #2a3140;
+  --v2-border-strong: #3f4757;
+  --v2-text: #f8fafc;
+  --v2-text-secondary: #94a3b8;
+  --v2-text-muted: #64748b;
+  --v2-accent: #f97316;
+  --v2-accent-hover: #fb923c;
+  --v2-accent-soft: rgba(249, 115, 22, 0.12);
+  --v2-accent-ring: rgba(249, 115, 22, 0.22);
+  --v2-success: #22c55e;
+  --v2-success-soft: rgba(34, 197, 94, 0.12);
+  --v2-warning: #facc15;
+  --v2-warning-soft: rgba(250, 204, 21, 0.12);
+  --v2-danger: #f43f5e;
+  --v2-danger-soft: rgba(244, 63, 94, 0.12);
+  --v2-info: #60a5fa;
+  --v2-info-soft: rgba(96, 165, 250, 0.12);
+  --v2-overlay: rgba(0, 0, 0, 0.56);
+  --v2-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --v2-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.2);
+  --v2-shadow-md: 0 18px 44px rgba(0, 0, 0, 0.34);
+  --v2-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04) inset, var(--v2-shadow-sm);
+
+  --color-bg-main: var(--v2-canvas);
+  --color-bg-panel: var(--v2-surface);
+  --color-bg-secondary: var(--v2-surface-subtle);
+  --color-bg-hover: var(--v2-surface-hover);
+  --color-text-primary: var(--v2-text);
+  --color-text-secondary: var(--v2-text-secondary);
+  --color-text-muted: var(--v2-text-muted);
+  --color-accent: var(--v2-accent);
+  --color-accent-hover: var(--v2-accent-hover);
+  --color-accent-glow: var(--v2-accent-ring);
+  --color-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  --color-success: var(--v2-success);
+  --color-warning: var(--v2-warning);
+  --color-danger: var(--v2-danger);
+  --color-error: var(--v2-danger);
+  --color-border: var(--v2-border);
+
+  --wl-surface-main: var(--v2-canvas);
+  --wl-surface-board: var(--v2-surface);
+  --wl-surface-elevated: var(--v2-surface-raised);
+  --wl-border-subtle: var(--v2-border);
+  --wl-text-primary: var(--v2-text);
+  --wl-text-secondary: var(--v2-text-secondary);
+  --wl-text-muted: var(--v2-text-muted);
+  --wl-text-accent: var(--v2-accent);
+}
+
+html,
+body {
+  background: var(--v2-canvas);
+  color: var(--v2-text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
+}

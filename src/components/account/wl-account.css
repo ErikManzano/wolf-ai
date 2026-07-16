@@ -1,9 +1,9 @@
 .wl-account-view {
-  --wl-account-surface: #111318;
-  --wl-account-border: #27272a;
-  --wl-account-text: #fafafa;
-  --wl-account-muted: #a1a1aa;
-  --wl-account-accent: #ff6b1a;
+  --wl-account-surface: var(--v2-surface);
+  --wl-account-border: var(--v2-border);
+  --wl-account-text: var(--v2-text);
+  --wl-account-muted: var(--v2-text-muted);
+  --wl-account-accent: var(--v2-accent);
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
@@ -20,6 +20,7 @@
   border-radius: 16px;
   border: 1px solid var(--wl-account-border);
   background: var(--wl-account-surface);
+  box-shadow: var(--v2-shadow-xs);
 }
 
 .wl-account-hero__avatar {
@@ -85,6 +86,7 @@
   border: 1px solid var(--wl-account-border);
   background: var(--wl-account-surface);
   overflow: hidden;
+  box-shadow: var(--v2-shadow-xs);
 }
 
 .wl-account-row {
