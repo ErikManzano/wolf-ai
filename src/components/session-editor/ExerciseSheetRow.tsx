@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { ChevronDown, Copy, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../../models/training';
+import { useWolfAlert } from '../../context/WolfAlertContext';
 import { normalizeBlockType } from '../../services/trainingEngine';
 import {
   duplicateExerciseBlock,
@@ -12,6 +13,7 @@ import {
 } from '../../services/sessionMutations';
 import type { SessionPickerOption } from '../../services/exercise';
 import { blockTonnage, blockTotalSets } from './blockMetrics';
+import { editorActionToast } from './editorActionToasts';
 import { blockDisplayName } from './sessionSheetUtils';
 import { formatBlockRepsSummary } from './spreadsheetBlockFormat';
 import { BlockPrescriptionRx } from './BlockPrescriptionRx';
@@ -67,6 +69,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   onExpandBlock,
   onApply,
 }) => {
+  const { pushAlert } = useWolfAlert();
   const isComplex =
     normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const workSets = blockTotalSets(block);
@@ -172,6 +175,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 onApply(() => duplicateExerciseBlock(session, blockIndex, athlete, exercises));
+                pushAlert(editorActionToast(isEs, 'duplicateExercise'));
               }}
             >
               <Copy size={14} aria-hidden />
@@ -184,6 +188,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 onApply(() => removeExerciseBlock(session, blockIndex, athlete, exercises));
+                pushAlert(editorActionToast(isEs, 'removeExercise'));
               }}
             >
               <Trash2 size={14} aria-hidden />

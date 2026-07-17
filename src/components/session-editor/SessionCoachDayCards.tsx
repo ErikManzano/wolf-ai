@@ -13,6 +13,8 @@ import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
 import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
 import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
 import { CoachBlockTypePicker } from './CoachBlockTypePicker';
+import { useWolfAlert } from '../../context/WolfAlertContext';
+import { editorActionToast } from './editorActionToasts';
 import './session-coach-day-cards.css';
 import './coach-block-type-picker.css';
 import './exercise-coach-actions-sheet.css';
@@ -270,6 +272,7 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
   onChangeExercise,
   onApply,
 }) => {
+  const { pushAlert } = useWolfAlert();
   const canSort = sortable && Boolean(onReorderBlocks) && session.exercises.length > 1;
   const reduceMotion = useReducedMotion();
   const [rows, setRows] = useState<SortableRow[]>(() => rowsFromBlocks(session.exercises));
@@ -390,6 +393,7 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
             ? () => {
                 setActionsIndex(null);
                 onDuplicateBlock(actionsIndex);
+                pushAlert(editorActionToast(isEs, 'duplicateExercise'));
               }
             : undefined
         }
@@ -425,7 +429,10 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
         isEs={isEs}
         onCancel={() => setDeleteIndex(null)}
         onConfirm={() => {
-          if (deleteIndex != null) onRemoveBlock?.(deleteIndex);
+          if (deleteIndex != null) {
+            onRemoveBlock?.(deleteIndex);
+            pushAlert(editorActionToast(isEs, 'removeExercise'));
+          }
           setDeleteIndex(null);
         }}
       />

@@ -35,6 +35,8 @@ import { blockTonnage, exerciseName } from './blockMetrics';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExercisePickerSheet } from '../mobile-wl/sheets/ExercisePickerSheet';
 import { formatBlockPrescription } from './schemeFormat';
+import { useWolfAlert } from '../../context/WolfAlertContext';
+import { editorActionToast } from './editorActionToasts';
 import type { SessionCatalogProps } from './types';
 import './session-editor.css';
 import './exercise-block-card.css';
@@ -142,6 +144,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   layout = 'default',
   mode = 'full',
 }) => {
+  const { pushAlert } = useWolfAlert();
   const apply = onApply;
   const isEmbedded = layout === 'embedded';
   const setsOnly = mode === 'setsOnly';
@@ -574,9 +577,18 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 onSegmentRepChange={(si, segIdx, val) =>
                   apply(() => updateSegmentRepAt(session, bi, si, segIdx, val, athlete, exercises))
                 }
-                onAddSet={() => apply(() => addSetToBlock(session, bi, athlete, exercises))}
-                onDuplicateSet={(si) => apply(() => duplicateSetAt(session, bi, si, athlete, exercises))}
-                onRemoveSet={(si) => apply(() => removeSetFromBlock(session, bi, si, athlete, exercises))}
+                onAddSet={() => {
+                  apply(() => addSetToBlock(session, bi, athlete, exercises));
+                  pushAlert(editorActionToast(isEs, 'addBlock'));
+                }}
+                onDuplicateSet={(si) => {
+                  apply(() => duplicateSetAt(session, bi, si, athlete, exercises));
+                  pushAlert(editorActionToast(isEs, 'duplicateBlock'));
+                }}
+                onRemoveSet={(si) => {
+                  apply(() => removeSetFromBlock(session, bi, si, athlete, exercises));
+                  pushAlert(editorActionToast(isEs, 'removeBlock'));
+                }}
                 onReorderSets={(from, to) =>
                   apply(() => reorderSetsInBlock(session, bi, from, to, athlete, exercises))
                 }

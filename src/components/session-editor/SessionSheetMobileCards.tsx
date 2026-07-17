@@ -4,6 +4,7 @@ import { Reorder, useDragControls } from 'framer-motion';
 import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';
 import { normalizeBlockType } from '../../services/trainingEngine';
+import { useWolfAlert } from '../../context/WolfAlertContext';
 import {
   duplicateExerciseBlock,
   getExerciseBlockKind,
@@ -11,6 +12,7 @@ import {
   setExerciseBlockKind,
 } from '../../services/sessionMutations';
 import { blockTonnage, blockTotalSets } from './blockMetrics';
+import { editorActionToast } from './editorActionToasts';
 import { blockDisplayName } from './sessionSheetUtils';
 import { formatBlockPrescriptionDisplay } from './schemeFormat';
 import { formatBlockRepsSummary } from './spreadsheetBlockFormat';
@@ -80,6 +82,7 @@ const MobileExerciseCard: React.FC<MobileCardProps> = ({
   onRemoveBlock,
   onDragStart,
 }) => {
+  const { pushAlert } = useWolfAlert();
   const isComplex =
     normalizeBlockType(block) === 'complex' && Boolean(block.segments?.length);
   const workSets = blockTotalSets(block);
@@ -187,9 +190,10 @@ const MobileExerciseCard: React.FC<MobileCardProps> = ({
           className="wolf-se-spreadsheet__icon-btn"
           title={isEs ? 'Duplicar' : 'Duplicate'}
           disabled={session.exercises.length >= 8}
-          onClick={() =>
-            onApply(() => duplicateExerciseBlock(session, blockIndex, athlete, exercises))
-          }
+          onClick={() => {
+            onApply(() => duplicateExerciseBlock(session, blockIndex, athlete, exercises));
+            pushAlert(editorActionToast(isEs, 'duplicateExercise'));
+          }}
         >
           <Copy size={14} aria-hidden />
         </button>
@@ -199,7 +203,10 @@ const MobileExerciseCard: React.FC<MobileCardProps> = ({
             className="wolf-se-spreadsheet__icon-btn wolf-se-spreadsheet__icon-btn--danger"
             title={isEs ? 'Eliminar' : 'Remove'}
             disabled={totalBlocks <= 1}
-            onClick={() => onRemoveBlock(blockIndex)}
+            onClick={() => {
+              onRemoveBlock(blockIndex);
+              pushAlert(editorActionToast(isEs, 'removeExercise'));
+            }}
           >
             <Trash2 size={14} aria-hidden />
           </button>
