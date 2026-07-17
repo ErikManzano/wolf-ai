@@ -1785,14 +1785,14 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-combo--complex,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-combo--complex .wolf-se-spreadsheet__type-trigger {
-    width: 108px;
-    min-width: 108px;
+    width: 110px;
+    min-width: 110px;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-combo--warmup,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-combo--warmup .wolf-se-spreadsheet__type-trigger {
-    width: 126px;
-    min-width: 126px;
+    width: 124px;
+    min-width: 124px;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-trigger .wolf-se-block-type__dot {
@@ -1891,7 +1891,7 @@
     height: 58px;
     min-height: 58px;
     align-items: flex-start;
-    gap: 6px;
+    gap: 7px;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-main {
