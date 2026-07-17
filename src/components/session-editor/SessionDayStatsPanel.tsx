@@ -3,28 +3,26 @@ import type { Athlete, Exercise, Session } from '../../models/training';
 import {
   estimateSessionMinutes,
   sessionAvgIntensity,
-  sessionTotalReps,
   sessionTotalSets,
-  sessionTonnage,
 } from './blockMetrics';
-import {
-  sessionExerciseVolumes,
-  sessionPurposeBreakdown,
-  sessionPurposeTonnageBreakdown,
-} from './sessionSummaryMetrics';
-import {
-  buildDayScopeKpiCards,
-  ProgramStatsDashboardLayout,
-  ProgramStatsHorizontalBars,
-  ProgramStatsKpiGrid,
-  ProgramStatsPurposeBlock,
-  ProgramStatsStatusCard,
-} from './programStatsShared';
+import { sessionPurposeBreakdown } from './sessionSummaryMetrics';
 import {
   computeSessionExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
-import { evaluateDayVerdict, sessionIntensityRange } from './programStatsVerdict';
+import { evaluateDayVerdict } from './programStatsVerdict';
+import { formatStatsDuration } from './programStatsShared';
+import { buildDayInsights, purposeIntentLine } from './statsInsights';
+import { formatStatsKg, statsBlockTonnage, statsExerciseVolumes, statsSessionTonnage } from './statsTonnage';
+import {
+  DistributionBar,
+  ExerciseRanking,
+  InsightCard,
+  MetricCard,
+  SectionCard,
+  StatusBadge,
+  TimelineChart,
+} from './stats-ds';
 
 export interface SessionDayStatsPanelProps {
   session: Session;
@@ -55,7 +53,7 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   const blocks = session.exercises;
 
   const dayTonnage = useMemo(
-    () => sessionTonnage(session, athlete, exercises),
+    () => statsSessionTonnage(session, athlete, exercises),
     [session, athlete, exercises],
   );
 
@@ -64,18 +62,10 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     return Math.round((dayTonnage / weekTonnage) * 100);
   }, [weekTonnage, dayTonnage]);
 
-  const sessionMetrics = useMemo(
-    () => ({
-      sets: sessionTotalSets(blocks),
-      reps: sessionTotalReps(blocks),
-      avgPct: sessionAvgIntensity(blocks),
-      minutes: estimateSessionMinutes(session),
-      purpose: sessionPurposeBreakdown(blocks),
-      purposeTonnage: sessionPurposeTonnageBreakdown(blocks, athlete, exercises),
-      intensityRange: sessionIntensityRange(blocks),
-    }),
-    [blocks, session, athlete, exercises],
-  );
+  const purpose = useMemo(() => sessionPurposeBreakdown(blocks), [blocks]);
+  const avgPct = useMemo(() => sessionAvgIntensity(blocks), [blocks]);
+  const sets = useMemo(() => sessionTotalSets(blocks), [blocks]);
+  const minutes = useMemo(() => estimateSessionMinutes(session), [session]);
 
   const execution = useMemo(
     () =>
@@ -91,75 +81,114 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   );
 
   const exerciseRows = useMemo(
-    () => sessionExerciseVolumes(blocks, athlete, exercises, 6),
+    () => statsExerciseVolumes(blocks, athlete, exercises, 6),
     [blocks, athlete, exercises],
   );
 
-  const kpiCards = buildDayScopeKpiCards(isEs, {
-    tonnage: dayTonnage,
-    weekSharePct: daySharePct,
-    avgPct: sessionMetrics.avgPct,
-    intensityMin: sessionMetrics.intensityRange.min,
-    intensityMax: sessionMetrics.intensityRange.max,
-    sets: sessionMetrics.sets,
-    reps: sessionMetrics.reps,
-    minutes: sessionMetrics.minutes,
-    execution: execution
-      ? {
-          completedSets: execution.completedSets,
-          prescribedSets: execution.prescribedSets,
-          completionPct: execution.completionPct,
-        }
-      : null,
-  });
+  const insights = useMemo(
+    () =>
+      buildDayInsights({
+        session,
+        athlete,
+        exercises,
+        isEs,
+        purpose,
+        exerciseVolumes: exerciseRows,
+        avgPct,
+        verdict,
+      }),
+    [session, athlete, exercises, isEs, purpose, exerciseRows, avgPct, verdict],
+  );
+
+  const timelinePoints = useMemo(
+    () =>
+      blocks
+        .map((block, index) => ({
+          key: index,
+          label: `B${index + 1}`,
+          value: statsBlockTonnage(block, athlete, exercises),
+        }))
+        .filter((point) => point.value > 0),
+    [blocks, athlete, exercises],
+  );
+
+  const intentLine = purposeIntentLine(purpose, isEs);
 
   return (
     <section
       id="wolf-program-day-panel-stats"
       role="tabpanel"
       aria-labelledby="wolf-program-tab-stats"
-      className={`wolf-program-day-stats wolf-program-day-stats--day wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
+      className={`wolf-program-day-stats wolf-program-day-stats--day wolf-program-day-stats--ds wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
     >
-      <ProgramStatsDashboardLayout
-        dashboard={dashboard}
-        variant="day"
-        kpis={
-          <div className="wolf-program-day-stats__day-top-grid">
-            <ProgramStatsKpiGrid cards={kpiCards} />
-            <ProgramStatsStatusCard
-              title={verdict.title}
-              message={verdict.message}
-              tone={verdict.tone}
+      <div className="wl-stats-ds">
+        <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
+          <MetricCard
+            label={isEs ? 'Volumen' : 'Volume'}
+            value={formatStatsKg(dayTonnage)}
+            sub={daySharePct > 0 ? (isEs ? `${daySharePct}% de la semana` : `${daySharePct}% of week`) : undefined}
+            accent
+          />
+          <MetricCard
+            label={isEs ? 'Intensidad' : 'Intensity'}
+            value={avgPct > 0 ? `${avgPct}%` : '—'}
+            sub={isEs ? 'Media % 1RM' : 'Avg % 1RM'}
+          />
+          <MetricCard
+            label={isEs ? 'Series' : 'Sets'}
+            value={sets > 0 ? sets : '—'}
+            sub={
+              execution
+                ? isEs
+                  ? `${execution.completionPct}% completado`
+                  : `${execution.completionPct}% completed`
+                : isEs
+                  ? 'Prescritas'
+                  : 'Prescribed'
+            }
+            subTone={execution ? 'success' : 'muted'}
+          />
+          <MetricCard
+            label={isEs ? 'Duración' : 'Duration'}
+            value={formatStatsDuration(minutes)}
+            sub={isEs ? 'Estimada' : 'Estimated'}
+          />
+          <MetricCard
+            label={isEs ? 'Estado' : 'Status'}
+            value={<StatusBadge label={verdict.title} tone={verdict.tone} />}
+            sub={
+              execution
+                ? isEs
+                  ? `${execution.completedSets}/${execution.prescribedSets} series`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets`
+                : undefined
+            }
+          />
+        </div>
+
+        <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
+          <SectionCard title={isEs ? 'Distribución — Intención' : 'Distribution — Intent'}>
+            <DistributionBar purpose={purpose} isEs={isEs} insight={intentLine} />
+          </SectionCard>
+
+          <SectionCard title={isEs ? 'Timeline — Bloques' : 'Timeline — Blocks'}>
+            <TimelineChart
+              points={timelinePoints}
               isEs={isEs}
-              compact
-              executionLabel={
-                execution
-                  ? isEs
-                    ? `${execution.completionPct}% completado`
-                    : `${execution.completionPct}% completed`
-                  : undefined
-              }
+              showValues
+              valueUnit="kg"
             />
-          </div>
-        }
-        charts={
-          <>
-            <ProgramStatsPurposeBlock
-              purpose={sessionMetrics.purpose}
-              purposeTonnage={sessionMetrics.purposeTonnage}
-              avgPct={sessionMetrics.avgPct}
-              isEs={isEs}
-              title={isEs ? 'Distribución por intensidad (hoy)' : 'Intensity distribution (today)'}
-            />
-            <ProgramStatsHorizontalBars
-              title={isEs ? 'Carga por ejercicio' : 'Load by exercise'}
-              slices={exerciseRows}
-              isEs={isEs}
-              maxSlices={6}
-            />
-          </>
-        }
-      />
+          </SectionCard>
+        </div>
+
+        <SectionCard title={isEs ? 'Carga — Ranking' : 'Load — Ranking'}>
+          <ExerciseRanking slices={exerciseRows} isEs={isEs} maxSlices={6} />
+        </SectionCard>
+
+        <SectionCard title={isEs ? 'Insights Wolf' : 'Wolf Insights'}>
+          <InsightCard insights={insights} isEs={isEs} />
+        </SectionCard>
+      </div>
     </section>
   );
 };

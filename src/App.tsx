@@ -181,9 +181,7 @@ function AppShell() {
 
   const isProgramEditorActive =
     activeView === 'programs' && programsView === 'editor' && Boolean(editingProgramId);
-  const effectiveSidebarCollapsed = isNarrowLayout
-    ? false
-    : sidebarCollapsed || isProgramEditorActive;
+  const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
   const sidebarResizeEnabled = !isNarrowLayout;
   const {
     width: sidebarWidth,

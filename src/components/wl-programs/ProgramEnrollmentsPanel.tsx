@@ -14,12 +14,19 @@ import {
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import type { AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import ConfirmationModal from '../ConfirmationModal';
 import {
   athleteInitials,
   buildProgramEnrollmentRows,
   filterEnrollmentRows,
   type EnrollmentFilterId,
 } from './programEnrollmentsUtils';
+
+type PendingRemove = {
+  assignmentId: string;
+  athleteName: string;
+  athleteProfileId: string;
+};
 
 function levelLabel(level: AthleteLevel, isEs: boolean): string {
   if (level === 'beginner') return isEs ? 'Principiante' : 'Beginner';
@@ -90,6 +97,7 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
   );
   const [saving, setSaving] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
 
   useEffect(() => {
     void reloadWlAthletesFromApi();
@@ -163,13 +171,10 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
     handleAssign,
   ]);
 
-  const handleRemove = async (assignmentId: string, athleteName: string, athleteProfileId: string) => {
-    const ok = window.confirm(
-      isEs
-        ? `¿Quitar a ${athleteName} de «${program.name}»? El atleta dejará de ver este plan.`
-        : `Remove ${athleteName} from “${program.name}”? They will no longer see this plan.`,
-    );
-    if (!ok) return;
+  const confirmRemove = async () => {
+    if (!pendingRemove) return;
+    const { assignmentId, athleteProfileId } = pendingRemove;
+    setPendingRemove(null);
     setRemovingId(assignmentId);
     try {
       const removed = await removeAssignment(assignmentId);
@@ -185,6 +190,25 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
       setRemovingId(null);
     }
   };
+
+  const removeConfirmModal = (
+    <ConfirmationModal
+      open={pendingRemove != null}
+      title={isEs ? 'Quitar inscrito' : 'Remove enrollment'}
+      message={
+        pendingRemove
+          ? isEs
+            ? `¿Quitar a ${pendingRemove.athleteName} de «${program.name}»? El atleta dejará de ver este plan.`
+            : `Remove ${pendingRemove.athleteName} from “${program.name}”? They will no longer see this plan.`
+          : ''
+      }
+      confirmLabel={isEs ? 'Quitar' : 'Remove'}
+      cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+      danger
+      onCancel={() => setPendingRemove(null)}
+      onConfirm={() => void confirmRemove()}
+    />
+  );
 
   const enrolledCount = program.enrolledAthletes.length;
   const sheetFilters = (Object.keys(FILTER_LABELS) as EnrollmentFilterId[]).filter(
@@ -284,7 +308,12 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
               onToggle={() => toggle(athlete.id)}
               onRemove={
                 enrollment
-                  ? () => void handleRemove(enrollment.assignmentId, athlete.name, athlete.id)
+                  ? () =>
+                      setPendingRemove({
+                        assignmentId: enrollment.assignmentId,
+                        athleteName: athlete.name,
+                        athleteProfileId: athlete.id,
+                      })
                   : undefined
               }
             />
@@ -322,26 +351,34 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
   );
 
   if (!isInline) {
-    return <div className="wl-program-enrollments-panel wl-program-enrollments-panel--sheet">{listContent}</div>;
+    return (
+      <>
+        <div className="wl-program-enrollments-panel wl-program-enrollments-panel--sheet">{listContent}</div>
+        {removeConfirmModal}
+      </>
+    );
   }
 
   return (
-    <section className="wl-program-enrollments-panel wl-program-enrollments-panel--inline" aria-label={isEs ? 'Inscritos en este plan' : 'Enrolled in this plan'}>
-      <button
-        type="button"
-        className="wl-program-enrollments-panel__toggle"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((v) => !v)}
-      >
-        <span className="wl-program-enrollments-panel__toggle-main">
-          <Users size={16} aria-hidden />
-          <strong>{isEs ? 'Inscritos en este plan' : 'Enrolled in this plan'}</strong>
-          <span className="wl-program-enrollments-panel__count">{enrolledCount}</span>
-        </span>
-        {expanded ? <ChevronUp size={18} aria-hidden /> : <ChevronDown size={18} aria-hidden />}
-      </button>
-      {expanded ? <div className="wl-program-enrollments-panel__body">{listContent}</div> : null}
-    </section>
+    <>
+      <section className="wl-program-enrollments-panel wl-program-enrollments-panel--inline" aria-label={isEs ? 'Inscritos en este plan' : 'Enrolled in this plan'}>
+        <button
+          type="button"
+          className="wl-program-enrollments-panel__toggle"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          <span className="wl-program-enrollments-panel__toggle-main">
+            <Users size={16} aria-hidden />
+            <strong>{isEs ? 'Inscritos en este plan' : 'Enrolled in this plan'}</strong>
+            <span className="wl-program-enrollments-panel__count">{enrolledCount}</span>
+          </span>
+          {expanded ? <ChevronUp size={18} aria-hidden /> : <ChevronDown size={18} aria-hidden />}
+        </button>
+        {expanded ? <div className="wl-program-enrollments-panel__body">{listContent}</div> : null}
+      </section>
+      {removeConfirmModal}
+    </>
   );
 };
 

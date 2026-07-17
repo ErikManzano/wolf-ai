@@ -477,13 +477,29 @@
 }
 
 /* ——— Confirmación modal ——— */
-.confirm-modal-btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 38%, var(--color-bg-panel));
-  border-color: var(--color-danger);
+.btn-primary.confirm-modal-btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 86%, #fff);
+  border-color: color-mix(in srgb, var(--color-danger) 70%, #fff);
+  color: #fff;
+  filter: none;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-danger) 38%, transparent);
+  transform: translateY(-1px);
 }
 
-.confirm-modal-btn--danger:active:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 48%, var(--color-bg-panel));
+.btn-primary.confirm-modal-btn--danger:active:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 88%, #000);
+  border-color: color-mix(in srgb, var(--color-danger) 80%, #000);
+  color: #fff;
+  filter: none;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-danger) 28%, transparent);
+  transform: translateY(0);
+}
+
+.btn-primary.confirm-modal-btn--danger:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-danger) 35%, transparent),
+    0 4px 14px color-mix(in srgb, var(--color-danger) 32%, transparent);
 }
 
 /* ——— Inputs focus (complemento) ——— */

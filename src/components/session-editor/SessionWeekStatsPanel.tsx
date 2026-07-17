@@ -2,23 +2,20 @@ import React, { useMemo } from 'react';
 import type { Athlete, Exercise, ProgramWeek } from '../../models/training';
 import { computeWeekAggregateMetrics } from './programWeekStats';
 import {
-  buildWeekScopeKpiCards,
-  ProgramStatsDashboardLayout,
-  ProgramStatsDataTable,
-  ProgramStatsDayCards,
-  ProgramStatsDetailSection,
-  ProgramStatsHorizontalBars,
-  ProgramStatsKpiGrid,
-  ProgramStatsMiniLineChart,
-  ProgramStatsPurposeBlock,
-} from './programStatsShared';
-import {
-  computeSessionExecution,
   computeWeekExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
-import { sessionIntensityRange } from './programStatsVerdict';
-import { sessionPurposeTonnageBreakdown } from './sessionSummaryMetrics';
+import { buildWeekInsights, purposeIntentLine } from './statsInsights';
+import { formatStatsKg } from './statsTonnage';
+import {
+  DistributionBar,
+  ExerciseRanking,
+  InsightCard,
+  MetricCard,
+  SectionCard,
+  StatusBadge,
+  TimelineChart,
+} from './stats-ds';
 
 export interface SessionWeekStatsPanelProps {
   athlete: Athlete;
@@ -32,6 +29,17 @@ export interface SessionWeekStatsPanelProps {
   executionContext?: SessionExecutionContext;
   /** GA-style viewport grid — all widgets visible without page scroll. */
   dashboard?: boolean;
+}
+
+function weekBalanceLabel(dayRows: { tonnage: number }[], isEs: boolean): string {
+  const active = dayRows.filter((d) => d.tonnage > 0);
+  if (active.length < 2) return isEs ? '—' : '—';
+  const avg = active.reduce((sum, row) => sum + row.tonnage, 0) / active.length;
+  const peak = Math.max(...active.map((d) => d.tonnage));
+  const ratio = avg > 0 ? peak / avg : 1;
+  if (ratio >= 1.6) return isEs ? 'Desbalanceado' : 'Unbalanced';
+  if (ratio >= 1.35) return isEs ? 'Moderado' : 'Moderate';
+  return isEs ? 'Equilibrado' : 'Balanced';
 }
 
 export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
@@ -56,141 +64,124 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
     [executionContext, weekData, weekNumber],
   );
 
-  const weekLabel = isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`;
-
-  const weekDays = useMemo(
-    () =>
-      metrics.dayRows.map((day) => {
-        const dayData = weekData?.days.find((d) => d.dayNumber === day.dayNumber);
-        const dayExecution =
-          executionContext?.assignmentId && dayData
-            ? computeSessionExecution(dayData.session, weekNumber, day.dayNumber, executionContext)
-            : null;
-        return {
-          dayNumber: day.dayNumber,
-          label: day.label,
-          tonnage: day.tonnage,
-          exerciseCount: dayData?.session.exercises.length ?? 0,
-          isSelected: day.dayNumber === selectedDay,
-          executionStatus: dayExecution?.status ?? 'none',
-        };
-      }),
-    [metrics.dayRows, weekData, selectedDay, executionContext, weekNumber],
+  const balance = useMemo(
+    () => weekBalanceLabel(metrics.dayRows, isEs),
+    [metrics.dayRows, isEs],
   );
 
-  const intensityRange = useMemo(() => {
-    const blocks = weekData?.days.flatMap((d) => d.session.exercises) ?? [];
-    return sessionIntensityRange(blocks);
-  }, [weekData]);
+  const peakDayKey = useMemo(() => {
+    const active = metrics.dayRows.filter((d) => d.tonnage > 0);
+    if (active.length === 0) return undefined;
+    return active.reduce((best, row) => (row.tonnage > best.tonnage ? row : best), active[0]!).dayNumber;
+  }, [metrics.dayRows]);
 
-  const purposeTonnage = useMemo(() => {
-    const blocks = weekData?.days.flatMap((d) => d.session.exercises) ?? [];
-    return sessionPurposeTonnageBreakdown(blocks, athlete, exercises);
-  }, [weekData, athlete, exercises]);
-
-  const intensityLinePoints = useMemo(
+  const timelinePoints = useMemo(
     () =>
       metrics.dayRows.map((row) => ({
         key: row.dayNumber,
-        label: row.label,
-        value: row.avgPct,
+        label: row.label.replace(/^(Día|Day)\s*/i, 'D'),
+        value: row.tonnage,
       })),
     [metrics.dayRows],
   );
 
-  const kpiCards = buildWeekScopeKpiCards(isEs, {
-    tonnage: metrics.tonnage,
-    avgPct: metrics.avgPct,
-    intensityMin: intensityRange.min,
-    intensityMax: intensityRange.max,
-    sets: metrics.sets,
-    reps: metrics.reps,
-    dayCount: metrics.dayCount,
-    minutes: metrics.minutes,
-    execution: execution
-      ? {
-          completedSets: execution.completedSets,
-          prescribedSets: execution.prescribedSets,
-          completionPct: execution.completionPct,
-        }
-      : null,
-  });
+  const insights = useMemo(
+    () =>
+      buildWeekInsights({
+        isEs,
+        dayRows: metrics.dayRows,
+        purpose: metrics.purpose,
+        avgPct: metrics.avgPct,
+      }),
+    [isEs, metrics.dayRows, metrics.purpose, metrics.avgPct],
+  );
+
+  const intentLine = purposeIntentLine(metrics.purpose, isEs);
 
   return (
     <section
       id="wolf-program-day-panel-stats"
       role="tabpanel"
       aria-labelledby="wolf-program-tab-stats"
-      className={`wolf-program-day-stats wolf-program-day-stats--week wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
+      className={`wolf-program-day-stats wolf-program-day-stats--week wolf-program-day-stats--ds wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
     >
-      <ProgramStatsDashboardLayout
-        dashboard={dashboard}
-        variant="week"
-        kpis={<ProgramStatsKpiGrid cards={kpiCards} />}
-        primary={
-          <ProgramStatsDayCards
-            title={isEs ? `Volumen por día (${weekLabel})` : `Volume by day (${weekLabel})`}
-            days={weekDays}
-            isEs={isEs}
-            onSelectDay={onSelectDay}
+      <div className="wl-stats-ds">
+        <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
+          <MetricCard
+            label={isEs ? 'Volumen semanal' : 'Weekly volume'}
+            value={formatStatsKg(metrics.tonnage)}
+            sub={isEs ? `${metrics.dayCount} días` : `${metrics.dayCount} days`}
+            accent
           />
-        }
-        charts={
-          <>
-            <ProgramStatsMiniLineChart
-              title={isEs ? 'Intensidad por día' : 'Intensity by day'}
-              points={intensityLinePoints}
+          <MetricCard
+            label={isEs ? 'Intensidad' : 'Intensity'}
+            value={metrics.avgPct > 0 ? `${metrics.avgPct}%` : '—'}
+            sub={isEs ? 'Media % 1RM' : 'Avg % 1RM'}
+          />
+          <MetricCard
+            label={isEs ? 'Días' : 'Days'}
+            value={metrics.dayCount > 0 ? metrics.dayCount : '—'}
+            sub={isEs ? 'Programados' : 'Scheduled'}
+          />
+          <MetricCard
+            label={isEs ? 'Completado' : 'Completed'}
+            value={
+              execution ? (
+                <StatusBadge
+                  label={`${execution.completionPct}%`}
+                  tone={execution.status === 'completed' ? 'completed' : execution.status === 'in_progress' ? 'in_progress' : 'pending'}
+                />
+              ) : (
+                '—'
+              )
+            }
+            sub={
+              execution
+                ? isEs
+                  ? `${execution.completedSets}/${execution.prescribedSets} series`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets`
+                : isEs
+                  ? 'Sin atleta asignado'
+                  : 'No assigned athlete'
+            }
+            subTone={execution ? 'success' : 'muted'}
+          />
+          <MetricCard
+            label={isEs ? 'Balance' : 'Balance'}
+            value={balance}
+            sub={isEs ? 'Carga entre días' : 'Load across days'}
+          />
+        </div>
+
+        <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
+          <SectionCard title={isEs ? 'Distribución' : 'Distribution'}>
+            <DistributionBar purpose={metrics.purpose} isEs={isEs} insight={intentLine} />
+          </SectionCard>
+
+          <SectionCard
+            title={isEs ? 'Timeline — Días' : 'Timeline — Days'}
+            subtitle={isEs ? 'Clic para abrir el día' : 'Click to open a day'}
+          >
+            <TimelineChart
+              points={timelinePoints}
               isEs={isEs}
+              selectedKey={selectedDay}
+              peakKey={peakDayKey}
+              onSelect={onSelectDay ? (key) => onSelectDay(Number(key)) : undefined}
+              showValues
+              valueUnit="kg"
             />
-            <ProgramStatsPurposeBlock
-              purpose={metrics.purpose}
-              purposeTonnage={purposeTonnage}
-              avgPct={metrics.avgPct}
-              isEs={isEs}
-              title={isEs ? 'Balance técnica / trabajo / intensidad' : 'Technique / work / intensity balance'}
-            />
-          </>
-        }
-        breakdown={
-          metrics.exerciseVolumes.length > 0 ? (
-            <ProgramStatsHorizontalBars
-              title={isEs ? 'Top ejercicios de la semana' : 'Top exercises this week'}
-              slices={metrics.exerciseVolumes}
-              isEs={isEs}
-              maxSlices={6}
-            />
-          ) : null
-        }
-        detail={
-          metrics.dayRows.length > 0 ? (
-            <ProgramStatsDetailSection title={isEs ? 'Detalle por día' : 'Breakdown by day'}>
-              <ProgramStatsDataTable
-                title=""
-                columns={[
-                  { key: 'day', label: isEs ? 'Día' : 'Day' },
-                  { key: 'volume', label: isEs ? 'Volumen' : 'Volume', align: 'right' },
-                  { key: 'sets', label: isEs ? 'Series' : 'Sets', align: 'right' },
-                  { key: 'reps', label: 'Reps', align: 'right' },
-                  { key: 'pct', label: '% 1RM', align: 'right' },
-                  { key: 'share', label: isEs ? '% sem.' : '% wk', align: 'right' },
-                ]}
-                rows={metrics.dayRows.map((row) => ({
-                  key: String(row.dayNumber),
-                  selected: row.dayNumber === selectedDay,
-                  cells: [
-                    row.label,
-                    `${row.tonnage.toLocaleString()} kg`,
-                    row.sets,
-                    row.reps,
-                    `${row.avgPct}%`,
-                    `${row.sharePct}%`,
-                  ],
-                }))}
-              />
-            </ProgramStatsDetailSection>
-          ) : null
-        }
-      />
+          </SectionCard>
+        </div>
+
+        <SectionCard title={isEs ? 'Carga — Ranking semanal' : 'Load — Weekly ranking'}>
+          <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={6} />
+        </SectionCard>
+
+        <SectionCard title={isEs ? 'Insights Wolf' : 'Wolf Insights'}>
+          <InsightCard insights={insights} isEs={isEs} />
+        </SectionCard>
+      </div>
     </section>
   );
 };

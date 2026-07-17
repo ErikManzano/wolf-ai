@@ -35,12 +35,14 @@ export interface ProgramStatsTableRow {
   selected?: boolean;
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard / SectionCard. */
 export interface ProgramStatsHeaderProps {
   eyebrow: string;
   title: string;
   metrics: ProgramStatsMetric[];
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard / SectionCard. */
 export const ProgramStatsHeader: React.FC<ProgramStatsHeaderProps> = ({
   eyebrow,
   title,
@@ -62,6 +64,7 @@ export const ProgramStatsHeader: React.FC<ProgramStatsHeaderProps> = ({
   </header>
 );
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard. */
 export const ProgramStatsKpiChips: React.FC<{ chips: ProgramStatsChip[] }> = ({ chips }) => {
   if (chips.length === 0) return null;
   return (
@@ -197,6 +200,7 @@ export const ProgramStatsPurposeBlock: React.FC<ProgramStatsPurposeBlockProps> =
   );
 };
 
+/** @deprecated Unused after stats-ds redesign — prefer TimelineChart. */
 export interface ProgramStatsWeekVolumeChartProps {
   days: ProgramStatsDayBar[];
   isEs: boolean;
@@ -204,6 +208,7 @@ export interface ProgramStatsWeekVolumeChartProps {
   onSelectDay?: (dayNumber: number) => void;
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer TimelineChart. */
 export const ProgramStatsWeekVolumeChart: React.FC<ProgramStatsWeekVolumeChartProps> = ({
   days,
   isEs,
@@ -312,6 +317,7 @@ export const ProgramStatsDataTable: React.FC<ProgramStatsDataTableProps> = ({
   );
 };
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard. */
 export function buildStandardKpiChips(
   isEs: boolean,
   metrics: {
@@ -516,14 +522,17 @@ export const ProgramStatsKpiGrid: React.FC<{ cards: ProgramStatsKpiCard[] }> = (
   );
 };
 
+/** @deprecated Unused after stats-ds redesign. */
 const DONUT_COLORS = ['#ff6b1a', '#8b5cf6', '#22d3ee', '#3b82f6', '#f59e0b', '#10b981'];
 
+/** @deprecated Unused after stats-ds redesign — prefer DistributionBar / ExerciseRanking. */
 export interface ProgramStatsDonutSlice {
   label: string;
   tonnage: number;
   pct: number;
 }
 
+/** @deprecated Unused after stats-ds redesign. */
 export function limitDonutSlices(
   slices: ProgramStatsDonutSlice[],
   maxSlices: number,
@@ -553,6 +562,7 @@ export function limitDonutSlices(
   ];
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer DistributionBar / ExerciseRanking. */
 export const ProgramStatsDonutChart: React.FC<{
   title: string;
   centerLabel: string;
@@ -731,6 +741,7 @@ export const ProgramStatsStatusCard: React.FC<{
   );
 };
 
+/** @deprecated Unused after stats-ds redesign. */
 export const ProgramStatsFooterRow: React.FC<{
   summary: React.ReactNode;
   status: React.ReactNode;
@@ -820,6 +831,7 @@ export function formatStatsDuration(minutes: number): string {
   return `${minutes} min`;
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard summary row. */
 export function buildWeekSummaryItems(
   isEs: boolean,
   params: {
@@ -861,6 +873,7 @@ export function buildWeekSummaryItems(
   ];
 }
 
+/** @deprecated Unused after stats-ds redesign — prefer MetricCard summary row. */
 export const ProgramStatsSummaryStrip: React.FC<{
   title: string;
   items: ProgramStatsMetric[];

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 
 const STORAGE_KEY = 'wolf_sidebar_width_v1';
 
-export const SIDEBAR_COMPACT_WIDTH = 44;
+export const SIDEBAR_COMPACT_WIDTH = 56;
 export const SIDEBAR_WIDTH_MIN = 200;
 export const SIDEBAR_WIDTH_MAX = 400;
 export const SIDEBAR_WIDTH_DEFAULT = 250;

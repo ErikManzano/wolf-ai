@@ -15,8 +15,8 @@
   --matrix-accent-line: rgba(249, 115, 22, 0.55);
   --matrix-cyan-soft: rgba(34, 211, 238, 0.07);
   --matrix-violet-soft: rgba(167, 139, 250, 0.06);
-  --matrix-rx: #fb923c;
-  --matrix-load: #34d399;
+  --matrix-rx: #c2410c;
+  --matrix-load: #047857;
   --matrix-text: var(--v2-text);
   --matrix-text-muted: var(--v2-text-secondary);
   --matrix-text-dim: var(--v2-text-muted);
@@ -39,6 +39,20 @@
   gap: 6px;
   flex-shrink: 0;
   padding: 8px 10px;
+}
+
+.wolf-program-matrix-toolbar-anchor:empty {
+  display: none;
+}
+
+.wolf-program-matrix-toolbar--in-head {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  box-shadow: none !important;
 }
 
 .wolf-program-matrix-tool-btn {
@@ -69,7 +83,6 @@
   background: color-mix(in srgb, var(--matrix-accent) 12%, var(--matrix-surface-3));
 }
 
-/* Brand header — visible on screen; export keeps it */
 .wolf-program-matrix-brand {
   display: flex;
   align-items: center;
@@ -81,6 +94,17 @@
     linear-gradient(90deg, color-mix(in srgb, var(--matrix-accent) 14%, transparent), transparent 42%),
     linear-gradient(180deg, var(--matrix-surface-2) 0%, var(--matrix-surface) 100%);
   position: relative;
+}
+
+/* Hidden in editor UI; shown only in PNG/PDF export clones */
+.wolf-program-matrix-brand.wolf-program-matrix-brand--export-only,
+.wolf-program-matrix-export-footer.wolf-program-matrix-export-footer--export-only {
+  display: none;
+}
+
+[data-matrix-export-mount] .wolf-program-matrix-brand.wolf-program-matrix-brand--export-only,
+[data-matrix-export-mount] .wolf-program-matrix-export-footer.wolf-program-matrix-export-footer--export-only {
+  display: flex;
 }
 
 .wolf-program-matrix-brand::before {
@@ -144,7 +168,7 @@
   flex-shrink: 0;
   padding: 7px 14px;
   border-top: 1px solid var(--matrix-border-soft);
-  background: linear-gradient(180deg, var(--matrix-surface) 0%, #0c0e14 100%);
+  background: linear-gradient(180deg, var(--matrix-surface) 0%, var(--matrix-surface-2) 100%);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -184,23 +208,39 @@
 }
 
 .wolf-program-matrix-day-col--tone-0 {
-  background: linear-gradient(180deg, #1a1714 0%, #12151c 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f97316 12%, var(--matrix-surface-2)) 0%,
+    var(--matrix-surface) 100%
+  );
   border-bottom-color: #f97316;
 }
 
 .wolf-program-matrix-day-col--tone-1 {
-  background: linear-gradient(180deg, #111a1c 0%, #12151c 100%);
-  border-bottom-color: #22d3ee;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #0891b2 10%, var(--matrix-surface-2)) 0%,
+    var(--matrix-surface) 100%
+  );
+  border-bottom-color: #0891b2;
 }
 
 .wolf-program-matrix-day-col--tone-2 {
-  background: linear-gradient(180deg, #16141f 0%, #12151c 100%);
-  border-bottom-color: #a78bfa;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #7c3aed 10%, var(--matrix-surface-2)) 0%,
+    var(--matrix-surface) 100%
+  );
+  border-bottom-color: #7c3aed;
 }
 
 .wolf-program-matrix-day-col--tone-3 {
-  background: linear-gradient(180deg, #111a16 0%, #12151c 100%);
-  border-bottom-color: #34d399;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #059669 10%, var(--matrix-surface-2)) 0%,
+    var(--matrix-surface) 100%
+  );
+  border-bottom-color: #059669;
 }
 
 .wolf-program-matrix-day-col.is-active-day {
@@ -209,23 +249,23 @@
 }
 
 .wolf-program-matrix-day-col--tone-0.is-active-day {
-  background: linear-gradient(180deg, #241a14 0%, #12151c 100%);
-  color: #fb923c;
+  background: color-mix(in srgb, #f97316 16%, var(--matrix-surface));
+  color: #c2410c;
 }
 
 .wolf-program-matrix-day-col--tone-1.is-active-day {
-  background: linear-gradient(180deg, #122022 0%, #12151c 100%);
-  color: #67e8f9;
+  background: color-mix(in srgb, #0891b2 14%, var(--matrix-surface));
+  color: #0e7490;
 }
 
 .wolf-program-matrix-day-col--tone-2.is-active-day {
-  background: linear-gradient(180deg, #1c1728 0%, #12151c 100%);
-  color: #c4b5fd;
+  background: color-mix(in srgb, #7c3aed 14%, var(--matrix-surface));
+  color: #6d28d9;
 }
 
 .wolf-program-matrix-day-col--tone-3.is-active-day {
-  background: linear-gradient(180deg, #122019 0%, #12151c 100%);
-  color: #6ee7b7;
+  background: color-mix(in srgb, #059669 14%, var(--matrix-surface));
+  color: #047857;
 }
 
 .wolf-program-matrix-week-row {
@@ -289,99 +329,99 @@ tr.is-active-week .wolf-program-matrix-week-load {
 }
 
 .wolf-program-matrix-cell--tone-0 {
-  background: #100e0c;
+  background: color-mix(in srgb, #f97316 4%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-1 {
-  background: #0c1011;
+  background: color-mix(in srgb, #0891b2 4%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-2 {
-  background: #0e0c12;
+  background: color-mix(in srgb, #7c3aed 4%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-3 {
-  background: #0c110f;
+  background: color-mix(in srgb, #059669 4%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-table tbody tr:nth-child(even) .wolf-program-matrix-cell--tone-0 {
-  background: #14110f;
+  background: color-mix(in srgb, #f97316 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-table tbody tr:nth-child(even) .wolf-program-matrix-cell--tone-1 {
-  background: #101516;
+  background: color-mix(in srgb, #0891b2 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-table tbody tr:nth-child(even) .wolf-program-matrix-cell--tone-2 {
-  background: #12101a;
+  background: color-mix(in srgb, #7c3aed 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-table tbody tr:nth-child(even) .wolf-program-matrix-cell--tone-3 {
-  background: #101613;
+  background: color-mix(in srgb, #059669 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-cell--tone-0 .wolf-program-matrix-exercise {
   border-left-color: #f97316;
-  background: linear-gradient(90deg, #1c1510 0%, #14110f 100%);
+  background: color-mix(in srgb, #f97316 8%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-cell--tone-1 .wolf-program-matrix-exercise {
-  border-left-color: #22d3ee;
-  background: linear-gradient(90deg, #0f1719 0%, #101516 100%);
+  border-left-color: #0891b2;
+  background: color-mix(in srgb, #0891b2 8%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-cell--tone-2 .wolf-program-matrix-exercise {
-  border-left-color: #a78bfa;
-  background: linear-gradient(90deg, #15121c 0%, #12101a 100%);
+  border-left-color: #7c3aed;
+  background: color-mix(in srgb, #7c3aed 8%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-cell--tone-3 .wolf-program-matrix-exercise {
-  border-left-color: #34d399;
-  background: linear-gradient(90deg, #0f1613 0%, #101613 100%);
+  border-left-color: #059669;
+  background: color-mix(in srgb, #059669 8%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-cell--tone-0 .wolf-program-matrix-exercise-rx {
-  color: #fb923c;
+  color: #c2410c;
 }
 
 .wolf-program-matrix-cell--tone-1 .wolf-program-matrix-exercise-rx {
-  color: #67e8f9;
+  color: #0e7490;
 }
 
 .wolf-program-matrix-cell--tone-2 .wolf-program-matrix-exercise-rx {
-  color: #c4b5fd;
+  color: #6d28d9;
 }
 
 .wolf-program-matrix-cell--tone-3 .wolf-program-matrix-exercise-rx {
-  color: #6ee7b7;
+  color: #047857;
 }
 
 .wolf-program-matrix-cell.is-empty {
-  background: #08090d !important;
+  background: color-mix(in srgb, var(--matrix-surface) 65%, var(--matrix-bg)) !important;
 }
 
 .wolf-program-matrix-cell.is-selected {
-  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.45);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--matrix-accent) 45%, transparent);
 }
 
 .wolf-program-matrix-cell--tone-0.is-selected {
-  background: #1a1410;
+  background: color-mix(in srgb, #f97316 12%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-1.is-selected {
-  background: #101a1c;
+  background: color-mix(in srgb, #0891b2 12%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-2.is-selected {
-  background: #16121f;
+  background: color-mix(in srgb, #7c3aed 12%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell--tone-3.is-selected {
-  background: #101a15;
+  background: color-mix(in srgb, #059669 12%, var(--matrix-bg));
 }
 
 .wolf-program-matrix-cell-hit:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--matrix-accent) 5%, transparent);
 }
 
 .wolf-program-matrix-exercise {
@@ -418,8 +458,21 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 /* Grid matrix layout — fluid day columns; fit all days on desktop */
 .wolf-program-matrix-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
   scroll-padding-left: var(--matrix-week-col, 88px);
   scroll-padding-top: 2px;
+}
+
+.wolf-program-matrix--expanded {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .wolf-program-matrix-table--grid {
@@ -501,13 +554,6 @@ tr.is-active-week .wolf-program-matrix-week-load {
   overflow-wrap: anywhere;
 }
 
-@media (min-width: 1024px) {
-  .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-}
-
 @media (max-width: 1023px) {
   .wolf-program-matrix-table--grid {
     min-width: calc(
@@ -516,17 +562,17 @@ tr.is-active-week .wolf-program-matrix-week-load {
   }
 
   .wolf-program-matrix--expanded {
-    overflow: visible;
+    overflow: hidden;
+    max-height: min(72vh, 720px);
   }
 
   .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0;
     max-height: none;
-    flex: none;
-    min-height: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+    overscroll-behavior: contain;
     touch-action: pan-x pan-y;
   }
 
@@ -587,19 +633,19 @@ tr.is-active-week .wolf-program-matrix-week-load {
 }
 
 .wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-0 {
-  background: #14110f;
+  background: color-mix(in srgb, #f97316 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-1 {
-  background: #101516;
+  background: color-mix(in srgb, #0891b2 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-2 {
-  background: #12101a;
+  background: color-mix(in srgb, #7c3aed 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-week-line.is-alt-row .wolf-program-matrix-cell--tone-3 {
-  background: #101613;
+  background: color-mix(in srgb, #059669 7%, var(--matrix-surface));
 }
 
 .wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-row {
@@ -688,5 +734,46 @@ tr.is-active-week .wolf-program-matrix-week-load {
     font-size: 0.66rem;
     gap: 4px;
   }
+}
+
+/* Dark theme — brighter accents on dark surfaces */
+:root[data-theme='dark'] .wolf-program-matrix {
+  --matrix-rx: #fb923c;
+  --matrix-load: #34d399;
+  --matrix-accent-soft: rgba(249, 115, 22, 0.14);
+  --matrix-cyan-soft: rgba(34, 211, 238, 0.08);
+  --matrix-violet-soft: rgba(167, 139, 250, 0.08);
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-day-col--tone-0.is-active-day {
+  color: #fb923c;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-day-col--tone-1.is-active-day {
+  color: #67e8f9;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-day-col--tone-2.is-active-day {
+  color: #c4b5fd;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-day-col--tone-3.is-active-day {
+  color: #6ee7b7;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-cell--tone-0 .wolf-program-matrix-exercise-rx {
+  color: #fb923c;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-cell--tone-1 .wolf-program-matrix-exercise-rx {
+  color: #67e8f9;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-cell--tone-2 .wolf-program-matrix-exercise-rx {
+  color: #c4b5fd;
+}
+
+:root[data-theme='dark'] .wolf-program-matrix-cell--tone-3 .wolf-program-matrix-exercise-rx {
+  color: #6ee7b7;
 }
 

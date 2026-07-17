@@ -6,16 +6,27 @@
   overflow-x: hidden;
 }
 
-/* Vistas largas (motor WL, plan atleta): crece el panel y el scroll lo hace .workspace-area (evita recortes). */
+/* Vistas largas (motor WL, plan atleta): crece el panel y el scroll lo hace .workspace-area (evita recortes).
+   Excluye la vista Tabla: ahí el scroll vive dentro de la matriz. */
 .central-panel:has(.wolf-engine),
 .central-panel:has(.wl-programs-hub),
-.central-panel:has(.wl-programs-panel),
+.central-panel:has(.wl-programs-panel):not(:has(.wolf-program-customize-layout--table)),
 .central-panel:has(.prx-page),
 .central-panel:has(.wolf-athlete-plan),
 .central-panel:has(.wolf-ei),
 .central-panel:has(.wl-account-view) {
   height: auto;
   min-height: 100%;
+}
+
+/* Tabla del editor: altura acotada para scroll interno de la matriz */
+.central-panel:has(.wolf-program-customize-layout--table) {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header {

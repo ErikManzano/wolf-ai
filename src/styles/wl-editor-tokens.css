@@ -21,8 +21,10 @@
   --wl-radius-pill: 999px;
 
   /* Motion */
-  --wl-motion-fast: 150ms;
+  --wl-motion-fast: 160ms;
+  --wl-motion-med: 240ms;
   --wl-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --wl-ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Typography */
   --wl-editor-title: 1.75rem;
@@ -68,23 +70,51 @@
 
 /* ── 2. Title hierarchy ── */
 
-.wl-programs-editor .wl-editor-title-input,
-.wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-input {
+.wl-programs-editor .wl-editor-title-input {
   font-size: var(--wl-editor-title);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
+  color: var(--color-text-primary);
+  -webkit-text-fill-color: var(--color-text-primary);
+}
+
+/* Sticky header title — compact editable field (not hero-sized) */
+.wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-input {
+  font-size: 0.84rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.wl-programs-editor .wl-editor-title-input::placeholder {
+  color: var(--color-text-muted);
+  -webkit-text-fill-color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.wl-programs-editor .wl-editor-title-icon {
+  color: var(--color-text-secondary);
+}
+
+.wl-programs-editor .wl-editor-title-counter {
+  color: var(--color-text-muted);
 }
 
 .wl-programs-editor .wl-editor-title-wrap {
   border-radius: var(--wl-radius-md);
   border-color: var(--wl-editor-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-panel) 40%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 88%, var(--color-bg-secondary));
+}
+
+.wl-programs-editor .wl-editor-title-wrap:hover:not(.wl-editor-title-wrap--readonly) {
+  border-color: color-mix(in srgb, var(--color-border) 80%, var(--color-text-muted));
+  background: var(--color-bg-panel);
 }
 
 .wl-programs-editor .wl-editor-title-wrap--focused {
   border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  background: var(--color-bg-panel);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
@@ -229,7 +259,7 @@
   padding: 3px;
   gap: 0;
   border-radius: var(--wl-radius-md);
-  border: none;
+  border: 1px solid var(--wl-editor-border-subtle);
   background: var(--wl-editor-segment-bg);
 }
 
@@ -244,18 +274,20 @@
   background: transparent;
   transition:
     color var(--wl-motion-fast) var(--wl-ease-out),
-    background var(--wl-motion-fast) var(--wl-ease-out);
+    background var(--wl-motion-fast) var(--wl-ease-out),
+    box-shadow var(--wl-motion-fast) var(--wl-ease-out);
 }
 
 .wl-programs-editor .wolf-program-stats-scope__btn:hover:not(.is-active) {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, #fafafa 4%, transparent);
+  background: color-mix(in srgb, var(--color-bg-hover) 70%, transparent);
 }
 
+/* Neutral active — orange accent is reserved for day chips */
 .wl-programs-editor .wolf-program-stats-scope__btn.is-active {
-  color: #0a0a0a;
-  background: var(--color-accent);
-  box-shadow: none;
+  color: var(--color-text-primary);
+  background: var(--color-bg-panel);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
 }
 
 /* ── 5. Toolbar — tertiary icon actions ── */
@@ -580,11 +612,13 @@
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__idx-num {
   border-radius: var(--wl-radius-sm);
-  border: 1px solid var(--wl-editor-border-subtle);
+  border: 0;
   background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--wl-editor-label);
-  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td.wolf-se-spreadsheet__metric {
@@ -932,59 +966,118 @@
   border: 1px solid var(--wl-editor-border-subtle);
   border-radius: var(--wl-radius-lg);
   background: var(--color-bg-panel);
-  box-shadow: none;
+  box-shadow: var(--v2-shadow-sm, none);
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-toolbar {
   padding: var(--wl-space-2) var(--wl-space-3);
   gap: var(--wl-space-2);
   border-bottom: 1px solid var(--wl-editor-border-subtle);
-  background: transparent;
+  background: var(--color-bg-secondary);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn {
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-brand {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 42%),
+    var(--color-bg-secondary);
+  border-bottom-color: var(--wl-editor-border-subtle);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-brand__title,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-brand__wolf {
+  color: var(--color-text-primary);
+}
+
+.wl-programs-editor .wolf-program-matrix-toolbar--in-head,
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-matrix-toolbar--in-head {
+  gap: 6px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.wl-programs-editor .wolf-program-matrix-tool-btn,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn,
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-matrix-tool-btn {
   min-height: 34px;
   padding: var(--wl-space-2) var(--wl-space-3);
   border-radius: var(--wl-radius-sm);
   border: 1px solid var(--wl-editor-border-subtle);
-  background: transparent;
-  color: var(--color-text-muted);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
   font-size: var(--wl-editor-label);
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.05);
   transition:
     border-color var(--wl-motion-fast) var(--wl-ease-out),
     color var(--wl-motion-fast) var(--wl-ease-out),
     background var(--wl-motion-fast) var(--wl-ease-out);
 }
 
-.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn:hover:not(:disabled) {
+.wl-programs-editor .wolf-program-matrix-tool-btn:hover:not(:disabled),
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn:hover:not(:disabled),
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-matrix-tool-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, #fafafa 4%, transparent);
-  border-color: color-mix(in srgb, var(--color-border) 75%, transparent);
+  background: var(--color-bg-hover);
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+}
+
+.wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-matrix-toolbar--in-head .wolf-program-matrix-tool-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.72rem;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-cell {
   padding: var(--wl-space-2);
-  border-color: color-mix(in srgb, var(--matrix-border, #2a3140) 40%, transparent);
+  border-color: var(--wl-editor-border-subtle);
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-day-col.is-active-day {
-  background: var(--color-accent) !important;
-  color: #0a0a0a !important;
-  box-shadow: none;
+  box-shadow: inset 0 -2px 0 currentColor;
 }
 
-.wl-programs-editor .wl-programs-embedded-plan tr.is-active-week .wolf-program-matrix-week-row {
-  background: color-mix(in srgb, var(--color-accent) 14%, var(--matrix-surface, #12151c));
+.wl-programs-editor .wl-programs-embedded-plan tr.is-active-week .wolf-program-matrix-week-row,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-row {
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-secondary));
 }
 
-.wl-programs-editor .wl-programs-embedded-plan tr.is-active-week .wolf-program-matrix-week-title {
+.wl-programs-editor .wl-programs-embedded-plan tr.is-active-week .wolf-program-matrix-week-title,
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-week-line.is-active-week .wolf-program-matrix-week-title {
   color: var(--color-accent);
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-export-footer {
   font-size: var(--wl-editor-label);
   color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border-top-color: var(--wl-editor-border-subtle);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-hint {
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border-top-color: var(--wl-editor-border-subtle);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-scroll {
+  overflow: auto;
+  min-height: 0;
+  flex: 1 1 0;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix--expanded {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── 12. Statistics panels ── */
@@ -1073,6 +1166,99 @@
   gap: var(--wl-space-2);
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar {
+  padding: var(--wl-space-2) 0 var(--wl-space-3);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  column-gap: var(--wl-space-3);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope {
+  width: min(100%, 300px);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar__center .wolf-day-tabs-strip {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete {
+  max-width: 260px;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete-label {
+  font-size: var(--wl-editor-label);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 140px;
+  width: 100%;
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  height: 38px;
+  padding: 0 32px 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--wl-editor-border-subtle);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  color-scheme: inherit;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  transition:
+    border-color var(--wl-motion-fast) var(--wl-ease-out),
+    background var(--wl-motion-fast) var(--wl-ease-out),
+    box-shadow var(--wl-motion-fast) var(--wl-ease-out);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  background: var(--color-bg-hover);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:disabled {
+  opacity: 0.72;
+  cursor: default;
+  background: var(--wl-editor-segment-bg);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select option {
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+}
+
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-chevron {
+  position: absolute;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  color: var(--color-text-secondary);
+}
+
 /* ── 13. Global inputs & icon sizing ── */
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-num-compact {
@@ -1116,29 +1302,102 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .wl-programs-editor .wolf-program-stats-scope__btn:hover:not(.is-active),
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover td,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-tool-btn:hover:not(:disabled) {
-    transform: scale(1.01);
+    transform: translateY(-1px);
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block {
-    transition: transform var(--wl-motion-fast) var(--wl-ease-out);
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td {
+    transition:
+      background-color var(--wl-motion-fast) var(--wl-ease-soft),
+      border-color var(--wl-motion-fast) var(--wl-ease-soft),
+      box-shadow var(--wl-motion-fast) var(--wl-ease-soft);
   }
 
   .wl-programs-editor .wolf-program-stats-scope__btn,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card,
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tab {
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tab,
+  .wl-programs-editor .wolf-program-customize-tab,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-trigger,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__icon-btn,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__blocks-toggle,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-autocomplete-input-wrap {
     transition:
-      color var(--wl-motion-fast) var(--wl-ease-out),
-      background var(--wl-motion-fast) var(--wl-ease-out),
-      box-shadow var(--wl-motion-fast) var(--wl-ease-out),
-      transform var(--wl-motion-fast) var(--wl-ease-out);
+      color var(--wl-motion-fast) var(--wl-ease-soft),
+      background-color var(--wl-motion-fast) var(--wl-ease-soft),
+      border-color var(--wl-motion-fast) var(--wl-ease-soft),
+      box-shadow var(--wl-motion-fast) var(--wl-ease-soft),
+      transform var(--wl-motion-fast) var(--wl-ease-soft),
+      opacity var(--wl-motion-fast) var(--wl-ease-soft);
   }
 
   .wl-programs-editor .wolf-program-customize-tab::after {
     transition:
-      opacity var(--wl-motion-fast) var(--wl-ease-out),
-      transform var(--wl-motion-fast) var(--wl-ease-out);
+      opacity var(--wl-motion-fast) var(--wl-ease-soft),
+      transform var(--wl-motion-fast) var(--wl-ease-soft);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tab:hover:not(.active),
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card:hover:not(.active) {
+    transform: translateY(-1px);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-trigger:hover,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__icon-btn:hover:not(:disabled),
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__blocks-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__blocks-toggle svg,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__type-chevron {
+    transition: transform var(--wl-motion-med) var(--wl-ease-soft);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--detail .wolf-se-spreadsheet__detail-panel {
+    animation: wl-editor-panel-in var(--wl-motion-med) var(--wl-ease-soft);
+  }
+
+  .wl-programs-editor .wl-programs-editor-stage {
+    animation: wl-editor-stage-in var(--wl-motion-med) var(--wl-ease-soft);
+  }
+
+  .wl-programs-editor .wl-programs-editor-stage .wolf-program-day-board__head {
+    animation: wl-editor-fade-up var(--wl-motion-med) var(--wl-ease-soft) both;
+    animation-delay: 20ms;
+  }
+
+  /* Opacity only — transform on this wrap breaks exercise drag coordinates. */
+  .wl-programs-editor .wl-programs-editor-stage .wolf-se-spreadsheet__table-wrap,
+  .wl-programs-editor .wl-programs-editor-stage .wolf-program-day-board__body {
+    animation: wl-editor-stage-in var(--wl-motion-med) var(--wl-ease-soft) both;
+    animation-delay: 60ms;
+  }
+
+  @keyframes wl-editor-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes wl-editor-stage-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes wl-editor-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
@@ -1156,10 +1415,6 @@
    Wolf V2 reference composition — desktop editor
    ============================================================================= */
 @media (min-width: 1025px) {
-  .app-container--program-editor {
-    --sidebar-compact-width: 44px;
-  }
-
   .app-container--program-editor .wl-programs-editor {
     --v2-canvas: #f7f7f5;
     --v2-surface: #ffffff;
@@ -1183,12 +1438,61 @@
   }
 
   .app-container--program-editor .wl-programs-editor-stage {
-    align-items: center;
+    align-items: stretch;
+  }
+
+  .app-container--program-editor .wl-programs-editor-stage:has(.wolf-program-customize-layout--table) {
+    align-items: stretch;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .app-container--program-editor .wl-programs-editor-stage > .wl-programs-embedded-plan {
     width: min(1280px, 100%);
+    max-width: 100%;
     margin-inline: auto;
+    min-height: 0;
+  }
+
+  .app-container--program-editor .wl-programs-editor-stage > .wl-programs-embedded-plan:has(.wolf-program-customize-layout--table) {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Table view: flush under sticky head — no canvas gray gutter */
+  .app-container--program-editor .wl-programs-panel.wl-programs-editor:has(.wolf-program-customize-layout--table) {
+    padding: 0;
+    background: var(--v2-surface);
+  }
+
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wl-programs-editor-sticky-head {
+    margin: 0;
+  }
+
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wl-programs-editor-body,
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wl-programs-editor-stage,
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wl-programs-customize-wrap,
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wolf-program-plan,
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wolf-program-customize-layout--table,
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wolf-program-customize-panel--table {
+    gap: 0;
+    padding: 0;
+    margin: 0;
+    background: var(--v2-surface);
+  }
+
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wolf-program-matrix--expanded {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .app-container--program-editor .wl-programs-editor:has(.wolf-program-customize-layout--table) .wolf-program-matrix-hint {
+    display: none;
   }
 
   .wl-programs-editor--sticky-head .wl-programs-editor-sticky-head {
@@ -1228,20 +1532,65 @@
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-title {
     order: 2;
-    width: min(260px, 35vw);
+    width: min(220px, 28vw);
+    min-width: 120px;
   }
 
-  .wl-programs-editor-sticky-title .wl-editor-title-wrap {
-    min-height: 30px;
-    padding: 2px 6px;
-    border-color: transparent;
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap {
+    min-height: 28px;
+    height: 28px;
+    padding: 0 8px 0 6px;
+    gap: 5px;
+    border: 1px solid transparent;
     border-radius: 6px;
     background: transparent;
+    box-shadow: none;
   }
 
-  .wl-programs-editor-sticky-title .wl-editor-title-input {
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap:hover:not(.wl-editor-title-wrap--readonly) {
+    border-color: var(--v2-border);
+    background: var(--v2-surface-subtle);
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap--focused {
+    border-color: color-mix(in srgb, var(--v2-accent) 35%, var(--v2-border));
+    background: var(--v2-surface);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--v2-accent) 12%, transparent);
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-input {
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--v2-text);
+    -webkit-text-fill-color: var(--v2-text);
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-input::placeholder {
+    color: var(--color-text-muted);
+    -webkit-text-fill-color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-icon {
+    color: var(--color-text-muted);
+    width: 12px;
+    height: 12px;
+    opacity: 0.75;
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap:hover:not(.wl-editor-title-wrap--readonly) .wl-editor-title-icon,
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap--focused .wl-editor-title-icon {
+    color: var(--v2-accent);
+    opacity: 1;
+    transform: none;
+  }
+
+  .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-counter {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    padding-left: 4px;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
@@ -1267,6 +1616,21 @@
     height: 56px;
     width: calc(100% + 36px);
     margin: 0 -18px;
+  }
+
+  /* Table view: no week/day chrome — collapse empty third row */
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor:empty {
+    display: none;
+    height: 0;
+    width: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .wl-programs-editor-sticky-head--unified:has(.wl-programs-editor-chrome-anchor:empty) {
+    --wl-programs-editor-chrome-height: 80px;
+    height: 80px;
+    grid-template-rows: 40px 40px 0;
   }
 
   .wl-programs-editor-chrome-anchor .wolf-program-day-board__head {
@@ -1515,6 +1879,64 @@
     background: #f4510b !important;
   }
 
+  /* Stats scope: neutral segment (no orange — reserved for day chips) */
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope {
+    height: 38px;
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 2px;
+    border: 1px solid #dedbd7;
+    border-radius: 9px;
+    background: var(--v2-surface-subtle);
+    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope__btn {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #57534e;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope__btn:hover:not(.is-active) {
+    color: var(--v2-text);
+    background: color-mix(in srgb, var(--v2-surface) 70%, transparent);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope__btn.is-active {
+    color: var(--v2-text);
+    background: var(--v2-surface);
+    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.08);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select {
+    height: 38px;
+    min-height: 38px;
+    border: 1px solid #dedbd7;
+    border-radius: 9px;
+    background: var(--v2-surface);
+    color: var(--v2-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:hover:not(:disabled) {
+    border-color: #d6d3d1;
+    background: var(--v2-surface-subtle);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:focus-visible {
+    border-color: color-mix(in srgb, var(--v2-accent) 45%, var(--v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--v2-accent) 18%, transparent);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-chevron {
+    color: #78716c;
+  }
+
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tab-add,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-program-nav-day-remove--strip {
     flex: 0 0 36px !important;
@@ -1611,7 +2033,68 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-idx {
-    width: 36px;
+    width: 48px;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__col-idx {
+    width: 48px;
+    min-width: 48px;
+    overflow: visible;
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__idx-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__drag {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    opacity: 0.7;
+    touch-action: none;
+    cursor: grab;
+    pointer-events: auto;
+    z-index: 2;
+    border-radius: 7px;
+    color: #78716c;
+    transition:
+      opacity var(--wl-motion-fast) var(--wl-ease-soft),
+      background-color var(--wl-motion-fast) var(--wl-ease-soft),
+      color var(--wl-motion-fast) var(--wl-ease-soft),
+      transform var(--wl-motion-fast) var(--wl-ease-soft);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__drag svg {
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block:hover .wolf-se-spreadsheet__drag,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__drag:hover,
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__drag:focus-visible {
+    opacity: 1;
+    color: #f4510b;
+    background: color-mix(in srgb, #f4510b 10%, transparent);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__drag:active {
+    cursor: grabbing;
+    transform: scale(0.96);
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__tbody--sortable[data-is-dragging='true'] .wolf-se-spreadsheet__row--block td {
+    background: #fffaf5 !important;
+    border-bottom-color: transparent;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-type {
@@ -1654,9 +2137,17 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__idx-num {
+    min-width: 1.4rem;
+    height: auto;
+    padding: 0;
     border: 0;
+    border-radius: 0;
     background: transparent;
-    font-size: 0.68rem;
+    color: #1c1917;
+    font-size: 0.875rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__blocks-toggle {

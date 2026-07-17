@@ -105,6 +105,7 @@ export function SpreadsheetDragGrip({ isEs, onPointerDown, disabled }: Spreadshe
       className="wolf-se-spreadsheet__drag"
       aria-label={isEs ? 'Arrastrar para reordenar' : 'Drag to reorder'}
       onPointerDown={onPointerDown}
+      onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
       }}

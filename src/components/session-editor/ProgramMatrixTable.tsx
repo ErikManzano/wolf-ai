@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FileImage, FileText, Maximize2, Minimize2, X } from 'lucide-react';
@@ -31,6 +31,8 @@ export interface ProgramMatrixTableProps {
   expanded?: boolean;
   exportTitle?: string;
   enableViewportTools?: boolean;
+  /** When set, Expand/PNG/PDF tools render into this element instead of above the table. */
+  toolbarPortalId?: string | null;
   onSelectCell: (weekNumber: number, dayNumber: number) => void;
   onSwapCells?: (from: ProgramDaySlot, to: ProgramDaySlot) => void;
 }
@@ -352,13 +354,28 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
   expanded = false,
   exportTitle,
   enableViewportTools = true,
+  toolbarPortalId = null,
   onSelectCell,
   onSwapCells,
 }) => {
   const { pushAlert } = useWolfAlert();
   const [fullscreen, setFullscreen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
   const matrixRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!toolbarPortalId) {
+      setToolbarPortalNode(null);
+      return;
+    }
+    const resolve = () => document.getElementById(toolbarPortalId);
+    const found = resolve();
+    setToolbarPortalNode(found);
+    if (found) return;
+    const frame = requestAnimationFrame(() => setToolbarPortalNode(resolve()));
+    return () => cancelAnimationFrame(frame);
+  }, [toolbarPortalId]);
 
   const title =
     exportTitle?.trim() || program.name?.trim() || (isEs ? 'programa' : 'program');
@@ -419,20 +436,18 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
   };
 
   const exportChrome = (
-    <>
-      <div className="wolf-program-matrix-brand">
-        <div className="wolf-program-matrix-brand__mark" aria-hidden>
-          <span className="wolf-program-matrix-brand__wolf">Wolf</span>
-          <span className="wolf-program-matrix-brand__ai">AI</span>
-        </div>
-        <span className="wolf-program-matrix-brand__divider" aria-hidden />
-        <h2 className="wolf-program-matrix-brand__title">{title}</h2>
+    <div className="wolf-program-matrix-brand wolf-program-matrix-brand--export-only">
+      <div className="wolf-program-matrix-brand__mark" aria-hidden>
+        <span className="wolf-program-matrix-brand__wolf">Wolf</span>
+        <span className="wolf-program-matrix-brand__ai">AI</span>
       </div>
-    </>
+      <span className="wolf-program-matrix-brand__divider" aria-hidden />
+      <h2 className="wolf-program-matrix-brand__title">{title}</h2>
+    </div>
   );
 
   const exportFooter = (
-    <div className="wolf-program-matrix-export-footer" aria-hidden>
+    <div className="wolf-program-matrix-export-footer wolf-program-matrix-export-footer--export-only" aria-hidden>
       <span className="wolf-program-matrix-export-footer__site">wolf.ai</span>
       <span>
         {isEs ? 'Inteligencia de entrenamiento olímpico' : 'Olympic weightlifting training intelligence'}
@@ -440,8 +455,13 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
     </div>
   );
 
+  const toolbarInHead = Boolean(toolbarPortalNode);
   const toolbar = enableViewportTools ? (
-    <div className="wolf-program-matrix-toolbar" role="toolbar" aria-label={isEs ? 'Herramientas de tabla' : 'Table tools'}>
+    <div
+      className={`wolf-program-matrix-toolbar${toolbarInHead ? ' wolf-program-matrix-toolbar--in-head' : ''}`}
+      role="toolbar"
+      aria-label={isEs ? 'Herramientas de tabla' : 'Table tools'}
+    >
       <button
         type="button"
         className="wolf-program-matrix-tool-btn"
@@ -449,6 +469,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         disabled={exporting || fullscreen}
         aria-label={isEs ? 'Pantalla completa' : 'Full screen'}
         title={isEs ? 'Pantalla completa' : 'Full screen'}
+        data-wl-tooltip={isEs ? 'Pantalla completa' : 'Full screen'}
       >
         <Maximize2 size={16} aria-hidden />
         <span>{isEs ? 'Expandir' : 'Expand'}</span>
@@ -460,6 +481,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         disabled={exporting}
         aria-label={isEs ? 'Exportar imagen' : 'Export image'}
         title={isEs ? 'Exportar PNG' : 'Export PNG'}
+        data-wl-tooltip={isEs ? 'Exportar PNG' : 'Export PNG'}
       >
         <FileImage size={16} aria-hidden />
         <span>{isEs ? 'Imagen' : 'Image'}</span>
@@ -471,12 +493,16 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         disabled={exporting}
         aria-label={isEs ? 'Exportar PDF' : 'Export PDF'}
         title={isEs ? 'Exportar PDF' : 'Export PDF'}
+        data-wl-tooltip={isEs ? 'Exportar PDF' : 'Export PDF'}
       >
         <FileText size={16} aria-hidden />
         <span>PDF</span>
       </button>
     </div>
   ) : null;
+
+  const toolbarPortaled =
+    toolbar && toolbarPortalNode ? createPortal(toolbar, toolbarPortalNode) : null;
 
   const matrixBodyProps = {
     program,
@@ -496,7 +522,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
       role="region"
       aria-label={isEs ? 'Vista general del plan' : 'Plan overview'}
     >
-      {toolbar}
+      {toolbarPortalNode ? null : toolbar}
       <div
         ref={!fullscreen ? matrixRef : undefined}
         data-matrix-export-root
@@ -514,6 +540,7 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
 
   return (
     <>
+      {toolbarPortaled}
       {!fullscreen ? matrixPanel : null}
       {fullscreen
         ? createPortal(

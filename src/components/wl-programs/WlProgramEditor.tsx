@@ -607,6 +607,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 customizeChromePortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_CHROME_PORTAL_ID : null}
                 customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
                 coachProgramId={programId}
+                enrolledAthletes={coachProgram.enrolledAthletes}
                 programSyncState={syncState}
                 lastSavedAt={lastSavedAt}
                 onRetryProgramSave={handleRetrySave}

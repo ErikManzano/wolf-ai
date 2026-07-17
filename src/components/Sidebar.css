@@ -242,8 +242,8 @@
 }
 
 .sidebar.compact {
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .sidebar.compact .logo h2,
@@ -317,129 +317,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media (min-width: 1025px) {
-  .app-container--program-editor .sidebar.compact {
-    padding-inline: 7px;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-collapse-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-assistant-btn span,
-  .app-container--program-editor .sidebar.compact .sidebar-account-btn span,
-  .app-container--program-editor .sidebar.compact .sidebar-logout-btn span {
-    display: none;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-assistant-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-account-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-logout-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-theme-btn {
-    min-height: 34px;
-    padding: 0;
-    flex-direction: row;
-  }
-
-  /* Program editor rail — compact UX/UI handoff. */
-  .app-container--program-editor .sidebar-area,
-  :root[data-theme='light'] .app-container--program-editor .sidebar-area {
-    background: #171411;
-    border-right-color: #2a2521;
-  }
-
-  .app-container--program-editor .sidebar.compact {
-    width: 43px;
-    padding: 0 4px 8px;
-    color: #77716c;
-    background: #171411;
-    grid-template-rows: 44px minmax(0, 1fr) auto;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-header {
-    justify-content: center;
-    padding: 11px 0 7px;
-  }
-
-  .app-container--program-editor .sidebar.compact .logo {
-    width: 24px;
-    height: 24px;
-    justify-content: center;
-    border-radius: 7px;
-    color: #fff;
-    background: #f4510b;
-    box-shadow: none;
-  }
-
-  .app-container--program-editor .sidebar.compact .logo-icon {
-    width: 14px;
-    height: 14px;
-    color: #fff;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-nav {
-    gap: 3px;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .app-container--program-editor .sidebar.compact .nav-item {
-    width: 28px;
-    min-height: 28px;
-    height: 28px;
-    margin: 0 auto;
-    padding: 0;
-    border-radius: 7px;
-    color: #6f6964;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .app-container--program-editor .sidebar.compact .nav-item svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .app-container--program-editor .sidebar.compact .nav-item:hover {
-    color: #aaa29b;
-    background: #211d19;
-  }
-
-  .app-container--program-editor .sidebar.compact .nav-item.active {
-    color: #f4510b;
-    background: #2a1d16;
-    box-shadow: none;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-footer {
-    padding: 0;
-    margin: 0;
-    border: 0;
-    background: transparent;
-  }
-
-  .app-container--program-editor .sidebar.compact .sidebar-theme-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-assistant-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-account-btn,
-  .app-container--program-editor .sidebar.compact .sidebar-logout-btn {
-    display: none;
-  }
-
-  .app-container--program-editor .sidebar.compact .user-profile {
-    width: 22px;
-    height: 22px;
-    margin: 0 auto;
-    padding: 0;
-    border: 0 !important;
-  }
-
-  .app-container--program-editor .sidebar.compact .avatar {
-    width: 22px;
-    height: 22px;
-    color: #f4510b;
-    background: #402013 !important;
-    font-size: 0.62rem;
-    font-weight: 700;
-  }
 }
 
 @media (max-width: 768px) {

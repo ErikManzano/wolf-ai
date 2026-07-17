@@ -53,7 +53,7 @@ export interface ProgramWeekDayNavProps {
   weekHeadLeading?: React.ReactNode;
   /** Tighter chrome for embedded program editor — more room for the exercise sheet. */
   density?: 'default' | 'editor';
-  /** Minimal picker for stats dashboard — hides editors chrome and day row unless scope is day. */
+  /** Stats dashboard mode — hides editor chrome; day chips only when scope is `day`. */
   statsContext?: ProgramStatsScope;
   /** Allows the unified desktop header to keep weeks while days stay above the exercise sheet. */
   sections?: 'all' | 'weeks' | 'days';

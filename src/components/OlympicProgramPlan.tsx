@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 import {
   CalendarRange,
+  ChevronDown,
   Copy,
   Download,
   FileJson,
@@ -15,6 +16,7 @@ import {
   Undo2,
   UserPlus,
 } from 'lucide-react';
+import type { ProgramEnrollment } from '../models/coach-architecture';
 import type { Athlete, GeneratedProgram, Session, SessionGoal } from '../models/training';
 import { generatePeriodizedProgram } from '../services/programGenerator';
 import {
@@ -93,6 +95,8 @@ interface OlympicProgramPlanProps {
   onFlushAutosave?: () => void;
   /** Coach program id — resolves assignment for execution stats on enrolled athletes. */
   coachProgramId?: string;
+  /** Enrolled athletes available for the stats athlete selector. */
+  enrolledAthletes?: ProgramEnrollment[];
   /** API autosave state (WlProgramEditor). */
   programSyncState?: import('./wl-programs/programSync').ProgramSyncState;
   lastSavedAt?: string | null;
@@ -192,6 +196,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   customizeChromePortalId = null,
   onFlushAutosave,
   coachProgramId,
+  enrolledAthletes = [],
   programSyncState,
   lastSavedAt = null,
   onRetryProgramSave,
@@ -271,8 +276,16 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const pendingHistoryRef = useRef<GeneratedProgram | null>(null);
   const [hasPendingHistory, setHasPendingHistory] = useState(false);
   const { pushAlert } = useWolfAlert();
-  const { assignProgramToAthlete, motorExercises, sessionExercisePicker, sessionExercisePickerSingles, assignments, completions, setLogs } =
-    useWolfAssign();
+  const {
+    assignProgramToAthlete,
+    motorExercises,
+    sessionExercisePicker,
+    sessionExercisePickerSingles,
+    assignments,
+    completions,
+    setLogs,
+    wlAthletes,
+  } = useWolfAssign();
 
   const sessionCatalog = useMemo<SessionCatalogProps>(
     () => ({
@@ -282,15 +295,54 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [sessionExercisePicker, sessionExercisePickerSingles],
   );
 
+  const statsAthleteOptions = useMemo(() => {
+    if (enrolledAthletes.length > 0) {
+      return [...enrolledAthletes]
+        .map((e) => ({
+          athleteProfileId: e.athleteProfileId,
+          assignmentId: e.assignmentId,
+          name: e.athleteName.trim() || e.athleteProfileId,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    }
+    if (!coachProgramId) return [];
+    return assignments
+      .filter((a) => a.coachProgramId === coachProgramId)
+      .map((a) => ({
+        athleteProfileId: a.athleteProfileId,
+        assignmentId: a.id,
+        name:
+          wlAthletes.find((w) => w.id === a.athleteProfileId)?.name?.trim() || a.athleteProfileId,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  }, [enrolledAthletes, coachProgramId, assignments, wlAthletes]);
+
+  const [statsAthleteId, setStatsAthleteId] = useState('');
+
+  useEffect(() => {
+    if (statsAthleteOptions.length === 0) {
+      if (statsAthleteId) setStatsAthleteId('');
+      return;
+    }
+    const stillValid = statsAthleteOptions.some((o) => o.athleteProfileId === statsAthleteId);
+    if (stillValid) return;
+    const preferred =
+      statsAthleteOptions.find((o) => o.athleteProfileId === athleteId)?.athleteProfileId ??
+      statsAthleteOptions[0]!.athleteProfileId;
+    setStatsAthleteId(preferred);
+  }, [statsAthleteOptions, athleteId, statsAthleteId]);
+
   const statsAssignmentId = useMemo(() => {
     if (editingAssignmentId) return editingAssignmentId;
-    if (!coachProgramId || !athleteId) return null;
     return (
-      assignments.find(
-        (a) => a.coachProgramId === coachProgramId && a.athleteProfileId === athleteId,
-      )?.id ?? null
+      statsAthleteOptions.find((o) => o.athleteProfileId === statsAthleteId)?.assignmentId ?? null
     );
-  }, [editingAssignmentId, coachProgramId, athleteId, assignments]);
+  }, [editingAssignmentId, statsAthleteOptions, statsAthleteId]);
+
+  const statsAthleteForEngine = useMemo(() => {
+    if (!statsAthleteId) return athleteForEngine;
+    return wlAthletes.find((a) => a.id === statsAthleteId) ?? athleteForEngine;
+  }, [statsAthleteId, wlAthletes, athleteForEngine]);
 
   const statsExecutionContext = useMemo(
     () => ({
@@ -827,6 +879,19 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     return map;
   }, [program, athleteForEngine, motorExercises]);
 
+  const statsWeekTonnages = useMemo(() => {
+    if (!program?.weeks.length) return {};
+    if (statsAthleteForEngine === athleteForEngine) return weekTonnages;
+    const map: Record<number, number> = {};
+    for (const w of program.weeks) {
+      map[w.weekNumber] = w.days.reduce(
+        (sum, day) => sum + calcularCargaTotal(day.session, statsAthleteForEngine, motorExercises),
+        0,
+      );
+    }
+    return map;
+  }, [program, statsAthleteForEngine, athleteForEngine, motorExercises, weekTonnages]);
+
   const canAddWeek = (program?.weeks.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS;
   const canAddDay = (selectedWeekData?.days.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK;
   const canRemoveWeek = (program?.weeks.length ?? 0) > PROGRAM_STRUCTURE_LIMITS.MIN_WEEKS;
@@ -1250,13 +1315,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       >
         {toolbarPortalNode ? customizeViewTabs : null}
         <div className="wolf-program-customize-toolbar-end">
-          {toolbarPortalNode ? (
-            <ProgramStatsScopeControls
-              statsScope={statsScope}
-              isEs={isEs}
-              onStatsScopeChange={setStatsScope}
-              variant="toolbar"
-              disabled={customizeSubview !== 'stats'}
+          {customizeSubview === 'table' ? (
+            <div
+              id="wl-program-matrix-toolbar-anchor"
+              className="wolf-program-matrix-toolbar-anchor"
             />
           ) : null}
           {!toolbarPortalNode ? customizeHistoryActions : null}
@@ -1273,13 +1335,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       <div className="wolf-program-day-board__stats-chrome wolf-program-day-board__stats-chrome--layout">
         {pinTabsInTopBar || toolbarPortalNode ? null : customizeViewTabs}
         <div className="wolf-program-day-board__stats-chrome-end">
-          <ProgramStatsScopeControls
-            statsScope={statsScope}
-            isEs={isEs}
-            onStatsScopeChange={setStatsScope}
-            variant="toolbar"
-            disabled={customizeSubview !== 'stats'}
-          />
           {!toolbarPortalNode ? customizeHistoryActions : null}
         </div>
       </div>
@@ -1330,11 +1385,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const programFullNavigation = renderProgramNavigation('all');
 
   const unifiedChromePortaled =
-    chromePortalNode && program && showCustomize
+    chromePortalNode && program && showCustomize && customizeSubview !== 'table'
       ? createPortal(
           <>
             {planViewChrome}
-            {customizeSubview !== 'table' && (customizeSubview !== 'editor' || sessionEditorView === 'sheet')
+            {customizeSubview !== 'editor' || sessionEditorView === 'sheet'
               ? programWeekNavigation
               : null}
           </>,
@@ -1525,6 +1580,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                 weekTonnages={weekTonnages}
                 expanded
                 exportTitle={planName.trim() || program?.name?.trim() || undefined}
+                toolbarPortalId={toolbarPortalNode ? 'wl-program-matrix-toolbar-anchor' : null}
                 labels={{
                   weekCol: t.matrixWeekCol,
                   emptyCell: t.matrixEmpty,
@@ -1545,30 +1601,74 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               className="wolf-program-customize-panel wolf-program-customize-panel--stats"
             >
               <div className="wolf-program-day-board wolf-program-day-board--stats-only">
-                {chromePortalNode ? programDayNavigation : programFullNavigation}
+                {chromePortalNode ? null : programWeekNavigation}
+                <div className="wolf-program-day-board__stats-scope-bar">
+                  <div className="wolf-program-day-board__stats-scope-bar__start">
+                    <ProgramStatsScopeControls
+                      statsScope={statsScope}
+                      isEs={isEs}
+                      onStatsScopeChange={setStatsScope}
+                    />
+                  </div>
+                  <div className="wolf-program-day-board__stats-scope-bar__center">
+                    {statsScope === 'day' ? programDayNavigation : null}
+                  </div>
+                  <div className="wolf-program-day-board__stats-scope-bar__end">
+                    <label className="wolf-program-day-board__stats-athlete">
+                      <span className="wolf-program-day-board__stats-athlete-label">
+                        {isEs ? 'Atleta' : 'Athlete'}
+                      </span>
+                      <div className="wolf-select-wrap wolf-select-wrap--app">
+                        <select
+                          value={statsAthleteId}
+                          onChange={(e) => setStatsAthleteId(e.target.value)}
+                          disabled={statsAthleteOptions.length === 0}
+                          aria-label={
+                            isEs
+                              ? 'Seleccionar atleta para estadísticas'
+                              : 'Select athlete for statistics'
+                          }
+                        >
+                          {statsAthleteOptions.length === 0 ? (
+                            <option value="">
+                              {isEs ? 'Sin atletas inscritos' : 'No enrolled athletes'}
+                            </option>
+                          ) : (
+                            statsAthleteOptions.map((opt) => (
+                              <option key={opt.athleteProfileId} value={opt.athleteProfileId}>
+                                {opt.name}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
+                      </div>
+                    </label>
+                  </div>
+                </div>
                 <div className="wolf-program-day-board__body">
                   {daySession && statsScope === 'day' ? (
                     <SessionDayStatsPanel
-                      key={`stats-day-${selectedWeek}-${selectedDay}`}
+                      key={`stats-day-${selectedWeek}-${selectedDay}-${statsAthleteId || 'none'}`}
                       session={daySession}
-                      athlete={athleteForEngine}
+                      athlete={statsAthleteForEngine}
                       exercises={motorExercises}
                       isEs={isEs}
                       weekNumber={selectedWeek}
                       dayNumber={selectedDay}
-                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
+                      weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
                       executionContext={statsExecutionContext}
                       dashboard
                     />
                   ) : null}
                   {statsScope === 'week' ? (
                     <SessionWeekStatsPanel
-                      key={`stats-week-${selectedWeek}`}
-                      athlete={athleteForEngine}
+                      key={`stats-week-${selectedWeek}-${statsAthleteId || 'none'}`}
+                      athlete={statsAthleteForEngine}
                       exercises={motorExercises}
                       isEs={isEs}
                       weekNumber={selectedWeek}
-                      weekTonnage={weekTonnages[selectedWeek] ?? 0}
+                      weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
                       weekData={selectedWeekData}
                       selectedDay={selectedDay}
                       onSelectDay={handleWeekStatsDaySelect}
@@ -1578,9 +1678,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   ) : null}
                   {statsScope === 'program' ? (
                     <SessionProgramStatsPanel
-                      key="stats-program"
+                      key={`stats-program-${statsAthleteId || 'none'}`}
                       program={program}
-                      athlete={athleteForEngine}
+                      athlete={statsAthleteForEngine}
                       exercises={motorExercises}
                       isEs={isEs}
                       selectedWeek={selectedWeek}

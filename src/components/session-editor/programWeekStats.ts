@@ -1,13 +1,12 @@
 import type { Athlete, Exercise, Session } from '../../models/training';
-import { calcularCargaTotal } from '../../services/trainingEngine';
 import {
   estimateSessionMinutes,
   sessionAvgIntensity,
   sessionTotalReps,
   sessionTotalSets,
-  sessionTonnage,
 } from './blockMetrics';
-import { sessionExerciseVolumes, sessionPurposeBreakdown } from './sessionSummaryMetrics';
+import { sessionPurposeBreakdown } from './sessionSummaryMetrics';
+import { statsExerciseVolumes, statsSessionTonnage } from './statsTonnage';
 import type { ProgramWeek } from '../../models/training';
 
 export interface WeekDayMetricRow {
@@ -30,7 +29,7 @@ export interface WeekAggregateMetrics {
   dayCount: number;
   purpose: ReturnType<typeof sessionPurposeBreakdown>;
   dayRows: WeekDayMetricRow[];
-  exerciseVolumes: ReturnType<typeof sessionExerciseVolumes>;
+  exerciseVolumes: ReturnType<typeof statsExerciseVolumes>;
 }
 
 function mergeExerciseVolumes(
@@ -41,7 +40,7 @@ function mergeExerciseVolumes(
 ) {
   const tonnageByLabel = new Map<string, number>();
   for (const blockList of blocks) {
-    for (const slice of sessionExerciseVolumes(blockList, athlete, exercises, 999)) {
+    for (const slice of statsExerciseVolumes(blockList, athlete, exercises, 999)) {
       tonnageByLabel.set(slice.label, (tonnageByLabel.get(slice.label) ?? 0) + slice.tonnage);
     }
   }
@@ -78,7 +77,7 @@ export function computeWeekAggregateMetrics(
   for (const day of days) {
     const blocks = day.session.exercises;
     allBlocks.push(blocks);
-    tonnage += sessionTonnage(day.session, athlete, exercises);
+    tonnage += statsSessionTonnage(day.session, athlete, exercises);
     sets += sessionTotalSets(blocks);
     reps += sessionTotalReps(blocks);
     minutes += estimateSessionMinutes(day.session);
@@ -99,7 +98,7 @@ export function computeWeekAggregateMetrics(
 
   const dayRows: WeekDayMetricRow[] = days.map((day) => {
     const blocks = day.session.exercises;
-    const dayTonnage = calcularCargaTotal(day.session, athlete, exercises);
+    const dayTonnage = statsSessionTonnage(day.session, athlete, exercises);
     const label =
       day.label?.trim() || (isEs ? `Día ${day.dayNumber}` : `Day ${day.dayNumber}`);
     return {

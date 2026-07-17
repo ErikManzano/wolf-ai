@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { ChevronDown, Copy, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../../models/training';
@@ -258,10 +258,17 @@ export const SortableExerciseSheetGroup: React.FC<SortableExerciseSheetGroupProp
   ...props
 }) => {
   const dragControls = useDragControls();
+  const [isDragging, setIsDragging] = useState(false);
+
   const startDrag = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        /* ignore capture failures on unsupported targets */
+      }
       dragControls.start(event);
     },
     [dragControls],
@@ -282,8 +289,16 @@ export const SortableExerciseSheetGroup: React.FC<SortableExerciseSheetGroupProp
       className="wolf-se-spreadsheet__tbody--sortable"
       layout="position"
       transition={SPREADSHEET_DRAG_SPRING}
-      whileDrag={{ zIndex: 20, position: 'relative' }}
-      style={{ touchAction: 'manipulation' }}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => setIsDragging(false)}
+      whileDrag={{
+        zIndex: 30,
+        position: 'relative',
+        scale: 1.01,
+        boxShadow: '0 14px 34px rgba(28, 25, 23, 0.18)',
+      }}
+      style={{ touchAction: 'none' }}
+      data-is-dragging={isDragging ? 'true' : undefined}
     >
       <ExerciseSheetRow
         {...props}
