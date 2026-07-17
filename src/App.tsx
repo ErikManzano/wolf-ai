@@ -38,7 +38,7 @@ function AppShell() {
     const link = typeof window !== 'undefined' ? parseHashDeepLink() : null;
     if (link && isAppViewId(link.view)) return link.view;
     if (link?.view === 'legal-terms' || link?.view === 'legal-privacy') return link.view;
-    return 'dashboard';
+    return 'programs';
   });
   const [language, setLanguage] = useState<'ES' | 'EN'>('ES');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -100,9 +100,7 @@ function AppShell() {
     setActiveView(
       currentUser.role === 'athlete'
         ? 'dashboard'
-        : currentUser.role === 'super_admin'
-          ? 'admin-users'
-          : 'dashboard',
+        : 'programs',
     );
   }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole, openProgramEditor]);
 
