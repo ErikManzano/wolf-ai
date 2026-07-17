@@ -93,7 +93,7 @@
 }
 
 .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-metric--vol {
-  width: 96px;
+  width: 112px;
 }
 
 .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-actions {
@@ -759,6 +759,8 @@
   color: color-mix(in srgb, var(--color-accent) 72%, var(--color-text-primary));
   font-weight: 900;
   font-size: 1rem;
+  min-width: 7.5ch;
+  overflow: visible;
 }
 
 .wolf-se-spreadsheet__row--block {

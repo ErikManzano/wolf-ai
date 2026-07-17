@@ -168,38 +168,73 @@
   min-width: 0;
 }
 
-/* DistributionBar */
+/* Distribution — pie / donut */
 .wl-stats-dist {
   display: flex;
   flex-direction: column;
   gap: var(--stats-space-3);
 }
 
-.wl-stats-dist__track {
+.wl-stats-dist__pie-layout {
   display: flex;
-  width: 100%;
-  height: 14px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--stats-border) 70%, transparent);
-}
-
-.wl-stats-dist__seg {
-  height: 100%;
+  align-items: center;
+  gap: var(--stats-space-5);
   min-width: 0;
-  transition: flex-basis 160ms ease;
 }
 
-.wl-stats-dist__seg--technique {
-  background: var(--stats-technique);
+.wl-stats-dist__pie {
+  --stats-pie-size: 132px;
+  position: relative;
+  flex: 0 0 var(--stats-pie-size);
+  width: var(--stats-pie-size);
+  height: var(--stats-pie-size);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--stats-border) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stats-border) 55%, transparent);
 }
 
-.wl-stats-dist__seg--work {
-  background: var(--stats-work);
+.wl-stats-dist__pie--empty {
+  background:
+    repeating-conic-gradient(
+      from -90deg,
+      color-mix(in srgb, var(--stats-border) 85%, transparent) 0deg 12deg,
+      color-mix(in srgb, var(--stats-canvas) 70%, var(--stats-surface)) 12deg 24deg
+    );
 }
 
-.wl-stats-dist__seg--intensity {
-  background: var(--stats-intensity);
+.wl-stats-dist__pie-hole {
+  position: absolute;
+  inset: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 50%;
+  background: var(--stats-surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--stats-border) 45%, transparent);
+  text-align: center;
+  padding: 4px;
+}
+
+.wl-stats-dist__pie-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--stats-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.wl-stats-dist__pie-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--stats-muted);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wl-stats-dist__legend {
@@ -209,14 +244,30 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wl-stats-dist__legend--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 8px;
 }
 
 .wl-stats-dist__legend-item {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 6px;
-  font-size: 0.74rem;
+  gap: 8px;
+  font-size: 0.78rem;
   color: var(--stats-secondary);
+}
+
+.wl-stats-dist__legend-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wl-stats-dist__swatch {
@@ -241,7 +292,7 @@
 .wl-stats-dist__legend-value {
   font-variant-numeric: tabular-nums;
   color: var(--stats-text);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .wl-stats-dist__insight {
@@ -249,6 +300,21 @@
   font-size: 0.78rem;
   color: var(--stats-secondary);
   line-height: 1.4;
+}
+
+@media (max-width: 520px) {
+  .wl-stats-dist__pie-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wl-stats-dist__legend--stacked {
+    width: 100%;
+  }
+
+  .wl-stats-dist__pie {
+    --stats-pie-size: 120px;
+  }
 }
 
 /* ExerciseRanking */
@@ -558,7 +624,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wl-stats-dist__seg,
   .wl-stats-timeline__fill {
     transition: none;
   }

@@ -203,7 +203,7 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
           className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--vol"
           data-metric-label={isEs ? 'Vol. total' : 'Total vol.'}
         >
-          {tonnage > 0 ? `${tonnage.toLocaleString()}kg` : '—'}
+          {tonnage > 0 ? `${tonnage.toLocaleString()}\u00A0kg` : '—'}
         </td>
         <td className="wolf-se-spreadsheet__col-blocks">
           <button

@@ -544,7 +544,7 @@
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-metric--vol {
-  width: 108px;
+  width: 112px;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td {
@@ -2019,7 +2019,7 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet--compact-head > .wolf-se-spreadsheet__table-wrap > .wolf-se-spreadsheet__table {
     height: auto !important;
     min-height: 0 !important;
-    min-width: 820px;
+    min-width: 860px;
     border-spacing: 0;
     font-size: 0.8rem;
   }
@@ -2114,7 +2114,7 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-metric--vol {
-    width: 76px !important;
+    width: 104px !important;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block {
@@ -2196,10 +2196,14 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td.wolf-se-spreadsheet__metric--vol {
-    width: 76px !important;
-    min-width: 76px !important;
-    max-width: 76px !important;
+    width: 104px !important;
+    min-width: 104px !important;
+    max-width: none !important;
     white-space: nowrap;
+    overflow: visible;
+    font-size: 0.92rem;
+    letter-spacing: -0.02em;
+    padding-inline: 4px;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric::after {
