@@ -31,17 +31,6 @@ export interface SessionWeekStatsPanelProps {
   dashboard?: boolean;
 }
 
-function weekBalanceLabel(dayRows: { tonnage: number }[], isEs: boolean): string {
-  const active = dayRows.filter((d) => d.tonnage > 0);
-  if (active.length < 2) return isEs ? '—' : '—';
-  const avg = active.reduce((sum, row) => sum + row.tonnage, 0) / active.length;
-  const peak = Math.max(...active.map((d) => d.tonnage));
-  const ratio = avg > 0 ? peak / avg : 1;
-  if (ratio >= 1.6) return isEs ? 'Desbalanceado' : 'Unbalanced';
-  if (ratio >= 1.35) return isEs ? 'Moderado' : 'Moderate';
-  return isEs ? 'Equilibrado' : 'Balanced';
-}
-
 export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
   athlete,
   exercises,
@@ -62,11 +51,6 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
   const execution = useMemo(
     () => (executionContext ? computeWeekExecution(weekData, weekNumber, executionContext) : null),
     [executionContext, weekData, weekNumber],
-  );
-
-  const balance = useMemo(
-    () => weekBalanceLabel(metrics.dayRows, isEs),
-    [metrics.dayRows, isEs],
   );
 
   const peakDayKey = useMemo(() => {
@@ -120,8 +104,23 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
           />
           <MetricCard
             label={isEs ? 'Días' : 'Days'}
-            value={metrics.dayCount > 0 ? metrics.dayCount : '—'}
-            sub={isEs ? 'Programados' : 'Scheduled'}
+            value={
+              execution
+                ? `${execution.completedDays}/${execution.totalDays}`
+                : metrics.dayCount > 0
+                  ? metrics.dayCount
+                  : '—'
+            }
+            sub={
+              execution
+                ? isEs
+                  ? 'Completados / programados'
+                  : 'Done / scheduled'
+                : isEs
+                  ? 'Programados'
+                  : 'Scheduled'
+            }
+            subTone={execution ? 'success' : 'muted'}
           />
           <MetricCard
             label={isEs ? 'Completado' : 'Completed'}
@@ -129,7 +128,13 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
               execution ? (
                 <StatusBadge
                   label={`${execution.completionPct}%`}
-                  tone={execution.status === 'completed' ? 'completed' : execution.status === 'in_progress' ? 'in_progress' : 'pending'}
+                  tone={
+                    execution.status === 'completed'
+                      ? 'completed'
+                      : execution.status === 'in_progress'
+                        ? 'in_progress'
+                        : 'pending'
+                  }
                 />
               ) : (
                 '—'
@@ -147,9 +152,24 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
             subTone={execution ? 'success' : 'muted'}
           />
           <MetricCard
-            label={isEs ? 'Balance' : 'Balance'}
-            value={balance}
-            sub={isEs ? 'Carga entre días' : 'Load across days'}
+            label={isEs ? 'Series · Reps' : 'Sets · Reps'}
+            value={
+              execution
+                ? `${execution.completedSets}/${execution.prescribedSets}`
+                : metrics.sets > 0
+                  ? metrics.sets
+                  : '—'
+            }
+            sub={
+              execution
+                ? isEs
+                  ? `${execution.completedReps}/${metrics.reps} reps`
+                  : `${execution.completedReps}/${metrics.reps} reps`
+                : isEs
+                  ? `${metrics.reps} reps prescritas`
+                  : `${metrics.reps} prescribed reps`
+            }
+            subTone={execution ? 'success' : 'muted'}
           />
         </div>
 

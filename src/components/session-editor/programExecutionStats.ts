@@ -8,6 +8,8 @@ export interface SessionExecutionSummary {
   assignmentId: string;
   prescribedSets: number;
   completedSets: number;
+  /** Sum of actualReps on set logs for the day. */
+  completedReps: number;
   completionPct: number;
   status: ExecutionStatus;
   sessionMarkedComplete: boolean;
@@ -37,6 +39,25 @@ function countLoggedSetsForDay(
   ).length;
 }
 
+function countLoggedRepsForDay(
+  setLogs: SetCompletionLog[],
+  assignmentId: string,
+  weekNumber: number,
+  dayNumber: number,
+): number {
+  return setLogs
+    .filter(
+      (log) =>
+        log.assignmentId === assignmentId &&
+        log.weekNumber === weekNumber &&
+        log.dayNumber === dayNumber,
+    )
+    .reduce(
+      (sum, log) => sum + (typeof log.actualReps === 'number' && log.actualReps > 0 ? log.actualReps : 0),
+      0,
+    );
+}
+
 function resolveExecutionStatus(
   prescribedSets: number,
   completedSets: number,
@@ -61,6 +82,7 @@ export function computeSessionExecution(
 
   const prescribedSets = countPrescribedSets(session);
   const completedSets = countLoggedSetsForDay(ctx.setLogs, assignmentId, weekNumber, dayNumber);
+  const completedReps = countLoggedRepsForDay(ctx.setLogs, assignmentId, weekNumber, dayNumber);
   const sessionMarkedComplete = isSessionMarkedComplete(
     ctx.completions,
     assignmentId,
@@ -87,6 +109,7 @@ export function computeSessionExecution(
     assignmentId,
     prescribedSets,
     completedSets,
+    completedReps,
     completionPct,
     status,
     sessionMarkedComplete: sessionMarkedComplete || dayMarkedComplete,
@@ -109,6 +132,8 @@ export function executionStatusLabel(status: ExecutionStatus, isEs: boolean): st
 export interface AggregateExecutionSummary {
   prescribedSets: number;
   completedSets: number;
+  /** Sum of actualReps on set logs (0 when athletes only tick sets without logging reps). */
+  completedReps: number;
   completionPct: number;
   completedDays: number;
   totalDays: number;
@@ -125,6 +150,7 @@ export function computeWeekExecution(
 
   let prescribedSets = 0;
   let completedSets = 0;
+  let completedReps = 0;
   let completedDays = 0;
 
   for (const day of weekData.days) {
@@ -132,6 +158,7 @@ export function computeWeekExecution(
     const completed = countLoggedSetsForDay(ctx.setLogs, assignmentId, weekNumber, day.dayNumber);
     prescribedSets += prescribed;
     completedSets += completed;
+    completedReps += countLoggedRepsForDay(ctx.setLogs, assignmentId, weekNumber, day.dayNumber);
     if (
       isDayComplete(
         ctx.completions,
@@ -158,6 +185,7 @@ export function computeWeekExecution(
   return {
     prescribedSets,
     completedSets,
+    completedReps,
     completionPct,
     completedDays,
     totalDays,
@@ -174,6 +202,7 @@ export function computeProgramExecution(
 
   let prescribedSets = 0;
   let completedSets = 0;
+  let completedReps = 0;
   let completedDays = 0;
   let totalDays = 0;
 
@@ -189,6 +218,12 @@ export function computeProgramExecution(
       );
       prescribedSets += prescribed;
       completedSets += completed;
+      completedReps += countLoggedRepsForDay(
+        ctx.setLogs,
+        assignmentId,
+        week.weekNumber,
+        day.dayNumber,
+      );
       if (
         isDayComplete(
           ctx.completions,
@@ -215,6 +250,7 @@ export function computeProgramExecution(
   return {
     prescribedSets,
     completedSets,
+    completedReps,
     completionPct,
     completedDays,
     totalDays,

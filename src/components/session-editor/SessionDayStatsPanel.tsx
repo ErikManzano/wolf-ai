@@ -3,6 +3,7 @@ import type { Athlete, Exercise, Session } from '../../models/training';
 import {
   estimateSessionMinutes,
   sessionAvgIntensity,
+  sessionTotalReps,
   sessionTotalSets,
 } from './blockMetrics';
 import { sessionPurposeBreakdown } from './sessionSummaryMetrics';
@@ -65,6 +66,7 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   const purpose = useMemo(() => sessionPurposeBreakdown(blocks), [blocks]);
   const avgPct = useMemo(() => sessionAvgIntensity(blocks), [blocks]);
   const sets = useMemo(() => sessionTotalSets(blocks), [blocks]);
+  const reps = useMemo(() => sessionTotalReps(blocks), [blocks]);
   const minutes = useMemo(() => estimateSessionMinutes(session), [session]);
 
   const execution = useMemo(
@@ -135,16 +137,22 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
             sub={isEs ? 'Media % 1RM' : 'Avg % 1RM'}
           />
           <MetricCard
-            label={isEs ? 'Series' : 'Sets'}
-            value={sets > 0 ? sets : '—'}
+            label={isEs ? 'Series · Reps' : 'Sets · Reps'}
+            value={
+              execution
+                ? `${execution.completedSets}/${execution.prescribedSets}`
+                : sets > 0
+                  ? sets
+                  : '—'
+            }
             sub={
               execution
                 ? isEs
-                  ? `${execution.completionPct}% completado`
-                  : `${execution.completionPct}% completed`
+                  ? `${execution.completedReps}/${reps} reps · ${execution.completionPct}%`
+                  : `${execution.completedReps}/${reps} reps · ${execution.completionPct}%`
                 : isEs
-                  ? 'Prescritas'
-                  : 'Prescribed'
+                  ? `${reps} reps prescritas`
+                  : `${reps} prescribed reps`
             }
             subTone={execution ? 'success' : 'muted'}
           />
@@ -159,10 +167,13 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
             sub={
               execution
                 ? isEs
-                  ? `${execution.completedSets}/${execution.prescribedSets} series`
-                  : `${execution.completedSets}/${execution.prescribedSets} sets`
-                : undefined
+                  ? `${execution.completedSets}/${execution.prescribedSets} series · ${execution.completedReps}/${reps} reps`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets · ${execution.completedReps}/${reps} reps`
+                : isEs
+                  ? `${sets} series · ${reps} reps`
+                  : `${sets} sets · ${reps} reps`
             }
+            subTone={execution ? 'success' : 'muted'}
           />
         </div>
 
