@@ -156,6 +156,8 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
     return (
       <MobileWeekNavigator
         variant="subheader"
+        editorChrome
+        labelMode="simple"
         weeks={program.weeks}
         activeWeek={week}
         isEs={isEs}
@@ -340,6 +342,7 @@ const AthleteTrainingView: React.FC<AthleteTrainingViewProps> = ({ language }) =
       </AnimatePresence>
 
       <AthleteDayNavigator
+        layout="coach"
         days={weekData.days}
         activeDay={activeDay}
         isEs={isEs}

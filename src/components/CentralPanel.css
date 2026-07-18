@@ -6,6 +6,16 @@
   overflow-x: hidden;
 }
 
+.central-panel:has(.wolf-athlete-plan--mobile-day) {
+  align-items: center;
+  justify-content: center;
+}
+
+.central-panel:has(.wolf-athlete-plan--mobile-day) > .wolf-athlete-plan {
+  width: 100%;
+  max-width: 100%;
+}
+
 /* Vistas largas (motor WL, plan atleta): crece el panel y el scroll lo hace .workspace-area (evita recortes).
    Excluye la vista Tabla: ahí el scroll vive dentro de la matriz. */
 .central-panel:has(.wolf-engine),

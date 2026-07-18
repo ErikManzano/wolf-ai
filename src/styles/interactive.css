@@ -680,6 +680,13 @@
 .wolf-select-wrap--app select option {
   background: var(--color-bg-panel);
   color: var(--color-text-primary);
+  color-scheme: inherit;
+}
+
+.wolf-select-wrap--app select option:checked,
+.wolf-select-wrap--app select option:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .wolf-select-wrap--app .wolf-select-chevron {

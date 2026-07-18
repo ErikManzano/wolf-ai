@@ -50,6 +50,13 @@
   box-shadow: var(--v2-shadow-xs);
 }
 
+/* Athlete mobile day: sit on canvas — no white panel sheet behind the plan */
+:root[data-theme='light'] .central-panel:has(.wolf-athlete-plan--mobile-day) {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
 .app-container.app-container--sidebar-collapsed {
   grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
 }
@@ -414,6 +421,11 @@
   .workspace-area:has(.wl-programs-editor) {
     scroll-padding-bottom: var(--mobile-nav-float-clearance);
     padding-bottom: var(--mobile-nav-float-clearance);
+  }
+
+  .workspace-area:has(.wolf-athlete-plan--mobile-day) {
+    padding-left: max(12px, var(--safe-left)) !important;
+    padding-right: max(12px, var(--safe-right)) !important;
   }
 
   .app-container--program-editor .workspace-area {

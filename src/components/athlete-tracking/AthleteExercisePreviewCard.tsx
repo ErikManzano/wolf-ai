@@ -147,8 +147,12 @@ export const AthleteExercisePreviewCard: React.FC<AthleteExercisePreviewCardProp
             </div>
             {schemeSummaries.length > 0 ? (
               <div className="wa-athlete-ex-card__rx-block" aria-label={isEs ? 'Prescripción' : 'Prescription'}>
-                {schemeSummaries.map((scheme) => (
+                {schemeSummaries.map((scheme, schemeIndex) => (
                   <p key={scheme.key} className="wa-athlete-ex-card__rx">
+                    <span
+                      className={`wa-athlete-ex-card__rx-dot wa-athlete-ex-card__rx-dot--${schemeIndex % 3}`}
+                      aria-hidden
+                    />
                     {scheme.kgLabel ? (
                       <span className="wa-athlete-ex-card__rx-kg">{scheme.kgLabel}</span>
                     ) : null}

@@ -1,15 +1,9 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Dumbbell, Play, Timer } from 'lucide-react';
+import { Dumbbell, Play } from 'lucide-react';
 import type { Athlete, Exercise, ProgramDay, SetCompletionLog } from '../../models/training';
 import { isExerciseCompleteWithSets } from '../../utils/completionHelpers';
-import {
-  dayDisplayTitle,
-  estimateDayVolume,
-  estimateSessionDuration,
-  formatDurationRange,
-  suggestRestRange,
-} from '../../utils/athleteDayMetrics';
+import { dayDisplayTitle, estimateDayVolume } from '../../utils/athleteDayMetrics';
 import { AthleteExercisePreviewCard } from './AthleteExercisePreviewCard';
 import type { SessionCompletion } from '../../models/training';
 
@@ -66,9 +60,6 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
   const progressPct =
     exerciseCount > 0 ? Math.round((completedExercises / exerciseCount) * 100) : 0;
 
-  const duration = estimateSessionDuration(day);
-  const durationLabel = formatDurationRange(duration.min, duration.max, isEs);
-  const restLabel = suggestRestRange(day, isEs);
   const volumeLabel = estimateDayVolume(day, athlete, exercises, isEs);
 
   const hasExercises = exerciseCount > 0;
@@ -160,22 +151,6 @@ export const AthleteDayOverview: React.FC<AthleteDayOverviewProps> = ({
                 {progressPct}%
               </span>
             </div>
-          </div>
-
-          <div className="wa-day-summary__stat">
-            <Clock size={14} className="wa-day-summary__stat-icon" aria-hidden />
-            <span className="wa-day-summary__stat-label">
-              {isEs ? 'Tiempo estimado' : 'Estimated time'}
-            </span>
-            <strong className="wa-day-summary__stat-value">{durationLabel}</strong>
-          </div>
-
-          <div className="wa-day-summary__stat">
-            <Timer size={14} className="wa-day-summary__stat-icon wa-day-summary__stat-icon--rest" aria-hidden />
-            <span className="wa-day-summary__stat-label">
-              {isEs ? 'Descanso sugerido' : 'Suggested rest'}
-            </span>
-            <strong className="wa-day-summary__stat-value">{restLabel}</strong>
           </div>
 
           <div className="wa-day-summary__stat">

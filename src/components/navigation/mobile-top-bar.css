@@ -144,23 +144,37 @@
     margin: 0;
     min-width: 0;
     width: 100%;
+    max-width: min(100%, 22rem);
   }
 
-  .mobile-header-inline-slot .wolf-select-wrap--app {
-    width: 100%;
-    max-width: none;
-  }
-
-  .mobile-header-inline-slot .wolf-select-wrap--app select {
-    width: 100%;
-    min-height: 36px;
-    padding: 6px 32px 6px 10px;
-    font-size: 0.88rem;
-    font-weight: 700;
+  /* Header-chrome trigger: soft surface + title weight */
+  .mobile-header-inline-slot .wolf-athlete-plan-select__trigger {
+    min-height: 40px;
+    height: 40px;
+    padding: 0 34px 0 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
+    font-size: 0.95rem;
+    font-weight: 800;
     letter-spacing: -0.02em;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+    box-shadow: none;
+  }
+
+  .mobile-header-inline-slot .wolf-athlete-plan-select__trigger:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+    background: color-mix(in srgb, var(--color-bg-hover) 80%, transparent);
+  }
+
+  .mobile-header-inline-slot .wolf-athlete-plan-select__trigger:focus-visible,
+  .mobile-header-inline-slot .wolf-athlete-plan-select__trigger[aria-expanded='true'] {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-secondary));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .mobile-header-inline-slot .wolf-athlete-plan-select__chevron {
+    color: var(--color-text-muted);
   }
 
   .mobile-header-title {
@@ -421,6 +435,87 @@
     font-weight: 700;
     border-color: color-mix(in srgb, var(--color-border) 85%, transparent);
     background: color-mix(in srgb, var(--color-bg-panel) 96%, #0c0a14);
+  }
+
+  /* Match program-editor week chrome in athlete tracking */
+  .mobile-subheader .wolf-athlete-week-section--editor-chrome .wolf-athlete-week-select__row--coach,
+  .mobile-subheader .wolf-coach-week-nav .wolf-athlete-week-select__row--coach {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    grid-template-columns: none;
+  }
+
+  .mobile-subheader .wolf-coach-week-nav .wolf-athlete-week-arrow {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-secondary, #57534e);
+  }
+
+  /* Athlete week select: system app-select (closed + open options) */
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app select {
+    width: 100%;
+    min-width: 0;
+    min-height: 36px;
+    height: 36px;
+    padding: 6px 32px 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-panel);
+    color: var(--color-text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.25;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    text-align: left;
+    text-transform: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    color-scheme: inherit;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+    transition:
+      border-color var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+      background var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+      box-shadow var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app select:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+    background: var(--color-bg-hover);
+  }
+
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app select:focus-visible {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow:
+      var(--ix-focus-ring, 0 0 0 3px color-mix(in srgb, var(--color-accent) 38%, transparent)),
+      inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  }
+
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app select option {
+    background: var(--color-bg-panel);
+    color: var(--color-text-primary);
+  }
+
+  .mobile-subheader .wolf-athlete-week-section .wolf-coach-week-nav .wolf-select-wrap--app .wolf-select-chevron {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+    color: var(--color-text-secondary);
   }
 
   .app-container:has(.mobile-subheader) {

@@ -15,8 +15,13 @@ interface MobileWeekNavigatorProps {
   /** Renders in the global mobile subheader (no sticky positioning). */
   variant?: MobileWeekNavigatorVariant;
   isDayComplete?: (weekNumber: number, dayNumber: number) => boolean;
-  /** Athlete: phase labels; coach: simple "Semana N". */
+  /** Athlete: phase labels; coach/editor chrome: simple "Semana N". */
   labelMode?: 'phase' | 'simple';
+  /**
+   * Same week chrome as the program editor (ghost arrows + centered uppercase select).
+   * Defaults to true for `variant="coach"`.
+   */
+  editorChrome?: boolean;
   canAddWeek?: boolean;
   onAddWeek?: () => void;
   addWeekTitle?: string;
@@ -50,6 +55,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
   variant = 'inline',
   isDayComplete,
   labelMode = 'phase',
+  editorChrome,
   canAddWeek = false,
   onAddWeek,
   addWeekTitle,
@@ -60,6 +66,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
   const weekIdx = weeks.findIndex((w) => w.weekNumber === activeWeek);
   const totalWeeks = weeks.length;
   const isCoach = variant === 'coach';
+  const useEditorChrome = editorChrome ?? isCoach;
 
   const goPrevWeek = () => {
     if (weekIdx > 0) onWeekChange(weeks[weekIdx - 1]!.weekNumber);
@@ -73,11 +80,11 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
 
   const row = (
     <div
-      className={`wolf-week-select-mobile wolf-athlete-week-select${isCoach ? ' wolf-coach-week-nav' : ''}`}
+      className={`wolf-week-select-mobile wolf-athlete-week-select${useEditorChrome ? ' wolf-coach-week-nav' : ''}`}
     >
       <div
         className={`wolf-week-select-mobile__row wolf-athlete-week-select__row${
-          isCoach ? ' wolf-athlete-week-select__row--coach' : ''
+          useEditorChrome ? ' wolf-athlete-week-select__row--coach' : ''
         }`}
       >
         <button
@@ -91,7 +98,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
         </button>
 
         <label className="wolf-week-select-mobile__field wolf-athlete-week-select__field">
-          <div className="wolf-select-wrap">
+          <div className="wolf-select-wrap wolf-select-wrap--app">
             <select
               value={activeWeek}
               onChange={(e) => onWeekChange(Number(e.target.value))}
@@ -162,7 +169,7 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
         variant === 'subheader'
           ? ' wolf-athlete-week-section--subheader'
           : ' wolf-athlete-week-section--sticky'
-      }`}
+      }${useEditorChrome ? ' wolf-athlete-week-section--editor-chrome' : ''}`}
       aria-label={isEs ? 'Semana' : 'Week'}
     >
       {row}
