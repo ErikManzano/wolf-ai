@@ -6,6 +6,7 @@ import ConfirmationModal from '../ConfirmationModal';
 import { AthleteDayNavigator } from '../athlete-tracking/AthleteDayNavigator';
 import { MobileWeekNavigator } from '../athlete-tracking/MobileWeekNavigator';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { CoachNavMoreMenu } from './CoachNavMoreMenu';
 import { formatWeekTonnageLabel } from './sessionSheetUtils';
 import { programNavConfirmCopy, type ProgramNavConfirmKind } from './programNavConfirmCopy';
 import {
@@ -628,6 +629,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               isEs={isEs}
               isDayComplete={() => false}
               onDayChange={onSelectDay}
+              layout="coach"
               className="wolf-coach-day-nav"
               trailing={
                 !isStatsNav ? (
@@ -642,16 +644,14 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                     >
                       <Plus size={16} strokeWidth={2.25} aria-hidden />
                     </button>
-                    {canRemoveDay && onRemoveDay ? (
-                      <button
-                        type="button"
-                        className="wolf-coach-day-nav__tool wolf-coach-day-nav__tool--remove"
-                        onClick={() => requestRemoveDay(selectedDay)}
-                        aria-label={labels.removeDay}
-                        title={labels.removeDay}
-                      >
-                        <Trash2 size={14} strokeWidth={2} aria-hidden />
-                      </button>
+                    {onRemoveDay ? (
+                      <CoachNavMoreMenu
+                        ariaLabel={isEs ? 'Más opciones de día' : 'More day options'}
+                        removeLabel={labels.removeDay}
+                        canRemove={Boolean(canRemoveDay)}
+                        onRemove={() => requestRemoveDay(selectedDay)}
+                        triggerClassName="wolf-coach-day-nav__tool"
+                      />
                     ) : null}
                   </>
                 ) : undefined

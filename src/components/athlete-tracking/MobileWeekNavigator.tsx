@@ -1,7 +1,8 @@
 import React from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { GeneratedProgram } from '../../models/training';
 import { weekNavigatorLabel } from '../../utils/athleteDayMetrics';
+import { CoachNavMoreMenu } from '../session-editor/CoachNavMoreMenu';
 import './mobile-plan-nav.css';
 
 export type MobileWeekNavigatorVariant = 'inline' | 'subheader' | 'coach';
@@ -134,16 +135,14 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
           </button>
         ) : null}
 
-        {isCoach && canRemoveWeek && onRemoveWeek ? (
-          <button
-            type="button"
-            className="wolf-coach-week-nav__tool wolf-coach-week-nav__tool--remove"
-            onClick={onRemoveWeek}
-            title={removeWeekTitle}
-            aria-label={removeWeekTitle}
-          >
-            <Trash2 size={16} strokeWidth={2} aria-hidden />
-          </button>
+        {isCoach && onRemoveWeek ? (
+          <CoachNavMoreMenu
+            ariaLabel={isEs ? 'Más opciones de semana' : 'More week options'}
+            removeLabel={removeWeekTitle ?? (isEs ? 'Quitar semana' : 'Remove week')}
+            canRemove={canRemoveWeek}
+            onRemove={onRemoveWeek}
+            triggerClassName="wolf-coach-week-nav__tool"
+          />
         ) : null}
       </div>
     </div>

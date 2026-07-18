@@ -114,3 +114,60 @@
     display: none;
   }
 }
+
+/* Mockup cards: SIMPLE / COMPLEJO / CALENTAMIENTO pills */
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip {
+  min-height: 34px;
+  padding: 6px 8px;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border, #d6d3d1);
+  background: var(--color-bg-panel, #fff);
+  color: var(--color-text-muted, #78716c);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip.is-active {
+  background: #4a4458;
+  border-color: #4a4458;
+  color: #fff;
+  box-shadow: none;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip.is-active .wolf-se-coach-block-type__dot {
+  background: var(--color-accent, #ff4d00);
+  opacity: 1;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--simple.is-active,
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--complex.is-active,
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--warmup.is-active {
+  background: #4a4458;
+  border-color: #4a4458;
+  color: #fff;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip:not(.is-active):hover {
+  border-color: color-mix(in srgb, var(--color-accent, #ff4d00) 28%, var(--color-border));
+  color: var(--color-text-primary, #1c1917);
+}

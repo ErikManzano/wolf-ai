@@ -563,12 +563,12 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
   .wolf-program-matrix--expanded {
     overflow: hidden;
-    max-height: min(72vh, 720px);
+    max-height: none;
   }
 
   .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
     overflow: auto;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
     max-height: none;
     -webkit-overflow-scrolling: touch;

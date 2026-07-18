@@ -244,3 +244,222 @@
   border-color: color-mix(in srgb, #ef4444 26%, var(--color-border));
   color: color-mix(in srgb, #f87171 80%, var(--color-text-muted));
 }
+
+/* ── Coach mobile mockup: week + day chrome ── */
+
+.wolf-coach-week-nav .wolf-athlete-week-arrow {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #57534e);
+  border-radius: 999px;
+}
+
+.wolf-coach-week-nav .wolf-athlete-week-arrow:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-bg-hover, #f5f5f4) 80%, transparent);
+  border-color: transparent;
+  color: var(--color-text-primary, #1c1917);
+}
+
+.wolf-coach-week-nav .wolf-select-wrap select {
+  min-height: 40px;
+  padding: 8px 32px 8px 8px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-text-primary, #1c1917);
+}
+
+.wolf-coach-week-nav .wolf-select-wrap select:hover,
+.wolf-coach-week-nav .wolf-select-wrap select:focus-visible {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.wolf-coach-week-nav .wolf-select-chevron {
+  color: var(--color-text-muted, #78716c);
+}
+
+.wolf-coach-week-nav__tool {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Coach mobile days — match desktop segmented D1–D7 strip */
+.wa-day-nav--coach .wa-day-nav__row {
+  align-items: center;
+  gap: 8px;
+}
+
+.wa-day-nav--coach .wa-day-nav__strip {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  height: 38px;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #dedbd7;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  scrollbar-width: none;
+}
+
+.wa-day-nav--coach .wa-day-nav__strip::-webkit-scrollbar {
+  display: none;
+}
+
+.wa-day-tab--coach,
+.wolf-coach-day-nav .wa-day-tab--coach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 44px;
+  width: auto;
+  height: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-right: 1px solid #e7e5e4;
+  border-radius: 0;
+  background: #fff;
+  color: #44403c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.wa-day-tab--coach:last-child,
+.wolf-coach-day-nav .wa-day-tab--coach:last-child {
+  border-right: none;
+}
+
+.wa-day-tab--coach.active,
+.wolf-coach-day-nav .wa-day-tab--coach.active,
+.wolf-coach-day-nav .wa-day-tab.active {
+  border-color: transparent;
+  border-right-color: #e7e5e4;
+  background: #f4510b;
+  color: #fff;
+  box-shadow: none;
+}
+
+.wa-day-tab--coach.active:last-child,
+.wolf-coach-day-nav .wa-day-tab--coach.active:last-child {
+  border-right: none;
+}
+
+.wa-day-tab--coach:hover:not(.active) {
+  background: #fafaf8;
+  color: #1c1917;
+}
+
+.wolf-coach-day-nav .wolf-coach-day-nav__tool {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: transparent;
+}
+
+/* Coach nav ⋮ menu (delete week/day) */
+.wolf-coach-nav-more {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.wolf-coach-nav-more__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--color-border) 85%, transparent);
+  background: transparent;
+  color: var(--color-text-muted, #78716c);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-coach-nav-more__trigger:hover,
+.wolf-coach-nav-more__trigger[aria-expanded='true'] {
+  color: var(--color-text-primary, #1c1917);
+  border-color: color-mix(in srgb, var(--color-accent, #ff4d00) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-bg-hover, #f5f5f4) 80%, transparent);
+}
+
+.wolf-coach-nav-more__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  min-width: 188px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid #e7e5e4;
+  background: #ffffff;
+  box-shadow:
+    0 12px 32px rgba(28, 25, 23, 0.16),
+    0 2px 8px rgba(28, 25, 23, 0.08);
+}
+
+.wolf-coach-nav-more__menu--portal {
+  position: fixed;
+  right: auto;
+  z-index: 10080;
+}
+
+.wolf-coach-nav-more__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  color: #1c1917;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-coach-nav-more__item:hover,
+.wolf-coach-nav-more__item:active {
+  background: #f5f5f4;
+}
+
+.wolf-coach-nav-more__item--danger {
+  color: #dc2626;
+  background: color-mix(in srgb, #ef4444 6%, #fff);
+}
+
+.wolf-coach-nav-more__item--danger:hover,
+.wolf-coach-nav-more__item--danger:active {
+  background: color-mix(in srgb, #ef4444 12%, #fff);
+  color: #b91c1c;
+}
+
+.wolf-coach-nav-more__item--danger svg {
+  flex-shrink: 0;
+  color: currentColor;
+}

@@ -2823,26 +2823,32 @@
   .wl-programs-embedded-plan .wolf-program-customize-layout--table,
   .wl-programs-embedded-plan .wolf-program-customize-panel--table {
     overflow: hidden;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .wl-programs-embedded-plan .wolf-program-matrix--expanded {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
-    max-height: min(72vh, 720px);
+    max-height: none;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
     overflow: auto;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
     width: 100%;
     -webkit-overflow-scrolling: touch;
@@ -5120,18 +5126,43 @@
     max-width: 100%;
   }
 
+  /* Table view needs a bounded flex height chain + internal scroll (not overflow:visible). */
   .wl-programs-embedded-plan .wolf-program-customize-layout--table,
-  .wl-programs-embedded-plan .wolf-program-customize-panel--table,
-  .wl-programs-embedded-plan .wolf-program-matrix--expanded,
-  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
-    overflow: visible;
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  .wl-programs-embedded-plan .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
-    overflow-x: auto;
-    overflow-y: visible;
+  .wl-programs-embedded-plan .wolf-program-customize-layout--table .wolf-program-matrix--expanded,
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table .wolf-program-matrix--expanded {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-layout--table .wolf-program-matrix--expanded .wolf-program-matrix-export-body,
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table .wolf-program-matrix--expanded .wolf-program-matrix-export-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wl-programs-embedded-plan .wolf-program-customize-layout--table .wolf-program-matrix--expanded .wolf-program-matrix-scroll,
+  .wl-programs-embedded-plan .wolf-program-customize-panel--table .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+    overscroll-behavior: contain;
     touch-action: pan-x pan-y;
   }
 
@@ -5954,6 +5985,55 @@
     padding-top: 0;
   }
 
+  /* Tabla mobile: fill workspace under pinned tabs and scroll inside the matrix */
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table),
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table),
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wl-programs-editor-body,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wl-programs-editor-stage,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wl-programs-customize-wrap,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-plan,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-customize-layout--table,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-customize-panel--table {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-matrix--expanded {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+  }
+
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-matrix--expanded .wolf-program-matrix-export-body,
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--table) .wolf-program-matrix--expanded .wolf-program-matrix-scroll {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
+  }
+
   /* Sin caja oscura — fondo de la app visible */
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-day-board {
     background: transparent !important;
@@ -5978,7 +6058,11 @@
   .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-day-board__head {
     border: none;
     border-radius: 0;
-    padding: 6px;
+    padding: 8px 12px 4px;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-se-coach-day {
+    padding: 8px 12px 20px;
   }
 
   /* Athlete-style week select + day pills (coach mobile editor) */

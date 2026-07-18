@@ -11,6 +11,8 @@ export interface AthleteDayNavigatorProps {
   onDayChange: (dayNumber: number) => void;
   className?: string;
   trailing?: React.ReactNode;
+  /** Coach editor: same D1/D2 chip labels as desktop day strip. */
+  layout?: 'default' | 'coach';
 }
 
 function dayTabLabel(day: ProgramDay): string {
@@ -33,8 +35,10 @@ export const AthleteDayNavigator: React.FC<AthleteDayNavigatorProps> = ({
   onDayChange,
   className,
   trailing,
+  layout = 'default',
 }) => {
   const stripRef = useRef<HTMLDivElement>(null);
+  const isCoach = layout === 'coach';
 
   useEffect(() => {
     const el = stripRef.current?.querySelector<HTMLElement>('.wa-day-tab.active');
@@ -43,7 +47,7 @@ export const AthleteDayNavigator: React.FC<AthleteDayNavigatorProps> = ({
 
   return (
     <section
-      className={cn('wa-day-nav', className)}
+      className={cn('wa-day-nav', isCoach && 'wa-day-nav--coach', className)}
       aria-label={isEs ? 'Días de la semana' : 'Week days'}
     >
       <div className="wa-day-nav__row">
@@ -57,7 +61,12 @@ export const AthleteDayNavigator: React.FC<AthleteDayNavigatorProps> = ({
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={cn('wa-day-tab', active && 'active', done && !active && 'wa-day-tab--done')}
+                className={cn(
+                  'wa-day-tab',
+                  isCoach && 'wa-day-tab--coach',
+                  active && 'active',
+                  done && !active && 'wa-day-tab--done',
+                )}
                 onClick={() => onDayChange(day.dayNumber)}
               >
                 {dayTabLabel(day)}

@@ -415,6 +415,27 @@
     scroll-padding-bottom: var(--mobile-nav-float-clearance);
     padding-bottom: var(--mobile-nav-float-clearance);
   }
+
+  .app-container--program-editor .workspace-area {
+    padding: 0 !important;
+    background: var(--v2-canvas, #f7f7f5);
+  }
+
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    padding-bottom: 0 !important;
+  }
+
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table) {
+    flex: 1 1 0;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
 }
 
 /* Asistente AI acoplado al sidebar (escritorio) */

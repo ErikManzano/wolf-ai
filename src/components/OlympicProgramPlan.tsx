@@ -5,9 +5,9 @@ import {
   ChevronDown,
   Copy,
   Download,
+  Dumbbell,
   FileJson,
   Minus,
-  PenLine,
   Plus,
   Redo2,
   BarChart3,
@@ -1203,7 +1203,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           onClick={() => switchCustomizeSubview('editor')}
           aria-label={t.customizeViewEditor}
         >
-          <PenLine size={14} aria-hidden />
+          <Dumbbell size={14} aria-hidden />
           {t.customizeViewEditor}
         </button>
         <button

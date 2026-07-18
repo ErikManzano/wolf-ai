@@ -485,19 +485,40 @@
   color: var(--color-text-muted);
 }
 
-/* ── 7. Mobile coach nav — token alignment ── */
+/* ── 7. Mobile coach nav — light V2 + mockup chrome ── */
 
 @media (max-width: 1024px) {
-  .wl-programs-editor--mobile-plan .wolf-athlete-week-arrow,
-  .wl-programs-editor--mobile-plan .wolf-athlete-week-select .wolf-select-wrap select,
-  .wl-programs-editor--mobile-plan .wa-day-tab {
-    border-radius: var(--wl-radius-md);
-  }
-
-  .wl-programs-editor--mobile-plan .wa-day-tab.active {
-    background: var(--color-accent);
-    color: #0a0a0a;
-    border-color: var(--color-accent);
+  .app-container--program-editor,
+  .app-container--program-editor .wl-programs-editor,
+  .app-container--program-editor .wl-programs-editor--mobile-plan {
+    --v2-canvas: #f7f7f5;
+    --v2-surface: #ffffff;
+    --v2-surface-subtle: #fafaf8;
+    --v2-surface-raised: #ffffff;
+    --v2-surface-hover: #f5f5f4;
+    --v2-border: #e7e5e4;
+    --v2-border-strong: #d6d3d1;
+    --v2-text: #1c1917;
+    --v2-text-secondary: #57534e;
+    --v2-text-muted: #78716c;
+    --v2-accent: #ff4d00;
+    --wl-surface-board: #f7f7f5;
+    --wl-surface-elevated: #ffffff;
+    --wl-bg-panel: #ffffff;
+    --wl-border-subtle: #e7e5e4;
+    --wl-text-accent: #ff4d00;
+    --color-bg-main: #f7f7f5;
+    --color-bg-primary: #ffffff;
+    --color-bg-panel: #ffffff;
+    --color-bg-secondary: #fafaf8;
+    --color-bg-hover: #f5f5f4;
+    --color-border: #e7e5e4;
+    --color-text-primary: #1c1917;
+    --color-text-secondary: #57534e;
+    --color-text-muted: #78716c;
+    --color-accent: #ff4d00;
+    color: var(--v2-text);
+    background: var(--v2-canvas);
   }
 
   .wl-programs-editor--mobile-plan .wolf-program-nav-section--days,
@@ -505,6 +526,22 @@
     border-top: none;
     padding: 0;
     gap: var(--wl-space-2);
+  }
+
+  .wl-programs-editor--mobile-plan .wa-day-tab--coach.active,
+  .wl-programs-editor--mobile-plan .wolf-coach-day-nav .wa-day-tab--coach.active {
+    background: #f4510b;
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .wl-programs-editor--mobile-plan .wolf-session-editor--mobile-coach,
+  .wl-programs-editor--mobile-plan .wolf-se-coach-day {
+    background: transparent;
+  }
+
+  .wl-programs-editor--mobile-plan .wl-programs-embedded-plan .wolf-program-day-board__body {
+    background: var(--v2-canvas);
   }
 }
 

@@ -354,6 +354,15 @@
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Tabla: no romper la cadena de altura / scroll interno en mobile */
+  .central-panel:has(.wolf-program-customize-layout--table) {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
   .panel-header {
     flex-direction: column;
     align-items: flex-start;

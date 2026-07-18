@@ -509,6 +509,49 @@
     background: color-mix(in srgb, var(--color-bg-hover) 70%, transparent);
   }
 
+  /* Program editor mobile mockup — light chrome + segmented tabs */
+  .app-container--program-editor .mobile-header {
+    background: #f7f7f5;
+    border-bottom-color: #e7e5e4;
+    color: #1c1917;
+  }
+
+  .app-container--program-editor .mobile-header-title,
+  .app-container--program-editor .mobile-header-btn {
+    color: #1c1917;
+  }
+
+  .app-container--program-editor .mobile-subheader {
+    background: #f7f7f5;
+    border-bottom-color: #e7e5e4;
+  }
+
+  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned {
+    border: 1px solid #e7e5e4;
+    background: #efeeec;
+    box-shadow: none;
+  }
+
+  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab {
+    color: #78716c;
+    font-size: 0.76rem;
+  }
+
+  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active {
+    color: #fff;
+    background: #3f3f46;
+    box-shadow: none;
+  }
+
+  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active svg {
+    color: #fff;
+    opacity: 1;
+  }
+
+  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab:active:not(.is-active) {
+    background: color-mix(in srgb, #fff 55%, transparent);
+  }
+
   .app-container:has(.mobile-subheader) .workspace-area {
     min-height: calc(100dvh - (56px + var(--wolf-mobile-subheader-h) + var(--safe-top)));
     max-height: calc(100dvh - (56px + var(--wolf-mobile-subheader-h) + var(--safe-top)));
