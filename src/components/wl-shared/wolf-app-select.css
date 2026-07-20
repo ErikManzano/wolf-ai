@@ -1,0 +1,162 @@
+/* Shared app select — trigger + portaled menu (system tokens) */
+
+.wolf-app-select,
+.wolf-athlete-plan-select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.wolf-app-select__label,
+.wolf-athlete-plan-select__label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wolf-app-select__trigger,
+.wolf-athlete-plan-select__trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 34px 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  transition:
+    border-color var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    background var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow var(--ix-duration, 0.18s) var(--ix-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.wolf-app-select__trigger:hover,
+.wolf-athlete-plan-select__trigger:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: var(--color-bg-hover);
+}
+
+.wolf-app-select__trigger:focus-visible,
+.wolf-app-select__trigger[aria-expanded='true'],
+.wolf-athlete-plan-select__trigger:focus-visible,
+.wolf-athlete-plan-select__trigger[aria-expanded='true'] {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow:
+    var(--ix-focus-ring, 0 0 0 3px color-mix(in srgb, var(--color-accent) 38%, transparent)),
+    inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+}
+
+.wolf-app-select__value,
+.wolf-athlete-plan-select__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-app-select__chevron,
+.wolf-athlete-plan-select__chevron {
+  position: absolute;
+  right: 10px;
+  color: var(--color-text-secondary);
+  transition: transform 0.18s ease;
+}
+
+.wolf-app-select__chevron.is-open,
+.wolf-athlete-plan-select__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.wolf-app-select__menu,
+.wolf-athlete-plan-select__menu {
+  position: fixed;
+  z-index: 10080;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  box-shadow: var(--v2-shadow-md, 0 12px 32px rgba(0, 0, 0, 0.22));
+  -webkit-overflow-scrolling: touch;
+}
+
+.wolf-app-select__option,
+.wolf-athlete-plan-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.wolf-app-select__option:hover,
+.wolf-app-select__option:active,
+.wolf-athlete-plan-select__option:hover,
+.wolf-athlete-plan-select__option:active {
+  background: var(--color-bg-hover);
+}
+
+.wolf-app-select__option--active,
+.wolf-athlete-plan-select__option--active {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
+  color: var(--color-text-primary);
+}
+
+.wolf-app-select__option-label,
+.wolf-athlete-plan-select__option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wolf-app-select__check,
+.wolf-athlete-plan-select__check {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+/* Week navigator: keep trigger height aligned with arrows/tools */
+.wolf-athlete-week-select .wolf-app-select__trigger,
+.wolf-coach-week-nav .wolf-app-select__trigger {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 34px 0 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}

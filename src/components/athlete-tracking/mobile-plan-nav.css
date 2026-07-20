@@ -186,7 +186,7 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 0.35rem;
+  gap: 6px;
 }
 
 .wa-day-tab {
@@ -262,28 +262,19 @@
   color: var(--color-text-primary, #1c1917);
 }
 
-.wolf-coach-week-nav .wolf-select-wrap select {
-  min-height: 40px;
-  padding: 8px 32px 8px 8px;
-  border: none;
-  background: transparent;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--color-text-primary, #1c1917);
+.wolf-coach-week-nav .wolf-app-select {
+  width: 100%;
+  min-width: 0;
 }
 
-.wolf-coach-week-nav .wolf-select-wrap select:hover,
-.wolf-coach-week-nav .wolf-select-wrap select:focus-visible {
-  border: none;
-  box-shadow: none;
-  background: transparent;
-}
-
-.wolf-coach-week-nav .wolf-select-chevron {
-  color: var(--color-text-muted, #78716c);
+.wolf-coach-week-nav .wolf-app-select__trigger {
+  min-height: 36px;
+  height: 36px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .wolf-coach-week-nav__tool {
@@ -296,12 +287,15 @@
 
 /* Coach mobile days — match desktop segmented D1–D7 strip */
 .wa-day-nav--coach .wa-day-nav__row {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
 .wa-day-nav--coach .wa-day-nav__strip {
-  display: inline-flex;
+  display: flex;
   flex: 1 1 auto;
   align-items: stretch;
   gap: 0;
@@ -370,7 +364,7 @@
 .wolf-coach-day-nav .wolf-coach-day-nav__tool {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
 }
 

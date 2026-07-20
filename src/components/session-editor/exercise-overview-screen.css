@@ -24,7 +24,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: var(--color-text-primary, #fafafa);
+  color: var(--color-text-primary);
   cursor: pointer;
 }
 
@@ -109,16 +109,27 @@
   width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
-  background: color-mix(in srgb, var(--color-bg-elevated, #1a1a1a) 90%, transparent);
-  color: var(--color-text-secondary, #a3a3a3);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.wolf-se-exercise-overview__movement-pick:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
 
 .wolf-se-exercise-overview__movement-pick:active {
-  background: var(--color-bg-hover, rgba(255, 255, 255, 0.06));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-hover));
 }
 
 .wolf-se-exercise-overview__chain {
@@ -127,8 +138,8 @@
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-  background: color-mix(in srgb, var(--color-bg-elevated, #1a1a1a) 88%, transparent);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
 }
 
 .wolf-se-exercise-overview__chain-head {
@@ -313,9 +324,9 @@
 }
 
 .wolf-se-exercise-overview__tag--technique {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #93c5fd;
+  background: color-mix(in srgb, #3b82f6 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #3b82f6 32%, var(--color-border));
+  color: color-mix(in srgb, #2563eb 70%, var(--color-text-primary));
 }
 
 .wolf-se-exercise-overview__tag--technique .wolf-se-exercise-overview__tag-dot {
@@ -323,9 +334,9 @@
 }
 
 .wolf-se-exercise-overview__tag--work {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  background: color-mix(in srgb, #22c55e 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #22c55e 32%, var(--color-border));
+  color: color-mix(in srgb, #16a34a 70%, var(--color-text-primary));
 }
 
 .wolf-se-exercise-overview__tag--work .wolf-se-exercise-overview__tag-dot {
@@ -333,9 +344,9 @@
 }
 
 .wolf-se-exercise-overview__tag--intensity {
-  background: rgba(249, 115, 22, 0.12);
-  border-color: rgba(249, 115, 22, 0.35);
-  color: #fdba74;
+  background: color-mix(in srgb, #f97316 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #f97316 32%, var(--color-border));
+  color: color-mix(in srgb, #ea580c 70%, var(--color-text-primary));
 }
 
 .wolf-se-exercise-overview__tag--intensity .wolf-se-exercise-overview__tag-dot {
@@ -375,8 +386,8 @@
 
 .wolf-se-coach-block-card {
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
-  background: var(--color-bg-panel, #18181b);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
   overflow: hidden;
 }
 
@@ -439,9 +450,9 @@
 }
 
 .wolf-se-coach-block-card__purpose--technique {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #93c5fd;
+  background: color-mix(in srgb, #3b82f6 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #3b82f6 32%, var(--color-border));
+  color: color-mix(in srgb, #2563eb 70%, var(--color-text-primary));
 }
 
 .wolf-se-coach-block-card__purpose--technique .wolf-se-coach-block-card__purpose-dot {
@@ -449,9 +460,9 @@
 }
 
 .wolf-se-coach-block-card__purpose--work {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  background: color-mix(in srgb, #22c55e 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #22c55e 32%, var(--color-border));
+  color: color-mix(in srgb, #16a34a 70%, var(--color-text-primary));
 }
 
 .wolf-se-coach-block-card__purpose--work .wolf-se-coach-block-card__purpose-dot {
@@ -459,9 +470,13 @@
 }
 
 .wolf-se-coach-block-card__purpose--intensity {
-  background: rgba(249, 115, 22, 0.12);
-  border-color: rgba(249, 115, 22, 0.35);
-  color: #fdba74;
+  background: color-mix(in srgb, #f97316 12%, var(--color-bg-panel));
+  border-color: color-mix(in srgb, #f97316 32%, var(--color-border));
+  color: color-mix(in srgb, #ea580c 70%, var(--color-text-primary));
+}
+
+.wolf-se-coach-block-card__purpose--intensity .wolf-se-coach-block-card__purpose-dot {
+  background: #f97316;
 }
 
 .wolf-se-coach-block-card__purpose--intensity .wolf-se-coach-block-card__purpose-dot {
@@ -481,7 +496,7 @@
   font-size: 0.92rem;
   font-weight: 650;
   font-family: inherit;
-  color: var(--color-text-primary, #fafafa);
+  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -495,7 +510,7 @@
 }
 
 .wolf-se-coach-block-card__vol--on {
-  color: #f97316;
+  color: var(--color-accent, #f97316);
 }
 
 .wolf-se-coach-block-card__chev {
@@ -577,7 +592,7 @@
 }
 
 .wolf-se-exercise-overview__summary-vol {
-  color: #f97316 !important;
+  color: var(--color-accent, #f97316) !important;
 }
 
 .wolf-se-exercise-overview__footer {

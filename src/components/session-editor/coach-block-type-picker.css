@@ -49,21 +49,21 @@
 }
 
 .wolf-se-coach-block-type__chip--simple.is-active {
-  background: rgba(249, 115, 22, 0.14);
-  border-color: rgba(249, 115, 22, 0.42);
-  color: #fdba74;
+  background: #d3e3fd;
+  border-color: color-mix(in srgb, #174ea6 22%, #d3e3fd);
+  color: #174ea6;
 }
 
 .wolf-se-coach-block-type__chip--complex.is-active {
-  background: rgba(56, 189, 248, 0.14);
-  border-color: rgba(56, 189, 248, 0.42);
-  color: #7dd3fc;
+  background: #e9d5ff;
+  border-color: color-mix(in srgb, #6b21a8 22%, #e9d5ff);
+  color: #6b21a8;
 }
 
 .wolf-se-coach-block-type__chip--warmup.is-active {
-  background: rgba(250, 204, 21, 0.14);
-  border-color: rgba(250, 204, 21, 0.42);
-  color: #fde047;
+  background: #fef0c3;
+  border-color: color-mix(in srgb, #8a5a00 22%, #fef0c3);
+  color: #8a5a00;
 }
 
 .wolf-se-coach-block-type__chip:not(.is-active):hover {
@@ -148,23 +148,42 @@
 }
 
 .wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip.is-active {
-  background: #4a4458;
-  border-color: #4a4458;
-  color: #fff;
   box-shadow: none;
 }
 
 .wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip.is-active .wolf-se-coach-block-type__dot {
-  background: var(--color-accent, #ff4d00);
   opacity: 1;
 }
 
-.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--simple.is-active,
-.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--complex.is-active,
+/* Match spreadsheet type-pill colors (simple / complex / warmup) */
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--simple.is-active {
+  background: #d3e3fd;
+  border-color: color-mix(in srgb, #174ea6 22%, #d3e3fd);
+  color: #174ea6;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--simple.is-active .wolf-se-coach-block-type__dot {
+  background: #3b82f6;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--complex.is-active {
+  background: #e9d5ff;
+  border-color: color-mix(in srgb, #6b21a8 22%, #e9d5ff);
+  color: #6b21a8;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--complex.is-active .wolf-se-coach-block-type__dot {
+  background: #a78bfa;
+}
+
 .wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--warmup.is-active {
-  background: #4a4458;
-  border-color: #4a4458;
-  color: #fff;
+  background: #fef0c3;
+  border-color: color-mix(in srgb, #8a5a00 22%, #fef0c3);
+  color: #8a5a00;
+}
+
+.wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip--warmup.is-active .wolf-se-coach-block-type__dot {
+  background: #f59e0b;
 }
 
 .wolf-se-coach-day-card--mockup .wolf-se-coach-block-type__chip:not(.is-active):hover {

@@ -8,7 +8,6 @@ import { blockTonnage, estimateBlockRpe } from './blockMetrics';
 import { blockDisplayName, blockHasExercise } from './sessionSheetUtils';
 import { buildSchemeCardSummaries } from '../../utils/schemeCardRx';
 import { coachListItemMotion, coachListStagger } from './coachMobileMotion';
-import { CoachDayHeaderStrip } from './CoachDayHeaderStrip';
 import { ExerciseCoachActionsSheet } from './ExerciseCoachActionsSheet';
 import { ExerciseDeleteConfirmModal } from './ExerciseDeleteConfirmModal';
 import { CoachDayAddExerciseButton } from './CoachDayAddExerciseButton';
@@ -27,13 +26,9 @@ export interface SessionCoachDayCardsProps {
   athlete: Athlete;
   exercises: Exercise[];
   isEs: boolean;
-  dayNumber?: number;
-  dayLabel?: string;
   sortable?: boolean;
   onSelectBlock?: (index: number) => void;
   onReorderBlocks?: (blocks: SessionExerciseBlock[]) => void;
-  onDuplicateDay?: () => void;
-  canDuplicateDay?: boolean;
   canAddExercise?: boolean;
   onAddExercise?: () => void;
   onRemoveBlock?: (index: number) => void;
@@ -260,13 +255,9 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
   athlete,
   exercises,
   isEs,
-  dayNumber,
-  dayLabel,
   sortable = false,
   onSelectBlock,
   onReorderBlocks,
-  onDuplicateDay,
-  canDuplicateDay,
   canAddExercise = false,
   onAddExercise,
   onRemoveBlock,
@@ -321,17 +312,6 @@ export const SessionCoachDayCards: React.FC<SessionCoachDayCardsProps> = ({
 
   return (
     <section className="wolf-se-coach-day" aria-label={isEs ? 'Ejercicios del día' : 'Day exercises'}>
-      <CoachDayHeaderStrip
-        session={session}
-        athlete={athlete}
-        exercises={exercises}
-        isEs={isEs}
-        dayNumber={dayNumber}
-        dayLabel={dayLabel}
-        onDuplicateDay={onDuplicateDay}
-        canDuplicateDay={canDuplicateDay}
-      />
-
       {session.exercises.length > 0 ? (
         canSort ? (
           <Reorder.Group

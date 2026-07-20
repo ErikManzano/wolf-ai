@@ -50,8 +50,6 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   canAddExercise,
   dense = false,
   embedded = false,
-  dayNumber,
-  dayLabel,
   sortable,
   focusBlockIndex,
   onFocusBlockHandled,
@@ -62,8 +60,6 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   onRemoveBlock,
   onMoveBlockUp,
   onMoveBlockDown,
-  onDuplicateDay,
-  canDuplicateDay,
   onChangeExercise,
   onDuplicateBlock,
 }) => {
@@ -76,13 +72,9 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
         athlete={athlete}
         exercises={exercises}
         isEs={isEs}
-        dayNumber={dayNumber}
-        dayLabel={dayLabel}
         sortable={sortable}
         onSelectBlock={onSelectBlock}
         onReorderBlocks={onReorderBlocks}
-        onDuplicateDay={onDuplicateDay}
-        canDuplicateDay={canDuplicateDay}
         canAddExercise={canAddExercise}
         onAddExercise={onAddExercise}
         onRemoveBlock={onRemoveBlock}

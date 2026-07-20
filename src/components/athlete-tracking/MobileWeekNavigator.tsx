@@ -1,8 +1,9 @@
-import React from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { GeneratedProgram } from '../../models/training';
 import { weekNavigatorLabel } from '../../utils/athleteDayMetrics';
 import { CoachNavMoreMenu } from '../session-editor/CoachNavMoreMenu';
+import { WolfAppSelect } from '../wl-shared/WolfAppSelect';
 import './mobile-plan-nav.css';
 
 export type MobileWeekNavigatorVariant = 'inline' | 'subheader' | 'coach';
@@ -78,6 +79,20 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
 
   const weeksLabel = isEs ? 'Semanas' : 'Weeks';
 
+  const weekOptions = useMemo(
+    () =>
+      weeks.map((w) => {
+        const allDaysDone = isDayComplete
+          ? w.days.every((d) => isDayComplete(w.weekNumber, d.dayNumber))
+          : false;
+        return {
+          value: w.weekNumber,
+          label: weekOptionLabel(w.weekNumber, totalWeeks, allDaysDone, isEs, labelMode),
+        };
+      }),
+    [weeks, totalWeeks, isDayComplete, isEs, labelMode],
+  );
+
   const row = (
     <div
       className={`wolf-week-select-mobile wolf-athlete-week-select${useEditorChrome ? ' wolf-coach-week-nav' : ''}`}
@@ -97,27 +112,15 @@ export const MobileWeekNavigator: React.FC<MobileWeekNavigatorProps> = ({
           <ChevronLeft size={18} />
         </button>
 
-        <label className="wolf-week-select-mobile__field wolf-athlete-week-select__field">
-          <div className="wolf-select-wrap wolf-select-wrap--app">
-            <select
-              value={activeWeek}
-              onChange={(e) => onWeekChange(Number(e.target.value))}
-              aria-label={weeksLabel}
-            >
-              {weeks.map((w) => {
-                const allDaysDone = isDayComplete
-                  ? w.days.every((d) => isDayComplete(w.weekNumber, d.dayNumber))
-                  : false;
-                return (
-                  <option key={w.weekNumber} value={w.weekNumber}>
-                    {weekOptionLabel(w.weekNumber, totalWeeks, allDaysDone, isEs, labelMode)}
-                  </option>
-                );
-              })}
-            </select>
-            <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
-          </div>
-        </label>
+        <div className="wolf-week-select-mobile__field wolf-athlete-week-select__field">
+          <WolfAppSelect
+            options={weekOptions}
+            value={activeWeek}
+            onChange={onWeekChange}
+            ariaLabel={weeksLabel}
+            className="wolf-athlete-week-select__app-select"
+          />
+        </div>
 
         <button
           type="button"

@@ -410,7 +410,7 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tabs-section,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tabs-strip {
-    padding: 3px !important;
+    padding: 24px 4px !important;
     gap: 0 !important;
     border-radius: var(--wl-radius-md);
     background: var(--wl-editor-segment-bg) !important;
@@ -1727,12 +1727,13 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav-compact {
-    height: 109px;
+    height: auto;
+    min-height: 109px;
     gap: 0;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--editor-density {
-    height: 109px;
+    height: auto;
     min-height: 109px;
   }
 
@@ -1812,21 +1813,24 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav-section--days {
-    flex: 0 0 53px;
-    height: 53px;
-    min-height: 53px;
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
     box-sizing: border-box;
-    padding: 7px 0 !important;
+    padding: 24px 0 !important;
     background: var(--v2-surface-subtle);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tabs-section,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tabs-strip {
-    min-height: 39px;
+    min-height: 0;
+    height: auto;
     justify-content: center;
-    padding: 0 !important;
+    align-items: center;
+    padding: 24px 4px !important;
     border-radius: 0;
     background: transparent !important;
+    box-sizing: border-box;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-day-tab,
@@ -1858,9 +1862,12 @@
   /* Day selector above the exercise sheet: segmented group + detached actions. */
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tabs-section,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tabs-strip {
-    height: 44px;
-    min-height: 44px;
+    height: auto;
+    min-height: 0;
     justify-content: center;
+    align-items: center;
+    padding: 24px 4px !important;
+    box-sizing: border-box;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tabs-strip {
