@@ -846,6 +846,7 @@
   flex-direction: column;
   width: 100%;
   min-width: 0;
+  min-height: 100%;
   padding: var(--wl-space-editor-y, 1.5rem) var(--wl-space-editor-x, 2rem) var(--wl-space-editor-y, 1.5rem);
   box-sizing: border-box;
   font-family: var(--font-family);
@@ -860,6 +861,8 @@
   gap: 0;
   width: 100%;
   min-width: 0;
+  min-height: 100%;
+  flex: 1 1 auto;
 }
 
 .wl-programs-editor-hero {
@@ -1552,12 +1555,15 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
 }
 
 .wl-programs-editor-stage {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: 8px;
   min-width: 0;
 }

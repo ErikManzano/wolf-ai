@@ -50,6 +50,16 @@
   box-shadow: var(--v2-shadow-xs);
 }
 
+/* Program editor / modules: sit on canvas — no white sheet below content */
+:root[data-theme='light'] .app-container--program-editor .central-panel,
+:root[data-theme='light'] .central-panel:has(.wl-programs-editor),
+:root[data-theme='light'] .central-panel:has(.wl-programs-hub),
+:root[data-theme='light'] .central-panel:has(.prx-page) {
+  background: var(--v2-canvas);
+  border: none;
+  box-shadow: none;
+}
+
 /* Athlete mobile day: sit on canvas — no white panel sheet behind the plan */
 :root[data-theme='light'] .central-panel:has(.wolf-athlete-plan--mobile-day) {
   background: transparent;
@@ -285,6 +295,15 @@
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    background: var(--v2-canvas, #f7f7f5);
+    min-height: 100%;
+  }
+
+  .app-container--program-editor .central-panel > .wl-programs-panel.wl-programs-editor,
+  .app-container--program-editor .wl-programs-editor {
+    flex: 1 1 auto;
+    min-height: 100%;
+    background: var(--v2-canvas, #f7f7f5);
   }
 
   .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table) {
@@ -431,6 +450,11 @@
   .app-container--program-editor .workspace-area {
     padding: 0 !important;
     background: var(--v2-canvas, #f7f7f5);
+  }
+
+  .app-container--program-editor .central-panel {
+    background: var(--v2-canvas, #f7f7f5);
+    min-height: 100%;
   }
 
   .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table) {

@@ -1472,6 +1472,19 @@
     --color-accent: #ff4d00;
     color: var(--v2-text);
     background: var(--v2-canvas);
+    min-height: 100%;
+    flex: 1 1 auto;
+  }
+
+  .app-container--program-editor .central-panel {
+    background: var(--v2-canvas, #f7f7f5);
+  }
+
+  .app-container--program-editor .wl-programs-editor-body,
+  .app-container--program-editor .wl-programs-editor-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    background: var(--v2-canvas);
   }
 
   .app-container--program-editor .wl-programs-editor-stage {
