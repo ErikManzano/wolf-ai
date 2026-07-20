@@ -3564,13 +3564,13 @@
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks .wolf-se-combo-select--premium .wolf-se-combo-select__input:hover {
-  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 42%, var(--wl-border-subtle, #27272a));
-  background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 6%, #0f0f12);
+  border-color: color-mix(in srgb, var(--color-accent, var(--wl-text-accent, #ff6b1a)) 42%, var(--color-border, var(--wl-border-subtle, #27272a)));
+  background: color-mix(in srgb, var(--color-accent, var(--wl-text-accent, #ff6b1a)) 8%, var(--color-bg-hover, #f5f5f4));
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks .wolf-se-combo-select--premium.is-open .wolf-se-combo-select__input {
-  border-color: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 55%, var(--wl-border-subtle, #27272a));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent, var(--wl-text-accent, #ff6b1a)) 55%, var(--color-border, var(--wl-border-subtle, #27272a)));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent, var(--wl-text-accent, #ff6b1a)) 20%, transparent);
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__type-trigger:hover {

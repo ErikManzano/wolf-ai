@@ -223,6 +223,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
                       options={pickerOptions}
                       value={seg.exerciseId}
                       isEs={isEs}
+                      compact
                       panelMatchCard={false}
                       placeholder={isEs ? 'Buscar movimiento…' : 'Search movement…'}
                       onChange={(id) => onSegmentExerciseChange(segIndex, id)}
@@ -235,7 +236,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
                       disabled={segments.length <= 2}
                       onClick={() => onRemoveMovement(segIndex)}
                     >
-                      <Trash2 size={16} aria-hidden />
+                      <Trash2 size={14} aria-hidden />
                     </button>
                   </div>
                 </div>

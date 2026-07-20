@@ -455,7 +455,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       <div
         className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
       >
-        <Search size={prominent ? 20 : 16} aria-hidden />
+        <Search size={prominent ? 20 : compact ? 14 : 16} aria-hidden />
         <input
           ref={inputRef}
           type="text"
