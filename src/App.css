@@ -448,7 +448,11 @@
   }
 
   .app-container--program-editor .workspace-area {
-    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: var(--mobile-nav-float-clearance, calc(112px + env(safe-area-inset-bottom, 0px))) !important;
+    scroll-padding-bottom: var(--mobile-nav-float-clearance, calc(112px + env(safe-area-inset-bottom, 0px)));
     background: var(--v2-canvas);
   }
 
@@ -463,6 +467,7 @@
     overflow: hidden;
     min-height: 0;
     padding-bottom: 0 !important;
+    scroll-padding-bottom: 0;
   }
 
   .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table) {

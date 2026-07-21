@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../../models/training';
 import type { SessionApplyFn } from './types';
 import {
@@ -183,7 +183,9 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
   };
 
   return (
-    <div className="wolf-se-exercise-overview">
+    <div
+      className={`wolf-se-exercise-overview${hideHeaderBack ? ' wolf-se-exercise-overview--chrome-header' : ''}`}
+    >
       {hideHeaderBack ? null : (
         <header className="wolf-se-exercise-overview__head">
           <button
@@ -233,7 +235,7 @@ export const ExerciseOverviewScreen: React.FC<ExerciseOverviewScreenProps> = ({
                 <React.Fragment key={`${seg.exerciseId}-${segIdx}`}>
                   {segIdx > 0 ? (
                     <span className="wolf-se-exercise-overview__chain-arrow" aria-hidden>
-                      →
+                      <ChevronDown size={16} strokeWidth={2.5} />
                     </span>
                   ) : null}
                   <button

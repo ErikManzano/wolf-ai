@@ -304,10 +304,10 @@
   padding: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid #dedbd7;
+  border: 1px solid var(--color-border, #e7e5e4);
   border-radius: 9px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  background: var(--color-bg-panel, #fff);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text-primary, #1c1917) 6%, transparent);
   scrollbar-width: none;
 }
 
@@ -327,10 +327,10 @@
   min-height: 36px;
   padding: 0 10px;
   border: none;
-  border-right: 1px solid #e7e5e4;
+  border-right: 1px solid var(--color-border, #e7e5e4);
   border-radius: 0;
-  background: #fff;
-  color: #44403c;
+  background: var(--color-bg-panel, #fff);
+  color: var(--color-text-secondary, #44403c);
   font-size: 0.82rem;
   font-weight: 700;
   box-shadow: none;
@@ -345,8 +345,8 @@
 .wolf-coach-day-nav .wa-day-tab--coach.active,
 .wolf-coach-day-nav .wa-day-tab.active {
   border-color: transparent;
-  border-right-color: #e7e5e4;
-  background: #f4510b;
+  border-right-color: var(--color-border, #e7e5e4);
+  background: var(--color-accent, #f4510b);
   color: #fff;
   box-shadow: none;
 }
@@ -357,8 +357,8 @@
 }
 
 .wa-day-tab--coach:hover:not(.active) {
-  background: #fafaf8;
-  color: #1c1917;
+  background: var(--color-bg-hover, #fafaf8);
+  color: var(--color-text-primary, #1c1917);
 }
 
 .wolf-coach-day-nav .wolf-coach-day-nav__tool {
@@ -404,11 +404,11 @@
   min-width: 188px;
   padding: 6px;
   border-radius: 12px;
-  border: 1px solid #e7e5e4;
-  background: #ffffff;
+  border: 1px solid var(--color-border, #e7e5e4);
+  background: var(--color-bg-panel, #ffffff);
   box-shadow:
-    0 12px 32px rgba(28, 25, 23, 0.16),
-    0 2px 8px rgba(28, 25, 23, 0.08);
+    0 12px 32px color-mix(in srgb, var(--color-text-primary, #1c1917) 16%, transparent),
+    0 2px 8px color-mix(in srgb, var(--color-text-primary, #1c1917) 8%, transparent);
 }
 
 .wolf-coach-nav-more__menu--portal {
@@ -426,8 +426,8 @@
   padding: 10px 12px;
   border: none;
   border-radius: 10px;
-  background: #fff;
-  color: #1c1917;
+  background: var(--color-bg-panel, #fff);
+  color: var(--color-text-primary, #1c1917);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 650;
@@ -439,17 +439,17 @@
 
 .wolf-coach-nav-more__item:hover,
 .wolf-coach-nav-more__item:active {
-  background: #f5f5f4;
+  background: var(--color-bg-hover, #f5f5f4);
 }
 
 .wolf-coach-nav-more__item--danger {
   color: #dc2626;
-  background: color-mix(in srgb, #ef4444 6%, #fff);
+  background: color-mix(in srgb, #ef4444 6%, var(--color-bg-panel, #fff));
 }
 
 .wolf-coach-nav-more__item--danger:hover,
 .wolf-coach-nav-more__item--danger:active {
-  background: color-mix(in srgb, #ef4444 12%, #fff);
+  background: color-mix(in srgb, #ef4444 12%, var(--color-bg-panel, #fff));
   color: #b91c1c;
 }
 

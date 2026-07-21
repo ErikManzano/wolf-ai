@@ -558,47 +558,96 @@
     background: color-mix(in srgb, var(--color-bg-hover) 70%, transparent);
   }
 
-  /* Program editor mobile mockup — light chrome + segmented tabs */
-  .app-container--program-editor .mobile-header {
+  /* Program editor mobile chrome — light mockup only */
+  :root[data-theme='light'] .app-container--program-editor .mobile-header {
     background: #f7f7f5;
     border-bottom-color: #e7e5e4;
     color: #1c1917;
   }
 
-  .app-container--program-editor .mobile-header-title,
-  .app-container--program-editor .mobile-header-btn {
+  :root[data-theme='light'] .app-container--program-editor .mobile-header-title,
+  :root[data-theme='light'] .app-container--program-editor .mobile-header-btn {
     color: #1c1917;
   }
 
-  .app-container--program-editor .mobile-subheader {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader {
     background: #f7f7f5;
     border-bottom-color: #e7e5e4;
   }
 
-  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned {
     border: 1px solid #e7e5e4;
     background: #efeeec;
     box-shadow: none;
   }
 
-  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab {
     color: #78716c;
     font-size: 0.76rem;
   }
 
-  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active {
     color: #fff;
     background: #3f3f46;
     box-shadow: none;
   }
 
-  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active svg {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active svg {
     color: #fff;
     opacity: 1;
   }
 
-  .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab:active:not(.is-active) {
+  :root[data-theme='light'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab:active:not(.is-active) {
     background: color-mix(in srgb, #fff 55%, transparent);
+  }
+
+  /* Program editor mobile chrome — dark theme */
+  :root[data-theme='dark'] .app-container--program-editor .mobile-header {
+    background: var(--color-bg-main, #09090b);
+    border-bottom-color: color-mix(in srgb, var(--color-border, #27272a) 80%, transparent);
+    color: var(--color-text-primary, #fafafa);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-header-title,
+  :root[data-theme='dark'] .app-container--program-editor .mobile-header-btn {
+    color: var(--color-text-primary, #fafafa);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-header-btn--back,
+  :root[data-theme='dark'] .app-container--program-editor .mobile-header-btn--account {
+    color: var(--color-text-secondary, #a1a1aa);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader {
+    background: var(--color-bg-main, #09090b);
+    border-bottom-color: color-mix(in srgb, var(--color-border, #27272a) 80%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned {
+    border: 1px solid color-mix(in srgb, var(--color-border, #27272a) 90%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary, #0c0c0e) 88%, #000);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab {
+    color: var(--color-text-muted, #a1a1aa);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active {
+    color: var(--color-text-primary, #fafafa);
+    background: color-mix(in srgb, var(--color-bg-panel, #18181b) 92%, transparent);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 5%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-accent, #f97316) 24%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab.is-active svg {
+    color: var(--color-accent, #f97316);
+    opacity: 1;
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .mobile-subheader .wolf-program-customize-tabs--pinned .wolf-program-customize-tab:active:not(.is-active) {
+    background: color-mix(in srgb, var(--color-bg-hover) 70%, transparent);
   }
 
   .app-container:has(.mobile-subheader) .workspace-area {

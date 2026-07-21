@@ -3,7 +3,7 @@ import type { ExerciseBlockKind } from '../../services/sessionMutations';
 import { exerciseBlockKindLabel, exerciseBlockKindLabelShort } from '../../services/sessionMutations';
 import './coach-block-type-picker.css';
 
-const KINDS: readonly ExerciseBlockKind[] = ['simple', 'complex', 'warmup'];
+const KINDS: readonly ExerciseBlockKind[] = ['simple', 'complex'];
 
 export interface CoachBlockTypePickerProps {
   kind: ExerciseBlockKind;

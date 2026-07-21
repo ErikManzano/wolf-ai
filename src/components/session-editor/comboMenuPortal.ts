@@ -180,17 +180,32 @@ export function usePortaledComboMenu(
   }, [open, menuRect?.layout]);
 
   useEffect(() => {
-    const onDoc = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      const target = e.target as Node;
-      if (rootRef.current?.contains(target)) return;
-      if (menuRef.current?.contains(target)) return;
-      if ((target as Element).closest?.('.wolf-se-combo-select__backdrop')) return;
-      if (!open) return;
-      window.requestAnimationFrame(() => onClose());
+    if (!open) return;
+
+    // Ignore the opening gesture / ghost taps that land as the sheet mounts.
+    const openedAt = performance.now();
+    const GRACE_MS = 420;
+
+    const isInsideComboUi = (target: EventTarget | null) => {
+      if (!(target instanceof Node)) return false;
+      if (rootRef.current?.contains(target)) return true;
+      if (menuRef.current?.contains(target)) return true;
+      if (target instanceof Element) {
+        if (target.closest('.wolf-se-combo-select__menu--portal')) return true;
+        if (target.closest('.wolf-se-combo-select__backdrop')) return true;
+      }
+      return false;
     };
-    document.addEventListener('pointerdown', onDoc);
-    return () => document.removeEventListener('pointerdown', onDoc);
+
+    const onDocPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      if (performance.now() - openedAt < GRACE_MS) return;
+      if (isInsideComboUi(e.target)) return;
+      onClose();
+    };
+
+    document.addEventListener('pointerdown', onDocPointerDown);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown);
   }, [open, onClose, rootRef, menuRef]);
 
   return open ? menuRect : null;

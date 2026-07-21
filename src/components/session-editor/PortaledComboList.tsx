@@ -104,6 +104,10 @@ export function PortaledComboList<T>({
           onPointerDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             onClose();
           }}
         />
@@ -116,6 +120,7 @@ export function PortaledComboList<T>({
         aria-label={ariaLabel}
         aria-modal={isSheet ? true : undefined}
         style={menuStyle}
+        onPointerDown={(e) => e.stopPropagation()}
       >
         {isSheet ? (
           <li className="wolf-se-combo-select__sheet-handle" aria-hidden role="presentation" />
@@ -135,9 +140,17 @@ export function PortaledComboList<T>({
                 className={`wolf-se-combo-select__option${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}`}
                 onPointerDown={(e) => {
                   if (e.button !== 0) return;
+                  e.stopPropagation();
+                  if (isSheet) return;
+                  // Anchored: pick on pointerdown so blur/outside dismiss cannot steal the tap.
+                  e.preventDefault();
+                  onPick(index);
+                }}
+                onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onPick(index);
+                  // Sheet: click only fires for a real tap (not a scroll gesture).
+                  if (isSheet) onPick(index);
                 }}
                 onMouseEnter={() => onActiveIndexChange?.(index)}
               >
