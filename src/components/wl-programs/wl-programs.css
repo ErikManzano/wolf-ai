@@ -935,27 +935,56 @@
   }
 
   .wl-programs-editor-sticky-head--unified {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__bar {
+    position: relative;
+    display: flex;
     align-items: center;
-    column-gap: 12px;
-    row-gap: 6px;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__nav {
-    grid-column: 1;
-    grid-row: 1;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__tabs,
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: auto;
+    flex: 0 0 auto;
+    pointer-events: none;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor > * {
+    pointer-events: auto;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
-    grid-column: 2;
-    grid-row: 1;
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__main {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor {
+    width: 100%;
   }
 
   .wl-programs-editor-sticky-head__main {
@@ -964,10 +993,6 @@
     align-items: center;
     gap: 10px 14px;
     min-width: 0;
-  }
-
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__main {
-    grid-template-columns: minmax(220px, 1fr) auto;
   }
 
   .wl-programs-editor-sticky-head .wl-programs-editor-crumb {
@@ -1016,15 +1041,16 @@
   .wl-programs-editor-toolbar-anchor {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 8px;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     min-width: 0;
+    width: auto;
   }
 
   .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar--in-head {
     width: auto;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     gap: 8px;
     margin: 0;
   }
@@ -1042,7 +1068,7 @@
   }
 
   .wl-programs-editor-toolbar-anchor .wolf-program-customize-tabs {
-    max-width: min(100%, 320px);
+    max-width: none;
   }
 
   .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar-end {
@@ -1062,6 +1088,11 @@
     font-size: 0.64rem;
   }
 
+  .wl-programs-editor-sticky-head .wl-programs-sync-cloud {
+    width: 26px;
+    height: 26px;
+  }
+
   .wl-programs-editor-sticky-head .wl-programs-enrolled-chip {
     min-height: 30px;
     padding: 4px 10px;
@@ -1071,44 +1102,6 @@
 
   .wl-programs-editor-sticky-head .wl-programs-enrolled-chip__chev {
     flex-shrink: 0;
-  }
-
-  @media (min-width: 1320px) {
-    .wl-programs-editor-sticky-head--unified {
-      display: grid;
-      grid-template-columns: auto minmax(220px, 1fr) auto auto;
-      align-items: center;
-      column-gap: 14px;
-      row-gap: 0;
-    }
-
-    .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__nav {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
-      grid-column: 4;
-      grid-row: 1;
-      justify-self: end;
-      min-width: 0;
-    }
-
-    .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__main {
-      display: contents;
-    }
-
-    .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-title {
-      grid-column: 2;
-      grid-row: 1;
-      min-width: 0;
-    }
-
-    .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor {
-      grid-column: 3;
-      grid-row: 1;
-      justify-content: flex-end;
-    }
   }
 
   .wl-programs-editor--sticky-head .wl-programs-embedded-plan .wolf-program-customize-layout {
@@ -1308,6 +1301,52 @@
   color: color-mix(in srgb, var(--color-accent) 90%, white);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.wl-programs-sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wl-programs-sync-cloud {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-border, #27272a) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated, #18181b) 70%, transparent);
+  color: var(--color-text-muted, #a1a1aa);
+  cursor: default;
+  flex-shrink: 0;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.wl-programs-sync-cloud--saved {
+  color: #86efac;
+  border-color: color-mix(in srgb, #22c55e 30%, transparent);
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+}
+
+.wl-programs-sync-cloud--pending {
+  color: #fcd34d;
+  border-color: color-mix(in srgb, #f59e0b 32%, transparent);
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+}
+
+.wl-programs-sync-cloud--saving {
+  color: #93c5fd;
+  border-color: color-mix(in srgb, #3b82f6 32%, transparent);
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  animation: wl-programs-sync-pulse 1.2s ease-in-out infinite;
 }
 
 .wl-programs-sync-chip {

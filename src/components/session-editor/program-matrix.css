@@ -29,6 +29,22 @@
   box-shadow: var(--v2-shadow-sm);
 }
 
+.wolf-program-matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-height: 44px;
+  border-bottom: 1px solid var(--matrix-border-soft);
+  background: linear-gradient(180deg, var(--matrix-surface-2) 0%, var(--matrix-surface) 100%);
+}
+
+.wolf-program-matrix-header .wolf-program-matrix-toolbar {
+  width: 100%;
+  border-bottom: none;
+  background: transparent;
+}
+
 .wolf-program-matrix-toolbar {
   background: linear-gradient(180deg, var(--matrix-surface-2) 0%, var(--matrix-surface) 100%);
   border-bottom: 1px solid var(--matrix-border-soft);

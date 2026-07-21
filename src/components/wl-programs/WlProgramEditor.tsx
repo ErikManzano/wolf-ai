@@ -3,6 +3,8 @@ import {
   ArrowLeft,
   CalendarRange,
   ChevronDown,
+  CloudCheck,
+  CloudUpload,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -82,6 +84,8 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     onBackToDay: () => void;
     exerciseTitle: string;
   } | null>(null);
+  const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
+  const [chromePortalNode, setChromePortalNode] = useState<HTMLElement | null>(null);
   const mobileTitleInputRef = useRef<HTMLInputElement>(null);
   const programRef = useRef(program);
   const dirtyRef = useRef(false);
@@ -419,13 +423,18 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     if (!hasProgram) return null;
     if (syncState === 'saving') return isEs ? 'Guardando…' : 'Saving…';
     if (syncState === 'pending') return isEs ? 'Cambios pendientes' : 'Unsaved changes';
-    if (enrolledCount > 0) {
-      return isEs
-        ? `Guardado · ${enrolledCount} atleta${enrolledCount === 1 ? '' : 's'} avisado${enrolledCount === 1 ? '' : 's'}`
-        : `Saved · ${enrolledCount} athlete${enrolledCount === 1 ? '' : 's'} notified`;
-    }
     return isEs ? 'Guardado' : 'Saved';
-  }, [hasProgram, syncState, isEs, enrolledCount]);
+  }, [hasProgram, syncState, isEs]);
+
+  const cloudSyncLabel = useMemo(() => {
+    if (syncState === 'saving') {
+      return isEs ? 'Subiendo cambios a la nube…' : 'Uploading changes to the cloud…';
+    }
+    if (syncState === 'pending') {
+      return isEs ? 'Hay cambios sin subir a la nube' : 'Changes not yet uploaded to the cloud';
+    }
+    return isEs ? 'Cambios guardados en la nube' : 'Changes saved in the cloud';
+  }, [syncState, isEs]);
 
   const actionDockHint = useMemo(() => {
     if (!hasProgram) {
@@ -446,14 +455,20 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     return isEs ? 'Todo guardado.' : 'All changes saved.';
   }, [hasProgram, titleMissing, isEs, syncState, enrolledCount]);
 
+  const SyncCloudIcon = syncState === 'saved' ? CloudCheck : CloudUpload;
+
   const syncStatusChip =
     hasProgram && syncHint ? (
-      <span
-        className={`wl-programs-sync-chip wl-programs-sync-chip--${syncState}`}
-        role="status"
-        aria-live="polite"
-      >
-        {syncHint}
+      <span className="wl-programs-sync-status" role="status" aria-live="polite">
+        <button
+          type="button"
+          className={`wl-programs-sync-cloud wl-programs-sync-cloud--${syncState}`}
+          title={cloudSyncLabel}
+          aria-label={cloudSyncLabel}
+        >
+          <SyncCloudIcon size={15} aria-hidden />
+        </button>
+        <span className={`wl-programs-sync-chip wl-programs-sync-chip--${syncState}`}>{syncHint}</span>
       </span>
     ) : null;
 
@@ -508,39 +523,41 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       >
         {useStickyDesktopHead ? (
           <>
-            <div className="wl-programs-editor-sticky-head__nav">
-              <AppBreadcrumb
-                isEs={isEs}
-                className="app-breadcrumb--icon-back wl-programs-editor-crumb"
-                onBack={onBack}
-                backLabel={isEs ? 'Programas' : 'Programs'}
-                items={[]}
-              />
-              <WlEditorTitleField
-                isEs={isEs}
-                value={programTitle}
-                onChange={handleProgramTitleChange}
-                onBlur={handleProgramTitleBlur}
-                maxLength={PLAN_TITLE_MAX_LEN}
-                placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
-                label={isEs ? 'Nombre del plan' : 'Plan name'}
-                required
-                className="wl-programs-editor-sticky-title"
-              />
-            </div>
-            {(portalToolbarToHead || !hasProgram) ? (
-              <div className="wl-programs-editor-sticky-head__status">{editorProgramMeta}</div>
-            ) : null}
-            <div className="wl-programs-editor-sticky-head__main">
+            <div className="wl-programs-editor-sticky-head__bar">
+              <div className="wl-programs-editor-sticky-head__nav">
+                <AppBreadcrumb
+                  isEs={isEs}
+                  className="app-breadcrumb--icon-back wl-programs-editor-crumb"
+                  onBack={onBack}
+                  backLabel={isEs ? 'Programas' : 'Programs'}
+                  items={[]}
+                />
+                <WlEditorTitleField
+                  isEs={isEs}
+                  value={programTitle}
+                  onChange={handleProgramTitleChange}
+                  onBlur={handleProgramTitleBlur}
+                  maxLength={PLAN_TITLE_MAX_LEN}
+                  placeholder={isEs ? 'Ej. Mesociclo fuerza' : 'E.g. Strength block'}
+                  label={isEs ? 'Nombre del plan' : 'Plan name'}
+                  required
+                  className="wl-programs-editor-sticky-title"
+                />
+              </div>
               {portalToolbarToHead ? (
                 <div
+                  ref={setToolbarPortalNode}
                   id={WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID}
-                  className="wl-programs-editor-toolbar-anchor"
+                  className="wl-programs-editor-toolbar-anchor wl-programs-editor-sticky-head__tabs"
                 />
+              ) : null}
+              {(portalToolbarToHead || !hasProgram) ? (
+                <div className="wl-programs-editor-sticky-head__status">{editorProgramMeta}</div>
               ) : null}
             </div>
             {portalToolbarToHead ? (
               <div
+                ref={setChromePortalNode}
                 id={WL_PROGRAM_EDITOR_CHROME_PORTAL_ID}
                 className="wl-programs-editor-chrome-anchor wl-programs-embedded-plan"
               />
@@ -604,7 +621,9 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 programName={programTitle}
                 onProgramNameChange={handleProgramTitleChange}
                 customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
+                customizeToolbarPortalNode={portalToolbarToHead ? toolbarPortalNode : null}
                 customizeChromePortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_CHROME_PORTAL_ID : null}
+                customizeChromePortalNode={portalToolbarToHead ? chromePortalNode : null}
                 customizeToolbarEnd={portalToolbarToHead ? undefined : editorProgramMeta}
                 coachProgramId={programId}
                 enrolledAthletes={coachProgram.enrolledAthletes}

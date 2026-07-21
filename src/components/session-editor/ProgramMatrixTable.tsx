@@ -522,7 +522,9 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
       role="region"
       aria-label={isEs ? 'Vista general del plan' : 'Plan overview'}
     >
-      {toolbarPortalNode ? null : toolbar}
+      {toolbarPortalNode ? null : toolbar ? (
+        <header className="wolf-program-matrix-header">{toolbar}</header>
+      ) : null}
       <div
         ref={!fullscreen ? matrixRef : undefined}
         data-matrix-export-root

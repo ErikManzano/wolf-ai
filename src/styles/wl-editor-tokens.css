@@ -145,6 +145,37 @@
   background: color-mix(in srgb, var(--color-accent) 6%, transparent);
 }
 
+.wl-programs-editor .wl-programs-sync-status {
+  gap: 5px;
+}
+
+.wl-programs-editor .wl-programs-sync-cloud {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--wl-radius-sm);
+  border: 1px solid var(--wl-editor-border-subtle);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.wl-programs-editor .wl-programs-sync-cloud--saved {
+  color: color-mix(in srgb, #22c55e 85%, var(--color-text-muted));
+  border-color: color-mix(in srgb, #22c55e 28%, var(--color-border));
+  background: color-mix(in srgb, #22c55e 8%, transparent);
+}
+
+.wl-programs-editor .wl-programs-sync-cloud--pending {
+  color: color-mix(in srgb, #f59e0b 85%, var(--color-text-muted));
+  border-color: color-mix(in srgb, #f59e0b 28%, var(--color-border));
+  background: color-mix(in srgb, #f59e0b 8%, transparent);
+}
+
+.wl-programs-editor .wl-programs-sync-cloud--saving {
+  color: color-mix(in srgb, #3b82f6 85%, var(--color-text-muted));
+  border-color: color-mix(in srgb, #3b82f6 28%, var(--color-border));
+  background: color-mix(in srgb, #3b82f6 8%, transparent);
+}
+
 .wl-programs-editor .wl-programs-sync-chip {
   min-height: 24px;
   padding: 2px var(--wl-space-2);
@@ -488,9 +519,9 @@
 /* ── 7. Mobile coach nav — light V2 + mockup chrome ── */
 
 @media (max-width: 1024px) {
-  .app-container--program-editor,
-  .app-container--program-editor .wl-programs-editor,
-  .app-container--program-editor .wl-programs-editor--mobile-plan {
+  :root[data-theme='light'] .app-container--program-editor,
+  :root[data-theme='light'] .app-container--program-editor .wl-programs-editor,
+  :root[data-theme='light'] .app-container--program-editor .wl-programs-editor--mobile-plan {
     --v2-canvas: #f7f7f5;
     --v2-surface: #ffffff;
     --v2-surface-subtle: #fafaf8;
@@ -1006,11 +1037,18 @@
   box-shadow: var(--v2-shadow-sm, none);
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-header {
+  min-height: 44px;
+  padding: 0;
+  border-bottom: 1px solid var(--wl-editor-border-subtle);
+  background: var(--v2-surface);
+}
+
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-toolbar {
   padding: var(--wl-space-2) var(--wl-space-3);
   gap: var(--wl-space-2);
-  border-bottom: 1px solid var(--wl-editor-border-subtle);
-  background: var(--color-bg-secondary);
+  border-bottom: none;
+  background: transparent;
 }
 
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-matrix-brand {
@@ -1452,7 +1490,7 @@
    Wolf V2 reference composition — desktop editor
    ============================================================================= */
 @media (min-width: 1025px) {
-  .app-container--program-editor .wl-programs-editor {
+  :root[data-theme='light'] .app-container--program-editor .wl-programs-editor {
     --v2-canvas: #f7f7f5;
     --v2-surface: #ffffff;
     --v2-surface-subtle: #fafaf8;
@@ -1476,8 +1514,82 @@
     flex: 1 1 auto;
   }
 
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-editor {
+    color: var(--v2-text);
+    background: var(--v2-canvas);
+    min-height: 100%;
+    flex: 1 1 auto;
+    --wl-surface-board: var(--v2-canvas);
+    --wl-surface-elevated: var(--v2-surface-raised);
+    --wl-bg-panel: var(--v2-surface);
+    --wl-border-subtle: var(--v2-border);
+    --wl-text-accent: var(--v2-accent);
+    --color-bg-primary: var(--v2-surface);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .central-panel {
+    background: var(--v2-canvas);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-editor-body,
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-editor-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    background: var(--v2-canvas);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-editor--sticky-head .wl-programs-editor-sticky-head {
+    background: color-mix(in srgb, var(--v2-surface) 92%, transparent);
+    border-bottom-color: var(--v2-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet--compact-head > .wolf-se-spreadsheet__table-wrap {
+    background: var(--v2-surface);
+    border-color: var(--v2-border);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-program-day-board__head {
+    background: var(--v2-surface);
+    border-bottom-color: var(--v2-border);
+  }
+
+  /* Softer dividers on dark — avoid near-white hairlines */
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-editor {
+    --wl-editor-border-subtle: color-mix(in srgb, var(--v2-border) 55%, transparent);
+    --v2-border: #2a3140;
+    --v2-border-strong: #3a4252;
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td,
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td {
+    border-color: color-mix(in srgb, var(--v2-border) 45%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--v2-border) 45%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td:first-child,
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block td:last-child {
+    border-color: color-mix(in srgb, var(--v2-border) 45%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start {
+    border-left-color: color-mix(in srgb, var(--v2-border) 50%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet--compact-head > .wolf-se-spreadsheet__table-wrap {
+    border-color: color-mix(in srgb, var(--v2-border) 65%, transparent);
+  }
+
+  :root[data-theme='dark'] .app-container--program-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__table tbody td.wolf-se-spreadsheet__col-blocks {
+    border-right-color: color-mix(in srgb, var(--v2-border) 45%, transparent);
+  }
+
+
   .app-container--program-editor .central-panel {
-    background: var(--v2-canvas, #f7f7f5);
+    background: var(--v2-canvas);
   }
 
   .app-container--program-editor .wl-programs-editor-body,
@@ -1546,27 +1658,45 @@
   }
 
   .wl-programs-editor--sticky-head .wl-programs-editor-sticky-head {
-    --wl-programs-editor-chrome-height: 136px;
-    height: 136px;
+    --wl-editor-head-row: 55px;
+    --wl-programs-editor-chrome-height: calc(var(--wl-editor-head-row) * 2);
+    height: calc(var(--wl-editor-head-row) * 2);
     box-sizing: border-box;
     margin: calc(-1 * var(--wl-space-editor-y, 1.5rem)) calc(-1 * var(--wl-space-editor-x, 2rem)) 0;
     padding: 0 18px;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 40px 40px 56px;
-    column-gap: 14px;
-    row-gap: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     background: var(--v2-surface);
     border-bottom: 1px solid var(--v2-border);
     box-shadow: none;
     backdrop-filter: none;
   }
 
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 0 0 var(--wl-editor-head-row);
+    height: var(--wl-editor-head-row);
+    min-height: var(--wl-editor-head-row);
+    width: 100%;
+    min-width: 0;
+  }
+
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__nav {
-    grid-column: 1;
-    grid-row: 1;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    min-height: 40px;
+    min-height: var(--wl-editor-head-row);
+    min-width: 0;
+    max-width: min(360px, 34%);
+    flex: 0 1 auto;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__nav::after {
@@ -1582,8 +1712,109 @@
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-title {
     order: 2;
-    width: min(220px, 28vw);
-    min-width: 120px;
+    width: min(220px, 100%);
+    min-width: 96px;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__tabs,
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    width: auto;
+    max-width: min(420px, 46%);
+    min-width: 0;
+    min-height: var(--wl-editor-head-row);
+    pointer-events: none;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor > * {
+    pointer-events: auto;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+    min-height: var(--wl-editor-head-row);
+    min-width: 0;
+    max-width: min(420px, 38%);
+    flex: 0 1 auto;
+  }
+
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 var(--wl-editor-head-row);
+    min-width: 0;
+    height: var(--wl-editor-head-row);
+    width: calc(100% + 36px);
+    margin: 0 -18px;
+    border-top: 1px solid var(--v2-border);
+  }
+
+  /* Table view: no week/day chrome — collapse empty second row */
+  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor:empty {
+    display: none;
+    height: 0;
+    width: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .wl-programs-editor-sticky-head--unified:has(.wl-programs-editor-chrome-anchor:empty) {
+    --wl-programs-editor-chrome-height: var(--wl-editor-head-row);
+    height: var(--wl-editor-head-row);
+  }
+
+  .wl-programs-editor-chrome-anchor .wolf-program-day-board__head {
+    flex: 0 0 var(--wl-editor-head-row);
+    min-width: 0;
+    height: var(--wl-editor-head-row);
+  }
+
+  .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar--in-head {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    width: auto;
+    min-height: var(--wl-editor-head-row);
+    gap: 10px;
+  }
+
+  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tabs {
+    align-self: stretch;
+    gap: 24px;
+  }
+
+  .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar-end {
+    margin-left: 0;
+    align-self: center;
+  }
+
+  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab {
+    min-height: var(--wl-editor-head-row);
+    padding: 0 2px;
+    border-radius: 0;
+    font-size: 0.74rem;
+  }
+
+  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab::after {
+    bottom: 0;
+    background: var(--v2-accent);
+  }
+
+  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar-actions {
+    display: none;
   }
 
   .wl-programs-editor .wl-programs-editor-sticky-title .wl-editor-title-wrap {
@@ -1643,79 +1874,6 @@
     padding-left: 4px;
   }
 
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 40px;
-  }
-
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__main {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: block;
-    min-height: 40px;
-    border-top: 1px solid var(--v2-border);
-  }
-
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    height: 56px;
-    width: calc(100% + 36px);
-    margin: 0 -18px;
-  }
-
-  /* Table view: no week/day chrome — collapse empty third row */
-  .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor:empty {
-    display: none;
-    height: 0;
-    width: 0;
-    margin: 0;
-    overflow: hidden;
-  }
-
-  .wl-programs-editor-sticky-head--unified:has(.wl-programs-editor-chrome-anchor:empty) {
-    --wl-programs-editor-chrome-height: 80px;
-    height: 80px;
-    grid-template-rows: 40px 40px 0;
-  }
-
-  .wl-programs-editor-chrome-anchor .wolf-program-day-board__head {
-    flex: 0 0 56px;
-    min-width: 0;
-  }
-
-  .wl-programs-editor-toolbar-anchor,
-  .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar--in-head {
-    width: 100%;
-    min-height: 39px;
-    justify-content: space-between;
-  }
-
-  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tabs {
-    align-self: stretch;
-    gap: 24px;
-  }
-
-  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab {
-    min-height: 39px;
-    padding: 0 2px;
-    border-radius: 0;
-    font-size: 0.74rem;
-  }
-
-  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-tab::after {
-    bottom: 0;
-    background: var(--v2-accent);
-  }
-
-  .wl-programs-editor .wl-programs-editor-toolbar-anchor .wolf-program-customize-toolbar-actions {
-    display: none;
-  }
-
   .wl-programs-editor-body,
   .wl-programs-editor-stage,
   .wl-programs-customize-wrap,
@@ -1731,8 +1889,8 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-chrome--layout {
-    height: 56px;
-    min-height: 56px;
+    height: var(--wl-editor-head-row, 55px);
+    min-height: var(--wl-editor-head-row, 55px);
     box-sizing: border-box;
     padding: 0;
     border-bottom: 1px solid var(--v2-border);
@@ -1741,19 +1899,19 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav-compact {
     height: auto;
-    min-height: 109px;
+    min-height: calc(var(--wl-editor-head-row, 55px) * 2);
     gap: 0;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--editor-density {
     height: auto;
-    min-height: 109px;
+    min-height: calc(var(--wl-editor-head-row, 55px) * 2);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--weeks-only,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--weeks-only .wolf-program-nav-compact {
-    height: 56px;
-    min-height: 56px;
+    height: var(--wl-editor-head-row, 55px);
+    min-height: var(--wl-editor-head-row, 55px);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only,
@@ -1764,15 +1922,15 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav-section--weeks {
-    flex: 0 0 56px;
-    height: 56px;
-    min-height: 56px;
+    flex: 0 0 var(--wl-editor-head-row, 55px);
+    height: var(--wl-editor-head-row, 55px);
+    min-height: var(--wl-editor-head-row, 55px);
     border-bottom: 1px solid var(--v2-border) !important;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-week-carousel {
-    height: 55px;
-    min-height: 55px;
+    height: var(--wl-editor-head-row, 55px);
+    min-height: var(--wl-editor-head-row, 55px);
     box-sizing: border-box;
     padding: 0 !important;
     border-radius: 0;
@@ -1781,8 +1939,8 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-card-wrap .wolf-week-tab-card {
     position: relative;
-    height: 55px !important;
-    min-height: 55px !important;
+    height: var(--wl-editor-head-row, 55px) !important;
+    min-height: var(--wl-editor-head-row, 55px) !important;
     padding: 0 18px !important;
     border-radius: 0 !important;
   }
@@ -1807,8 +1965,8 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-week-carousel__arrow {
-    height: 55px;
-    min-height: 55px;
+    height: var(--wl-editor-head-row, 55px);
+    min-height: var(--wl-editor-head-row, 55px);
     border-radius: 0;
   }
 
@@ -1895,10 +2053,10 @@
     width: auto;
     height: 38px;
     overflow: hidden !important;
-    border: 1px solid #dedbd7;
+    border: 1px solid var(--v2-border);
     border-radius: 9px;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+    background: var(--v2-surface);
+    box-shadow: var(--v2-shadow-xs);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tab-wrap {
@@ -1917,10 +2075,10 @@
     min-height: 36px !important;
     padding: 0 !important;
     border: 0 !important;
-    border-right: 1px solid #e7e5e4 !important;
+    border-right: 1px solid var(--v2-border) !important;
     border-radius: 0 !important;
-    color: #44403c !important;
-    background: #fff !important;
+    color: var(--v2-text-secondary) !important;
+    background: var(--v2-surface) !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
     box-shadow: none;
@@ -1942,10 +2100,10 @@
     min-height: 38px;
     box-sizing: border-box;
     padding: 2px;
-    border: 1px solid #dedbd7;
+    border: 1px solid var(--v2-border);
     border-radius: 9px;
     background: var(--v2-surface-subtle);
-    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+    box-shadow: var(--v2-shadow-xs);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope__btn {
@@ -1954,7 +2112,7 @@
     border-radius: 7px;
     font-size: 0.78rem;
     font-weight: 700;
-    color: #57534e;
+    color: var(--v2-text-secondary);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-scope-bar .wolf-program-stats-scope__btn:hover:not(.is-active) {
@@ -1971,17 +2129,17 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select {
     height: 38px;
     min-height: 38px;
-    border: 1px solid #dedbd7;
+    border: 1px solid var(--v2-border);
     border-radius: 9px;
     background: var(--v2-surface);
     color: var(--v2-text);
     font-size: 0.82rem;
     font-weight: 700;
-    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+    box-shadow: var(--v2-shadow-xs);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-wrap select:hover:not(:disabled) {
-    border-color: #d6d3d1;
+    border-color: var(--v2-border-strong);
     background: var(--v2-surface-subtle);
   }
 
@@ -1991,7 +2149,7 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-day-board__stats-athlete .wolf-select-chevron {
-    color: #78716c;
+    color: var(--v2-text-muted);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tab-add,
@@ -2003,12 +2161,12 @@
     min-height: 36px !important;
     margin: 0;
     border-radius: 9px;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-day-tab-add {
-    color: #78716c;
-    border: 1px solid #a8a29e;
+    color: var(--v2-text-muted);
+    border: 1px solid var(--v2-text-muted);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav--days-only .wolf-program-nav-day-remove--strip {
@@ -2068,9 +2226,9 @@
     max-height: none !important;
     padding-top: 0;
     overflow: hidden;
-    border: 1px solid #dedbd7;
+    border: 1px solid var(--v2-border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet--compact-head > .wolf-se-spreadsheet__table-wrap > .wolf-se-spreadsheet__table {
@@ -2122,7 +2280,7 @@
     pointer-events: auto;
     z-index: 2;
     border-radius: 7px;
-    color: #78716c;
+    color: var(--v2-text-muted);
     transition:
       opacity var(--wl-motion-fast) var(--wl-ease-soft),
       background-color var(--wl-motion-fast) var(--wl-ease-soft),
@@ -2150,7 +2308,7 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__tbody--sortable[data-is-dragging='true'] .wolf-se-spreadsheet__row--block td {
-    background: #fffaf5 !important;
+    background: color-mix(in srgb, var(--v2-accent) 8%, var(--v2-surface)) !important;
     border-bottom-color: transparent;
   }
 
@@ -2185,8 +2343,8 @@
     height: 66px;
     box-sizing: border-box;
     padding: 6px;
-    background: #fff;
-    border-bottom: 1px solid #ece9e6;
+    background: var(--v2-surface);
+    border-bottom: 1px solid color-mix(in srgb, var(--v2-border) 70%, transparent);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block.is-expanded td.wolf-se-spreadsheet__col-idx {
@@ -2200,7 +2358,7 @@
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: #1c1917;
+    color: var(--v2-text);
     font-size: 0.875rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -2217,7 +2375,7 @@
     padding: 0;
     border: 0;
     background: transparent;
-    color: #44403c;
+    color: var(--v2-text-secondary);
     font-size: 0;
   }
 
@@ -2230,8 +2388,8 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--vol {
     padding-inline: 3px;
-    color: #1c1917;
-    background: #fff;
+    color: var(--v2-text);
+    background: var(--v2-surface);
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 1rem;
     font-weight: 700;
@@ -2242,7 +2400,7 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start {
-    border-left: 1px solid #e7e5e4;
+    border-left: 1px solid color-mix(in srgb, var(--v2-border) 70%, transparent);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--block > td.wolf-se-spreadsheet__metric:not(.wolf-se-spreadsheet__metric--vol) {
@@ -2269,7 +2427,7 @@
     font-family: var(--font-family);
     font-size: 0.62rem;
     font-weight: 600;
-    color: #57534e;
+    color: var(--v2-text-secondary);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__metric--zone-start::after {
@@ -2300,8 +2458,8 @@
     width: 28px;
     height: 28px;
     border-radius: 6px;
-    border-color: #a8a29e;
-    background: #fff;
+    border-color: var(--v2-text-muted);
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__icon-btn--danger {
@@ -2382,7 +2540,7 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__row--detail td {
     padding: 0 !important;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__detail-panel {
@@ -2391,7 +2549,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: #fff;
+    background: var(--v2-surface);
     box-shadow: none;
   }
 
@@ -2472,9 +2630,9 @@
     padding: 4px 8px !important;
     gap: 6px;
     overflow: hidden;
-    border-color: #d6d3d1;
+    border-color: var(--v2-border-strong);
     border-radius: 6px;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__col-exercise .wolf-se-autocomplete-input,
@@ -2530,8 +2688,8 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-complex-unified__movements {
     padding: 10px 12px 12px;
-    background: #fafaf8;
-    border-bottom: 1px solid #e7e5e4;
+    background: var(--v2-surface-subtle);
+    border-bottom: 1px solid var(--v2-border);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-complex-unified__movements-grid {
@@ -2546,9 +2704,9 @@
     width: min(286px, 100%);
     min-width: 220px;
     padding: 10px;
-    border-color: #bfdbfe;
+    border-color: color-mix(in srgb, var(--v2-info) 35%, var(--v2-border));
     border-radius: 9px;
-    background: #eff6ff;
+    background: color-mix(in srgb, var(--v2-info) 12%, var(--v2-surface));
     box-shadow: none;
   }
 
@@ -2559,7 +2717,7 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-complex-unified__movement-card:nth-child(3n) {
     border-color: #fed7aa;
-    background: #fff7ed;
+    background: color-mix(in srgb, var(--v2-accent) 10%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-complex-unified__movement-card-index {
@@ -2593,9 +2751,9 @@
     padding: 4px 8px !important;
     gap: 6px;
     overflow: hidden;
-    border-color: #d6d3d1;
+    border-color: var(--v2-border-strong);
     border-radius: 6px;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-complex-unified__movement-remove {
@@ -2622,18 +2780,18 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n + 1) {
-    color: #1e40af;
-    background: #bfdbfe;
+    color: color-mix(in srgb, var(--v2-info) 75%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-info) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n + 2) {
-    color: #047857;
-    background: #a7f3d0;
+    color: color-mix(in srgb, var(--v2-success) 75%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-success) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n) {
-    color: #c2410c;
-    background: #fed7aa;
+    color: color-mix(in srgb, var(--v2-accent) 75%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-accent) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__add {
@@ -2682,7 +2840,7 @@
     height: 30px;
     min-height: 30px;
     padding: 6px 8px;
-    color: #57534e;
+    color: var(--v2-text-secondary);
     font-size: 0.7rem;
     line-height: 1.1;
   }
@@ -2694,7 +2852,7 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody td {
     height: 40px;
     padding: 5px 8px;
-    color: #292524;
+    color: var(--v2-text);
     font-size: 0.76rem;
   }
 
@@ -2719,21 +2877,21 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-purpose__label {
-    color: #44403c;
+    color: var(--v2-text-secondary);
     font-size: 0.75rem;
     font-weight: 600;
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n + 1) td {
-    background: #f3f7fc;
+    background: color-mix(in srgb, var(--v2-info) 10%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n + 2) td {
-    background: #eef9f6;
+    background: color-mix(in srgb, var(--v2-success) 10%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n) td {
-    background: #fff5ef;
+    background: color-mix(in srgb, var(--v2-accent) 8%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks .wolf-se-combo-select__input,
@@ -2745,7 +2903,7 @@
     height: 30px;
     padding: 0 26px 0 14px;
     gap: 0;
-    color: #292524;
+    color: var(--v2-text);
     font-size: 0.75rem;
     font-weight: 650;
     line-height: 1;
@@ -2776,42 +2934,42 @@
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n + 1) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    background: #adcdf9;
+    background: color-mix(in srgb, var(--v2-info) 45%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n + 2) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    background: #a7e4d3;
+    background: color-mix(in srgb, var(--v2-success) 40%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:nth-child(3n) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    background: #fac3a6;
+    background: color-mix(in srgb, var(--v2-accent) 40%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--technique) td {
-    background: #f3f7fc;
+    background: color-mix(in srgb, var(--v2-info) 10%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--work) td {
-    background: #eef9f6;
+    background: color-mix(in srgb, var(--v2-success) 10%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--intensity) td {
-    background: #fff5ef;
+    background: color-mix(in srgb, var(--v2-accent) 8%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--technique) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    color: #1e3a8a;
-    background: #bfdbfe;
+    color: color-mix(in srgb, var(--v2-info) 70%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-info) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--work) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    color: #065f46;
-    background: #a7f3d0;
+    color: color-mix(in srgb, var(--v2-success) 70%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-success) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table tbody tr:has(.wolf-se-spreadsheet-purpose--intensity) .wolf-se-spreadsheet-blocks__pct .wolf-se-combo-select__input {
-    color: #9a3412;
-    background: #fed7aa;
+    color: color-mix(in srgb, var(--v2-accent) 70%, var(--v2-text));
+    background: color-mix(in srgb, var(--v2-accent) 35%, var(--v2-surface));
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__sets .wolf-se-combo-select__input,
@@ -2819,8 +2977,8 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__rest .wolf-se-combo-select__input {
     width: max-content;
     min-width: 0;
-    border: 1px solid #78716c;
-    background: #fff;
+    border: 1px solid var(--v2-text-muted);
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__sets .wolf-se-combo-select__input {
@@ -2839,8 +2997,8 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__sets .wolf-se-combo-select--premium .wolf-se-combo-select__input:hover,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__reps .wolf-se-combo-select--premium .wolf-se-combo-select__input:hover,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__rest .wolf-se-combo-select--premium .wolf-se-combo-select__input:hover {
-    border-color: #57534e;
-    background: #f5f5f4;
+    border-color: var(--v2-text-secondary);
+    background: var(--color-bg-hover);
     box-shadow: none;
   }
 
@@ -2848,12 +3006,12 @@
   .wl-programs-editor .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__reps .wolf-se-combo-select--premium.is-open .wolf-se-combo-select__input,
   .wl-programs-editor .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__rest .wolf-se-combo-select--premium.is-open .wolf-se-combo-select__input {
     border-color: color-mix(in srgb, var(--v2-accent, #ff4d00) 45%, #78716c);
-    background: #fff;
+    background: var(--v2-surface);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--v2-accent, #ff4d00) 18%, transparent);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__vol {
-    color: #1c1917;
+    color: var(--v2-text);
     font-size: 0.76rem;
     font-weight: 700;
   }
@@ -2862,7 +3020,7 @@
     width: 30px;
     height: 30px;
     border-radius: 6px;
-    background: #fff;
+    background: var(--v2-surface);
   }
 
   .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet-blocks__table .wolf-se-spreadsheet__icon-btn--danger {

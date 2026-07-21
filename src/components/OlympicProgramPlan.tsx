@@ -89,8 +89,12 @@ interface OlympicProgramPlanProps {
   customizeToolbarEnd?: React.ReactNode;
   /** When set, renders Editor/Table toolbar into this element (desktop sticky header). */
   customizeToolbarPortalId?: string | null;
+  /** Prefer over id lookup when the host already holds a DOM node ref. */
+  customizeToolbarPortalNode?: HTMLElement | null;
   /** When set, renders scope and week/day navigation inside the unified desktop header. */
   customizeChromePortalId?: string | null;
+  /** Prefer over id lookup when the host already holds a DOM node ref. */
+  customizeChromePortalNode?: HTMLElement | null;
   /** Flush pending autosave (e.g. before week/day navigation). */
   onFlushAutosave?: () => void;
   /** Coach program id — resolves assignment for execution stats on enrolled athletes. */
@@ -193,7 +197,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   onProgramNameChange,
   customizeToolbarEnd,
   customizeToolbarPortalId = null,
+  customizeToolbarPortalNode = null,
   customizeChromePortalId = null,
+  customizeChromePortalNode = null,
   onFlushAutosave,
   coachProgramId,
   enrolledAthletes = [],
@@ -238,20 +244,28 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const skipNavFlushRef = useRef(true);
 
   useLayoutEffect(() => {
+    if (customizeToolbarPortalNode) {
+      setToolbarPortalNode(customizeToolbarPortalNode);
+      return;
+    }
     if (!customizeToolbarPortalId) {
       setToolbarPortalNode(null);
       return;
     }
     setToolbarPortalNode(document.getElementById(customizeToolbarPortalId));
-  }, [customizeToolbarPortalId, program]);
+  }, [customizeToolbarPortalNode, customizeToolbarPortalId, program]);
 
   useLayoutEffect(() => {
+    if (customizeChromePortalNode) {
+      setChromePortalNode(customizeChromePortalNode);
+      return;
+    }
     if (!customizeChromePortalId) {
       setChromePortalNode(null);
       return;
     }
     setChromePortalNode(document.getElementById(customizeChromePortalId));
-  }, [customizeChromePortalId, program]);
+  }, [customizeChromePortalNode, customizeChromePortalId, program]);
 
   useEffect(() => {
     setSessionEditorView('sheet');
@@ -1308,22 +1322,20 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     </div>
   );
 
+  const showToolbarEnd = !toolbarPortalNode || Boolean(customizeToolbarEnd);
+
   const customizeToolbar =
     program && showCustomize ? (
       <div
         className={`wolf-program-customize-toolbar${toolbarPortalNode ? ' wolf-program-customize-toolbar--in-head' : ''}`}
       >
         {toolbarPortalNode ? customizeViewTabs : null}
-        <div className="wolf-program-customize-toolbar-end">
-          {customizeSubview === 'table' ? (
-            <div
-              id="wl-program-matrix-toolbar-anchor"
-              className="wolf-program-matrix-toolbar-anchor"
-            />
-          ) : null}
-          {!toolbarPortalNode ? customizeHistoryActions : null}
-          {customizeToolbarEnd}
-        </div>
+        {showToolbarEnd ? (
+          <div className="wolf-program-customize-toolbar-end">
+            {!toolbarPortalNode ? customizeHistoryActions : null}
+            {customizeToolbarEnd}
+          </div>
+        ) : null}
       </div>
     ) : null;
 
@@ -1580,7 +1592,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                 weekTonnages={weekTonnages}
                 expanded
                 exportTitle={planName.trim() || program?.name?.trim() || undefined}
-                toolbarPortalId={toolbarPortalNode ? 'wl-program-matrix-toolbar-anchor' : null}
                 labels={{
                   weekCol: t.matrixWeekCol,
                   emptyCell: t.matrixEmpty,
