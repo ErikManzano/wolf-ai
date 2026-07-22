@@ -4,7 +4,6 @@ import { purposePct, type SessionPurposeBreakdown } from '../sessionSummaryMetri
 export interface DistributionBarProps {
   purpose: SessionPurposeBreakdown;
   isEs: boolean;
-  insight?: string;
 }
 
 type SliceKey = 'technique' | 'work' | 'intensity';
@@ -15,7 +14,7 @@ const SLICE_COLORS: Record<SliceKey, string> = {
   intensity: 'var(--stats-intensity)',
 };
 
-export const DistributionBar: React.FC<DistributionBarProps> = ({ purpose, isEs, insight }) => {
+export const DistributionBar: React.FC<DistributionBarProps> = ({ purpose, isEs }) => {
   const technique = purposePct(purpose, 'technique');
   const work = purposePct(purpose, 'work');
   const intensity = purposePct(purpose, 'intensity');
@@ -87,7 +86,6 @@ export const DistributionBar: React.FC<DistributionBarProps> = ({ purpose, isEs,
           ))}
         </ul>
       </div>
-      {insight ? <p className="wl-stats-dist__insight">{insight}</p> : null}
     </div>
   );
 };

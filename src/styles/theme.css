@@ -14,10 +14,10 @@
   --v2-text: #292524;
   --v2-text-secondary: #57534e;
   --v2-text-muted: #a8a29e;
-  --v2-accent: #f97316;
-  --v2-accent-hover: #ea580c;
+  --v2-accent: #FF7A00;
+  --v2-accent-hover: #e66e00;
   --v2-accent-soft: #fff1e7;
-  --v2-accent-ring: rgba(249, 115, 22, 0.22);
+  --v2-accent-ring: rgba(255, 122, 0, 0.22);
   --v2-success: #15803d;
   --v2-success-soft: #ecfdf3;
   --v2-warning: #b45309;
@@ -43,7 +43,7 @@
   --color-accent: var(--v2-accent);
   --color-accent-hover: var(--v2-accent-hover);
   --color-accent-glow: var(--v2-accent-ring);
-  --color-accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+  --color-accent-gradient: linear-gradient(135deg, #ff9a3d 0%, #FF7A00 55%, #e66e00 100%);
   --color-success: var(--v2-success);
   --color-warning: var(--v2-warning);
   --color-danger: var(--v2-danger);
@@ -58,6 +58,12 @@
   --wl-text-secondary: var(--v2-text-secondary);
   --wl-text-muted: var(--v2-text-muted);
   --wl-text-accent: var(--v2-accent);
+
+  /* Homilos mark — light surfaces: dark H + orange wings */
+  --brand-mark-h: #111111;
+  --brand-mark-wings: #FF7A00;
+  --brand-wordmark: #111111;
+  --brand-builder: #FF7A00;
 }
 
 :root[data-theme='dark'] {
@@ -74,10 +80,10 @@
   --v2-text: #f8fafc;
   --v2-text-secondary: #94a3b8;
   --v2-text-muted: #64748b;
-  --v2-accent: #f97316;
-  --v2-accent-hover: #fb923c;
-  --v2-accent-soft: rgba(249, 115, 22, 0.12);
-  --v2-accent-ring: rgba(249, 115, 22, 0.22);
+  --v2-accent: #FF7A00;
+  --v2-accent-hover: #ff9a3d;
+  --v2-accent-soft: rgba(255, 122, 0, 0.12);
+  --v2-accent-ring: rgba(255, 122, 0, 0.22);
   --v2-success: #22c55e;
   --v2-success-soft: rgba(34, 197, 94, 0.12);
   --v2-warning: #facc15;
@@ -102,7 +108,7 @@
   --color-accent: var(--v2-accent);
   --color-accent-hover: var(--v2-accent-hover);
   --color-accent-glow: var(--v2-accent-ring);
-  --color-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  --color-accent-gradient: linear-gradient(135deg, #FF7A00 0%, #e66e00 100%);
   --color-success: var(--v2-success);
   --color-warning: var(--v2-warning);
   --color-danger: var(--v2-danger);
@@ -117,6 +123,12 @@
   --wl-text-secondary: var(--v2-text-secondary);
   --wl-text-muted: var(--v2-text-muted);
   --wl-text-accent: var(--v2-accent);
+
+  /* Homilos mark — dark surfaces: white H + orange wings */
+  --brand-mark-h: #FFFFFF;
+  --brand-mark-wings: #FF7A00;
+  --brand-wordmark: #FFFFFF;
+  --brand-builder: #FF7A00;
 }
 
 html,

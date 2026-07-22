@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ShieldCheck,
   Dumbbell,
   LineChart,
   Clock,
@@ -20,6 +19,7 @@ import '../styles/interactive.css';
 import { DEMO_QUICK_PROFILES } from '../config/demoQuickLogin';
 import { allowPublicRegister, showDemoQuickLogin } from '../config/productionAuth';
 import { LegalDocumentView, type LegalDocId } from './legal/LegalDocumentView';
+import { LogoIcon } from './branding';
 
 const MOBILE_MQ = '(max-width: 900px)';
 const ONB_STORAGE_KEY = 'wolf-mobile-onb';
@@ -139,7 +139,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       signInLink: isEs ? 'Iniciar sesión' : 'Sign in',
       orContinue: isEs ? 'o continúa con' : 'or continue with',
       soon: isEs ? 'Próximamente' : 'Coming soon',
-      brandShort: isEs ? 'Wolf' : 'Wolf',
+      brandShort: 'Homilos',
       quickAccess: isEs ? 'Accesos rápidos (demo)' : 'Quick access (demo)',
       quickAccessAria: isEs ? 'Rellenar cuenta de demostración' : 'Fill demo account',
       quickCoach: isEs ? 'Coach' : 'Coach',
@@ -572,7 +572,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 <div className="wolf-login-onb-welcome-bg" aria-hidden />
                 <div className="wolf-login-onb-welcome-inner">
                   <div className="wolf-login-logo wolf-login-logo--onb">
-                    <ShieldCheck size={22} strokeWidth={2} aria-hidden />
+                    <LogoIcon size={22} aria-hidden />
                     <span>{t.brandShort}</span>
                   </div>
                   <h2 className="wolf-login-onb-headline">
@@ -621,8 +621,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           <div className="wolf-login-get-started">
             <div className="wolf-login-get-started-brand">
               <div className="wolf-login-logo wolf-login-logo--get-started" aria-hidden>
-                <ShieldCheck size={24} strokeWidth={2} />
-                <span>Wolf AI</span>
+                <LogoIcon size={24} />
+                <span>Homilos</span>
               </div>
             </div>
             <h2 className="wolf-login-get-started-title">{t.getStartedTitle}</h2>
@@ -703,7 +703,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
               </button>
             </div>
             <div className="wolf-login-mobile-auth-logo">
-              <ShieldCheck size={40} strokeWidth={1.75} aria-hidden />
+              <LogoIcon size={40} aria-hidden />
             </div>
             <form
               className="wolf-login-form wolf-login-form--mobile"
@@ -728,8 +728,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         <aside className="wolf-login-brand">
           <div className="wolf-login-brand-top">
             <div className="wolf-login-logo">
-              <ShieldCheck size={22} strokeWidth={2} aria-hidden />
-              <span>Wolf AI</span>
+              <LogoIcon size={22} aria-hidden />
+              <span>Homilos Builder</span>
             </div>
             <h2 className="wolf-login-headline">
               {t.brandHeadline}

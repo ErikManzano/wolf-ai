@@ -1,5 +1,6 @@
-import type { Athlete, Exercise, SessionExerciseBlock } from '../models/training';
+import type { Athlete, Exercise, SessionExerciseBlock, SetScheme } from '../models/training';
 import { exerciseName, formatAthleteKg } from '../components/session-editor/blockMetrics';
+import { purposeForScheme, type SetPurpose } from '../components/session-editor/spreadsheetPurposeUtils';
 import { flattenBlockSets, type FlatSetRow } from './athleteSetLogs';
 
 export interface SchemeCardRxSummary {
@@ -7,6 +8,7 @@ export interface SchemeCardRxSummary {
   kgLabel: string | null;
   percentage: number;
   volumeLabel: string;
+  purpose: SetPurpose;
 }
 
 function repsTokenFromRow(row: FlatSetRow): string {
@@ -41,11 +43,14 @@ export function buildSchemeCardSummaries(
         ? repsToken
         : `${row.schemeSetCount}×${repsToken}`;
 
+    const schemeStub = { percentage: row.percentage } as SetScheme;
+
     summaries.push({
       key: `scheme-${row.schemeIndex}`,
       kgLabel: row.prescribedKg > 0 ? `${formatAthleteKg(row.prescribedKg)} kg` : null,
       percentage: row.percentage,
       volumeLabel,
+      purpose: purposeForScheme(schemeStub),
     });
   }
 

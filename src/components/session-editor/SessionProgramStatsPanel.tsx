@@ -5,12 +5,10 @@ import {
   computeProgramExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
-import { buildProgramInsights, purposeIntentLine } from './statsInsights';
 import { formatStatsKg } from './statsTonnage';
 import {
   DistributionBar,
   ExerciseRanking,
-  InsightCard,
   MetricCard,
   SectionCard,
   StatRow,
@@ -26,8 +24,8 @@ export interface SessionProgramStatsPanelProps {
   selectedWeek: number;
   onSelectWeek?: (weekNumber: number) => void;
   executionContext?: SessionExecutionContext;
-  /** GA-style viewport grid — all widgets visible without page scroll. */
-  dashboard?: boolean;
+  /** Scope / athlete controls rendered inside the dashboard shell. */
+  toolbar?: React.ReactNode;
 }
 
 export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> = ({
@@ -38,7 +36,7 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
   selectedWeek,
   onSelectWeek,
   executionContext,
-  dashboard = false,
+  toolbar,
 }) => {
   const metrics = useMemo(
     () => computeProgramAggregateMetrics(program, athlete, exercises, isEs, 8),
@@ -77,39 +75,71 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
     [metrics.weekRows],
   );
 
-  const insights = useMemo(
-    () =>
-      buildProgramInsights({
-        isEs,
-        weekRows: metrics.weekRows,
-        purpose: metrics.purpose,
-        exerciseVolumes: metrics.exerciseVolumes,
-        avgPct: metrics.avgPct,
-      }),
-    [isEs, metrics.weekRows, metrics.purpose, metrics.exerciseVolumes, metrics.avgPct],
+  const selectedWeekRow = useMemo(
+    () => metrics.weekRows.find((w) => w.weekNumber === selectedWeek),
+    [metrics.weekRows, selectedWeek],
   );
+  const prevSelectedWeekRow = useMemo(() => {
+    const sorted = [...metrics.weekRows].sort((a, b) => a.weekNumber - b.weekNumber);
+    const idx = sorted.findIndex((w) => w.weekNumber === selectedWeek);
+    if (idx <= 0) return null;
+    return sorted[idx - 1] ?? null;
+  }, [metrics.weekRows, selectedWeek]);
 
-  const intentLine = purposeIntentLine(metrics.purpose, isEs);
+  const selectedWeekVolumeDelta = useMemo(() => {
+    if (!selectedWeekRow || !prevSelectedWeekRow || prevSelectedWeekRow.tonnage <= 0) return undefined;
+    const pct = Math.round(
+      ((selectedWeekRow.tonnage - prevSelectedWeekRow.tonnage) / prevSelectedWeekRow.tonnage) * 100,
+    );
+    if (!Number.isFinite(pct) || pct === 0) return undefined;
+    const abs = Math.abs(pct);
+    const arrow = pct > 0 ? '↑' : '↓';
+    return {
+      pct,
+      label: isEs
+        ? `${arrow} ${abs}% S${selectedWeek} vs S${prevSelectedWeekRow.weekNumber}`
+        : `${arrow} ${abs}% W${selectedWeek} vs W${prevSelectedWeekRow.weekNumber}`,
+      tone: (pct > 0 ? 'up' : 'down') as 'up' | 'down',
+    };
+  }, [selectedWeekRow, prevSelectedWeekRow, selectedWeek, isEs]);
 
   return (
     <section
       id="wolf-program-day-panel-stats"
       role="tabpanel"
       aria-labelledby="wolf-program-tab-stats"
-      className={`wolf-program-day-stats wolf-program-day-stats--program wolf-program-day-stats--ds wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
+      className="wolf-program-day-stats wolf-program-day-stats--program wolf-program-day-stats--ds"
     >
       <div className="wl-stats-ds">
+        {toolbar ? <div className="wl-stats-ds__toolbar">{toolbar}</div> : null}
         <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
           <MetricCard
             label={isEs ? 'Volumen total' : 'Total volume'}
             value={formatStatsKg(metrics.tonnage)}
-            sub={isEs ? 'Programa' : 'Program'}
+            sub={
+              selectedWeekRow && selectedWeekRow.sharePct > 0
+                ? isEs
+                  ? `S${selectedWeek}: ${selectedWeekRow.sharePct}% del total`
+                  : `W${selectedWeek}: ${selectedWeekRow.sharePct}% of total`
+                : isEs
+                  ? 'Programa'
+                  : 'Program'
+            }
+            delta={selectedWeekVolumeDelta}
             accent
           />
           <MetricCard
             label={isEs ? 'Intensidad' : 'Intensity'}
             value={metrics.avgPct > 0 ? `${metrics.avgPct}%` : '—'}
-            sub={isEs ? 'Media % 1RM' : 'Avg % 1RM'}
+            sub={
+              prevSelectedWeekRow && selectedWeekRow && selectedWeekRow.avgPct > 0
+                ? isEs
+                  ? `Semana actual ${selectedWeekRow.avgPct}% · ant. ${prevSelectedWeekRow.avgPct}%`
+                  : `Current week ${selectedWeekRow.avgPct}% · prev ${prevSelectedWeekRow.avgPct}%`
+                : isEs
+                  ? 'Media % 1RM'
+                  : 'Avg % 1RM'
+            }
           />
           <MetricCard
             label={isEs ? 'Semanas' : 'Weeks'}
@@ -142,19 +172,23 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
             sub={
               execution
                 ? isEs
-                  ? `${execution.completedSets}/${execution.prescribedSets} series`
-                  : `${execution.completedSets}/${execution.prescribedSets} sets`
+                  ? `${execution.completedSets}/${execution.prescribedSets} series · ${execution.completedReps}/${metrics.reps} reps`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets · ${execution.completedReps}/${metrics.reps} reps`
                 : isEs
-                  ? 'Sin atleta asignado'
-                  : 'No assigned athlete'
+                  ? `${metrics.sets} series · ${metrics.reps} reps`
+                  : `${metrics.sets} sets · ${metrics.reps} reps`
             }
             subTone={execution ? 'success' : 'muted'}
           />
         </div>
 
+        <SectionCard title={isEs ? 'Estímulo — Distribución' : 'Stimulus — Distribution'}>
+          <DistributionBar purpose={metrics.purpose} isEs={isEs} />
+        </SectionCard>
+
         <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
           <SectionCard
-            title={isEs ? 'Timeline — Semanas' : 'Timeline — Weeks'}
+            title={isEs ? 'Carga — Semanas' : 'Load — Weeks'}
             subtitle={isEs ? 'Volumen por semana · clic para seleccionar' : 'Volume by week · click to select'}
           >
             <TimelineChart
@@ -173,18 +207,10 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
             ) : null}
           </SectionCard>
 
-          <SectionCard title={isEs ? 'Distribución' : 'Distribution'}>
-            <DistributionBar purpose={metrics.purpose} isEs={isEs} insight={intentLine} />
+          <SectionCard title={isEs ? 'Carga — Ranking global' : 'Load — Global ranking'}>
+            <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={8} />
           </SectionCard>
         </div>
-
-        <SectionCard title={isEs ? 'Carga — Ranking global' : 'Load — Global ranking'}>
-          <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={8} />
-        </SectionCard>
-
-        <SectionCard title={isEs ? 'Insights Wolf' : 'Wolf Insights'}>
-          <InsightCard insights={insights} isEs={isEs} />
-        </SectionCard>
       </div>
     </section>
   );

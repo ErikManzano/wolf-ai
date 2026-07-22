@@ -17,12 +17,13 @@ const TYPE_OPTIONS = (isEs: boolean): readonly TypeOption[] => [
     label: isEs ? 'Complejo' : 'Complex',
     hint: isEs ? 'Varios movimientos enlazados' : 'Linked movements in one set',
   },
-  {
-    value: 'warmup',
-    label: isEs ? 'Calentamiento' : 'Warm-up',
-    hint: isEs ? 'Activación antes del trabajo' : 'Activation before work sets',
-  },
 ];
+
+function typeTriggerLabel(kind: ExerciseBlockKind, isEs: boolean): string {
+  if (kind === 'warmup') return isEs ? 'Calentamiento' : 'Warm-up';
+  const opt = TYPE_OPTIONS(isEs).find((o) => o.value === kind);
+  return opt?.label ?? (isEs ? 'Simple' : 'Single');
+}
 
 function TypeDot({ kind }: { kind: ExerciseBlockKind }) {
   return <span className={`wolf-se-block-type__dot wolf-se-block-type__dot--${kind}`} aria-hidden />;
@@ -69,7 +70,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
   const [activeIndex, setActiveIndex] = useState(0);
 
   const selectedIndex = options.findIndex((opt) => opt.value === kind);
-  const selected = options[selectedIndex] ?? options[0]!;
+  const triggerLabel = typeTriggerLabel(kind, isEs);
 
   useEffect(() => {
     if (!open) return;
@@ -161,7 +162,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
         onKeyDown={onTriggerKeyDown}
       >
         <TypeDot kind={kind} />
-        <span className="wolf-se-spreadsheet__type-label">{selected.label}</span>
+        <span className="wolf-se-spreadsheet__type-label">{triggerLabel}</span>
         <ChevronDown size={13} strokeWidth={2.25} className="wolf-se-spreadsheet__type-chevron" aria-hidden />
       </button>
       <PortaledComboList

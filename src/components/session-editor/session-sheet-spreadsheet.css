@@ -1465,18 +1465,22 @@
   min-width: 0;
 }
 
-/* Dashboard — GA-style grid, fully responsive */
+/* Dashboard — fills body; panel itself scrolls */
 .wolf-program-day-stats--dashboard {
-  flex: none;
+  flex: 1 1 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  min-height: auto;
+  min-height: 0;
   height: auto;
+  max-height: 100%;
   margin-bottom: 0;
   padding: clamp(6px, 1.2vw, 12px) clamp(4px, 1vw, 10px);
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__dashboard--viewport {
@@ -1612,15 +1616,6 @@
 .wolf-program-day-stats--dashboard .wolf-program-day-stats__day-card {
   min-width: 0;
   max-width: none;
-}
-
-.wolf-program-day-board--stats-only .wolf-program-day-board__body:has(.wolf-program-day-stats--dashboard) {
-  overflow-x: clip;
-  overflow-y: visible;
-  padding: 0 clamp(6px, 1.2vw, 12px) 12px;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
 }
 
 /* Tablet landscape / small desktop */

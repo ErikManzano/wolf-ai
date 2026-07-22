@@ -60,8 +60,8 @@ export function statsExerciseVolumes(
 export function formatStatsKg(kg: number): string {
   if (!Number.isFinite(kg) || kg <= 0) return '—';
   if (kg >= 1000) {
-    const k = kg / 1000;
-    return `${k >= 10 ? Math.round(k) : Math.round(k * 10) / 10}k kg`;
+    const tonnes = Math.round((kg / 1000) * 10) / 10;
+    return `${tonnes} t`;
   }
   return `${Math.round(kg).toLocaleString()} kg`;
 }

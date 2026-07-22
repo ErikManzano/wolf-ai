@@ -5,12 +5,11 @@ import {
   computeWeekExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
-import { buildWeekInsights, purposeIntentLine } from './statsInsights';
+import { buildPctDelta, buildPtsDelta, intensityDeltaPts, volumeDeltaPct } from './statsComparison';
 import { formatStatsKg } from './statsTonnage';
 import {
   DistributionBar,
   ExerciseRanking,
-  InsightCard,
   MetricCard,
   SectionCard,
   StatusBadge,
@@ -24,11 +23,13 @@ export interface SessionWeekStatsPanelProps {
   weekNumber: number;
   weekTonnage: number;
   weekData?: ProgramWeek;
+  /** Previous week in the mesocycle — for N vs N−1 comparisons */
+  previousWeekData?: ProgramWeek;
   selectedDay: number;
   onSelectDay?: (dayNumber: number) => void;
   executionContext?: SessionExecutionContext;
-  /** GA-style viewport grid — all widgets visible without page scroll. */
-  dashboard?: boolean;
+  /** Scope / athlete controls rendered inside the dashboard shell. */
+  toolbar?: React.ReactNode;
 }
 
 export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
@@ -38,14 +39,47 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
   weekNumber,
   weekTonnage: _weekTonnage,
   weekData,
+  previousWeekData,
   selectedDay,
   onSelectDay,
   executionContext,
-  dashboard = false,
+  toolbar,
 }) => {
   const metrics = useMemo(
     () => computeWeekAggregateMetrics(weekData, athlete, exercises, isEs, 6),
     [weekData, athlete, exercises, isEs],
+  );
+
+  const prevMetrics = useMemo(
+    () =>
+      previousWeekData
+        ? computeWeekAggregateMetrics(previousWeekData, athlete, exercises, isEs, 1)
+        : null,
+    [previousWeekData, athlete, exercises, isEs],
+  );
+
+  const volumeDelta = useMemo(
+    () =>
+      prevMetrics && prevMetrics.tonnage > 0
+        ? buildPctDelta(
+            volumeDeltaPct(metrics.tonnage, prevMetrics.tonnage),
+            isEs ? 'vs semana anterior' : 'vs previous week',
+            isEs,
+          )
+        : undefined,
+    [metrics.tonnage, prevMetrics, isEs],
+  );
+
+  const intensityDelta = useMemo(
+    () =>
+      prevMetrics && prevMetrics.avgPct > 0
+        ? buildPtsDelta(
+            intensityDeltaPts(metrics.avgPct, prevMetrics.avgPct),
+            isEs ? 'vs semana anterior' : 'vs previous week',
+            isEs,
+          )
+        : undefined,
+    [metrics.avgPct, prevMetrics, isEs],
   );
 
   const execution = useMemo(
@@ -69,38 +103,28 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
     [metrics.dayRows],
   );
 
-  const insights = useMemo(
-    () =>
-      buildWeekInsights({
-        isEs,
-        dayRows: metrics.dayRows,
-        purpose: metrics.purpose,
-        avgPct: metrics.avgPct,
-      }),
-    [isEs, metrics.dayRows, metrics.purpose, metrics.avgPct],
-  );
-
-  const intentLine = purposeIntentLine(metrics.purpose, isEs);
-
   return (
     <section
       id="wolf-program-day-panel-stats"
       role="tabpanel"
       aria-labelledby="wolf-program-tab-stats"
-      className={`wolf-program-day-stats wolf-program-day-stats--week wolf-program-day-stats--ds wolf-program-day-board__pane${dashboard ? ' wolf-program-day-stats--dashboard' : ''}`}
+      className="wolf-program-day-stats wolf-program-day-stats--week wolf-program-day-stats--ds"
     >
       <div className="wl-stats-ds">
+        {toolbar ? <div className="wl-stats-ds__toolbar">{toolbar}</div> : null}
         <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
           <MetricCard
             label={isEs ? 'Volumen semanal' : 'Weekly volume'}
             value={formatStatsKg(metrics.tonnage)}
             sub={isEs ? `${metrics.dayCount} días` : `${metrics.dayCount} days`}
+            delta={volumeDelta}
             accent
           />
           <MetricCard
             label={isEs ? 'Intensidad' : 'Intensity'}
             value={metrics.avgPct > 0 ? `${metrics.avgPct}%` : '—'}
             sub={isEs ? 'Media % 1RM' : 'Avg % 1RM'}
+            delta={intensityDelta}
           />
           <MetricCard
             label={isEs ? 'Días' : 'Days'}
@@ -143,43 +167,23 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
             sub={
               execution
                 ? isEs
-                  ? `${execution.completedSets}/${execution.prescribedSets} series`
-                  : `${execution.completedSets}/${execution.prescribedSets} sets`
+                  ? `${execution.completedSets}/${execution.prescribedSets} series · ${execution.completedReps}/${metrics.reps} reps`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets · ${execution.completedReps}/${metrics.reps} reps`
                 : isEs
-                  ? 'Sin atleta asignado'
-                  : 'No assigned athlete'
-            }
-            subTone={execution ? 'success' : 'muted'}
-          />
-          <MetricCard
-            label={isEs ? 'Series · Reps' : 'Sets · Reps'}
-            value={
-              execution
-                ? `${execution.completedSets}/${execution.prescribedSets}`
-                : metrics.sets > 0
-                  ? metrics.sets
-                  : '—'
-            }
-            sub={
-              execution
-                ? isEs
-                  ? `${execution.completedReps}/${metrics.reps} reps`
-                  : `${execution.completedReps}/${metrics.reps} reps`
-                : isEs
-                  ? `${metrics.reps} reps prescritas`
-                  : `${metrics.reps} prescribed reps`
+                  ? `${metrics.sets} series · ${metrics.reps} reps`
+                  : `${metrics.sets} sets · ${metrics.reps} reps`
             }
             subTone={execution ? 'success' : 'muted'}
           />
         </div>
 
-        <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
-          <SectionCard title={isEs ? 'Distribución' : 'Distribution'}>
-            <DistributionBar purpose={metrics.purpose} isEs={isEs} insight={intentLine} />
-          </SectionCard>
+        <SectionCard title={isEs ? 'Estímulo — Distribución' : 'Stimulus — Distribution'}>
+          <DistributionBar purpose={metrics.purpose} isEs={isEs} />
+        </SectionCard>
 
+        <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
           <SectionCard
-            title={isEs ? 'Timeline — Días' : 'Timeline — Days'}
+            title={isEs ? 'Carga — Días' : 'Load — Days'}
             subtitle={isEs ? 'Clic para abrir el día' : 'Click to open a day'}
           >
             <TimelineChart
@@ -192,15 +196,11 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
               valueUnit="kg"
             />
           </SectionCard>
+
+          <SectionCard title={isEs ? 'Carga — Ranking semanal' : 'Load — Weekly ranking'}>
+            <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={6} />
+          </SectionCard>
         </div>
-
-        <SectionCard title={isEs ? 'Carga — Ranking semanal' : 'Load — Weekly ranking'}>
-          <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={6} />
-        </SectionCard>
-
-        <SectionCard title={isEs ? 'Insights Wolf' : 'Wolf Insights'}>
-          <InsightCard insights={insights} isEs={isEs} />
-        </SectionCard>
       </div>
     </section>
   );

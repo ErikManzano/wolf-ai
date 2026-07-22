@@ -1,0 +1,23 @@
+/* Homilos Builder — logo surface helpers */
+
+.hb-logo-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Forced surfaces when a parent isn't on the global theme (e.g. dark marketing panel in light mode) */
+.hb-logo--on-dark {
+  --brand-mark-h: #ffffff;
+  --brand-mark-wings: #ff7a00;
+  --brand-wordmark: #ffffff;
+  --brand-builder: #ff7a00;
+  color: #ffffff;
+}
+
+.hb-logo--on-light {
+  --brand-mark-h: #111111;
+  --brand-mark-wings: #ff7a00;
+  --brand-wordmark: #111111;
+  --brand-builder: #ff7a00;
+  color: #111111;
+}

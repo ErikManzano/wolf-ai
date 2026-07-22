@@ -270,7 +270,7 @@
   .mobile-header-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
     flex: 1;
   }
@@ -290,8 +290,20 @@
     color: var(--color-accent);
   }
 
+  .mobile-header-brand-mark {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  }
+
   .mobile-header-logo {
-    color: var(--color-accent);
+    display: block;
     flex-shrink: 0;
   }
 

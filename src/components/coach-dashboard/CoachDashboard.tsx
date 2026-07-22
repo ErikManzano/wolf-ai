@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Bell,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -37,7 +36,6 @@ export interface CoachDashboardProps {
   wlAthletes: Athlete[];
   motorExercises: Exercise[];
   alerts: DashboardAlert[];
-  onAlertNavigate: (alert: DashboardAlert) => void;
   onOpenPrograms: (coachProgramId?: string) => void;
   onOpenAthletes: () => void;
 }
@@ -83,7 +81,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
   wlAthletes,
   motorExercises,
   alerts,
-  onAlertNavigate,
   onOpenPrograms,
   onOpenAthletes,
 }) => {
@@ -191,9 +188,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     { id: 'month', label: isEs ? 'Mes' : 'Month' },
   ];
 
-  const alertAccent = (s: DashboardAlert['severity']) =>
-    s === 'danger' ? 'var(--color-danger)' : s === 'warning' ? 'var(--color-warning)' : 'var(--color-accent)';
-
   return (
     <div className="mock-view super-dashboard coach-dashboard">
       <div className="cd-toolbar">
@@ -278,37 +272,6 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
                 </table>
               )}
             </div>
-          </div>
-        </section>
-
-        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-alerts-title">
-          <div className="cd-panel__head">
-            <h2 id="cd-alerts-title" className="cd-panel__title">
-              <Bell size={16} aria-hidden />
-              {isEs ? 'Alertas inteligentes' : 'Smart alerts'}
-            </h2>
-          </div>
-          <div className="cd-panel__body">
-            {model.alerts.length === 0 ? (
-              <div className="cd-alert cd-alert--ok">
-                <p>{isEs ? 'Sin alertas según los datos actuales.' : 'No alerts for the current data.'}</p>
-              </div>
-            ) : (
-              <ul className="cd-alert-feed">
-                {model.alerts.map((alert) => (
-                  <li key={alert.id} className="cd-alert-item">
-                    <span className="cd-alert-item__dot" style={{ background: alertAccent(alert.severity) }} aria-hidden />
-                    <div className="cd-alert-item__body">
-                      <strong>{alert.title}</strong>
-                      <p>{alert.description}</p>
-                    </div>
-                    <button type="button" className="cd-link-btn cd-link-btn--compact" onClick={() => onAlertNavigate(alert)}>
-                      {alert.actionLabel}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </section>
 

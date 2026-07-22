@@ -197,16 +197,19 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
         </td>
         <td
           className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--zone-start"
-          data-metric-label={isEs ? 'Series' : 'Sets'}
+          data-metric-label={isEs ? 'series' : 'sets'}
         >
           {workSets}
         </td>
-        <td className="wolf-se-spreadsheet__metric" data-metric-label="Reps">
+        <td
+          className="wolf-se-spreadsheet__metric"
+          data-metric-label={isEs ? 'repeticiones' : 'reps'}
+        >
           {repsSummary}
         </td>
         <td
           className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--vol"
-          data-metric-label={isEs ? 'Vol. total' : 'Total vol.'}
+          data-metric-label={isEs ? 'vol. total' : 'total vol.'}
         >
           {tonnage > 0 ? `${tonnage.toLocaleString()}\u00A0kg` : '—'}
         </td>

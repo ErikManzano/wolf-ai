@@ -22,7 +22,8 @@
     "smoke:prd-program-save": "tsx scripts/smoke-prd-program-save.ts",
     "verify:coach-exercises": "tsx scripts/verify-coach-exercises.ts",
     "db:seed-exercises": "tsx scripts/db-setup-production.ts",
-    "db:provision-users": "tsx scripts/provision-users.ts"
+    "db:provision-users": "tsx scripts/provision-users.ts",
+    "branding:generate": "node scripts/generate-branding.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
@@ -45,6 +46,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@fontsource/manrope": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
@@ -59,6 +62,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "gh-pages": "^6.3.0",
     "globals": "^17.4.0",
+    "svgo": "^4.0.2",
     "tsx": "^4.19.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",

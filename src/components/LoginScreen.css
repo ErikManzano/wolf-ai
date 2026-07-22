@@ -55,7 +55,6 @@
 }
 
 .wolf-login-logo svg {
-  color: var(--wolf-login-orange);
   flex-shrink: 0;
 }
 

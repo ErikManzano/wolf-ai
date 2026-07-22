@@ -63,6 +63,11 @@
   .wl-stats-ds__metrics {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+
+  .wolf-program-day-stats--day .wl-stats-ds__metrics,
+  .wolf-program-day-stats--week .wl-stats-ds__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 719px) {
@@ -116,6 +121,25 @@
   font-size: 0.72rem;
   color: var(--stats-muted);
   line-height: 1.3;
+}
+
+.wl-stats-metric__delta {
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.wl-stats-metric__delta--up {
+  color: var(--stats-green);
+}
+
+.wl-stats-metric__delta--down {
+  color: color-mix(in srgb, var(--stats-orange) 75%, var(--stats-muted));
+}
+
+.wl-stats-metric__delta--flat {
+  color: var(--stats-muted);
 }
 
 .wl-stats-metric__sub--success {
@@ -498,6 +522,12 @@
   background: color-mix(in srgb, var(--stats-canvas) 70%, var(--stats-surface));
 }
 
+.wl-stats-insight--hero {
+  padding: 12px 14px;
+  border-color: color-mix(in srgb, var(--stats-orange) 28%, var(--stats-border));
+  background: color-mix(in srgb, var(--stats-orange) 6%, var(--stats-surface));
+}
+
 .wl-stats-insight__dot {
   width: 7px;
   height: 7px;
@@ -519,11 +549,47 @@
   background: var(--stats-blue);
 }
 
-.wl-stats-insight__text {
+.wl-stats-insight__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wl-stats-insight__title {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--stats-text);
+}
+
+.wl-stats-insight__body {
+  margin: 0;
+  font-size: 0.78rem;
   line-height: 1.4;
   color: var(--stats-secondary);
+}
+
+.wl-stats-insight__action {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--stats-text);
+}
+
+.wl-stats-insight__action-label {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stats-orange);
+}
+
+.wl-stats-insight--hero .wl-stats-insight__title {
+  font-size: 0.9rem;
 }
 
 /* StatusBadge */
@@ -604,23 +670,54 @@
   text-align: right;
 }
 
-/* Dashboard host (replaces dense old layout when panels use DS) */
+/* Stats DS host — fills board; section scrolls */
 .wolf-program-day-stats--ds {
   padding: 0;
-}
-
-.wolf-program-day-stats--ds.wolf-program-day-stats--dashboard {
-  height: 100%;
+  flex: 1 1 0;
   min-height: 0;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  height: auto;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .wolf-program-day-stats--ds .wl-stats-ds {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-bottom: 32px;
+  gap: var(--stats-space-5);
+}
+
+.wl-stats-ds__toolbar {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 clamp(8px, 1.5vw, 16px);
+  background: var(--stats-canvas, var(--v2-canvas, var(--color-bg-main, #f7f7f5)));
+  border-bottom: 1px solid color-mix(in srgb, var(--stats-border, var(--v2-border, #e7e5e4)) 80%, transparent);
+}
+
+.wl-stats-ds__toolbar .wolf-program-day-board__stats-scope-bar {
+  padding-top: 8px;
+  padding-bottom: 10px;
+  border-bottom: none;
+  background: transparent;
+}
+
+.wolf-program-day-stats--ds .wl-stats-ds > :not(.wl-stats-ds__toolbar) {
   max-width: 1100px;
+  width: 100%;
   margin-inline: auto;
   padding-inline: 2px;
+  box-sizing: border-box;
 }
 
 @media (prefers-reduced-motion: reduce) {

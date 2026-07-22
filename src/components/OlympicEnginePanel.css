@@ -2154,10 +2154,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .wolf-program-day-board__stats-chrome {
@@ -2487,10 +2484,16 @@
   }
 }
 
-.wolf-program-day-board--stats-only .wolf-program-day-board__body {
-  flex: none;
-  min-height: auto;
-  overflow: visible;
+.wolf-program-day-board--stats-only > .wolf-program-day-stats {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 @media (max-width: 1023px) {

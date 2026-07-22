@@ -459,16 +459,15 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   const syncStatusChip =
     hasProgram && syncHint ? (
-      <span className="wl-programs-sync-status" role="status" aria-live="polite">
-        <button
-          type="button"
-          className={`wl-programs-sync-cloud wl-programs-sync-cloud--${syncState}`}
-          title={cloudSyncLabel}
-          aria-label={cloudSyncLabel}
-        >
-          <SyncCloudIcon size={15} aria-hidden />
-        </button>
-        <span className={`wl-programs-sync-chip wl-programs-sync-chip--${syncState}`}>{syncHint}</span>
+      <span
+        className={`wl-programs-sync-status wl-programs-sync-status--${syncState}`}
+        role="status"
+        aria-live="polite"
+        title={cloudSyncLabel}
+        aria-label={cloudSyncLabel}
+      >
+        <SyncCloudIcon size={14} strokeWidth={2.25} className="wl-programs-sync-status__icon" aria-hidden />
+        <span className="wl-programs-sync-status__label">{syncHint}</span>
       </span>
     ) : null;
 

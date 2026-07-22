@@ -279,13 +279,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     wlNameByProfileId,
   ]);
 
-  const handleDashboardNavigate = (alert: DashboardAlert) => {
-    if (alert.athleteId != null) {
-      setActiveAthleteId(alert.athleteId);
-    }
-    setActiveView(alert.targetView);
-  };
-
   useEffect(() => {
     if (activeView === 'performance') setActiveView('dashboard');
   }, [activeView, setActiveView]);
@@ -691,7 +684,6 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
       wlAthletes={wlAthletes}
       motorExercises={motorExercises}
       alerts={dashboardData.alerts}
-      onAlertNavigate={handleDashboardNavigate}
       onOpenPrograms={(coachProgramId) => {
         try {
           if (coachProgramId) sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, coachProgramId);

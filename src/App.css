@@ -35,6 +35,11 @@
   --color-text-primary: #f5f5f4;
   --color-text-secondary: #a8a29e;
   --color-text-muted: #78716c;
+  /* Sidebar is always a dark rail — force dark-surface brand mark */
+  --brand-mark-h: #ffffff;
+  --brand-mark-wings: #ff7a00;
+  --brand-wordmark: #ffffff;
+  --brand-builder: #ff7a00;
   background: #171411;
   border-right-color: #2a2521;
   color-scheme: dark;
@@ -282,7 +287,8 @@
     background: var(--v2-canvas);
   }
 
-  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table) {
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table),
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--stats) {
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -306,7 +312,8 @@
     background: var(--v2-canvas);
   }
 
-  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table) {
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table),
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--stats) {
     height: 100%;
     max-height: 100%;
     min-height: 0;
@@ -461,7 +468,8 @@
     min-height: 100%;
   }
 
-  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table) {
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table),
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--stats) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -470,7 +478,8 @@
     scroll-padding-bottom: 0;
   }
 
-  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table) {
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table),
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--stats) {
     flex: 1 1 0;
     height: 100%;
     max-height: 100%;

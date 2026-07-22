@@ -215,7 +215,19 @@
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
   min-width: 0;
-  color: #ff4d00;
+  color: var(--color-text-secondary, #57534e);
+}
+
+.wa-athlete-ex-card__rx--technique {
+  color: #38bdf8;
+}
+
+.wa-athlete-ex-card__rx--work {
+  color: #22c55e;
+}
+
+.wa-athlete-ex-card__rx--intensity {
+  color: #ff7a00;
 }
 
 .wa-athlete-ex-card__rx--empty {
@@ -228,19 +240,19 @@
   height: 8px;
   flex-shrink: 0;
   border-radius: 999px;
+  background: currentColor;
+}
+
+.wa-athlete-ex-card__rx-dot--technique {
   background: #38bdf8;
 }
 
-.wa-athlete-ex-card__rx-dot--0 {
-  background: #38bdf8;
-}
-
-.wa-athlete-ex-card__rx-dot--1 {
+.wa-athlete-ex-card__rx-dot--work {
   background: #22c55e;
 }
 
-.wa-athlete-ex-card__rx-dot--2 {
-  background: #ff4d00;
+.wa-athlete-ex-card__rx-dot--intensity {
+  background: #ff7a00;
 }
 
 .wa-athlete-ex-card__rx-kg,

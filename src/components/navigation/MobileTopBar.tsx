@@ -10,11 +10,13 @@ import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useMobileTopBarContext } from '../../context/MobileTopBarContext';
 import { useTheme } from '../../context/ThemeContext';
 import { NotificationsBell } from '../notifications/NotificationsBell';
-import { WolfBrandIcon } from '../WolfBrandIcon';
+import { LogoIcon } from '../branding';
 import './mobile-top-bar.css';
 
-const WolfHeaderIcon = ({ size = 18 }: { size?: number }) => (
-  <WolfBrandIcon size={size} className="mobile-header-logo" />
+const BrandHeaderIcon = ({ size = 22 }: { size?: number }) => (
+  <span className="mobile-header-brand-mark" aria-hidden>
+    <LogoIcon size={size} className="mobile-header-logo" title="" />
+  </span>
 );
 
 type MobileTopBarProps = {
@@ -65,7 +67,7 @@ export function MobileTopBar({
             <ArrowLeft size={22} strokeWidth={2} aria-hidden />
           </button>
         ) : null}
-        {config?.hideBrandIcon ? null : <WolfHeaderIcon />}
+        {config?.hideBrandIcon ? null : <BrandHeaderIcon />}
         <div className={`mobile-header-brand-copy${config?.belowTitle ? ' mobile-header-brand-copy--stacked' : ''}`}>
           {config?.titleContent ?? <div className="mobile-header-title">{title}</div>}
           {config?.belowTitle ? (

@@ -1428,6 +1428,52 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const customizeToolbarPortaled =
     toolbarPortalNode && customizeToolbar ? createPortal(customizeToolbar, toolbarPortalNode) : null;
 
+  const statsToolbar =
+    showCustomize && customizeSubview === 'stats' ? (
+      <div className="wolf-program-day-board__stats-scope-bar">
+        <div className="wolf-program-day-board__stats-scope-bar__start">
+          <ProgramStatsScopeControls
+            statsScope={statsScope}
+            isEs={isEs}
+            onStatsScopeChange={setStatsScope}
+          />
+        </div>
+        <div className="wolf-program-day-board__stats-scope-bar__center">
+          {statsScope === 'day' ? programDayNavigation : null}
+        </div>
+        <div className="wolf-program-day-board__stats-scope-bar__end">
+          <label className="wolf-program-day-board__stats-athlete">
+            <span className="wolf-program-day-board__stats-athlete-label">
+              {isEs ? 'Atleta' : 'Athlete'}
+            </span>
+            <div className="wolf-select-wrap wolf-select-wrap--app">
+              <select
+                value={statsAthleteId}
+                onChange={(e) => setStatsAthleteId(e.target.value)}
+                disabled={statsAthleteOptions.length === 0}
+                aria-label={
+                  isEs
+                    ? 'Seleccionar atleta para estadísticas'
+                    : 'Select athlete for statistics'
+                }
+              >
+                {statsAthleteOptions.length === 0 ? (
+                  <option value="">{isEs ? 'Sin atletas inscritos' : 'No enrolled athletes'}</option>
+                ) : (
+                  statsAthleteOptions.map((opt) => (
+                    <option key={opt.athleteProfileId} value={opt.athleteProfileId}>
+                      {opt.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
+            </div>
+          </label>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <div className={`wolf-program-plan${showCustomize && !showCreate ? ' wolf-program-plan--edit' : ''}`}>
       {showCreate && (
@@ -1613,94 +1659,50 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
             >
               <div className="wolf-program-day-board wolf-program-day-board--stats-only">
                 {chromePortalNode ? null : programWeekNavigation}
-                <div className="wolf-program-day-board__stats-scope-bar">
-                  <div className="wolf-program-day-board__stats-scope-bar__start">
-                    <ProgramStatsScopeControls
-                      statsScope={statsScope}
-                      isEs={isEs}
-                      onStatsScopeChange={setStatsScope}
-                    />
-                  </div>
-                  <div className="wolf-program-day-board__stats-scope-bar__center">
-                    {statsScope === 'day' ? programDayNavigation : null}
-                  </div>
-                  <div className="wolf-program-day-board__stats-scope-bar__end">
-                    <label className="wolf-program-day-board__stats-athlete">
-                      <span className="wolf-program-day-board__stats-athlete-label">
-                        {isEs ? 'Atleta' : 'Athlete'}
-                      </span>
-                      <div className="wolf-select-wrap wolf-select-wrap--app">
-                        <select
-                          value={statsAthleteId}
-                          onChange={(e) => setStatsAthleteId(e.target.value)}
-                          disabled={statsAthleteOptions.length === 0}
-                          aria-label={
-                            isEs
-                              ? 'Seleccionar atleta para estadísticas'
-                              : 'Select athlete for statistics'
-                          }
-                        >
-                          {statsAthleteOptions.length === 0 ? (
-                            <option value="">
-                              {isEs ? 'Sin atletas inscritos' : 'No enrolled athletes'}
-                            </option>
-                          ) : (
-                            statsAthleteOptions.map((opt) => (
-                              <option key={opt.athleteProfileId} value={opt.athleteProfileId}>
-                                {opt.name}
-                              </option>
-                            ))
-                          )}
-                        </select>
-                        <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                <div className="wolf-program-day-board__body">
-                  {daySession && statsScope === 'day' ? (
-                    <SessionDayStatsPanel
-                      key={`stats-day-${selectedWeek}-${selectedDay}-${statsAthleteId || 'none'}`}
-                      session={daySession}
-                      athlete={statsAthleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      weekNumber={selectedWeek}
-                      dayNumber={selectedDay}
-                      weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
-                      executionContext={statsExecutionContext}
-                      dashboard
-                    />
-                  ) : null}
-                  {statsScope === 'week' ? (
-                    <SessionWeekStatsPanel
-                      key={`stats-week-${selectedWeek}-${statsAthleteId || 'none'}`}
-                      athlete={statsAthleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      weekNumber={selectedWeek}
-                      weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
-                      weekData={selectedWeekData}
-                      selectedDay={selectedDay}
-                      onSelectDay={handleWeekStatsDaySelect}
-                      executionContext={statsExecutionContext}
-                      dashboard
-                    />
-                  ) : null}
-                  {statsScope === 'program' ? (
-                    <SessionProgramStatsPanel
-                      key={`stats-program-${statsAthleteId || 'none'}`}
-                      program={program}
-                      athlete={statsAthleteForEngine}
-                      exercises={motorExercises}
-                      isEs={isEs}
-                      selectedWeek={selectedWeek}
-                      onSelectWeek={handleProgramStatsWeekSelect}
-                      executionContext={statsExecutionContext}
-                      dashboard
-                    />
-                  ) : null}
-                </div>
+                {daySession && statsScope === 'day' ? (
+                  <SessionDayStatsPanel
+                    key={`stats-day-${selectedWeek}-${selectedDay}-${statsAthleteId || 'none'}`}
+                    session={daySession}
+                    athlete={statsAthleteForEngine}
+                    exercises={motorExercises}
+                    isEs={isEs}
+                    weekNumber={selectedWeek}
+                    dayNumber={selectedDay}
+                    weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
+                    weekData={selectedWeekData}
+                    executionContext={statsExecutionContext}
+                    toolbar={statsToolbar}
+                  />
+                ) : null}
+                {statsScope === 'week' ? (
+                  <SessionWeekStatsPanel
+                    key={`stats-week-${selectedWeek}-${statsAthleteId || 'none'}`}
+                    athlete={statsAthleteForEngine}
+                    exercises={motorExercises}
+                    isEs={isEs}
+                    weekNumber={selectedWeek}
+                    weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
+                    weekData={selectedWeekData}
+                    previousWeekData={program?.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
+                    selectedDay={selectedDay}
+                    onSelectDay={handleWeekStatsDaySelect}
+                    executionContext={statsExecutionContext}
+                    toolbar={statsToolbar}
+                  />
+                ) : null}
+                {statsScope === 'program' ? (
+                  <SessionProgramStatsPanel
+                    key={`stats-program-${statsAthleteId || 'none'}`}
+                    program={program}
+                    athlete={statsAthleteForEngine}
+                    exercises={motorExercises}
+                    isEs={isEs}
+                    selectedWeek={selectedWeek}
+                    onSelectWeek={handleProgramStatsWeekSelect}
+                    executionContext={statsExecutionContext}
+                    toolbar={statsToolbar}
+                  />
+                ) : null}
               </div>
             </div>
           ) : (

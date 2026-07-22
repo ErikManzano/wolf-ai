@@ -164,10 +164,13 @@ function CoachDayCard({
             className="wolf-se-coach-day-card__rx-block"
             aria-label={isEs ? 'Prescripción' : 'Prescription'}
           >
-            {schemeSummaries.map((scheme, schemeIndex) => (
-              <p key={scheme.key} className="wolf-se-coach-day-card__rx">
+            {schemeSummaries.map((scheme) => (
+              <p
+                key={scheme.key}
+                className={`wolf-se-coach-day-card__rx wolf-se-coach-day-card__rx--${scheme.purpose}`}
+              >
                 <span
-                  className={`wolf-se-coach-day-card__rx-dot wolf-se-coach-day-card__rx-dot--${schemeIndex % 3}`}
+                  className={`wolf-se-coach-day-card__rx-dot wolf-se-coach-day-card__rx-dot--${scheme.purpose}`}
                   aria-hidden
                 />
                 {scheme.kgLabel ? (

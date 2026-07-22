@@ -66,10 +66,10 @@
   height: 40px;
   padding: 0;
   overflow-x: auto;
-  border: 1px solid #dedbd7;
+  border: 1px solid var(--color-border, #dedbd7);
   border-radius: 9px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  background: var(--color-bg-panel, #fff);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-text-primary, #1c1917) 6%, transparent);
 }
 
 .wolf-athlete-plan--mobile-day .wa-day-tab--coach {
@@ -79,10 +79,10 @@
   min-height: 36px;
   padding: 0 10px;
   border: none;
-  border-right: 1px solid #e7e5e4;
+  border-right: 1px solid var(--color-border, #e7e5e4);
   border-radius: 0;
-  background: #fff;
-  color: #44403c;
+  background: var(--color-bg-panel, #fff);
+  color: var(--color-text-secondary, #44403c);
   font-size: 0.82rem;
   font-weight: 700;
   box-shadow: none;
@@ -94,8 +94,8 @@
 
 .wolf-athlete-plan--mobile-day .wa-day-tab--coach.active {
   border-color: transparent;
-  border-right-color: #e7e5e4;
-  background: #f4510b;
+  border-right-color: var(--color-border, #e7e5e4);
+  background: var(--color-accent, #f4510b);
   color: #fff;
 }
 
@@ -104,9 +104,9 @@
 }
 
 .wolf-athlete-plan--mobile-day .wa-day-tab--coach.wa-day-tab--done:not(.active) {
-  border-right: 1px solid #e7e5e4;
-  color: color-mix(in srgb, var(--color-success) 85%, #44403c);
-  background: #fff;
+  border-right: 1px solid var(--color-border, #e7e5e4);
+  color: color-mix(in srgb, var(--color-success) 85%, var(--color-text-secondary, #44403c));
+  background: var(--color-bg-panel, #fff);
 }
 
 .wa-day-overview {

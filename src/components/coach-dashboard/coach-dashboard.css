@@ -89,6 +89,10 @@
   align-items: stretch;
 }
 
+.cd-quad-grid > .cd-panel:first-child {
+  grid-column: 1 / -1;
+}
+
 .cd-panel {
   border-radius: 14px;
   padding: clamp(12px, 1.6vw, 16px);

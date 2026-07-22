@@ -5,7 +5,7 @@ import {
   exerciseDemoEmbedUrl,
   exerciseDemoThumbnailUrl,
 } from '../../config/exerciseDemoPlaceholder';
-import { WolfBrandIcon } from '../WolfBrandIcon';
+import { LogoIcon } from '../branding';
 import './exercise-detail-mock.css';
 
 interface ExerciseDetailMockProps {
@@ -16,8 +16,8 @@ interface ExerciseDetailMockProps {
   youtubeVideoId?: string;
 }
 
-function WolfPlayMark() {
-  return <WolfBrandIcon className="wa-exercise-media__wolf-mark" size={24} />;
+function BrandPlayMark() {
+  return <LogoIcon className="wa-exercise-media__wolf-mark" size={24} variant="monochrome" />;
 }
 
 /** Demo video + coach note (per-exercise media will come from catalog/backend). */
@@ -75,7 +75,7 @@ export const ExerciseDetailMock: React.FC<ExerciseDetailMockProps> = ({
             <span className="wa-exercise-media__shade" aria-hidden />
             <span className="wa-exercise-media__play-stack">
               <span className="wa-exercise-media__play-ring">
-                <WolfPlayMark />
+                <BrandPlayMark />
                 <Play className="wa-exercise-media__play-icon" size={22} strokeWidth={2.25} fill="currentColor" aria-hidden />
               </span>
               <span className="wa-exercise-media__play-label">

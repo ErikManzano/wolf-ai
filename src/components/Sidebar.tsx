@@ -11,10 +11,10 @@ import {
   getVisibleNavItems,
   isNavItemVisible,
 } from '../navigation/appNavigation';
-import { WolfBrandIcon } from './WolfBrandIcon';
+import { LogoIcon } from './branding';
 
-const WolfIcon = ({ size = 28, className = '' }) => (
-  <WolfBrandIcon size={size} className={className} />
+const BrandIcon = ({ size = 28, className = '' }) => (
+  <LogoIcon size={size} className={className} />
 );
 
 interface SidebarProps {
@@ -65,8 +65,15 @@ const Sidebar: React.FC<SidebarProps> = ({
     <div className={`sidebar${collapsed ? ' compact' : ''}${mobileDrawer ? ' sidebar--mobile-drawer' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
-          <WolfIcon size={20} className="logo-icon" />
-          <h2>{mobileDrawer ? (isEs ? 'Más opciones' : 'More options') : 'Wolf AI'}</h2>
+          <BrandIcon size={collapsed ? 26 : 32} className="logo-icon" />
+          {mobileDrawer ? (
+            <h2 className="logo-wordmark logo-wordmark--plain">{isEs ? 'Más opciones' : 'More options'}</h2>
+          ) : (
+            <h2 className="logo-wordmark" aria-label="Homilos Builder">
+              <span className="logo-wordmark__name">Homilos</span>
+              <span className="logo-wordmark__builder">Builder</span>
+            </h2>
+          )}
         </div>
         {showRailToggle ? (
           <button
