@@ -2795,17 +2795,17 @@
     line-height: 1.3;
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n + 1) {
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip--technique {
     color: color-mix(in srgb, var(--v2-info) 75%, var(--v2-text));
     background: color-mix(in srgb, var(--v2-info) 35%, var(--v2-surface));
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n + 2) {
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip--work {
     color: color-mix(in srgb, var(--v2-success) 75%, var(--v2-text));
     background: color-mix(in srgb, var(--v2-success) 35%, var(--v2-surface));
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip:nth-child(3n) {
+  .wl-programs-editor .wl-programs-embedded-plan .wolf-se-spreadsheet__exercise-rx-chip--intensity {
     color: color-mix(in srgb, var(--v2-accent) 75%, var(--v2-text));
     background: color-mix(in srgb, var(--v2-accent) 35%, var(--v2-surface));
   }

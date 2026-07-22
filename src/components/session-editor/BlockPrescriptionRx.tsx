@@ -4,6 +4,7 @@ import {
   formatBlockPrescription,
   formatSetSchemeRow,
 } from './schemeFormat';
+import { purposeForScheme } from './spreadsheetPurposeUtils';
 
 export interface BlockPrescriptionRxProps {
   block: SessionExerciseBlock;
@@ -33,11 +34,17 @@ export function BlockPrescriptionRx({ block, className }: BlockPrescriptionRxPro
       title={fullLabel}
       aria-label={fullLabel}
     >
-      {block.sets.map((row, idx) => (
-        <span key={idx} className="wolf-se-spreadsheet__exercise-rx-chip">
-          {formatSetSchemeRow(row, isComplex)}
-        </span>
-      ))}
+      {block.sets.map((row, idx) => {
+        const purpose = purposeForScheme(row);
+        return (
+          <span
+            key={idx}
+            className={`wolf-se-spreadsheet__exercise-rx-chip wolf-se-spreadsheet__exercise-rx-chip--${purpose}`}
+          >
+            {formatSetSchemeRow(row, isComplex)}
+          </span>
+        );
+      })}
     </div>
   );
 }

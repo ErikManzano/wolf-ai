@@ -329,13 +329,32 @@
   gap: 4px;
   padding: 5px 10px;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, var(--color-border));
-  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary) 70%, var(--color-bg-panel));
   font-size: 0.84rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
   white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.wolf-se-spreadsheet__exercise-rx-chip--technique {
+  color: color-mix(in srgb, #38bdf8 82%, var(--color-text-primary));
+  border-color: color-mix(in srgb, #38bdf8 32%, var(--color-border));
+  background: color-mix(in srgb, #38bdf8 12%, var(--color-bg-panel));
+}
+
+.wolf-se-spreadsheet__exercise-rx-chip--work {
+  color: color-mix(in srgb, #22c55e 82%, var(--color-text-primary));
+  border-color: color-mix(in srgb, #22c55e 32%, var(--color-border));
+  background: color-mix(in srgb, #22c55e 12%, var(--color-bg-panel));
+}
+
+.wolf-se-spreadsheet__exercise-rx-chip--intensity {
+  color: color-mix(in srgb, var(--color-accent, #ff7a00) 82%, var(--color-text-primary));
+  border-color: color-mix(in srgb, var(--color-accent, #ff7a00) 32%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent, #ff7a00) 12%, var(--color-bg-panel));
 }
 
 .wolf-se-spreadsheet__exercise-rx-pct {
