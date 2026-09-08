@@ -1,7 +1,7 @@
 import type { ProgramDay, ProgramWeek } from '../../models/training';
 
 export type WeekRow = { id: string; weekNumber: number };
-export type DayRow = { id: string; dayNumber: number; label?: string };
+export type DayRow = { id: string; dayNumber: number; label?: string; dateLabel?: string };
 
 export const TAB_SPRING = { type: 'spring' as const, stiffness: 640, damping: 40, mass: 0.7 };
 
@@ -39,6 +39,7 @@ export function syncDayRows(days: ProgramDay[], prev: DayRow[]): DayRow[] {
     id: prev[i]?.id ?? newRowId('day'),
     dayNumber: d.dayNumber,
     label: d.label,
+    dateLabel: prev[i]?.dateLabel,
   }));
 }
 

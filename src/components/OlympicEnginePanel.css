@@ -5483,3 +5483,81 @@ tr.is-active-week .wolf-program-matrix-week-load {
     display: none;
   }
 }
+
+/* Editor + sticky stats split (tablet+) */
+.wolf-program-customize-panel--editor-split .wolf-program-editor-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wolf-program-editor-split__main { min-width: 0; }
+
+.wolf-program-editor-split__stats {
+  position: sticky;
+  top: 8px;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--v2-border, var(--color-border, #e7e5e4));
+  background: var(--v2-canvas, var(--color-bg-main, #f7f7f5));
+}
+
+.wl-day-coach-note {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--v2-border, var(--color-border, #e7e5e4));
+  background: var(--v2-surface, var(--color-bg-panel, #fff));
+}
+
+.wl-day-coach-note__label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--v2-text-muted, #78716c);
+  margin-bottom: 6px;
+}
+
+.wl-day-coach-note__input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 52px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--v2-text, #1c1917);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.wl-day-date-chip {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--v2-text-muted, #78716c);
+}
+
+.wolf-day-tab--dated {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.wolf-day-tab__date {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 600;
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+}

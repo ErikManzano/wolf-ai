@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
@@ -18,6 +18,7 @@ import {
   syncDayRows,
   syncWeekRows,
 } from './programTabReorderUtils';
+import { formatShortDate, programDayDate } from './programScienceStats';
 
 import type { ProgramStatsScope } from './ProgramDayBoardTabs';
 
@@ -208,6 +209,7 @@ interface SortableDayTabProps {
   canReorder: boolean;
   reduceMotion: boolean | null;
   onSelect: (dayNumber: number) => void;
+  dateLabel?: string | null;
 }
 
 const SortableDayTab: React.FC<SortableDayTabProps> = ({
@@ -216,6 +218,7 @@ const SortableDayTab: React.FC<SortableDayTabProps> = ({
   canReorder,
   reduceMotion,
   onSelect,
+  dateLabel,
 }) => {
   const label = dayTabLabel(row);
 
@@ -233,11 +236,12 @@ const SortableDayTab: React.FC<SortableDayTabProps> = ({
     >
       <button
         type="button"
-        className={`wolf-day-tab${isActive ? ' active' : ''}`}
+        className={`wolf-day-tab${isActive ? ' active' : ''}${dateLabel ? ' wolf-day-tab--dated' : ''}`}
         aria-current={isActive ? 'true' : undefined}
         onClick={() => onSelect(row.dayNumber)}
       >
-        {label}
+        <span className="wolf-day-tab__label">{label}</span>
+        {dateLabel ? <span className="wolf-day-tab__date">{dateLabel}</span> : null}
       </button>
     </Reorder.Item>
   );
@@ -303,6 +307,16 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
     dayWeekRef.current = selectedWeek;
     setDayRows((prev) => syncDayRows(selectedWeekData.days, weekChanged ? [] : prev));
   }, [selectedWeek, selectedWeekData]);
+
+  const dayDateLabels = useMemo(() => {
+    const map: Record<number, string> = {};
+    if (!program.startDate || !selectedWeekData) return map;
+    for (const day of selectedWeekData.days) {
+      const iso = programDayDate(program, selectedWeek, day.dayNumber);
+      if (iso) map[day.dayNumber] = formatShortDate(iso, isEs);
+    }
+    return map;
+  }, [program, selectedWeek, selectedWeekData, isEs]);
 
   const weekNumbers = weekRows.map((r) => r.weekNumber);
   const selectedWeekIndex = weekNumbers.indexOf(selectedWeek);
@@ -680,6 +694,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   canReorder={canReorderDays}
                   reduceMotion={reduceMotion}
                   onSelect={onSelectDay}
+                  dateLabel={dayDateLabels[row.dayNumber] ?? null}
                 />
               ))}
             </Reorder.Group>

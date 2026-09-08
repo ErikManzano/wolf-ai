@@ -1,8 +1,10 @@
 export { MetricCard, type MetricCardProps } from './MetricCard';
 export { SectionCard, type SectionCardProps } from './SectionCard';
 export { DistributionBar, type DistributionBarProps } from './DistributionBar';
+export { ScienceDistributionBar, type ScienceDistributionBarProps } from './ScienceDistributionBar';
 export { ExerciseRanking, type ExerciseRankingProps } from './ExerciseRanking';
 export { TimelineChart, type TimelineChartProps, type TimelinePoint } from './TimelineChart';
+export { LineTrendChart, type LineTrendChartProps, type TrendSeries } from './LineTrendChart';
 export { InsightCard, type InsightCardProps } from './InsightCard';
 export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './StatusBadge';
 export { StatRow, type StatRowProps, type StatRowItem } from './StatRow';

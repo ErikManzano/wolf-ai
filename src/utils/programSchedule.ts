@@ -5,6 +5,8 @@ import { buildSessionFromBlocks, getExercisePoolForGoal } from '../services/sess
 export interface ProgramDraftInput {
   name: string;
   startDate: string;
+  /** Optional inclusive end / deadline. Defaults from startDate + totalWeeks. */
+  endDate?: string;
   totalWeeks: number;
   daysPerWeek: number;
   primaryGoal?: SessionGoal;
@@ -86,6 +88,25 @@ export function computeProgramEndDate(startDate: string, totalWeeks: number): st
   return addCalendarDays(startDate, weeks * 7 - 1);
 }
 
+/** Inclusive calendar-day span between two ISO dates (YYYY-MM-DD). */
+export function calendarDaysInclusive(startDate: string, endDate: string): number {
+  const start = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+  const diffMs = end.getTime() - start.getTime();
+  if (diffMs < 0) return 1;
+  return Math.floor(diffMs / (24 * 60 * 60 * 1000)) + 1;
+}
+
+/**
+ * Weeks implied by an inclusive start→end window.
+ * e.g. 1–7 days → 1 week, 8–14 → 2 weeks.
+ */
+export function computeWeeksFromDateRange(startDate: string, endDate: string): number {
+  const days = calendarDaysInclusive(startDate, endDate);
+  return Math.max(1, Math.min(52, Math.ceil(days / 7)));
+}
+
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -95,7 +116,11 @@ export function buildProgramDraft(input: ProgramDraftInput): GeneratedProgram {
   const totalWeeks = Math.max(1, Math.min(52, Math.round(input.totalWeeks)));
   const daysPerWeek = Math.max(1, Math.min(7, Math.round(input.daysPerWeek)));
   const startDate = input.startDate || todayIsoDate();
-  const endDate = computeProgramEndDate(startDate, totalWeeks);
+  const computedEnd = computeProgramEndDate(startDate, totalWeeks);
+  const endDate =
+    input.endDate && input.endDate >= startDate
+      ? input.endDate
+      : computedEnd;
 
   return {
     id: `prog-${Date.now()}`,

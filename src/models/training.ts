@@ -262,6 +262,8 @@ export interface ProgramDay {
   dayNumber: number;
   label: string;
   session: Session;
+  /** Coach note / day objective (stats + editor). Optional for legacy programs. */
+  coachNote?: string;
 }
 
 export interface ProgramWeek {

@@ -6,12 +6,19 @@ import {
   type SessionExecutionContext,
 } from './programExecutionStats';
 import { formatStatsKg } from './statsTonnage';
+import { computeWeekScience } from './programScienceStats';
+import { buildProgramInsights, pickHeroInsight } from './statsInsights';
 import {
-  DistributionBar,
+  AthletesAcwrRoster,
+  type AthleteAcwrRow,
+} from './AthletesAcwrRoster';
+import {
   ExerciseRanking,
+  InsightCard,
+  LineTrendChart,
   MetricCard,
+  ScienceDistributionBar,
   SectionCard,
-  StatRow,
   StatusBadge,
   TimelineChart,
 } from './stats-ds';
@@ -24,8 +31,11 @@ export interface SessionProgramStatsPanelProps {
   selectedWeek: number;
   onSelectWeek?: (weekNumber: number) => void;
   executionContext?: SessionExecutionContext;
-  /** Scope / athlete controls rendered inside the dashboard shell. */
   toolbar?: React.ReactNode;
+  /** Enrolled athletes for mesocycle ACWR roster */
+  rosterAthletes?: AthleteAcwrRow[];
+  selectedAthleteId?: string;
+  onSelectAthlete?: (athleteProfileId: string) => void;
 }
 
 export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> = ({
@@ -37,10 +47,18 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
   onSelectWeek,
   executionContext,
   toolbar,
+  rosterAthletes = [],
+  selectedAthleteId,
+  onSelectAthlete,
 }) => {
   const metrics = useMemo(
     () => computeProgramAggregateMetrics(program, athlete, exercises, isEs, 8),
     [program, athlete, exercises, isEs],
+  );
+
+  const science = useMemo(
+    () => computeWeekScience(program, selectedWeek, athlete, exercises, null),
+    [program, selectedWeek, athlete, exercises],
   );
 
   const execution = useMemo(
@@ -62,17 +80,6 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
         value: row.tonnage,
       })),
     [metrics.weekRows, isEs],
-  );
-
-  const intensityRows = useMemo(
-    () =>
-      metrics.weekRows
-        .filter((row) => row.avgPct > 0)
-        .map((row) => ({
-          label: row.label,
-          value: `${row.avgPct}%`,
-        })),
-    [metrics.weekRows],
   );
 
   const selectedWeekRow = useMemo(
@@ -103,6 +110,26 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
     };
   }, [selectedWeekRow, prevSelectedWeekRow, selectedWeek, isEs]);
 
+  const insights = useMemo(
+    () =>
+      buildProgramInsights({
+        isEs,
+        weekRows: metrics.weekRows,
+        purpose: metrics.purpose,
+        exerciseVolumes: metrics.exerciseVolumes,
+        avgPct: metrics.avgPct,
+      }),
+    [isEs, metrics],
+  );
+
+  const heroInsight = useMemo(() => pickHeroInsight(insights), [insights]);
+
+  const selectedTrendIndex = useMemo(() => {
+    if (!science) return undefined;
+    const idx = science.trend.labels.findIndex((l) => l === `Sem ${selectedWeek}`);
+    return idx >= 0 ? idx : undefined;
+  }, [science, selectedWeek]);
+
   return (
     <section
       id="wolf-program-day-panel-stats"
@@ -110,8 +137,11 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
       aria-labelledby="wolf-program-tab-stats"
       className="wolf-program-day-stats wolf-program-day-stats--program wolf-program-day-stats--ds"
     >
-      <div className="wl-stats-ds">
+      <div className="wl-stats-ds wl-stats-ds--ios">
         {toolbar ? <div className="wl-stats-ds__toolbar">{toolbar}</div> : null}
+
+        {heroInsight ? <InsightCard insights={[heroInsight]} isEs={isEs} hero /> : null}
+
         <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
           <MetricCard
             label={isEs ? 'Volumen total' : 'Total volume'}
@@ -129,27 +159,54 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
             accent
           />
           <MetricCard
-            label={isEs ? 'Intensidad' : 'Intensity'}
-            value={metrics.avgPct > 0 ? `${metrics.avgPct}%` : '—'}
+            label="IMP"
+            value={
+              science && science.summary.intensityWeighted > 0
+                ? `${science.summary.intensityWeighted}%`
+                : metrics.avgPct > 0
+                  ? `${metrics.avgPct}%`
+                  : '—'
+            }
             sub={
-              prevSelectedWeekRow && selectedWeekRow && selectedWeekRow.avgPct > 0
-                ? isEs
-                  ? `Semana actual ${selectedWeekRow.avgPct}% · ant. ${prevSelectedWeekRow.avgPct}%`
-                  : `Current week ${selectedWeekRow.avgPct}% · prev ${prevSelectedWeekRow.avgPct}%`
-                : isEs
-                  ? 'Media % 1RM'
-                  : 'Avg % 1RM'
+              isEs
+                ? `Semana ${selectedWeek} · ponderada por volumen`
+                : `Week ${selectedWeek} · volume-weighted`
             }
           />
           <MetricCard
-            label={isEs ? 'Semanas' : 'Weeks'}
-            value={metrics.weekCount > 0 ? metrics.weekCount : '—'}
-            sub={isEs ? 'Del bloque' : 'In block'}
+            label={isEs ? 'Carga relativa (AU)' : 'Training Load (AU)'}
+            value={science?.summary.trainingLoad ?? '—'}
+            sub={
+              science?.fatigue.rampRate != null
+                ? isEs
+                  ? `Ramp ${science.fatigue.rampRate > 0 ? '+' : ''}${science.fatigue.rampRate}%`
+                  : `Ramp ${science.fatigue.rampRate > 0 ? '+' : ''}${science.fatigue.rampRate}%`
+                : isEs
+                  ? 'Semana seleccionada'
+                  : 'Selected week'
+            }
           />
           <MetricCard
-            label={isEs ? 'Sesiones' : 'Sessions'}
-            value={metrics.sessionCount > 0 ? metrics.sessionCount : '—'}
-            sub={isEs ? 'Días programados' : 'Scheduled days'}
+            label={isEs ? 'ACWR mesociclo' : 'Mesocycle ACWR'}
+            value={
+              science?.fatigue.acwr.value != null ? (
+                <StatusBadge
+                  label={String(science.fatigue.acwr.value)}
+                  tone={
+                    science.fatigue.acwr.status === 'OPTIMAL'
+                      ? 'optimal'
+                      : science.fatigue.acwr.status === 'ATENCION'
+                        ? 'heavy'
+                        : science.fatigue.acwr.status === 'RIESGO'
+                          ? 'intense'
+                          : 'none'
+                  }
+                />
+              ) : (
+                '—'
+              )
+            }
+            sub={isEs ? 'Aguda / crónica prescrita' : 'Prescribed acute / chronic'}
           />
           <MetricCard
             label={isEs ? 'Completado' : 'Completed'}
@@ -172,24 +229,64 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
             sub={
               execution
                 ? isEs
-                  ? `${execution.completedSets}/${execution.prescribedSets} series · ${execution.completedReps}/${metrics.reps} reps`
-                  : `${execution.completedSets}/${execution.prescribedSets} sets · ${execution.completedReps}/${metrics.reps} reps`
+                  ? `${execution.completedSets}/${execution.prescribedSets} series`
+                  : `${execution.completedSets}/${execution.prescribedSets} sets`
                 : isEs
-                  ? `${metrics.sets} series · ${metrics.reps} reps`
-                  : `${metrics.sets} sets · ${metrics.reps} reps`
+                  ? `${metrics.weekCount} sem · ${metrics.sessionCount} días`
+                  : `${metrics.weekCount} wk · ${metrics.sessionCount} days`
             }
             subTone={execution ? 'success' : 'muted'}
           />
         </div>
 
-        <SectionCard title={isEs ? 'Estímulo — Distribución' : 'Stimulus — Distribution'}>
-          <DistributionBar purpose={metrics.purpose} isEs={isEs} />
+        <SectionCard title={isEs ? 'Estímulo — Zonas científicas' : 'Stimulus — Science zones'}>
+          {science ? (
+            <ScienceDistributionBar slices={science.stimulusDistribution} isEs={isEs} />
+          ) : null}
         </SectionCard>
+
+        {science && science.trend.labels.length > 1 ? (
+          <SectionCard
+            title={isEs ? 'Tendencia del mesociclo' : 'Mesocycle trend'}
+            subtitle={isEs ? 'Tonelaje e IMP' : 'Tonnage and IMP'}
+          >
+            <LineTrendChart
+              labels={science.trend.labels}
+              series={[
+                {
+                  id: 'tonnage',
+                  label: isEs ? 'Tonelaje' : 'Tonnage',
+                  values: science.trend.tonnageData,
+                  unit: 'kg',
+                },
+                {
+                  id: 'imp',
+                  label: 'IMP',
+                  values: science.trend.intensityData,
+                  unit: 'pct',
+                  color: 'var(--stats-blue)',
+                },
+              ]}
+              isEs={isEs}
+              selectedIndex={selectedTrendIndex}
+              onSelectIndex={
+                onSelectWeek
+                  ? (idx) => {
+                      const w = [...program.weeks].sort((a, b) => a.weekNumber - b.weekNumber)[idx];
+                      if (w) onSelectWeek(w.weekNumber);
+                    }
+                  : undefined
+              }
+              referenceValue={science.trend.chronicBaseline}
+              referenceLabel={isEs ? 'Baseline crónica' : 'Chronic baseline'}
+            />
+          </SectionCard>
+        ) : null}
 
         <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
           <SectionCard
             title={isEs ? 'Carga — Semanas' : 'Load — Weeks'}
-            subtitle={isEs ? 'Volumen por semana · clic para seleccionar' : 'Volume by week · click to select'}
+            subtitle={isEs ? 'Clic para seleccionar' : 'Click to select'}
           >
             <TimelineChart
               points={timelinePoints}
@@ -200,17 +297,29 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
               showValues
               valueUnit="kg"
             />
-            {intensityRows.length > 0 ? (
-              <div style={{ marginTop: 12 }}>
-                <StatRow rows={intensityRows.slice(0, 6)} />
-              </div>
-            ) : null}
           </SectionCard>
 
-          <SectionCard title={isEs ? 'Carga — Ranking global' : 'Load — Global ranking'}>
-            <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={8} />
+          <SectionCard title={isEs ? 'Atletas — ACWR' : 'Athletes — ACWR'}>
+            <AthletesAcwrRoster
+              program={program}
+              weekNumber={selectedWeek}
+              athletes={rosterAthletes}
+              isEs={isEs}
+              selectedAthleteId={selectedAthleteId}
+              onSelectAthlete={onSelectAthlete}
+            />
           </SectionCard>
         </div>
+
+        <SectionCard title={isEs ? 'Carga — Ranking global' : 'Load — Global ranking'}>
+          <ExerciseRanking slices={metrics.exerciseVolumes} isEs={isEs} maxSlices={8} />
+        </SectionCard>
+
+        {insights.length > 1 ? (
+          <SectionCard title={isEs ? 'Insights' : 'Insights'}>
+            <InsightCard insights={insights.slice(0, 4)} isEs={isEs} />
+          </SectionCard>
+        ) : null}
       </div>
     </section>
   );

@@ -311,6 +311,19 @@
   line-height: 1.45;
 }
 
+.wl-form-sheet-field .wl-form-sheet-hint {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+}
+
+.wl-form-sheet-hint--error {
+  color: #dc2626;
+  border-color: color-mix(in srgb, #dc2626 40%, var(--wl-sheet-border));
+}
+
 .wl-form-sheet-summary {
   margin-top: 14px;
   padding: 12px 14px;

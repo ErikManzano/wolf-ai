@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import type { Athlete, Exercise, ProgramWeek, Session } from '../../models/training';
 import {
   estimateSessionMinutes,
-  sessionAvgIntensity,
   sessionTotalReps,
   sessionTotalSets,
 } from './blockMetrics';
@@ -16,9 +15,16 @@ import { formatStatsDuration } from './programStatsShared';
 import { buildPctDelta, volumeDeltaPct } from './statsComparison';
 import { formatStatsKg, statsBlockTonnage, statsExerciseVolumes, statsSessionTonnage } from './statsTonnage';
 import {
-  DistributionBar,
+  computeSessionScienceSummary,
+  computeStimulusDistribution,
+  formatShortDate,
+} from './programScienceStats';
+import { buildDayInsights, pickHeroInsight } from './statsInsights';
+import {
   ExerciseRanking,
+  InsightCard,
   MetricCard,
+  ScienceDistributionBar,
   SectionCard,
   StatusBadge,
   TimelineChart,
@@ -32,6 +38,9 @@ export interface SessionDayStatsPanelProps {
   weekNumber: number;
   dayNumber: number;
   dayLabel?: string;
+  /** Optional calendar date ISO when program has startDate */
+  dayDateIso?: string | null;
+  coachNote?: string | null;
   weekTonnage: number;
   /** Current week — used for vs previous day comparison */
   weekData?: ProgramWeek;
@@ -48,6 +57,9 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   isEs,
   weekNumber,
   dayNumber,
+  dayLabel,
+  dayDateIso,
+  coachNote,
   weekTonnage,
   weekData,
   executionContext,
@@ -55,10 +67,17 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
 }) => {
   const blocks = session.exercises;
 
-  const dayTonnage = useMemo(
-    () => statsSessionTonnage(session, athlete, exercises),
+  const science = useMemo(
+    () => computeSessionScienceSummary(session, athlete, exercises),
     [session, athlete, exercises],
   );
+
+  const stimulus = useMemo(
+    () => computeStimulusDistribution(session, athlete, exercises),
+    [session, athlete, exercises],
+  );
+
+  const dayTonnage = science.tonnage;
 
   const daySharePct = useMemo(() => {
     if (weekTonnage <= 0 || dayTonnage <= 0) return 0;
@@ -102,10 +121,9 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
   }, [dayTonnage, weekAvgTonnage, volumeDelta, isEs]);
 
   const purpose = useMemo(() => sessionPurposeBreakdown(blocks), [blocks]);
-  const avgPct = useMemo(() => sessionAvgIntensity(blocks), [blocks]);
   const sets = useMemo(() => sessionTotalSets(blocks), [blocks]);
   const reps = useMemo(() => sessionTotalReps(blocks), [blocks]);
-  const minutes = useMemo(() => estimateSessionMinutes(session), [session]);
+  const minutes = science.durationMinutes || estimateSessionMinutes(session);
 
   const execution = useMemo(
     () =>
@@ -137,8 +155,26 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     [blocks, athlete, exercises],
   );
 
+  const insights = useMemo(
+    () =>
+      buildDayInsights({
+        session,
+        athlete,
+        exercises,
+        isEs,
+        purpose,
+        exerciseVolumes: exerciseRows,
+        avgPct: science.intensityWeighted,
+        verdict,
+      }),
+    [session, athlete, exercises, isEs, purpose, exerciseRows, science.intensityWeighted, verdict],
+  );
+
+  const heroInsight = useMemo(() => pickHeroInsight(insights), [insights]);
+
   const showBlockTimeline = timelinePoints.length >= 3;
-  const intensitySub = isEs ? 'Media % 1RM' : 'Avg % 1RM';
+  const note = coachNote?.trim() || null;
+  const dateLabel = dayDateIso ? formatShortDate(dayDateIso, isEs) : null;
 
   const seriesRepsSub = execution
     ? isEs
@@ -155,8 +191,27 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
       aria-labelledby="wolf-program-tab-stats"
       className="wolf-program-day-stats wolf-program-day-stats--day wolf-program-day-stats--ds"
     >
-      <div className="wl-stats-ds">
+      <div className="wl-stats-ds wl-stats-ds--ios">
         {toolbar ? <div className="wl-stats-ds__toolbar">{toolbar}</div> : null}
+
+        {(dayLabel || dateLabel) && (
+          <p className="wl-stats-day-meta">
+            {dayLabel ? <span className="wl-stats-day-meta__label">{dayLabel}</span> : null}
+            {dateLabel ? <span className="wl-stats-day-meta__date">{dateLabel}</span> : null}
+          </p>
+        )}
+
+        {heroInsight ? <InsightCard insights={[heroInsight]} isEs={isEs} hero /> : null}
+
+        {note ? (
+          <div className="wl-stats-day-note" role="note">
+            <span className="wl-stats-day-note__title">
+              {isEs ? 'Notas y objetivo' : 'Notes & objective'}
+            </span>
+            <p className="wl-stats-day-note__body">{note}</p>
+          </div>
+        ) : null}
+
         <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
           <MetricCard
             label={isEs ? 'Volumen' : 'Volume'}
@@ -166,14 +221,31 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
             accent
           />
           <MetricCard
-            label={isEs ? 'Intensidad' : 'Intensity'}
-            value={avgPct > 0 ? `${avgPct}%` : '—'}
-            sub={intensitySub}
+            label="IMP"
+            value={science.intensityWeighted > 0 ? `${science.intensityWeighted}%` : '—'}
+            sub={
+              science.intensityRange.max > 0
+                ? isEs
+                  ? `Rango ${science.intensityRange.min}–${science.intensityRange.max}%`
+                  : `Range ${science.intensityRange.min}–${science.intensityRange.max}%`
+                : isEs
+                  ? 'Ponderada por volumen'
+                  : 'Volume-weighted'
+            }
           />
           <MetricCard
-            label={isEs ? 'Duración' : 'Duration'}
-            value={formatStatsDuration(minutes)}
-            sub={isEs ? 'Estimada' : 'Estimated'}
+            label={isEs ? 'Carga relativa (AU)' : 'Training Load (AU)'}
+            value={science.trainingLoad > 0 ? science.trainingLoad : '—'}
+            sub={isEs ? 'Carga prescrita' : 'Prescribed load'}
+          />
+          <MetricCard
+            label={isEs ? 'Densidad' : 'Density'}
+            value={science.density > 0 ? `${science.density}` : '—'}
+            sub={
+              science.densityEstimated
+                ? `${formatStatsDuration(minutes)} · ${isEs ? 'estimada' : 'estimated'}`
+                : formatStatsDuration(minutes)
+            }
           />
           <MetricCard
             label={isEs ? 'Estado' : 'Status'}
@@ -184,8 +256,8 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
         </div>
 
         <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
-          <SectionCard title={isEs ? 'Estímulo — Distribución' : 'Stimulus — Distribution'}>
-            <DistributionBar purpose={purpose} isEs={isEs} />
+          <SectionCard title={isEs ? 'Estímulo — Zonas científicas' : 'Stimulus — Science zones'}>
+            <ScienceDistributionBar slices={stimulus} isEs={isEs} />
           </SectionCard>
 
           <SectionCard title={isEs ? 'Carga — Ranking' : 'Load — Ranking'}>
@@ -196,6 +268,12 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
         {showBlockTimeline ? (
           <SectionCard title={isEs ? 'Carga — Bloques' : 'Load — Blocks'}>
             <TimelineChart points={timelinePoints} isEs={isEs} showValues valueUnit="kg" />
+          </SectionCard>
+        ) : null}
+
+        {insights.length > 1 ? (
+          <SectionCard title={isEs ? 'Insights' : 'Insights'}>
+            <InsightCard insights={insights.slice(0, 4)} isEs={isEs} />
           </SectionCard>
         ) : null}
       </div>

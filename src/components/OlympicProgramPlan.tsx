@@ -55,6 +55,8 @@ import {
 import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
 import { SessionWeekStatsPanel } from './session-editor/SessionWeekStatsPanel';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
+import { DayCoachNoteCard } from './session-editor/DayCoachNoteCard';
+import { formatShortDate, programDayDate } from './session-editor/programScienceStats';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useWolfAlert } from '../context/WolfAlertContext';
 
@@ -857,6 +859,30 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [applyProgramUpdate, athleteForEngine, motorExercises],
   );
 
+  const handleDayCoachNoteChange = useCallback(
+    (note: string) => {
+      const current = programRef.current;
+      if (!current) return;
+      const wk = selectedWeekRef.current;
+      const dy = selectedDayRef.current;
+      const next: GeneratedProgram = {
+        ...current,
+        weeks: current.weeks.map((w) =>
+          w.weekNumber !== wk
+            ? w
+            : {
+                ...w,
+                days: w.days.map((d) =>
+                  d.dayNumber !== dy ? d : { ...d, coachNote: note.trim() || undefined },
+                ),
+              },
+        ),
+      };
+      applyProgramUpdate(next);
+    },
+    [applyProgramUpdate],
+  );
+
   const sessionSaveState = skipLocalDraftPersistence && programSyncState ? programSyncState : null;
   const sessionSavedAt = skipLocalDraftPersistence ? lastSavedAt : draftSavedAt;
   const sessionSyncPending =
@@ -1184,6 +1210,28 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
     return w?.days.find((x) => x.dayNumber === selectedDay)?.label;
   }, [program, selectedWeek, selectedDay]);
+
+  const selectedDayCoachNote = useMemo(() => {
+    if (!program) return '';
+    const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
+    return w?.days.find((x) => x.dayNumber === selectedDay)?.coachNote ?? '';
+  }, [program, selectedWeek, selectedDay]);
+
+  const selectedDayDateIso = useMemo(() => {
+    if (!program) return null;
+    return programDayDate(program, selectedWeek, selectedDay);
+  }, [program, selectedWeek, selectedDay]);
+
+  const rosterAthletes = useMemo(
+    () =>
+      statsAthleteOptions.map((o) => ({
+        athleteProfileId: o.athleteProfileId,
+        name: o.name,
+      })),
+    [statsAthleteOptions],
+  );
+
+  const isTabletSplit = useMediaQuery('(min-width: 1100px)');
 
   const copyJson = useCallback(async () => {
     if (!program) return;
@@ -1668,6 +1716,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     isEs={isEs}
                     weekNumber={selectedWeek}
                     dayNumber={selectedDay}
+                    dayLabel={selectedDayLabel}
+                    dayDateIso={selectedDayDateIso}
+                    coachNote={selectedDayCoachNote}
                     weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
                     weekData={selectedWeekData}
                     executionContext={statsExecutionContext}
@@ -1683,9 +1734,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     weekNumber={selectedWeek}
                     weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
                     weekData={selectedWeekData}
+                    program={program}
                     previousWeekData={program?.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
                     selectedDay={selectedDay}
                     onSelectDay={handleWeekStatsDaySelect}
+                    onSelectWeek={handleProgramStatsWeekSelect}
                     executionContext={statsExecutionContext}
                     toolbar={statsToolbar}
                   />
@@ -1701,6 +1754,9 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     onSelectWeek={handleProgramStatsWeekSelect}
                     executionContext={statsExecutionContext}
                     toolbar={statsToolbar}
+                    rosterAthletes={rosterAthletes}
+                    selectedAthleteId={statsAthleteId || undefined}
+                    onSelectAthlete={setStatsAthleteId}
                   />
                 ) : null}
               </div>
@@ -1710,49 +1766,88 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               id="wolf-program-panel-editor"
               role="tabpanel"
               aria-labelledby="wolf-program-tab-editor"
-              className="wolf-program-customize-panel wolf-program-customize-panel--editor"
+              className={`wolf-program-customize-panel wolf-program-customize-panel--editor${isTabletSplit ? ' wolf-program-customize-panel--editor-split' : ''}`}
             >
               <div
-                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}`}
+                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}${isTabletSplit ? ' wolf-program-day-board--with-stats-rail' : ''}`}
               >
                 {sessionEditorView === 'sheet'
                   ? chromePortalNode
                     ? programDayNavigation
                     : programFullNavigation
                   : null}
-                {daySession ? (
-                  <div
-                    key={`${selectedWeek}-${selectedDay}`}
-                    id="wolf-program-day-panel-session"
-                    className="wolf-program-session-pane wolf-program-day-board__pane"
-                  >
-                      <OlympicSessionEditor
-                        session={daySession}
-                        athlete={athleteForEngine}
-                        exercises={motorExercises}
-                        catalog={sessionCatalog}
-                        isEs={isEs}
-                        onChange={handleSessionEdit}
-                        draftSavedAt={sessionSavedAt}
-                        syncPending={sessionSyncPending}
-                        saveState={sessionSaveState ?? undefined}
-                        onRetrySave={onRetryProgramSave}
-                        onFlushAutosave={onFlushAutosave}
-                        dayLabel={selectedDayLabel}
-                        weekNumber={selectedWeek}
-                        dayNumber={selectedDay}
-                        embedded
-                        onViewChange={setSessionEditorView}
-                        onMobileExerciseFocusChange={
-                          pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
-                        }
-                        onDuplicateDay={handleDuplicateDay}
-                        canDuplicateDay={canAddDay}
-                        onRemoveDay={() => handleRemoveDay(selectedDay)}
-                        canRemoveDay={canRemoveDay}
-                      />
+                <div className="wolf-program-editor-split">
+                  <div className="wolf-program-editor-split__main">
+                    {daySession ? (
+                      <div
+                        key={`${selectedWeek}-${selectedDay}`}
+                        id="wolf-program-day-panel-session"
+                        className="wolf-program-session-pane wolf-program-day-board__pane"
+                      >
+                        {sessionEditorView === 'sheet' ? (
+                          <DayCoachNoteCard
+                            note={selectedDayCoachNote}
+                            isEs={isEs}
+                            onChange={handleDayCoachNoteChange}
+                          />
+                        ) : null}
+                        {selectedDayDateIso && sessionEditorView === 'sheet' ? (
+                          <p className="wl-day-date-chip">
+                            {formatShortDate(selectedDayDateIso, isEs)}
+                          </p>
+                        ) : null}
+                        <OlympicSessionEditor
+                          session={daySession}
+                          athlete={athleteForEngine}
+                          exercises={motorExercises}
+                          catalog={sessionCatalog}
+                          isEs={isEs}
+                          onChange={handleSessionEdit}
+                          draftSavedAt={sessionSavedAt}
+                          syncPending={sessionSyncPending}
+                          saveState={sessionSaveState ?? undefined}
+                          onRetrySave={onRetryProgramSave}
+                          onFlushAutosave={onFlushAutosave}
+                          dayLabel={selectedDayLabel}
+                          weekNumber={selectedWeek}
+                          dayNumber={selectedDay}
+                          embedded
+                          onViewChange={setSessionEditorView}
+                          onMobileExerciseFocusChange={
+                            pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
+                          }
+                          onDuplicateDay={handleDuplicateDay}
+                          canDuplicateDay={canAddDay}
+                          onRemoveDay={() => handleRemoveDay(selectedDay)}
+                          canRemoveDay={canRemoveDay}
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
+                  {isTabletSplit && program && sessionEditorView === 'sheet' ? (
+                    <aside
+                      className="wolf-program-editor-split__stats"
+                      aria-label={isEs ? 'Estadísticas de la semana' : 'Week statistics'}
+                    >
+                      <SessionWeekStatsPanel
+                        key={`split-week-${selectedWeek}-${statsAthleteId || 'none'}`}
+                        athlete={statsAthleteForEngine}
+                        exercises={motorExercises}
+                        isEs={isEs}
+                        weekNumber={selectedWeek}
+                        weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
+                        weekData={selectedWeekData}
+                        program={program}
+                        previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
+                        selectedDay={selectedDay}
+                        onSelectDay={handleWeekStatsDaySelect}
+                        onSelectWeek={handleProgramStatsWeekSelect}
+                        executionContext={statsExecutionContext}
+                        compact
+                      />
+                    </aside>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}

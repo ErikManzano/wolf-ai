@@ -353,10 +353,22 @@
 
 .wl-stats-rank__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(72px, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1.4fr) minmax(72px, 1fr) auto;
   gap: 10px;
   align-items: center;
   min-width: 0;
+}
+
+.wl-stats-rank__thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 750;
+  background: color-mix(in srgb, var(--stats-blue) 14%, var(--stats-canvas));
+  color: var(--stats-blue);
 }
 
 .wl-stats-rank__label {
@@ -718,6 +730,251 @@
   margin-inline: auto;
   padding-inline: 2px;
   box-sizing: border-box;
+}
+
+/* iOS / Homilos polish */
+.wl-stats-ds--ios {
+  --stats-radius: 16px;
+  --stats-radius-sm: 12px;
+  --stats-orange: var(--brand-accent, #ff7a00);
+}
+
+.wl-stats-ds--ios .wl-stats-metric {
+  border-radius: var(--stats-radius-sm);
+  background: color-mix(in srgb, var(--stats-surface) 92%, var(--stats-canvas));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--stats-border) 70%, transparent);
+}
+
+.wl-stats-ds__metrics--fatigue {
+  margin-top: calc(var(--stats-space-2) * -1);
+}
+
+.wl-stats-dist__hint {
+  margin: 0 0 var(--stats-space-3);
+  font-size: 0.72rem;
+  color: var(--stats-muted);
+  line-height: 1.35;
+}
+
+.wl-stats-dist__legend-range {
+  color: var(--stats-muted);
+  font-weight: 500;
+  font-size: 0.68rem;
+}
+
+.wl-stats-day-meta {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: 0;
+  padding-inline: 2px;
+  font-size: 0.85rem;
+}
+
+.wl-stats-day-meta__label {
+  font-weight: 700;
+  color: var(--stats-text);
+}
+
+.wl-stats-day-meta__date {
+  color: var(--stats-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wl-stats-day-note {
+  padding: var(--stats-space-3);
+  border-radius: var(--stats-radius-sm);
+  border: 1px solid var(--stats-border);
+  background: var(--stats-surface);
+}
+
+.wl-stats-day-note__title {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stats-muted);
+  margin-bottom: 6px;
+}
+
+.wl-stats-day-note__body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--stats-text);
+  white-space: pre-wrap;
+}
+
+/* Line trend */
+.wl-stats-line {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wl-stats-line__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.wl-stats-line__ref {
+  stroke: var(--stats-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+}
+
+.wl-stats-line__hit {
+  cursor: pointer;
+}
+
+.wl-stats-line__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.wl-stats-line__label {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--stats-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.wl-stats-line__label:disabled {
+  cursor: default;
+}
+
+.wl-stats-line__label.is-selected {
+  color: var(--stats-orange);
+}
+
+.wl-stats-line__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wl-stats-line__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--stats-secondary);
+}
+
+.wl-stats-line__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.wl-stats-line__swatch--ref {
+  background: transparent;
+  border: 1px dashed var(--stats-muted);
+  border-radius: 0;
+  height: 0;
+  width: 14px;
+}
+
+/* Athlete ACWR roster */
+.wl-stats-roster__hint {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: var(--stats-muted);
+  line-height: 1.35;
+}
+
+.wl-stats-roster__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wl-stats-roster__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--stats-radius-sm);
+  border: 1px solid var(--stats-border);
+  background: var(--stats-surface);
+  color: inherit;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+button.wl-stats-roster__row {
+  cursor: pointer;
+}
+
+button.wl-stats-roster__row:hover,
+.wl-stats-roster__row.is-selected {
+  border-color: color-mix(in srgb, var(--stats-orange) 45%, var(--stats-border));
+}
+
+.wl-stats-roster__thumb {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 750;
+  background: color-mix(in srgb, var(--stats-orange) 16%, var(--stats-canvas));
+  color: var(--stats-orange);
+}
+
+.wl-stats-roster__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wl-stats-roster__name {
+  font-size: 0.82rem;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wl-stats-roster__tl {
+  font-size: 0.68rem;
+  color: var(--stats-muted);
+}
+
+.wl-stats-roster__acwr {
+  flex: 0 0 auto;
+}
+
+.wolf-program-day-stats--compact .wl-stats-ds {
+  gap: var(--stats-space-3);
+  padding-top: 0;
+}
+
+.wolf-program-day-stats--compact .wl-stats-ds__metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 @media (prefers-reduced-motion: reduce) {

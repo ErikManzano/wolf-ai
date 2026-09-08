@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Save } from 'lucide-react';
 import { WlFormSheet } from '../wl-shared/WlFormSheet';
 import { WlFormNumberStepper } from '../wl-shared/WlFormNumberStepper';
@@ -6,6 +6,7 @@ import type { Exercise } from '../../models/training';
 import {
   buildStarterProgramDraft,
   computeProgramEndDate,
+  computeWeeksFromDateRange,
   todayIsoDate,
   totalTrainingDays,
 } from '../../utils/programSchedule';
@@ -26,23 +27,39 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
   onClose,
   onCreate,
 }) => {
+  const initialStart = todayIsoDate();
+  const initialWeeks = 4;
   const [name, setName] = useState(isEs ? 'Nuevo mesociclo' : 'New mesocycle');
-  const [startDate, setStartDate] = useState(todayIsoDate);
-  const [totalWeeks, setTotalWeeks] = useState(4);
+  const [startDate, setStartDate] = useState(initialStart);
+  const [totalWeeks, setTotalWeeks] = useState(initialWeeks);
+  const [endDate, setEndDate] = useState(() => computeProgramEndDate(initialStart, initialWeeks));
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [saving, setSaving] = useState(false);
 
-  const endDate = useMemo(
-    () => computeProgramEndDate(startDate, totalWeeks),
-    [startDate, totalWeeks],
-  );
+  const trainingDays = totalTrainingDays(totalWeeks, daysPerWeek);
+  const endBeforeStart = Boolean(endDate && startDate && endDate < startDate);
+  const canSave =
+    name.trim().length > 0 && totalWeeks >= 1 && daysPerWeek >= 1 && !endBeforeStart;
 
-  const trainingDays = useMemo(
-    () => totalTrainingDays(totalWeeks, daysPerWeek),
-    [totalWeeks, daysPerWeek],
-  );
+  const handleStartDateChange = (nextStart: string) => {
+    if (!nextStart) return;
+    setStartDate(nextStart);
+    // Keep weeks; refresh end to match the new window.
+    setEndDate(computeProgramEndDate(nextStart, totalWeeks));
+  };
 
-  const canSave = name.trim().length > 0 && totalWeeks >= 1 && daysPerWeek >= 1;
+  const handleEndDateChange = (nextEnd: string) => {
+    if (!nextEnd) return;
+    setEndDate(nextEnd);
+    if (nextEnd < startDate) return;
+    setTotalWeeks(computeWeeksFromDateRange(startDate, nextEnd));
+  };
+
+  const handleWeeksChange = (weeks: number) => {
+    const next = Math.max(1, Math.min(52, weeks));
+    setTotalWeeks(next);
+    setEndDate(computeProgramEndDate(startDate, next));
+  };
 
   const handleSubmit = async () => {
     if (!canSave || saving) return;
@@ -52,6 +69,7 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
         {
           name: name.trim(),
           startDate,
+          endDate,
           totalWeeks,
           daysPerWeek,
         },
@@ -113,20 +131,33 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
             type="date"
             className="wl-form-sheet-input"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => handleStartDateChange(e.target.value)}
           />
         </label>
 
         <label className="wl-form-sheet-field">
-          <span className="wl-form-sheet-label">{isEs ? 'Fecha de término' : 'End date'}</span>
+          <span className="wl-form-sheet-label">{isEs ? 'Fecha límite / término' : 'Deadline / end date'}</span>
           <input
             type="date"
-            className="wl-form-sheet-input wl-form-sheet-input--readonly"
+            className="wl-form-sheet-input"
             value={endDate}
-            readOnly
-            tabIndex={-1}
-            aria-readonly="true"
+            min={startDate}
+            onChange={(e) => handleEndDateChange(e.target.value)}
+            aria-invalid={endBeforeStart}
           />
+          {endBeforeStart ? (
+            <span className="wl-form-sheet-hint wl-form-sheet-hint--error">
+              {isEs
+                ? 'La fecha límite no puede ser anterior al inicio.'
+                : 'End date cannot be before the start date.'}
+            </span>
+          ) : (
+            <span className="wl-form-sheet-hint">
+              {isEs
+                ? 'Al cambiarla se ajustan las semanas del mesociclo.'
+                : 'Changing it updates mesocycle weeks.'}
+            </span>
+          )}
         </label>
 
         <label className="wl-form-sheet-field">
@@ -135,7 +166,7 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
             value={totalWeeks}
             min={1}
             max={52}
-            onChange={setTotalWeeks}
+            onChange={handleWeeksChange}
             aria-label={isEs ? 'Semanas' : 'Weeks'}
             decrementAria={isEs ? 'Menos semanas' : 'Fewer weeks'}
             incrementAria={isEs ? 'Más semanas' : 'More weeks'}
@@ -164,6 +195,11 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
             : `${trainingDays} training days across ${totalWeeks} week${totalWeeks === 1 ? '' : 's'} (${daysPerWeek} days per week).`}
         </p>
         <ul className="wl-form-sheet-summary__list">
+          <li>
+            {isEs
+              ? `Calendario: ${startDate} → ${endDate}.`
+              : `Calendar: ${startDate} → ${endDate}.`}
+          </li>
           <li>
             {isEs
               ? 'Después podrás ajustar semanas, días y sesiones en el editor.'
