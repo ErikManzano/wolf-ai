@@ -55,7 +55,7 @@ import {
 import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
 import { SessionWeekStatsPanel } from './session-editor/SessionWeekStatsPanel';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
-import { DayCoachNoteCard } from './session-editor/DayCoachNoteCard';
+import { EditorProgrammingRail } from './session-editor/EditorProgrammingRail';
 import { formatShortDate, programDayDate } from './session-editor/programScienceStats';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useWolfAlert } from '../context/WolfAlertContext';
@@ -859,30 +859,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [applyProgramUpdate, athleteForEngine, motorExercises],
   );
 
-  const handleDayCoachNoteChange = useCallback(
-    (note: string) => {
-      const current = programRef.current;
-      if (!current) return;
-      const wk = selectedWeekRef.current;
-      const dy = selectedDayRef.current;
-      const next: GeneratedProgram = {
-        ...current,
-        weeks: current.weeks.map((w) =>
-          w.weekNumber !== wk
-            ? w
-            : {
-                ...w,
-                days: w.days.map((d) =>
-                  d.dayNumber !== dy ? d : { ...d, coachNote: note.trim() || undefined },
-                ),
-              },
-        ),
-      };
-      applyProgramUpdate(next);
-    },
-    [applyProgramUpdate],
-  );
-
   const sessionSaveState = skipLocalDraftPersistence && programSyncState ? programSyncState : null;
   const sessionSavedAt = skipLocalDraftPersistence ? lastSavedAt : draftSavedAt;
   const sessionSyncPending =
@@ -1232,6 +1208,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   );
 
   const isTabletSplit = useMediaQuery('(min-width: 1100px)');
+  const showProgrammingRail = Boolean(program) && sessionEditorView === 'sheet';
+  const programmingRailOverlay = !isTabletSplit;
 
   const copyJson = useCallback(async () => {
     if (!program) return;
@@ -1766,10 +1744,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               id="wolf-program-panel-editor"
               role="tabpanel"
               aria-labelledby="wolf-program-tab-editor"
-              className={`wolf-program-customize-panel wolf-program-customize-panel--editor${isTabletSplit ? ' wolf-program-customize-panel--editor-split' : ''}`}
+              className={`wolf-program-customize-panel wolf-program-customize-panel--editor${showProgrammingRail ? ' wolf-program-customize-panel--editor-split' : ''}`}
             >
               <div
-                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}${isTabletSplit ? ' wolf-program-day-board--with-stats-rail' : ''}`}
+                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}${showProgrammingRail && isTabletSplit ? ' wolf-program-day-board--with-stats-rail' : ''}`}
               >
                 {sessionEditorView === 'sheet'
                   ? chromePortalNode
@@ -1784,13 +1762,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         id="wolf-program-day-panel-session"
                         className="wolf-program-session-pane wolf-program-day-board__pane"
                       >
-                        {sessionEditorView === 'sheet' ? (
-                          <DayCoachNoteCard
-                            note={selectedDayCoachNote}
-                            isEs={isEs}
-                            onChange={handleDayCoachNoteChange}
-                          />
-                        ) : null}
                         {selectedDayDateIso && sessionEditorView === 'sheet' ? (
                           <p className="wl-day-date-chip">
                             {formatShortDate(selectedDayDateIso, isEs)}
@@ -1824,28 +1795,20 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                       </div>
                     ) : null}
                   </div>
-                  {isTabletSplit && program && sessionEditorView === 'sheet' ? (
-                    <aside
-                      className="wolf-program-editor-split__stats"
-                      aria-label={isEs ? 'Estadísticas de la semana' : 'Week statistics'}
-                    >
-                      <SessionWeekStatsPanel
-                        key={`split-week-${selectedWeek}-${statsAthleteId || 'none'}`}
-                        athlete={statsAthleteForEngine}
-                        exercises={motorExercises}
-                        isEs={isEs}
-                        weekNumber={selectedWeek}
-                        weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
-                        weekData={selectedWeekData}
-                        program={program}
-                        previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
-                        selectedDay={selectedDay}
-                        onSelectDay={handleWeekStatsDaySelect}
-                        onSelectWeek={handleProgramStatsWeekSelect}
-                        executionContext={statsExecutionContext}
-                        compact
-                      />
-                    </aside>
+                  {showProgrammingRail && program ? (
+                    <EditorProgrammingRail
+                      key={`prog-rail-${selectedWeek}-${statsAthleteId || 'none'}`}
+                      athlete={statsAthleteForEngine}
+                      exercises={motorExercises}
+                      isEs={isEs}
+                      weekNumber={selectedWeek}
+                      selectedDay={selectedDay}
+                      weekData={selectedWeekData}
+                      program={program}
+                      previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
+                      onSelectDay={handleWeekStatsDaySelect}
+                      overlay={programmingRailOverlay}
+                    />
                   ) : null}
                 </div>
               </div>
