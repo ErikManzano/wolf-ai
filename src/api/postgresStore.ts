@@ -1454,8 +1454,6 @@ export class PostgresStore {
   }
 
   private async seedWlAthleteProfilesIfEmpty(): Promise<void> {
-    const count = await this.pool.query('SELECT COUNT(*)::int AS c FROM wl_athlete_profiles;');
-    if ((count.rows[0]?.c as number) > 0) return;
     for (const athlete of mockAthletes) {
       const coachId = this.coachIdForAthleteProfile(athlete.id);
       await this.pool.query(

@@ -25,6 +25,16 @@
     "passwordHash": "$2b$10$hMrKHLPJe.UywTMnI0KiFOymb8kHlEhl6xW35Y1zT6BqD4DPwUUwa"
   },
   {
+    "id": "user-hendryck",
+    "name": "Hendryck",
+    "role": "athlete",
+    "username": "hendryck",
+    "coachId": "user-coach-wl",
+    "linkedAthleteId": "ath-hendryck",
+    "email": "hendryck@wolf-ai.temp",
+    "passwordHash": "$2b$10$IxPt.d32xW2DIv.4j7pYCe0ue9YZu8Gn.e5L4323C0zPhEw.Arg5."
+  },
+  {
     "id": "user-coach",
     "name": "Coach",
     "role": "coach",

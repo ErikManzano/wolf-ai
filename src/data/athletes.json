@@ -9,6 +9,15 @@
     "readinessScore": 72
   },
   {
+    "id": "ath-hendryck",
+    "name": "Hendryck",
+    "level": "intermediate",
+    "bodyweight": 80,
+    "oneRM": { "snatch": 80, "cleanJerk": 100, "backSquat": 140, "frontSquat": 120 },
+    "fatigueScore": 35,
+    "readinessScore": 75
+  },
+  {
     "id": "ath-you",
     "name": "Atleta principal",
     "level": "intermediate",
