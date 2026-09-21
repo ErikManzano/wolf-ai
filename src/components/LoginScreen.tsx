@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Mail,
   Lock,
-  Smartphone,
   User,
 } from 'lucide-react';
 import './LoginScreen.css';
@@ -133,9 +132,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
       getStartedSub: isEs
         ? 'Elige cómo quieres continuar.'
         : 'Choose how you’d like to continue.',
-      continueGoogle: isEs ? 'Continuar con Google' : 'Continue with Google',
       continueEmail: isEs ? 'Continuar con email' : 'Continue with email',
-      continuePhone: isEs ? 'Continuar con teléfono' : 'Continue with phone',
       signInLink: isEs ? 'Iniciar sesión' : 'Sign in',
       orContinue: isEs ? 'o continúa con' : 'or continue with',
       soon: isEs ? 'Próximamente' : 'Coming soon',
@@ -628,12 +625,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
             <h2 className="wolf-login-get-started-title">{t.getStartedTitle}</h2>
             <p className="wolf-login-get-started-sub">{t.getStartedSub}</p>
             <div className="wolf-login-get-started-actions">
-              <button type="button" className="wolf-login-btn-google" disabled title={t.soon}>
-                <span className="wolf-login-btn-google-mark" aria-hidden>
-                  G
-                </span>
-                {t.continueGoogle}
-              </button>
               <button
                 type="button"
                 className="wolf-login-btn-outline-icon"
@@ -644,10 +635,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
               >
                 <Mail size={20} strokeWidth={2} aria-hidden />
                 {t.continueEmail}
-              </button>
-              <button type="button" className="wolf-login-btn-outline-icon" disabled title={t.soon}>
-                <Smartphone size={20} strokeWidth={2} aria-hidden />
-                {t.continuePhone}
               </button>
             </div>
             {showDemoQuickLogin && (

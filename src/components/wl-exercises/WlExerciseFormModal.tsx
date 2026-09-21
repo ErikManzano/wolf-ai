@@ -11,13 +11,17 @@ import type {
   StartPositionCode,
   TrainingObjectiveCode,
 } from '../../models/exercise';
-import { isSingleComposition } from '../../models/exercise';
+import {
+  customFamilyIdFromTags,
+  isSingleComposition,
+  stripCustomFamilyTags,
+} from '../../models/exercise';
+import { useWolfAssign } from '../../context/WolfAssignContext';
+import { useCoachExerciseFamilies } from '../../hooks/useCoachExerciseFamilies';
 import { composeDisplayName } from '../../services/exercise';
 import { WlCenteredModal } from '../wl-shared/WlCenteredModal';
-import {
-  DISCIPLINE_OPTIONS,
-  type ExerciseDisciplineFilter,
-} from './exerciseListUtils';
+import { ExerciseFamilyPicker } from './ExerciseFamilyPicker';
+import { DISCIPLINE_OPTIONS, type ExerciseDisciplineFilter } from './exerciseListUtils';
 
 export type ExerciseFormMode = 'create' | 'edit' | 'fork' | 'duplicate';
 
@@ -32,6 +36,11 @@ function emptySingle(family: ExerciseFamilyCode = 'snatch'): SingleComposition {
   };
 }
 
+function seedSingle(initial?: MergedDefinitionView | null): SingleComposition {
+  const composition = initial?.composition;
+  return composition && isSingleComposition(composition) ? composition : emptySingle();
+}
+
 export function WlExerciseFormModal({
   isEs,
   mode,
@@ -40,6 +49,7 @@ export function WlExerciseFormModal({
   busy,
   onClose,
   onSave,
+  onManageFamilies,
 }: {
   isEs: boolean;
   mode: ExerciseFormMode;
@@ -47,7 +57,8 @@ export function WlExerciseFormModal({
   initial?: MergedDefinitionView | null;
   busy?: boolean;
   onClose: () => void;
-  onSave: (input: ExerciseDefinitionInput) => Promise<void>;
+  onSave: (input: ExerciseDefinitionInput, opts: { folderId: string | null }) => Promise<void>;
+  onManageFamilies?: () => void;
 }) {
   const titles: Record<ExerciseFormMode, { es: string; en: string }> = {
     create: { es: 'Nuevo ejercicio', en: 'New exercise' },
@@ -56,36 +67,31 @@ export function WlExerciseFormModal({
     duplicate: { es: 'Duplicar ejercicio', en: 'Duplicate exercise' },
   };
 
+  const seeded = seedSingle(initial);
   const [discipline, setDiscipline] = useState<ExerciseDisciplineFilter>(
     initial?.family === 'accessory' ? 'accessory' : 'weightlifting',
   );
-  const [family, setFamily] = useState<ExerciseFamilyCode>(
-    isSingleComposition(initial?.composition ?? emptySingle())
-      ? (initial?.composition as SingleComposition).family
-      : 'snatch',
-  );
-  const [variation, setVariation] = useState<ExerciseVariationCode>(
-    isSingleComposition(initial?.composition ?? emptySingle())
-      ? (initial?.composition as SingleComposition).variation
-      : 'classic',
-  );
-  const [startPosition, setStartPosition] = useState<StartPositionCode>(
-    isSingleComposition(initial?.composition ?? emptySingle())
-      ? (initial?.composition as SingleComposition).startPosition
-      : 'floor',
-  );
-  const [modifiers, setModifiers] = useState<ExerciseModifierCode[]>(
-    isSingleComposition(initial?.composition ?? emptySingle())
-      ? (initial?.composition as SingleComposition).modifiers
-      : [],
-  );
+  const [family, setFamily] = useState<ExerciseFamilyCode>(seeded.family);
+  const [variation, setVariation] = useState<ExerciseVariationCode>(seeded.variation);
+  const [startPosition, setStartPosition] = useState<StartPositionCode>(seeded.startPosition);
+  const [modifiers, setModifiers] = useState<ExerciseModifierCode[]>(seeded.modifiers);
   const [objective, setObjective] = useState<TrainingObjectiveCode>(initial?.objective ?? 'technique');
   const [loadAnchor, setLoadAnchor] = useState<ExerciseLoadAnchorCode>(initial?.loadAnchor ?? 'auto');
+  const [customFamilyId, setCustomFamilyId] = useState<string | null>(() =>
+    customFamilyIdFromTags(initial?.tags),
+  );
+  const { currentUserId } = useWolfAssign();
+  const { families: customFamilies } = useCoachExerciseFamilies(currentUserId);
   const isComplex = Boolean(initial && !isSingleComposition(initial.composition));
 
   useEffect(() => {
-    const composition = initial?.composition;
-    const single = composition && isSingleComposition(composition) ? composition : emptySingle();
+    if (customFamilyId && !customFamilies.some((family) => family.id === customFamilyId)) {
+      setCustomFamilyId(null);
+    }
+  }, [customFamilies, customFamilyId]);
+
+  useEffect(() => {
+    const single = seedSingle(initial);
     setDiscipline(initial?.family === 'accessory' ? 'accessory' : 'weightlifting');
     setFamily(single.family);
     setVariation(single.variation);
@@ -93,7 +99,10 @@ export function WlExerciseFormModal({
     setModifiers(single.modifiers);
     setObjective(initial?.objective ?? 'technique');
     setLoadAnchor(initial?.loadAnchor ?? 'auto');
+    setCustomFamilyId(customFamilyIdFromTags(initial?.tags));
   }, [initial, mode]);
+
+  const buildTags = (): string[] => stripCustomFamilyTags(initial?.tags);
 
   const catalogReady = discipline === 'weightlifting' || discipline === 'accessory' || discipline === 'all';
 
@@ -122,20 +131,28 @@ export function WlExerciseFormModal({
   const handleSave = async () => {
     if (!catalogReady) return;
     if (isComplex && initial) {
-      await onSave({
-        kind: 'complex',
-        composition: initial.composition,
-        objective,
-        loadAnchor,
-      });
+      await onSave(
+        {
+          kind: 'complex',
+          composition: initial.composition,
+          objective,
+          loadAnchor,
+          tags: buildTags(),
+        },
+        { folderId: customFamilyId },
+      );
       return;
     }
-    await onSave({
-      kind: 'single',
-      composition,
-      objective,
-      loadAnchor,
-    });
+    await onSave(
+      {
+        kind: 'single',
+        composition,
+        objective,
+        loadAnchor,
+        tags: buildTags(),
+      },
+      { folderId: customFamilyId },
+    );
   };
 
   return (
@@ -144,6 +161,7 @@ export function WlExerciseFormModal({
       kicker={isEs ? 'Ejercicios' : 'Exercises'}
       title={isEs ? titles[mode].es : titles[mode].en}
       subtitle={previewName}
+      className="wl-centered-modal--exercises-light"
       onClose={onClose}
       footer={
         <div className="wl-form-sheet-footer__actions">
@@ -221,21 +239,19 @@ export function WlExerciseFormModal({
           </>
         ) : (
           <>
-            <label className="wl-form-sheet-field">
-              <span className="wl-form-sheet-label">{isEs ? 'Familia' : 'Family'}</span>
-              <select
-                className="wl-form-sheet-select"
-                value={discipline === 'accessory' ? 'accessory' : family}
-                disabled={discipline === 'accessory'}
-                onChange={(event) => setFamily(event.target.value as ExerciseFamilyCode)}
-              >
-                {taxonomy.families.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {isEs ? item.labelEs : item.labelEn}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <ExerciseFamilyPicker
+              isEs={isEs}
+              officialFamily={family}
+              customFamilyId={customFamilyId}
+              customFamilies={customFamilies}
+              onOfficialChange={(nextFamily) => {
+                setFamily(nextFamily);
+                if (nextFamily === 'accessory') setDiscipline('accessory');
+                else if (discipline === 'accessory') setDiscipline('weightlifting');
+              }}
+              onCustomChange={setCustomFamilyId}
+              onManageFamilies={onManageFamilies}
+            />
             <label className="wl-form-sheet-field">
               <span className="wl-form-sheet-label">{isEs ? 'Variación' : 'Variation'}</span>
               <select

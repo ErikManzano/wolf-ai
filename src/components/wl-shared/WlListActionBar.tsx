@@ -53,10 +53,9 @@ export function WlListActionBar({
         onChange={onFilterChange}
         ariaLabel={filterAriaLabel}
         active={filterActive}
-        title={filterOptions.find((option) => option.id === filterValue)?.label}
       >
         {filterOptions.map((option) => (
-          <option key={option.id} value={option.id} title={option.label}>
+          <option key={option.id} value={option.id}>
             {option.shortLabel ?? option.label}
           </option>
         ))}

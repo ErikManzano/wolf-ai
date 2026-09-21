@@ -1,52 +1,40 @@
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search } from 'lucide-react';
-import type { ExerciseCategory } from '../../models/training';
-import type { ExerciseLifecycleStatus } from '../../models/exercise';
+import { BookOpen, Clock, Plus, Search, Star } from 'lucide-react';
 import {
-  catalogGroupLabel,
   fuzzySearchPickerOptions,
   pickerOptionsFromIds,
   type SessionPickerOption,
 } from '../../services/exercise';
-
-const GROUP_ORDER: ExerciseCategory[] = ['snatch', 'clean_jerk', 'squat', 'accessory'];
-
-const CAT: Record<ExerciseCategory, string> = {
-  snatch: 'SN',
-  clean_jerk: 'CJ',
-  squat: 'SQ',
-  accessory: 'AC',
-};
-
-const CAT_FILTER: { value: ExerciseCategory | null; labelEs: string; labelEn: string }[] = [
-  { value: null, labelEs: 'Todo', labelEn: 'All' },
-  { value: 'snatch', labelEs: 'SN', labelEn: 'SN' },
-  { value: 'clean_jerk', labelEs: 'CJ', labelEn: 'CJ' },
-  { value: 'squat', labelEs: 'SQ', labelEn: 'SQ' },
-  { value: 'accessory', labelEs: 'AC', labelEn: 'AC' },
-];
-
-function lifecycleBadgeClass(status: ExerciseLifecycleStatus): string {
-  return `wolf-ei-badge wolf-ei-badge--${status}`;
-}
-
-const SHORT_LIFECYCLE: Record<ExerciseLifecycleStatus, [string, string]> = {
-  official: ['Of.', 'Off.'],
-  coach_modified: ['Coach', 'Coach'],
-  experimental: ['Propio', 'Cust.'],
-  deprecated: ['Dep.', 'Dep.'],
-  ai_suggested: ['IA', 'AI'],
-};
-
-function optionMeta(opt: SessionPickerOption): string {
-  const parts: string[] = [];
-  const g = catalogGroupLabel(opt.tags, opt.catalogGroup);
-  if (g) parts.push(g);
-  parts.push(CAT[opt.category]);
-  if (opt.kind === 'complex') parts.push('Complex');
-  return parts.join(' · ');
-}
+import { customFamilyTag, stripCustomFamilyTags } from '../../models/exercise/coachFamily';
+import { useWolfAssign } from '../../context/WolfAssignContext';
+import { WlExerciseFormModal } from '../wl-exercises/WlExerciseFormModal';
+import {
+  readExerciseFavorites,
+  recordExerciseRecent,
+  toggleExerciseFavorite,
+  readExerciseRecents,
+} from '../wl-exercises/exerciseLibraryPrefs';
+import { FamilyAvatar } from '../wl-exercises/FamilyAvatar';
+import type { ExerciseFamilyId } from '../wl-exercises/types';
+import { ExercisePickerBrowseModal } from './ExercisePickerBrowseModal';
+import {
+  buildPickerFamilyCounts,
+  ExercisePickerFamilyFilters,
+  filterPickerByFamily,
+  type PickerFamilyFilter,
+} from './ExercisePickerFamilyFilters';
+import {
+  buildDropdownSections,
+  combinedRecentIds,
+  formatHoverPreview,
+  highlightTokens,
+  HOVER_PREVIEW_MS,
+  SEARCH_DEBOUNCE_MS,
+  truncateLabel,
+  type DropdownSectionKind,
+  type NavigableRow,
+} from './exerciseAutocompleteUtils';
 
 interface ExerciseAutocompleteProps {
   options: SessionPickerOption[];
@@ -55,18 +43,16 @@ interface ExerciseAutocompleteProps {
   isEs: boolean;
   placeholder?: string;
   compact?: boolean;
-  /** IDs used elsewhere in this session — surfaced first when opening */
+  /** IDs usados en esta sesión — prioridad en recientes. */
   recentIds?: string[];
   catalogGroupFilter?: string | null;
   pickerIdsInGroup?: Set<string>;
-  /** Align dropdown to full exercise card width (coach editor). */
   panelMatchCard?: boolean;
-  /** Enter selects but keeps panel open (coach multi-add). */
   keepOpenOnSelect?: boolean;
-  /** Larger input + focus ring (embedded program editor). */
   prominent?: boolean;
-  /** Focus search on mount. */
   autoFocus?: boolean;
+  /** Abre modal de creación con nombre prellenado. */
+  onCreateExercise?: (name: string) => void;
 }
 
 interface PanelRect {
@@ -77,15 +63,19 @@ interface PanelRect {
   flipAbove: boolean;
 }
 
+const SECTION_ICON: Record<DropdownSectionKind, React.ReactNode> = {
+  favorites: <Star size={11} aria-hidden />,
+  recents: <Clock size={11} aria-hidden />,
+  all: <BookOpen size={11} aria-hidden />,
+};
+
 function collectScrollTargets(anchor: HTMLElement | null): (HTMLElement | Window)[] {
   const targets: (HTMLElement | Window)[] = [];
   let el = anchor?.parentElement ?? null;
   while (el) {
     const style = getComputedStyle(el);
     const overflow = `${style.overflow} ${style.overflowY} ${style.overflowX}`;
-    if (/(auto|scroll|overlay)/.test(overflow)) {
-      targets.push(el);
-    }
+    if (/(auto|scroll|overlay)/.test(overflow)) targets.push(el);
     el = el.parentElement;
   }
   targets.push(window);
@@ -98,7 +88,7 @@ function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRec
   const card = input.closest('article.wolf-se-block-card');
   const margin = 12;
 
-  let width = Math.max(inputRect.width, 300);
+  let width = Math.max(inputRect.width, 400);
   let left = inputRect.left;
 
   if (matchCard && card) {
@@ -107,42 +97,24 @@ function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRec
     width = Math.max(cardRect.width - margin * 2, inputRect.width);
   }
 
-  width = Math.min(Math.max(width, 280), window.innerWidth - 16);
+  width = Math.min(Math.max(width, 400), window.innerWidth - 16);
   if (left + width > window.innerWidth - 8) {
     left = Math.max(8, window.innerWidth - width - 8);
   }
 
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-  const viewportCap = Math.min(380, Math.floor(viewportHeight * 0.52));
-  const minComfortable = Math.min(220, viewportCap);
+  const viewportCap = Math.min(480, Math.floor(viewportHeight * 0.58));
+  const minComfortable = Math.min(240, viewportCap);
   const spaceBelow = viewportHeight - inputRect.bottom - gap;
   const spaceAbove = inputRect.top - gap;
-
-  // Abrir hacia el lado con más espacio; si abajo queda muy justo, forzar arriba.
-  const flipAbove =
-    spaceAbove > spaceBelow ||
-    (spaceBelow < minComfortable && spaceAbove >= minComfortable);
-
+  const flipAbove = spaceAbove > spaceBelow || (spaceBelow < minComfortable && spaceAbove >= minComfortable);
   const available = flipAbove ? spaceAbove : spaceBelow;
-  const maxHeight = Math.min(viewportCap, Math.max(160, available - 8));
+  const maxHeight = Math.min(viewportCap, Math.max(180, available - 8));
 
   if (flipAbove) {
-    return {
-      top: inputRect.top - gap,
-      left,
-      width,
-      maxHeight,
-      flipAbove: true,
-    };
+    return { top: inputRect.top - gap, left, width, maxHeight, flipAbove: true };
   }
-
-  return {
-    top: inputRect.bottom + gap,
-    left,
-    width,
-    maxHeight,
-    flipAbove: false,
-  };
+  return { top: inputRect.bottom + gap, left, width, maxHeight, flipAbove: false };
 }
 
 export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
@@ -159,19 +131,43 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   keepOpenOnSelect = false,
   prominent = false,
   autoFocus = false,
+  onCreateExercise,
 }) => {
+  const { createExerciseDefinition, exerciseTaxonomy, refreshExerciseCatalog } = useWolfAssign();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hoverTimerRef = useRef<number | null>(null);
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [pickedLabel, setPickedLabel] = useState<string | null>(null);
   const [panelMounted, setPanelMounted] = useState(false);
   const [panelVisible, setPanelVisible] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [panelRect, setPanelRect] = useState<PanelRect | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readExerciseFavorites());
+  const [libraryRecentIds] = useState<string[]>(() => readExerciseRecents());
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState<string | null>(null);
+  const [familyFilter, setFamilyFilter] = useState<PickerFamilyFilter>('all');
+
+  const openCreateFlow = useCallback(
+    (name: string) => {
+      if (onCreateExercise) {
+        onCreateExercise(name);
+        return;
+      }
+      setQuery(name);
+      setCreateOpen(true);
+      setOpen(false);
+    },
+    [onCreateExercise],
+  );
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -179,58 +175,62 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     return () => cancelAnimationFrame(id);
   }, [autoFocus]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(
+    () => () => {
+      if (hoverTimerRef.current != null) window.clearTimeout(hoverTimerRef.current);
+    },
+    [],
+  );
+
   const selected = options.find((o) => o.id === value);
-
-  const recentOptions = useMemo(
-    () => pickerOptionsFromIds(options, recentIds.filter((id) => id !== value), 6),
-    [options, recentIds, value],
+  const mergedRecentIds = useMemo(
+    () => combinedRecentIds(recentIds, libraryRecentIds),
+    [recentIds, libraryRecentIds],
   );
 
-  const suggestions = useMemo(
+  const familyCounts = useMemo(() => buildPickerFamilyCounts(options), [options]);
+
+  const optionPool = useMemo(
+    () => filterPickerByFamily(options, familyFilter),
+    [options, familyFilter],
+  );
+
+  const searchResults = useMemo(() => {
+    const limit = debouncedQuery.trim() ? 80 : 40;
+    const results = fuzzySearchPickerOptions(optionPool, debouncedQuery, limit, {
+      catalogGroup: catalogGroupFilter,
+      exerciseIdsInGroup: pickerIdsInGroup,
+      preferIds: mergedRecentIds,
+    });
+    if (!debouncedQuery.trim()) {
+      const recentOpts = pickerOptionsFromIds(optionPool, mergedRecentIds.filter((id) => id !== value), 8);
+      const recentSet = new Set(recentOpts.map((o) => o.id));
+      const rest = results.filter((o) => !recentSet.has(o.id));
+      return [...recentOpts, ...rest].slice(0, limit);
+    }
+    return results;
+  }, [optionPool, debouncedQuery, catalogGroupFilter, pickerIdsInGroup, mergedRecentIds, value]);
+
+  const matched = searchResults;
+
+  const dropdown = useMemo(
     () =>
-      fuzzySearchPickerOptions(options, query, 24, {
-        catalogGroup: catalogGroupFilter,
-        exerciseIdsInGroup: pickerIdsInGroup,
-        category: categoryFilter,
-        preferIds: recentIds,
+      buildDropdownSections({
+        matched,
+        favoriteIds,
+        recentIds: mergedRecentIds,
+        query: debouncedQuery,
+        isEs,
       }),
-    [options, query, catalogGroupFilter, pickerIdsInGroup, categoryFilter, recentIds],
+    [matched, favoriteIds, mergedRecentIds, debouncedQuery, isEs],
   );
 
-  const displayList = useMemo(() => {
-    const mergeUnique = (items: SessionPickerOption[]) => {
-      const seen = new Set<string>();
-      const out: SessionPickerOption[] = [];
-      for (const item of items) {
-        if (seen.has(item.id)) continue;
-        seen.add(item.id);
-        out.push(item);
-      }
-      return out;
-    };
-
-    if (!query.trim() && recentOptions.length > 0) {
-      const recentIdsSet = new Set(recentOptions.map((o) => o.id));
-      const rest = suggestions.filter((o) => !recentIdsSet.has(o.id));
-      return mergeUnique([...recentOptions, ...rest]).slice(0, 24);
-    }
-    return mergeUnique(suggestions);
-  }, [query, recentOptions, suggestions]);
-
-  const groupedSections = useMemo(() => {
-    if (categoryFilter) return null;
-    const buckets = new Map<ExerciseCategory, SessionPickerOption[]>();
-    for (const cat of GROUP_ORDER) buckets.set(cat, []);
-    for (const opt of displayList) {
-      buckets.get(opt.category)?.push(opt);
-    }
-    return GROUP_ORDER.map((cat) => ({ cat, items: buckets.get(cat) ?? [] })).filter((s) => s.items.length > 0);
-  }, [categoryFilter, displayList]);
-
-  const flatList = useMemo(() => {
-    if (!groupedSections) return displayList;
-    return groupedSections.flatMap((s) => s.items);
-  }, [groupedSections, displayList]);
+  const navigable = dropdown.navigable;
 
   useEffect(() => {
     if (!open && pickedLabel == null) setQuery(selected?.name ?? '');
@@ -261,14 +261,18 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   }, [open]);
 
   useEffect(() => {
+    if (!open) setFamilyFilter('all');
+  }, [open]);
+
+  useEffect(() => {
     setActiveIndex(0);
-  }, [query, categoryFilter, catalogGroupFilter]);
+  }, [debouncedQuery, catalogGroupFilter, familyFilter]);
 
   useEffect(() => {
     if (!open || !panelRef.current) return;
-    const active = panelRef.current.querySelector('.wolf-se-autocomplete-option.is-active');
+    const active = panelRef.current.querySelector('.wolf-se-picker-row.is-active, .wolf-se-picker-create.is-active');
     active?.scrollIntoView({ block: 'nearest' });
-  }, [open, activeIndex, flatList]);
+  }, [open, activeIndex, navigable]);
 
   useEffect(() => {
     const onDoc = (e: PointerEvent) => {
@@ -291,7 +295,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       return;
     }
     updatePanelRect();
-  }, [open, updatePanelRect, flatList.length, categoryFilter]);
+  }, [open, updatePanelRect, navigable.length]);
 
   useEffect(() => {
     if (!open) return;
@@ -322,6 +326,8 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     (id: string) => {
       const opt = options.find((o) => o.id === id);
       onChange(id);
+      recordExerciseRecent(id, readExerciseRecents());
+
       if (keepOpenOnSelect) {
         setQuery('');
         requestAnimationFrame(() => inputRef.current?.focus());
@@ -335,48 +341,133 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     [onChange, keepOpenOnSelect, options],
   );
 
+  const handleToggleFavorite = useCallback((id: string) => {
+    setFavoriteIds((prev) => toggleExerciseFavorite(id, prev));
+  }, []);
+
+  const openBrowseModal = useCallback(() => {
+    setOpen(false);
+    setPanelVisible(false);
+    setBrowseOpen(true);
+    inputRef.current?.blur();
+  }, []);
+
+  const activateNavRow = useCallback(
+    (row: NavigableRow) => {
+      if (row.kind === 'option') pick(row.opt.id);
+      else if (row.kind === 'more') openBrowseModal();
+      else if (row.kind === 'create') openCreateFlow(row.query);
+    },
+    [pick, openCreateFlow, openBrowseModal],
+  );
+
   const closedLabel = pickedLabel ?? selected?.name ?? '';
   const inputValue = open ? query : closedLabel;
   const hasSettledValue = !open && Boolean(closedLabel.trim());
 
   const moveActive = (delta: number) => {
-    if (flatList.length === 0) return;
-    setActiveIndex((i) => (i + delta + flatList.length) % flatList.length);
+    if (navigable.length === 0) return;
+    setActiveIndex((i) => (i + delta + navigable.length) % navigable.length);
   };
 
-  const renderOption = (opt: SessionPickerOption, idx: number) => (
-    <li key={opt.id} id={`${listId}-opt-${idx}`} role="option" aria-selected={opt.id === value}>
-      <button
-        type="button"
-        className={`wolf-se-autocomplete-option${opt.id === value ? ' is-selected' : ''}${idx === activeIndex ? ' is-active' : ''}`}
-        onPointerDown={(e) => {
-          if (e.button !== 0) return;
-          e.preventDefault();
-          e.stopPropagation();
-          pick(opt.id);
-        }}
-        onMouseEnter={() => setActiveIndex(idx)}
-      >
-        <span className="wolf-se-autocomplete-option-text">
-          <span className="wolf-se-autocomplete-option-name">{opt.name}</span>
-          <span className="wolf-se-autocomplete-option-meta">{optionMeta(opt)}</span>
-        </span>
-        <span className="wolf-se-autocomplete-option-badges">
-          {opt.kind === 'complex' ? (
-            <span className="wolf-ei-badge wolf-ei-badge--coach_modified wolf-se-autocomplete-badge">C+</span>
-          ) : null}
-          <span className={`${lifecycleBadgeClass(opt.lifecycleStatus)} wolf-se-autocomplete-badge`}>
-            {SHORT_LIFECYCLE[opt.lifecycleStatus][isEs ? 0 : 1]}
-          </span>
-        </span>
-      </button>
-    </li>
-  );
+  const renderOptionRow = (opt: SessionPickerOption, navIndex: number, section: DropdownSectionKind) => {
+    const isFavorite = favoriteIds.includes(opt.id) || favoriteIds.includes(opt.definitionId);
+    const isActive = navigable[activeIndex]?.kind === 'option' && navigable[activeIndex]?.id === `opt-${opt.id}`;
+    const family = opt.family as ExerciseFamilyId;
+    const meta = `${opt.familyLabel} · ${opt.typeLabel}`;
 
-  const panelContent = panelMounted ? (
+    return (
+      <li key={`${section}-${opt.id}`} id={`${listId}-opt-${navIndex}`} role="option" aria-selected={opt.id === value}>
+        <div
+          className={`wolf-se-picker-row${isActive ? ' is-active' : ''}${opt.id === value ? ' is-selected' : ''}`}
+          onMouseEnter={() => {
+            setActiveIndex(navIndex);
+            if (hoverTimerRef.current != null) window.clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = window.setTimeout(
+              () => setHoverPreview(formatHoverPreview(opt, isEs)),
+              HOVER_PREVIEW_MS,
+            );
+          }}
+          onMouseLeave={() => {
+            if (hoverTimerRef.current != null) window.clearTimeout(hoverTimerRef.current);
+            setHoverPreview(null);
+          }}
+        >
+          <button
+            type="button"
+            className="wolf-se-picker-row__select"
+            onPointerDown={(e) => {
+              if (e.button !== 0) return;
+              e.preventDefault();
+              e.stopPropagation();
+              pick(opt.id);
+            }}
+          >
+            <span
+              className={`wolf-se-picker-row__avatar${opt.isOfficial ? '' : ' wolf-se-picker-row__avatar--custom'}`}
+            >
+              <FamilyAvatar family={family} size={32} />
+            </span>
+            <span className="wolf-se-picker-row__main">
+              <span className="wolf-se-picker-row__name">
+                {highlightTokens(truncateLabel(opt.name), debouncedQuery).map((part, index) =>
+                  part.match ? (
+                    <mark key={index} className="wolf-se-picker-highlight">
+                      {part.text}
+                    </mark>
+                  ) : (
+                    <span key={index}>{part.text}</span>
+                  ),
+                )}
+              </span>
+              <span className="wolf-se-picker-row__meta">{meta}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`wolf-se-picker-row__fav${isFavorite ? ' is-on' : ''}`}
+            aria-label={isEs ? 'Favorito' : 'Favorite'}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleFavorite(opt.id);
+            }}
+          >
+            <Star size={14} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden />
+          </button>
+        </div>
+      </li>
+    );
+  };
+
+  const sectionBlocks = dropdown.sections.map((section) => {
+    const sectionLabel = isEs ? section.labelEs : section.labelEn;
+    const rows = section.items.map((opt) => {
+      const idx = navigable.findIndex((n) => n.kind === 'option' && n.id === `opt-${opt.id}`);
+      return renderOptionRow(opt, idx >= 0 ? idx : 0, section.kind);
+    });
+    return (
+      <li key={section.kind} className="wolf-se-picker-section" role="presentation">
+        <p className="wolf-se-picker-section-label">
+          {SECTION_ICON[section.kind]}
+          <span>{sectionLabel}</span>
+          {section.kind === 'all' && debouncedQuery.trim() ? (
+            <span className="wolf-se-picker-section-count">({dropdown.totalMatches})</span>
+          ) : null}
+        </p>
+        <ul role="group">{rows}</ul>
+      </li>
+    );
+  });
+
+  const moreRow = navigable.find((n) => n.kind === 'more');
+  const createRow = navigable.find((n) => n.kind === 'create');
+
+  const panelContent = panelMounted && !browseOpen ? (
     <div
       ref={panelRef}
-      className={`wolf-se-autocomplete-panel wolf-se-autocomplete-panel--portal${panelMatchCard ? ' wolf-se-autocomplete-panel--match-card' : ''}${panelRect?.flipAbove ? ' wolf-se-autocomplete-panel--above' : ''}${panelVisible ? ' is-visible' : ' is-closing'}`}
+      className={`wolf-se-autocomplete-panel wolf-se-autocomplete-panel--portal wolf-se-autocomplete-panel--v2${panelMatchCard ? ' wolf-se-autocomplete-panel--match-card' : ''}${panelRect?.flipAbove ? ' wolf-se-autocomplete-panel--above' : ''}${panelVisible ? ' is-visible' : ' is-closing'}`}
+      onWheel={(e) => e.stopPropagation()}
       style={
         panelRect
           ? {
@@ -390,115 +481,166 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           : { position: 'fixed', visibility: 'hidden', zIndex: 10050 }
       }
     >
-      <div className="wolf-se-autocomplete-filters" role="group" aria-label={isEs ? 'Filtro categoría' : 'Category filter'}>
-        {CAT_FILTER.map((f) => (
-          <button
-            key={f.value ?? 'all'}
-            type="button"
-            className={`wolf-se-autocomplete-filter-chip${categoryFilter === f.value ? ' is-active' : ''}`}
-            onPointerDown={(e) => {
-              if (e.button !== 0) return;
-              e.preventDefault();
-              e.stopPropagation();
-              setCategoryFilter(f.value);
-            }}
-          >
-            {isEs ? f.labelEs : f.labelEn}
-          </button>
-        ))}
-      </div>
+      <ExercisePickerFamilyFilters
+        isEs={isEs}
+        active={familyFilter}
+        counts={familyCounts}
+        compact={compact}
+        onChange={setFamilyFilter}
+      />
 
-      {!query.trim() && recentOptions.length > 0 && (
-        <p className="wolf-se-autocomplete-section-label">{isEs ? 'En esta sesión' : 'In this session'}</p>
-      )}
+      {hoverPreview ? <p className="wolf-se-picker-inline-preview">{hoverPreview}</p> : null}
 
-      {flatList.length > 0 ? (
-        <>
-          <p className="wolf-se-autocomplete-count" aria-live="polite">
-            {flatList.length}
-            {options.length > flatList.length ? ` / ${options.length}` : ''}{' '}
-            {isEs ? 'movimientos' : 'movements'}
-            {catalogGroupLabel(undefined, catalogGroupFilter ?? undefined)
-              ? ` · ${catalogGroupLabel(undefined, catalogGroupFilter ?? undefined)}`
-              : ''}
-          </p>
-          <ul id={listId} role="listbox" className="wolf-se-autocomplete-menu">
-            {(() => {
-              let globalIdx = 0;
-              if (!groupedSections) return flatList.map((opt) => renderOption(opt, globalIdx++));
-              return groupedSections.map((section) => (
-                <li key={section.cat} className="wolf-se-autocomplete-group" role="presentation">
-                  <span className="wolf-se-autocomplete-group-label">{CAT[section.cat]}</span>
-                  <ul role="group">
-                    {section.items.map((opt) => renderOption(opt, globalIdx++))}
-                  </ul>
-                </li>
-              ));
-            })()}
-          </ul>
-        </>
+      {navigable.some((n) => n.kind === 'option') ? (
+        <ul id={listId} role="listbox" className="wolf-se-picker-menu">
+          {sectionBlocks}
+        </ul>
       ) : (
         <p className="wolf-se-autocomplete-empty">
-          {isEs
-            ? 'Sin resultados. Prueba otra palabra o quita filtros SN/CJ/SQ/AC.'
-            : 'No results. Try another term or clear SN/CJ/SQ/AC filters.'}
+          {dropdown.showCreate
+            ? isEs
+              ? `Sin resultados. Crea "${debouncedQuery.trim()}" para añadirlo a la biblioteca.`
+              : `No results. Create "${debouncedQuery.trim()}" to add it to the library.`
+            : familyFilter !== 'all'
+              ? isEs
+                ? 'Sin ejercicios en esta familia.'
+                : 'No exercises in this family.'
+              : isEs
+                ? 'Sin resultados.'
+                : 'No results.'}
         </p>
       )}
+
+      {moreRow && moreRow.kind === 'more' ? (
+        <button
+          type="button"
+          className={`wolf-se-picker-more${activeIndex === navigable.indexOf(moreRow) ? ' is-active' : ''}`}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            openBrowseModal();
+          }}
+        >
+          {isEs ? `Ver todos los resultados (${dropdown.totalMatches})` : `View all results (${dropdown.totalMatches})`}
+        </button>
+      ) : null}
+
+      {createRow && createRow.kind === 'create' ? (
+        <button
+          type="button"
+          className={`wolf-se-picker-create${activeIndex === navigable.indexOf(createRow) ? ' is-active' : ''}`}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            openCreateFlow(createRow.query);
+          }}
+        >
+          <Plus size={14} aria-hidden />
+          {isEs
+            ? `Crear "${createRow.query}" en la biblioteca`
+            : `Create "${createRow.query}" in library`}
+        </button>
+      ) : null}
     </div>
   ) : null;
 
   return (
-    <div
-      ref={rootRef}
-      className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
-    >
+    <>
       <div
-        className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
+        ref={rootRef}
+        className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
       >
-        <Search size={prominent ? 20 : compact ? 14 : 16} aria-hidden />
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-activedescendant={open && flatList[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined}
-          className="wolf-se-autocomplete-input"
-          placeholder={placeholder ?? (isEs ? 'Buscar: snatch, pull, G4…' : 'Search: snatch, pull, G4…')}
-          value={inputValue}
-          onFocus={() => {
-            setOpen(true);
-            setQuery('');
-          }}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setOpen(false);
-              setQuery(selected?.name ?? '');
+        <div
+          className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
+        >
+          <Search size={prominent ? 20 : compact ? 14 : 16} aria-hidden />
+          <input
+            ref={inputRef}
+            type="text"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listId}
+            aria-activedescendant={
+              open && navigable[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined
             }
-            if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              if (!open) setOpen(true);
-              else moveActive(1);
-            }
-            if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              moveActive(-1);
-            }
-            if (e.key === 'Enter' && open && flatList[activeIndex]) {
-              e.preventDefault();
-              pick(flatList[activeIndex]!.id);
+            className="wolf-se-autocomplete-input"
+            placeholder={placeholder ?? (isEs ? 'Buscar ejercicio…' : 'Search exercise…')}
+            value={inputValue}
+            onFocus={() => {
+              if (browseOpen) return;
+              setOpen(true);
+              setQuery('');
+            }}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setOpen(false);
+                setQuery(selected?.name ?? '');
+              }
+              if (e.key === 'Tab') {
+                setOpen(false);
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!open) setOpen(true);
+                else moveActive(1);
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                moveActive(-1);
+              }
+              if (e.key === 'Enter' && open && navigable[activeIndex]) {
+                e.preventDefault();
+                activateNavRow(navigable[activeIndex]!);
+              }
+            }}
+          />
+        </div>
+
+        {panelMounted && typeof document !== 'undefined' ? createPortal(panelContent, document.body) : null}
+      </div>
+
+      <ExercisePickerBrowseModal
+        isEs={isEs}
+        open={browseOpen}
+        options={options}
+        initialQuery={debouncedQuery}
+        initialFamily={familyFilter}
+        favoriteIds={favoriteIds}
+        onClose={() => setBrowseOpen(false)}
+        onSelect={pick}
+        onToggleFavorite={handleToggleFavorite}
+        onCreate={openCreateFlow}
+      />
+
+      {createOpen ? (
+        <WlExerciseFormModal
+          isEs={isEs}
+          mode="create"
+          taxonomy={exerciseTaxonomy}
+          busy={createBusy}
+          onClose={() => setCreateOpen(false)}
+          onSave={async (input, { folderId }) => {
+            setCreateBusy(true);
+            try {
+              const payload =
+                folderId != null
+                  ? {
+                      ...input,
+                      tags: [...stripCustomFamilyTags(input.tags), customFamilyTag(folderId)],
+                    }
+                  : input;
+              const id = await createExerciseDefinition(payload);
+              await refreshExerciseCatalog();
+              if (id) pick(id);
+              setCreateOpen(false);
+            } finally {
+              setCreateBusy(false);
             }
           }}
         />
-      </div>
-
-      {panelMounted && typeof document !== 'undefined'
-        ? createPortal(panelContent, document.body)
-        : null}
-    </div>
+      ) : null}
+    </>
   );
 };

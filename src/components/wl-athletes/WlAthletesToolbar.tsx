@@ -80,7 +80,6 @@ export function WlAthletesToolbar({
           onChange={(value) => onFilterChange(value as AthleteFilterId)}
           ariaLabel={isEs ? 'Filtrar atletas' : 'Filter athletes'}
           active={filter !== 'all'}
-          title={FILTER_OPTIONS.find((option) => option.id === filter)?.[isEs ? 'labelEs' : 'labelEn']}
         >
           {FILTER_OPTIONS.map((option) => (
             <option key={option.id} value={option.id}>
@@ -94,10 +93,9 @@ export function WlAthletesToolbar({
           onChange={(value) => onSortChange(value as AthleteSortId)}
           ariaLabel={isEs ? 'Ordenar atletas' : 'Sort athletes'}
           active={sort !== 'name_asc'}
-          title={SORT_OPTIONS.find((option) => option.id === sort)?.[isEs ? 'labelEs' : 'labelEn']}
         >
           {SORT_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id} title={isEs ? option.labelEs : option.labelEn}>
+            <option key={option.id} value={option.id}>
               {isEs ? option.shortEs : option.shortEn}
             </option>
           ))}

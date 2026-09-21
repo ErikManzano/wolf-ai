@@ -4,6 +4,7 @@ import type {
   ExerciseLifecycleStatus,
   MergedDefinitionView,
 } from '../../models/exercise';
+import { customFamilyTag, stripCustomFamilyTags } from '../../models/exercise/coachFamily';
 import { inferLifecycleStatus } from '../../models/exercise/lifecycle';
 
 export function mergeDefinitionView(
@@ -13,9 +14,17 @@ export function mergeDefinitionView(
   const lifecycleStatus = inferLifecycleStatus(def);
   const hiddenByCoach = Boolean(coachOverride?.override.hidden);
   const effectiveDisplayName = coachOverride?.override.displayName?.trim() || def.displayName;
+  const overrideFolderId = coachOverride?.override.customFamilyId;
+  const tags =
+    overrideFolderId !== undefined
+      ? overrideFolderId
+        ? [...stripCustomFamilyTags(def.tags), customFamilyTag(overrideFolderId)]
+        : stripCustomFamilyTags(def.tags)
+      : def.tags;
 
   return {
     ...def,
+    tags,
     lifecycleStatus,
     parentDefinitionId: def.parentDefinitionId ?? null,
     version: def.version ?? 1,
@@ -44,7 +53,7 @@ export function mergeCatalogViews(
     .map((d) => mergeDefinitionView(d, overrideByBase.get(d.id)))
     .filter((m) => !m.hiddenByCoach);
 
-  const mergedCoach = coachOwned.map((d) => mergeDefinitionView(d, null));
+  const mergedCoach = coachOwned.map((d) => mergeDefinitionView(d, overrideByBase.get(d.id)));
 
   const byId = new Map<string, MergedDefinitionView>();
   for (const m of mergedOfficial) byId.set(m.id, m);

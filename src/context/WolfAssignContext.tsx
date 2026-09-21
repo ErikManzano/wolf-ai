@@ -32,6 +32,12 @@ import {
   toLegacyExercise,
   type SessionPickerOption,
 } from '../services/exercise';
+import { writeCoachExerciseFamilies } from '../services/exercise/coachFamilyStore';
+import {
+  mergeCoachExerciseOverrides,
+  readCoachExerciseOverrides,
+  writeCoachExerciseOverrides,
+} from '../services/exercise/coachOverrideStore';
 import { normalizeExercise } from '../utils/exerciseCatalog';
 import { WlAssignmentsProvider, useWlAssignments } from '../modules/assignments';
 import { upsertCoachAthleteLocal } from '../modules/wl-athletes/athleteStore';
@@ -360,6 +366,11 @@ interface WolfAssignContextValue {
   } | null>;
   publishExerciseDefinition: (id: string, changeReason?: string) => Promise<string | null>;
   isBuiltinMotorExercise: (id: string) => boolean;
+  importExerciseLibrary: (result: {
+    definitions: ExerciseDefinition[];
+    overrides: CoachExerciseOverride[];
+    customFamilies: import('../models/exercise/coachFamily').CoachExerciseFamily[];
+  }) => void;
   /** @deprecated */
   refreshMotorExercises: () => Promise<void>;
   /** @deprecated */
@@ -396,7 +407,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
   const [exerciseRelationships, setExerciseRelationships] = useState<ExerciseRelationshipRule[]>(() =>
     seedRelationshipRules(),
   );
-  const [coachExerciseOverrides, setCoachExerciseOverrides] = useState<CoachExerciseOverride[]>([]);
+  const [coachExerciseOverrides, setCoachExerciseOverrides] = useState<CoachExerciseOverride[]>(() =>
+    typeof window !== 'undefined' ? readCoachExerciseOverrides() : [],
+  );
   const [technicalCollections, setTechnicalCollections] = useState<TechnicalCollectionWithItems[]>(() =>
     seedTechnicalCollectionsLocal(),
   );
@@ -428,8 +441,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       status: 'all',
       kind: 'all',
     }, exerciseTaxonomy);
-    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy);
-  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy]);
+    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy, { motorExercises, isEs: true });
+  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy, motorExercises]);
 
   const sessionExercisePickerSingles = useMemo(() => {
     const result = browseExerciseRegistry(motorExerciseDefinitions, coachExerciseOverrides, {
@@ -438,8 +451,8 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       status: 'all',
       kind: 'single',
     }, exerciseTaxonomy);
-    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy);
-  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy]);
+    return mergedViewsToPickerOptions(result.definitions, exerciseTaxonomy, { motorExercises, isEs: true });
+  }, [motorExerciseDefinitions, coachExerciseOverrides, currentUserId, exerciseTaxonomy, motorExercises]);
 
   const registryBrowse = useCallback(
     (query?: RegistryBrowseQuery) =>
@@ -535,7 +548,16 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       if (defRes.ok) {
         const defs = (await defRes.json()) as ExerciseDefinition[];
-        if (Array.isArray(defs)) setMotorExerciseDefinitions(defs);
+        if (Array.isArray(defs)) {
+          setMotorExerciseDefinitions((prev) => {
+            const byId = new Map<string, ExerciseDefinition>();
+            for (const def of defs) byId.set(def.id, def);
+            for (const def of prev) {
+              if (def.coachId) byId.set(def.id, def);
+            }
+            return [...byId.values()];
+          });
+        }
       }
       if (relRes.ok) {
         const rel = (await relRes.json()) as ExerciseRelationshipRule[];
@@ -547,12 +569,18 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       if (ovrRes.ok) {
         const ovrs = (await ovrRes.json()) as CoachExerciseOverride[];
-        if (Array.isArray(ovrs)) setCoachExerciseOverrides(ovrs);
+        if (Array.isArray(ovrs)) {
+          setCoachExerciseOverrides((prev) => {
+            const merged = mergeCoachExerciseOverrides(prev, ovrs, currentUserId);
+            writeCoachExerciseOverrides(merged);
+            return merged;
+          });
+        }
       }
     } catch {
       /* keep local catalog */
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     void loadUsersFromApi();
@@ -1027,6 +1055,21 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     persistLocalExerciseDefinitions(customCoach);
   }, []);
 
+  const importExerciseLibrary = useCallback(
+    (result: {
+      definitions: ExerciseDefinition[];
+      overrides: CoachExerciseOverride[];
+      customFamilies: import('../models/exercise/coachFamily').CoachExerciseFamily[];
+    }) => {
+      const customCoach = result.definitions.filter((def) => Boolean(def.coachId));
+      applyLocalDefinitionCatalog(customCoach);
+      setCoachExerciseOverrides(result.overrides);
+      writeCoachExerciseOverrides(result.overrides);
+      writeCoachExerciseFamilies(result.customFamilies);
+    },
+    [applyLocalDefinitionCatalog],
+  );
+
   const createExerciseDefinition = useCallback(
     async (input: ExerciseDefinitionInput): Promise<string | null> => {
       if (isApiEnabled() && apiToken) {
@@ -1048,12 +1091,12 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
       const id = `def-${Date.now()}`;
-      const created = buildExerciseDefinition(id, input, exerciseTaxonomy, { coachId: 'user-coach' });
+      const created = buildExerciseDefinition(id, input, exerciseTaxonomy, { coachId: currentUserId });
       const custom = motorExerciseDefinitions.filter((d) => d.coachId);
       applyLocalDefinitionCatalog([...custom, created]);
       return null;
     },
-    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, currentUserId, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
   );
 
   const updateExerciseDefinition = useCallback(
@@ -1080,13 +1123,13 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
       const updated = buildExerciseDefinition(id, input, exerciseTaxonomy, {
-        coachId: motorExerciseDefinitions.find((d) => d.id === id)?.coachId ?? 'user-coach',
+        coachId: motorExerciseDefinitions.find((d) => d.id === id)?.coachId ?? currentUserId,
       });
       const custom = motorExerciseDefinitions.filter((d) => d.coachId && d.id !== id);
       applyLocalDefinitionCatalog([...custom, updated]);
       return null;
     },
-    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, currentUserId, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
   );
 
   const createExerciseRelationship = useCallback(
@@ -1166,7 +1209,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       }
       const { buildExerciseDefinition } = await import('../services/exercise/buildDefinition');
       const forked = buildExerciseDefinition(`def-fork-${Date.now()}`, input, exerciseTaxonomy, {
-        coachId: 'user-coach',
+        coachId: currentUserId,
       });
       forked.parentDefinitionId = parentId;
       forked.lifecycleStatus = 'coach_modified';
@@ -1174,7 +1217,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
       applyLocalDefinitionCatalog([...custom, forked]);
       return null;
     },
-    [apiRequest, apiToken, applyLocalDefinitionCatalog, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
+    [apiRequest, apiToken, applyLocalDefinitionCatalog, currentUserId, exerciseTaxonomy, loadExerciseCatalogFromApi, motorExerciseDefinitions],
   );
 
   const upsertCoachOverride = useCallback(
@@ -1196,17 +1239,24 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
           return 'Could not connect to backend.';
         }
       }
-      const id = `ovr-user-coach-${baseDefinitionId}`;
-      const saved: CoachExerciseOverride = {
-        id,
-        coachId: 'user-coach',
-        baseDefinitionId,
-        override: patch,
-      };
-      setCoachExerciseOverrides((prev) => [...prev.filter((o) => o.id !== id), saved]);
+      const id = `ovr-${currentUserId}-${baseDefinitionId}`;
+      setCoachExerciseOverrides((prev) => {
+        const existing = prev.find(
+          (item) => item.coachId === currentUserId && item.baseDefinitionId === baseDefinitionId,
+        );
+        const saved: CoachExerciseOverride = {
+          id,
+          coachId: currentUserId,
+          baseDefinitionId,
+          override: { ...existing?.override, ...patch },
+        };
+        const next = [...prev.filter((item) => item.id !== id), saved];
+        writeCoachExerciseOverrides(next);
+        return next;
+      });
       return null;
     },
-    [apiRequest, apiToken, loadExerciseCatalogFromApi],
+    [apiRequest, apiToken, currentUserId, loadExerciseCatalogFromApi],
   );
 
   const fetchDefinitionDetail = useCallback(
@@ -1465,6 +1515,7 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     fetchDefinitionDetail,
     publishExerciseDefinition,
     isBuiltinMotorExercise,
+    importExerciseLibrary,
     refreshMotorExercises,
     createMotorExercise,
     updateMotorExercise,

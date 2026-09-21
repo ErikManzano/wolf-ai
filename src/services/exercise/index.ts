@@ -12,6 +12,24 @@ export { complexDefinitionToSessionBlock } from './complexToSessionBlock';
 export { mergeDefinitionView, mergeCatalogViews, lifecycleBadgeLabel } from './mergeDefinitionView';
 export { browseExerciseRegistry } from './registryBrowse';
 export {
+  buildLibraryExport,
+  downloadLibraryExport,
+  mergeLibraryImport,
+  parseLibraryExport,
+  previewLibraryImport,
+  type LibraryExportPayload,
+  type LibraryImportMergeResult,
+  type LibraryImportPreview,
+} from './libraryExport';
+export {
+  readCoachExerciseFamilies,
+  writeCoachExerciseFamilies,
+  upsertCoachExerciseFamily,
+  deleteCoachExerciseFamily,
+  slugifyFamilyLabel,
+  familyLabel,
+} from './coachFamilyStore';
+export {
   type SessionPickerOption,
   type SessionPickerBlockKind,
   catalogGroupLabel,

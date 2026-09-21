@@ -1,4 +1,4 @@
-import { Filter, Plus } from 'lucide-react';
+import { Filter, LayoutGrid, List, Plus } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { WlSearchField } from '../wl-shared/WlSearchField';
 import {
@@ -9,6 +9,7 @@ import {
   type ExerciseOriginFilter,
   type ExerciseSortId,
 } from './exerciseListUtils';
+import type { ExerciseViewMode } from './types';
 
 export function WlExercisesToolbar({
   isEs,
@@ -20,9 +21,13 @@ export function WlExercisesToolbar({
   onOriginChange,
   sort,
   onSortChange,
+  viewMode,
+  onViewModeChange,
   filtersOpen,
   onFiltersOpenChange,
   onCreate,
+  onManageFamilies,
+  onManageLibrary,
 }: {
   isEs: boolean;
   search: string;
@@ -33,9 +38,13 @@ export function WlExercisesToolbar({
   onOriginChange: (value: ExerciseOriginFilter) => void;
   sort: ExerciseSortId;
   onSortChange: (value: ExerciseSortId) => void;
+  viewMode: ExerciseViewMode;
+  onViewModeChange: (mode: ExerciseViewMode) => void;
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
   onCreate: () => void;
+  onManageFamilies: () => void;
+  onManageLibrary: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const filtersActive = discipline !== 'all' || origin !== 'all' || sort !== 'name_asc';
@@ -43,10 +52,19 @@ export function WlExercisesToolbar({
   useEffect(() => {
     if (!filtersOpen) return;
     const onClickAway = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onFiltersOpenChange(false);
+      if (!ref.current?.contains(event.target as Node)) {
+        onFiltersOpenChange(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onFiltersOpenChange(false);
     };
     window.addEventListener('mousedown', onClickAway);
-    return () => window.removeEventListener('mousedown', onClickAway);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousedown', onClickAway);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [filtersOpen, onFiltersOpenChange]);
 
   return (
@@ -58,6 +76,7 @@ export function WlExercisesToolbar({
           placeholder={isEs ? 'Buscar ejercicio…' : 'Search exercise…'}
           ariaLabel={isEs ? 'Buscar ejercicio' : 'Search exercise'}
         />
+
         <div className="wl-exercises-filters-wrap">
           <button
             type="button"
@@ -66,10 +85,20 @@ export function WlExercisesToolbar({
             onClick={() => onFiltersOpenChange(!filtersOpen)}
           >
             <Filter size={16} strokeWidth={2.25} aria-hidden />
-            {isEs ? 'Filtros' : 'Filters'}
+            <span className="wl-exercises-filters-btn__label">{isEs ? 'Filtros' : 'Filters'}</span>
           </button>
           {filtersOpen ? (
             <div className="wl-exercises-filters-popover" role="dialog" aria-label={isEs ? 'Filtros' : 'Filters'}>
+              <label>
+                {isEs ? 'Orden' : 'Sort'}
+                <select value={sort} onChange={(event) => onSortChange(event.target.value as ExerciseSortId)}>
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {isEs ? option.labelEs : option.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label>
                 {isEs ? 'Disciplina' : 'Discipline'}
                 <select
@@ -93,22 +122,42 @@ export function WlExercisesToolbar({
                   ))}
                 </select>
               </label>
-              <label>
-                {isEs ? 'Orden' : 'Sort'}
-                <select value={sort} onChange={(event) => onSortChange(event.target.value as ExerciseSortId)}>
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {isEs ? option.labelEs : option.labelEn}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className="wl-exercises-filters-popover__footer">
+                <button type="button" className="wl-exercises-filters-popover__link" onClick={onManageFamilies}>
+                  {isEs ? 'Gestionar carpetas' : 'Manage folders'}
+                </button>
+                <button type="button" className="wl-exercises-filters-popover__link" onClick={onManageLibrary}>
+                  {isEs ? 'Copia de seguridad' : 'Backup'}
+                </button>
+              </div>
             </div>
           ) : null}
         </div>
+
+        <div className="wl-exercises-view-toggle" role="group" aria-label={isEs ? 'Modo de vista' : 'View mode'}>
+          <button
+            type="button"
+            className={`wl-exercises-view-toggle__btn${viewMode === 'list' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'list'}
+            aria-label={isEs ? 'Lista' : 'List'}
+            onClick={() => onViewModeChange('list')}
+          >
+            <List size={16} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={`wl-exercises-view-toggle__btn${viewMode === 'grid' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'grid'}
+            aria-label={isEs ? 'Grid' : 'Grid'}
+            onClick={() => onViewModeChange('grid')}
+          >
+            <LayoutGrid size={16} aria-hidden />
+          </button>
+        </div>
+
         <button
           type="button"
-          className="btn-primary wl-list-toolbar__cta"
+          className="btn-primary wl-list-toolbar__cta wl-exercises-toolbar__cta"
           onClick={onCreate}
           aria-label={isEs ? 'Nuevo ejercicio' : 'New exercise'}
         >

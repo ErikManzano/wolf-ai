@@ -532,12 +532,20 @@ export async function upsertCoachOverride(
   methodology?: string | null,
 ): Promise<CoachExerciseOverride> {
   const id = `ovr-${coachId}-${baseDefinitionId}`;
+  const existing = await pool.query(
+    `SELECT override FROM coach_exercise_overrides WHERE coach_id = $1 AND base_definition_id = $2`,
+    [coachId, baseDefinitionId],
+  );
+  const merged: OverridePatch = {
+    ...((existing.rows[0]?.override as OverridePatch | undefined) ?? {}),
+    ...patch,
+  };
   const result = await pool.query(
     `INSERT INTO coach_exercise_overrides (id, coach_id, base_definition_id, override, methodology, updated_at)
      VALUES ($1,$2,$3,$4::jsonb,$5,now())
      ON CONFLICT (coach_id, base_definition_id) DO UPDATE SET override=$4::jsonb, methodology=$5, updated_at=now()
      RETURNING *`,
-    [id, coachId, baseDefinitionId, JSON.stringify(patch), methodology ?? null],
+    [id, coachId, baseDefinitionId, JSON.stringify(merged), methodology ?? null],
   );
   const row = result.rows[0];
   return {

@@ -3,7 +3,9 @@ import { Save } from 'lucide-react';
 import { WlFormSheet } from '../wl-shared/WlFormSheet';
 import { WlFormNumberStepper } from '../wl-shared/WlFormNumberStepper';
 import type { Exercise } from '../../models/training';
+import { applyProgramSchedule } from '../../services/programStructureMutations';
 import {
+  TEMPLATE_ATHLETE,
   buildStarterProgramDraft,
   computeProgramEndDate,
   computeWeeksFromDateRange,
@@ -11,6 +13,8 @@ import {
   todayIsoDate,
   totalTrainingDays,
 } from '../../utils/programSchedule';
+
+const DEFAULT_DAYS_PER_WEEK = 5;
 
 export interface WlProgramCreateSheetProps {
   isEs: boolean;
@@ -34,13 +38,11 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
   const [startDate, setStartDate] = useState(initialStart);
   const [totalWeeks, setTotalWeeks] = useState(initialWeeks);
   const [endDate, setEndDate] = useState(() => computeProgramEndDate(initialStart, initialWeeks));
-  const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [saving, setSaving] = useState(false);
 
-  const trainingDays = totalTrainingDays(totalWeeks, daysPerWeek);
+  const trainingDays = totalTrainingDays(totalWeeks, DEFAULT_DAYS_PER_WEEK);
   const endBeforeStart = Boolean(endDate && startDate && endDate < startDate);
-  const canSave =
-    name.trim().length > 0 && totalWeeks >= 1 && daysPerWeek >= 1 && !endBeforeStart;
+  const canSave = name.trim().length > 0 && totalWeeks >= 1 && !endBeforeStart;
 
   const handleStartDateChange = (nextStart: string) => {
     if (!nextStart) return;
@@ -66,14 +68,20 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      const program = buildStarterProgramDraft(
+      const draft = buildStarterProgramDraft(
         {
           name: name.trim(),
           startDate,
           endDate,
           totalWeeks,
-          daysPerWeek,
+          daysPerWeek: DEFAULT_DAYS_PER_WEEK,
         },
+        exercises,
+      );
+      const program = applyProgramSchedule(
+        draft,
+        { startDate, endDate, totalWeeks, daysPerWeek: DEFAULT_DAYS_PER_WEEK },
+        TEMPLATE_ATHLETE,
         exercises,
       );
       await onCreate({ name: name.trim(), program });
@@ -139,6 +147,18 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
         </label>
 
         <label className="wl-form-sheet-field">
+          <span className="wl-form-sheet-label">{isEs ? 'Fecha límite' : 'End date'}</span>
+          <input
+            type="date"
+            className="wl-form-sheet-input"
+            value={endDate}
+            min={startDate}
+            onChange={(e) => handleEndDateChange(e.target.value)}
+            aria-invalid={endBeforeStart}
+          />
+        </label>
+
+        <label className="wl-form-sheet-field wl-form-sheet-field--weeks">
           <span className="wl-form-sheet-label">{isEs ? 'Semanas' : 'Weeks'}</span>
           <WlFormNumberStepper
             value={totalWeeks}
@@ -151,51 +171,21 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
           />
         </label>
 
-        <label className="wl-form-sheet-field">
-          <span className="wl-form-sheet-label">{isEs ? 'Fecha límite / término' : 'Deadline / end date'}</span>
-          <input
-            type="date"
-            className="wl-form-sheet-input"
-            value={endDate}
-            min={startDate}
-            onChange={(e) => handleEndDateChange(e.target.value)}
-            aria-invalid={endBeforeStart}
-          />
-          {endBeforeStart ? (
-            <span className="wl-form-sheet-hint wl-form-sheet-hint--error">
-              {isEs
-                ? 'La fecha límite no puede ser anterior al inicio.'
-                : 'End date cannot be before the start date.'}
-            </span>
-          ) : (
-            <span className="wl-form-sheet-hint">
-              {isEs
-                ? 'Al cambiarla se ajustan las semanas.'
-                : 'Changing it updates weeks.'}
-            </span>
-          )}
-        </label>
-
-        <label className="wl-form-sheet-field wl-form-sheet-field--full">
-          <span className="wl-form-sheet-label">{isEs ? 'Días por semana' : 'Days per week'}</span>
-          <WlFormNumberStepper
-            value={daysPerWeek}
-            min={1}
-            max={7}
-            onChange={setDaysPerWeek}
-            aria-label={isEs ? 'Días por semana' : 'Days per week'}
-            decrementAria={isEs ? 'Menos días' : 'Fewer days'}
-            incrementAria={isEs ? 'Más días' : 'More days'}
-          />
-        </label>
+        {endBeforeStart ? (
+          <p className="wl-form-sheet-hint wl-form-sheet-hint--error wl-form-sheet-field--full">
+            {isEs
+              ? 'La fecha límite no puede ser anterior al inicio.'
+              : 'End date cannot be before the start date.'}
+          </p>
+        ) : null}
       </div>
 
       <section className="wl-form-sheet-summary" aria-live="polite">
         <p className="wl-form-sheet-summary__eyebrow">{isEs ? 'Resumen del mesociclo' : 'Mesocycle summary'}</p>
         <p className="wl-form-sheet-summary__lead">
           {isEs
-            ? `${trainingDays} días de entrenamiento distribuidos en ${totalWeeks} semana${totalWeeks === 1 ? '' : 's'} (${daysPerWeek} días por semana).`
-            : `${trainingDays} training days across ${totalWeeks} week${totalWeeks === 1 ? '' : 's'} (${daysPerWeek} days per week).`}
+            ? `${trainingDays} días de entrenamiento distribuidos en ${totalWeeks} semana${totalWeeks === 1 ? '' : 's'} (${DEFAULT_DAYS_PER_WEEK} días por semana).`
+            : `${trainingDays} training days across ${totalWeeks} week${totalWeeks === 1 ? '' : 's'} (${DEFAULT_DAYS_PER_WEEK} days per week).`}
         </p>
         <ul className="wl-form-sheet-summary__list">
           <li>

@@ -25,8 +25,8 @@
 
   /* Wolf V2 semantic palette */
   --v2-canvas: color-mix(in srgb, #f5f5f4 94%, var(--brand-coral-mid) 6%);
-  --v2-surface: #ffffff;
-  --v2-surface-subtle: #fafaf9;
+  --v2-surface: #fafaf9;
+  --v2-surface-subtle: #f5f5f4;
   --v2-surface-raised: #ffffff;
   --v2-surface-hover: #f4f4f3;
   --v2-surface-active: color-mix(in srgb, var(--brand-coral-light) 16%, #ffffff);
@@ -55,8 +55,8 @@
 
   /* Compatibility aliases used throughout V1 */
   --color-bg-main: var(--v2-canvas);
-  --color-bg-panel: var(--v2-surface);
-  --color-bg-secondary: var(--v2-surface-subtle);
+  --color-bg-panel: var(--v2-surface-raised);
+  --color-bg-secondary: var(--v2-surface);
   --color-bg-hover: var(--v2-surface-hover);
   --color-text-primary: var(--v2-text);
   --color-text-secondary: var(--v2-text-secondary);
@@ -146,8 +146,8 @@
   --v2-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04) inset, var(--v2-shadow-sm);
 
   --color-bg-main: var(--v2-canvas);
-  --color-bg-panel: var(--v2-surface);
-  --color-bg-secondary: var(--v2-surface-subtle);
+  --color-bg-panel: var(--v2-surface-raised);
+  --color-bg-secondary: var(--v2-surface);
   --color-bg-hover: var(--v2-surface-hover);
   --color-text-primary: var(--v2-text);
   --color-text-secondary: var(--v2-text-secondary);
@@ -210,4 +210,29 @@ textarea {
   textarea {
     transition: none;
   }
+}
+
+/* App shell — content on canvas; elevated surfaces only on cards/controls */
+.central-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.mock-view,
+.super-dashboard,
+.wl-athletes-section,
+.athletes-view,
+.wl-mgmt-hub,
+.wl-prs-flow,
+.coach-dashboard {
+  background: transparent;
+}
+
+:root[data-theme='light'] .wl-list-toolbar-scope {
+  --wl-list-surface: var(--v2-surface-raised);
+  --wl-list-border: var(--v2-border);
+  --wl-list-text: var(--v2-text);
+  --wl-list-muted: var(--v2-text-muted);
+  --wl-list-accent: var(--v2-accent);
 }

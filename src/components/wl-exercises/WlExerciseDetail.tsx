@@ -1,3 +1,4 @@
+import { Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type {
   ExerciseDefinitionVersion,
@@ -10,8 +11,8 @@ import type {
 import { isSingleComposition } from '../../models/exercise';
 import { intensityRangeForDefinition } from '../../services/exercise';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
-import '../wl-shared/wl-form-sheet.css';
-import { definitionFamily, taxonomyLabel } from './exerciseListUtils';
+import { ExerciseMedia } from './ExerciseMedia.tsx';
+import { definitionFamily, familyDisplayLabel, taxonomyLabel } from './exerciseListUtils';
 
 type DetailTab = 'intel' | 'override';
 
@@ -66,7 +67,7 @@ export function WlExerciseDetail({
   }, [def]);
 
   const family = definitionFamily(def);
-  const familyLabel = taxonomyLabel(taxonomy.families, family, isEs);
+  const familyLabel = familyDisplayLabel(family);
   const typeLabel = taxonomyLabel(taxonomy.objectives, def.objective, isEs);
   const band = intensityRangeForDefinition(def, taxonomy);
   const isOfficial = !def.coachId;
@@ -107,17 +108,24 @@ export function WlExerciseDetail({
       />
 
       <header className="wl-exercise-detail__head">
-        <div>
+        <div className="wl-exercise-detail__head-text">
           <p className="wl-exercises-head__desc">{isOfficial ? (isEs ? 'Oficial' : 'Official') : isEs ? 'Custom' : 'Custom'}</p>
           <h1 className="wl-exercise-detail__title">{def.effectiveDisplayName}</h1>
           <p className="wl-exercise-detail__meta">
             {familyLabel} · {typeLabel}
           </p>
         </div>
-        <button type="button" className="btn-primary wl-list-toolbar__cta" onClick={onPrimary}>
+        <button type="button" className="btn-primary wl-exercise-detail__cta" onClick={onPrimary}>
           {primaryLabel}
         </button>
       </header>
+
+      <ExerciseMedia
+        name={def.effectiveDisplayName}
+        family={family}
+        mediaUrl={videoUrl || def.coachOverride?.override.videoUrl}
+        isEs={isEs}
+      />
 
       <div className="wl-exercise-detail__tabs" role="tablist">
         <button
@@ -137,7 +145,7 @@ export function WlExerciseDetail({
             className={`wl-exercise-detail__tab${tab === 'override' ? ' is-active' : ''}`}
             onClick={() => setTab('override')}
           >
-            Override
+            {isEs ? 'Coach Override' : 'Coach Override'}
           </button>
         ) : null}
       </div>
@@ -236,74 +244,91 @@ export function WlExerciseDetail({
           ) : null}
         </>
       ) : (
-        <section className="wl-exercise-detail__section">
+        <section className="wl-exercise-detail__section wl-exercise-override">
           <h3>{isEs ? 'Override del coach' : 'Coach override'}</h3>
-          <label className="wl-exercise-override-field">
-            <span>{isEs ? 'Nombre custom' : 'Custom name'}</span>
-            <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder={def.displayName} />
-          </label>
-          <label className="wl-exercise-override-field">
-            <span>{isEs ? 'Notas' : 'Notes'}</span>
-            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
-          </label>
-          <label className="wl-exercise-override-field">
-            <span>Video URL</span>
-            <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://" />
-          </label>
-          <label className="wl-exercise-override-field">
-            <span>{isEs ? 'Ancla de intensidad' : 'Intensity anchor'}</span>
-            <select value={loadAnchor} onChange={(event) => setLoadAnchor(event.target.value as ExerciseLoadAnchorCode)}>
-              {ANCHORS.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {isEs ? item.labelEs : item.labelEn}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="wl-exercise-override-field">
-            <span>Cues</span>
-            <div className="wl-exercise-cues">
-              {cues.map((cue, index) => (
-                <div className="wl-exercise-cues__row" key={`cue-${index}`}>
-                  <input
-                    value={cue}
-                    onChange={(event) => {
-                      const next = [...cues];
-                      next[index] = event.target.value;
-                      setCues(next);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="wl-form-sheet-btn wl-form-sheet-btn--ghost"
-                    onClick={() => setCues(cues.filter((_, i) => i !== index))}
-                    aria-label={isEs ? 'Quitar cue' : 'Remove cue'}
-                  >
-                    ×
+          <form
+            className="wl-exercise-override__form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSaveOverride();
+            }}
+          >
+            <div className="wl-exercise-override__grid">
+              <label className="wl-exercise-override-field">
+                <span>{isEs ? 'Nombre custom' : 'Custom name'}</span>
+                <input
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  placeholder={def.displayName}
+                  autoComplete="off"
+                />
+              </label>
+              <label className="wl-exercise-override-field">
+                <span>{isEs ? 'Ancla de intensidad' : 'Intensity anchor'}</span>
+                <select value={loadAnchor} onChange={(event) => setLoadAnchor(event.target.value as ExerciseLoadAnchorCode)}>
+                  {ANCHORS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {isEs ? item.labelEs : item.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="wl-exercise-override-field wl-exercise-override-field--full">
+                <span>{isEs ? 'Notas' : 'Notes'}</span>
+                <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
+              </label>
+              <label className="wl-exercise-override-field wl-exercise-override-field--full">
+                <span>{isEs ? 'Video o imagen (URL)' : 'Video or image (URL)'}</span>
+                <input
+                  type="url"
+                  inputMode="url"
+                  value={videoUrl}
+                  onChange={(event) => setVideoUrl(event.target.value)}
+                  placeholder="https://youtube.com/…  ·  https://…/snatch.webp"
+                  autoComplete="off"
+                />
+              </label>
+              <div className="wl-exercise-override-field wl-exercise-override-field--full">
+                <span>Cues</span>
+                <div className="wl-exercise-cues">
+                  {cues.map((cue, index) => (
+                    <div className="wl-exercise-cues__row" key={`cue-${index}`}>
+                      <input
+                        value={cue}
+                        onChange={(event) => {
+                          const next = [...cues];
+                          next[index] = event.target.value;
+                          setCues(next);
+                        }}
+                        placeholder={isEs ? `Cue ${index + 1}` : `Cue ${index + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className="wl-exercise-cues__remove"
+                        onClick={() => setCues(cues.filter((_, i) => i !== index))}
+                        aria-label={isEs ? 'Quitar cue' : 'Remove cue'}
+                      >
+                        <X size={16} strokeWidth={2.25} aria-hidden />
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" className="wl-exercise-cues__add" onClick={() => setCues([...cues, ''])}>
+                    <Plus size={14} strokeWidth={2.25} aria-hidden />
+                    {isEs ? 'Añadir cue' : 'Add cue'}
                   </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                className="wl-form-sheet-btn wl-form-sheet-btn--ghost"
-                onClick={() => setCues([...cues, ''])}
-              >
-                {isEs ? '+ Añadir cue' : '+ Add cue'}
+              </div>
+            </div>
+            <div className="wl-exercise-override__footer">
+              <label className="wl-exercise-check">
+                <input type="checkbox" checked={hidden} onChange={(event) => setHidden(event.target.checked)} />
+                {isEs ? 'Ocultar de mi biblioteca' : 'Hide from my library'}
+              </label>
+              <button type="submit" className="btn-primary wl-exercise-detail__cta" disabled={busy}>
+                {isEs ? 'Guardar override' : 'Save override'}
               </button>
             </div>
-          </div>
-          <label className="wl-exercise-check">
-            <input type="checkbox" checked={hidden} onChange={(event) => setHidden(event.target.checked)} />
-            {isEs ? 'Ocultar de mi biblioteca' : 'Hide from my library'}
-          </label>
-          <button
-            type="button"
-            className="btn-primary wl-list-toolbar__cta"
-            disabled={busy}
-            onClick={() => void handleSaveOverride()}
-          >
-            {isEs ? 'Guardar override' : 'Save override'}
-          </button>
+          </form>
         </section>
       )}
 

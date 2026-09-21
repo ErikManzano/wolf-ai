@@ -29,29 +29,6 @@
     var(--v2-canvas);
 }
 
-:root[data-theme='light'] .central-panel {
-  border-color: var(--v2-border);
-  background: var(--v2-surface);
-  box-shadow: var(--v2-shadow-xs);
-}
-
-/* Program editor / modules: sit on canvas — no white sheet below content */
-:root[data-theme='light'] .app-container--program-editor .central-panel,
-:root[data-theme='light'] .central-panel:has(.wl-programs-editor),
-:root[data-theme='light'] .central-panel:has(.wl-programs-hub),
-:root[data-theme='light'] .central-panel:has(.prx-page) {
-  background: var(--v2-canvas);
-  border: none;
-  box-shadow: none;
-}
-
-/* Athlete mobile day: sit on canvas — no white panel sheet behind the plan */
-:root[data-theme='light'] .central-panel:has(.wolf-athlete-plan--mobile-day) {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
 .app-container.app-container--sidebar-collapsed {
   grid-template-columns: var(--sidebar-compact-width) minmax(0, 1fr);
 }

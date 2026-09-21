@@ -1,11 +1,22 @@
 import Fuse from 'fuse.js';
 import type {
   ExerciseDefinitionKind,
+  ExerciseFamilyCode,
   ExerciseLifecycleStatus,
+  ExerciseLoadAnchorCode,
   ExerciseTaxonomyBundle,
   MergedDefinitionView,
+  TrainingObjectiveCode,
 } from '../../models/exercise';
-import type { ExerciseCategory } from '../../models/training';
+import type { Exercise, ExerciseCategory } from '../../models/training';
+import {
+  definitionFamilyCode,
+  pickerFamilyLabel,
+  pickerIntensityRefLabel,
+  pickerLoadScale,
+  pickerSearchAugment,
+  pickerTypeLabel,
+} from './pickerDisplayMeta';
 import { toLegacyExercise } from './toLegacyExercise';
 
 export interface SessionPickerOption {
@@ -18,6 +29,16 @@ export interface SessionPickerOption {
   kind: ExerciseDefinitionKind;
   tags?: string[];
   catalogGroup?: string;
+  /** Familia WL para avatar y meta. */
+  family: ExerciseFamilyCode;
+  familyLabel: string;
+  objective: TrainingObjectiveCode;
+  typeLabel: string;
+  intensityRef: string;
+  loadAnchor: ExerciseLoadAnchorCode;
+  isOfficial: boolean;
+  loadScale?: number | null;
+  usageCount?: number;
 }
 
 const GROUP_SHORT: Record<string, string> = {
@@ -161,9 +182,10 @@ function fuseForOptions(options: SessionPickerOption[]): Fuse<SessionPickerOptio
   if (fuseIndexCache?.options === options) return fuseIndexCache.fuse;
   const fuse = new Fuse(options, {
     keys: [
-      { name: 'name', weight: 0.45 },
-      { name: 'searchText', weight: 0.35 },
-      { name: 'tags', weight: 0.2 },
+      { name: 'name', weight: 0.4 },
+      { name: 'searchText', weight: 0.3 },
+      { name: 'familyLabel', weight: 0.15 },
+      { name: 'typeLabel', weight: 0.15 },
     ],
     threshold: 0.38,
     ignoreLocation: true,
@@ -274,25 +296,48 @@ export function dedupePickerOptions(options: SessionPickerOption[]): SessionPick
   return idDeduped.filter((opt) => kept.has(opt));
 }
 
+export interface MergedViewsToPickerOptionsConfig {
+  isEs?: boolean;
+  motorExercises?: Exercise[];
+  usageById?: Map<string, number>;
+}
+
 export function mergedViewsToPickerOptions(
   merged: MergedDefinitionView[],
   taxonomy: ExerciseTaxonomyBundle,
+  config?: MergedViewsToPickerOptionsConfig,
 ): SessionPickerOption[] {
+  const isEs = config?.isEs ?? true;
+  const motorExercises = config?.motorExercises ?? [];
+  const usageById = config?.usageById;
+
   const mapped = merged
     .filter((d) => !d.hiddenByCoach && d.lifecycleStatus !== 'deprecated')
     .map((def) => {
       const legacy = toLegacyExercise(def, taxonomy);
       const catalogGroup = def.tags.find((t) => /^grupo_\d+$/.test(t));
+      const family = definitionFamilyCode(def);
+      const typeLabel = pickerTypeLabel(taxonomy, def.objective, isEs);
+      const augment = pickerSearchAugment(taxonomy, def);
       return {
         id: def.legacyExerciseId ?? def.id,
         definitionId: def.id,
         name: def.effectiveDisplayName,
-        searchText: def.searchText,
+        searchText: `${def.searchText} ${augment}`,
         category: legacy.category,
         lifecycleStatus: def.lifecycleStatus,
         kind: def.kind,
         tags: def.tags.length ? [...def.tags] : undefined,
         catalogGroup,
+        family,
+        familyLabel: pickerFamilyLabel(family),
+        objective: def.objective,
+        typeLabel,
+        intensityRef: pickerIntensityRefLabel(def.loadAnchor, isEs),
+        loadAnchor: def.loadAnchor,
+        isOfficial: !def.coachId,
+        loadScale: motorExercises.length ? pickerLoadScale(motorExercises, def) : null,
+        usageCount: usageById?.get(def.id) ?? usageById?.get(def.legacyExerciseId ?? '') ?? 0,
       };
     });
   return dedupePickerOptions(mapped);

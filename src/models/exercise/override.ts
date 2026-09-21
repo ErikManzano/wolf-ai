@@ -9,6 +9,8 @@ export interface OverridePatch {
   methodology?: string;
   cues?: string[];
   videoUrl?: string | null;
+  /** Carpeta personalizada del coach (`null` = quitar asignación). */
+  customFamilyId?: string | null;
 }
 
 export interface CoachExerciseOverride {

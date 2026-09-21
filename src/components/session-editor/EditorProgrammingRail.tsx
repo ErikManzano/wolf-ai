@@ -22,7 +22,7 @@ export interface EditorProgrammingRailProps {
 }
 
 /**
- * Top info bar for programming feedback — week/day plus volume, intensity and AU.
+ * Top info bar for programming feedback — week/day plus volume and intensity.
  */
 export const EditorProgrammingRail: React.FC<EditorProgrammingRailProps> = ({
   athlete,
@@ -52,7 +52,6 @@ export const EditorProgrammingRail: React.FC<EditorProgrammingRailProps> = ({
 
   const volume = science?.summary.tonnage ?? metrics.tonnage;
   const imp = science?.summary.intensityWeighted ?? metrics.avgPct;
-  const tl = science?.summary.trainingLoad ?? 0;
   const ramp = science?.fatigue.rampRate;
   const dateLabel = dayDateIso ? formatShortDate(dayDateIso, isEs) : null;
 
@@ -99,15 +98,6 @@ export const EditorProgrammingRail: React.FC<EditorProgrammingRailProps> = ({
             {dayScience && dayScience.intensityWeighted > 0 ? (
               <small>
                 {isEs ? 'día' : 'day'} {dayScience.intensityWeighted}%
-              </small>
-            ) : null}
-          </span>
-          <span className="wl-prog-bar__kpi">
-            <em>AU</em>
-            <strong>{tl > 0 ? tl : '—'}</strong>
-            {dayScience && dayScience.trainingLoad > 0 ? (
-              <small>
-                {isEs ? 'día' : 'day'} {dayScience.trainingLoad}
               </small>
             ) : null}
           </span>

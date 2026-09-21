@@ -107,16 +107,16 @@
   height: 42px;
   border-radius: 999px;
   color: var(--brand-coral-deep, #9a3828);
-  background: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.4) inset;
+  background: var(--v2-surface-raised, #fff);
+  border: 2px solid color-mix(in srgb, var(--v2-surface-raised, #fff) 85%, transparent);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--v2-surface-raised, #fff) 40%, transparent) inset;
 }
 
 .mobile-bottom-nav__item--center.is-active .mobile-bottom-nav__icon-wrap {
   color: var(--brand-coral-deep, #9a3828);
-  background: #fff;
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.5) inset;
+  background: var(--v2-surface-raised, #fff);
+  border-color: color-mix(in srgb, var(--v2-surface-raised, #fff) 95%, transparent);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--v2-surface-raised, #fff) 50%, transparent) inset;
 }
 
 .mobile-bottom-nav__label {

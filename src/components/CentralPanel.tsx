@@ -38,6 +38,7 @@ import {
 import type { AthleteLevel } from '../models/training';
 import { WlAccountView } from './account/WlAccountView';
 import { LegalDocumentView } from './legal/LegalDocumentView';
+import { readCoachExerciseFamilies } from '../services/exercise/coachFamilyStore';
 
 interface CentralPanelProps {
   language: 'ES' | 'EN';
@@ -70,10 +71,12 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     setLogs,
     wlAthletes,
     motorExercises,
+    motorExerciseDefinitions,
     updateWlAthlete,
     deleteWlAthlete,
     reloadWlAthletesFromApi,
     canManageWlAthletes,
+    currentUserId,
   } = useWolfAssign();
   const {
     athletes, programs,
@@ -125,7 +128,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
 
   useEffect(() => {
     if (activeView === 'admin-users' && currentUser?.role !== 'super_admin') {
-      setActiveView(persona === 'athlete' ? 'dashboard' : 'programs');
+      setActiveView('dashboard');
     }
   }, [activeView, currentUser?.role, persona, setActiveView]);
 
@@ -674,28 +677,37 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     );
   };
 
-  const renderDashboard = () => (
-    <CoachDashboard
-      language={language}
-      intakes={intakes}
-      appAthletes={athletes}
-      wlProgramAssignments={wlProgramAssignments}
-      completions={completions}
-      setLogs={setLogs}
-      wlAthletes={wlAthletes}
-      motorExercises={motorExercises}
-      alerts={dashboardData.alerts}
-      onOpenPrograms={(coachProgramId) => {
-        try {
-          if (coachProgramId) sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, coachProgramId);
-        } catch {
-          /* ignore */
-        }
-        setActiveView('programs');
-      }}
-      onOpenAthletes={() => setActiveView('athletes')}
-    />
-  );
+  const renderDashboard = () => {
+    const customFamilyCount = readCoachExerciseFamilies().filter((family) => family.coachId === currentUserId).length;
+    const customExerciseCount = motorExerciseDefinitions.filter((def) => Boolean(def.coachId)).length;
+
+    return (
+      <CoachDashboard
+        language={language}
+        intakes={intakes}
+        appAthletes={athletes}
+        wlProgramAssignments={wlProgramAssignments}
+        completions={completions}
+        setLogs={setLogs}
+        wlAthletes={wlAthletes}
+        motorExercises={motorExercises}
+        alerts={dashboardData.alerts}
+        customExerciseCount={customExerciseCount}
+        customFamilyCount={customFamilyCount}
+        onOpenPrograms={(coachProgramId) => {
+          try {
+            if (coachProgramId) sessionStorage.setItem(WL_PROGRAMS_FOCUS_KEY, coachProgramId);
+          } catch {
+            /* ignore */
+          }
+          setActiveView('programs');
+        }}
+        onOpenAthletes={() => setActiveView('athletes')}
+        onOpenExercises={() => setActiveView('exercise-intelligence')}
+        onOpenPraxiogram={() => setActiveView('praxiogram')}
+      />
+    );
+  };
 
   const renderPlaceholder = (title: string, icon: React.ReactNode) => (
     <div className="mock-view" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>

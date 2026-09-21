@@ -1,54 +1,67 @@
-import type { ExerciseFamilyCode, ExerciseTaxonomyBundle } from '../../models/exercise';
-import type { ExerciseFamilyFilter } from './exerciseListUtils';
-import { FAMILY_CHIP_ORDER } from './exerciseListUtils';
+import { customFamilyFilterKey, type CoachExerciseFamily } from '../../models/exercise/coachFamily';
+import { familyLabel } from '../../services/exercise/coachFamilyStore';
+import { WlExerciseChipBar, type ExerciseChipItem } from './WlExerciseChipBar';
+import {
+  FAMILY_CHIP_ORDER,
+  FAMILY_DISPLAY_LABEL,
+  isExerciseFamilyFilter,
+  type ExerciseFamilyFilter,
+} from './exerciseListUtils';
+import type { ExerciseQuickFilter } from './types';
 
 export function WlExerciseFamilyChips({
   isEs,
-  taxonomy,
   family,
   counts,
-  onChange,
+  customFamilies,
+  onFamilyChange,
+  onQuickFilterChange,
 }: {
   isEs: boolean;
-  taxonomy: ExerciseTaxonomyBundle;
   family: ExerciseFamilyFilter;
+  quickFilter?: ExerciseQuickFilter;
   counts: Record<string, number>;
-  onChange: (family: ExerciseFamilyFilter) => void;
+  customFamilies: CoachExerciseFamily[];
+  favoriteCount?: number;
+  recentCount?: number;
+  onFamilyChange: (family: ExerciseFamilyFilter) => void;
+  onQuickFilterChange: (filter: ExerciseQuickFilter) => void;
 }) {
-  const labelFor = (code: ExerciseFamilyCode) => {
-    const item = taxonomy.families.find((entry) => entry.code === code);
-    if (!item) return code;
-    return isEs ? item.labelEs : item.labelEn;
+  const activeId = family === 'all' ? 'all' : family;
+
+  const items: ExerciseChipItem[] = [
+    { id: 'all', label: isEs ? 'Todos' : 'All', count: counts.all ?? 0 },
+    ...FAMILY_CHIP_ORDER.map((code) => ({
+      id: code,
+      label: FAMILY_DISPLAY_LABEL[code],
+      count: counts[code] ?? 0,
+    })),
+    ...customFamilies.map((entry) => {
+      const id = customFamilyFilterKey(entry.id);
+      return {
+        id,
+        label: familyLabel(entry, isEs),
+        count: counts[id] ?? 0,
+        swatchColor: entry.color?.trim() || '#d6d3d1',
+        variant: 'folder' as const,
+      };
+    }),
+  ];
+
+  const handleChange = (id: string) => {
+    onQuickFilterChange('none');
+    if (isExerciseFamilyFilter(id)) {
+      onFamilyChange(id);
+    }
   };
 
   return (
-    <div className="wl-exercises-chips" role="tablist" aria-label={isEs ? 'Familias' : 'Families'}>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={family === 'all'}
-        className={`wl-exercises-chip${family === 'all' ? ' is-active' : ''}`}
-        onClick={() => onChange('all')}
-      >
-        {isEs ? 'Todos' : 'All'}
-        <span className="wl-exercises-chip__count">{counts.all ?? 0}</span>
-      </button>
-      {FAMILY_CHIP_ORDER.map((code) => {
-        const active = family === code;
-        return (
-          <button
-            key={code}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            className={`wl-exercises-chip${active ? ' is-active' : ''}`}
-            onClick={() => onChange(code)}
-          >
-            {labelFor(code)}
-            {active ? <span className="wl-exercises-chip__count">{counts[code] ?? 0}</span> : null}
-          </button>
-        );
-      })}
-    </div>
+    <WlExerciseChipBar
+      ariaLabel={isEs ? 'Familias' : 'Families'}
+      items={items}
+      activeId={activeId}
+      moreLabel={isEs ? '+ Más' : '+ More'}
+      onChange={handleChange}
+    />
   );
 }

@@ -10,6 +10,8 @@ export interface WlCenteredModalProps {
   title: string;
   subtitle?: string;
   titleId?: string;
+  className?: string;
+  headerExtra?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
@@ -22,6 +24,8 @@ export const WlCenteredModal: React.FC<WlCenteredModalProps> = ({
   title,
   subtitle,
   titleId = 'wl-centered-modal-title',
+  className,
+  headerExtra,
   onClose,
   children,
   footer,
@@ -45,7 +49,7 @@ export const WlCenteredModal: React.FC<WlCenteredModalProps> = ({
   return createPortal(
     <div className="wl-centered-modal-overlay" role="presentation" onClick={onClose}>
       <div
-        className="wl-form-sheet wl-centered-modal"
+        className={`wl-form-sheet wl-centered-modal${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -68,6 +72,7 @@ export const WlCenteredModal: React.FC<WlCenteredModalProps> = ({
             <X size={18} strokeWidth={2} />
           </button>
         </header>
+        {headerExtra ? <div className="wl-centered-modal__header-extra">{headerExtra}</div> : null}
         <div className="wl-form-sheet-body">{children}</div>
         {footer ? <footer className="wl-form-sheet-footer">{footer}</footer> : null}
       </div>

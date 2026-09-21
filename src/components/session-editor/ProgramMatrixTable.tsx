@@ -468,8 +468,6 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         onClick={() => setFullscreen(true)}
         disabled={exporting || fullscreen}
         aria-label={isEs ? 'Pantalla completa' : 'Full screen'}
-        title={isEs ? 'Pantalla completa' : 'Full screen'}
-        data-wl-tooltip={isEs ? 'Pantalla completa' : 'Full screen'}
       >
         <Maximize2 size={16} aria-hidden />
         <span>{isEs ? 'Expandir' : 'Expand'}</span>
@@ -480,8 +478,6 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         onClick={() => void runExport('png')}
         disabled={exporting}
         aria-label={isEs ? 'Exportar imagen' : 'Export image'}
-        title={isEs ? 'Exportar PNG' : 'Export PNG'}
-        data-wl-tooltip={isEs ? 'Exportar PNG' : 'Export PNG'}
       >
         <FileImage size={16} aria-hidden />
         <span>{isEs ? 'Imagen' : 'Image'}</span>
@@ -492,8 +488,6 @@ export const ProgramMatrixTable: React.FC<ProgramMatrixTableProps> = ({
         onClick={() => void runExport('pdf')}
         disabled={exporting}
         aria-label={isEs ? 'Exportar PDF' : 'Export PDF'}
-        title={isEs ? 'Exportar PDF' : 'Export PDF'}
-        data-wl-tooltip={isEs ? 'Exportar PDF' : 'Export PDF'}
       >
         <FileText size={16} aria-hidden />
         <span>PDF</span>

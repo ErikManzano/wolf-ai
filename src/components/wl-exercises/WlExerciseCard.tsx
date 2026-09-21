@@ -1,13 +1,12 @@
 import type { MergedDefinitionView } from '../../models/exercise';
-import { FAMILY_TOKEN } from '../exercise-intelligence/familyTokens';
 import { ExerciseActionsMenu } from './ExerciseActionsMenu';
-import { definitionFamily, taxonomyLabel } from './exerciseListUtils';
-import type { ExerciseTaxonomyBundle } from '../../models/exercise';
+import { FamilyAvatar } from './FamilyAvatar';
+import type { ExerciseListItem } from './types';
 
 export function WlExerciseCard({
+  item,
   def,
   isEs,
-  taxonomy,
   onOpen,
   onEdit,
   onPersonalize,
@@ -15,9 +14,9 @@ export function WlExerciseCard({
   onArchive,
   onDelete,
 }: {
+  item: ExerciseListItem;
   def: MergedDefinitionView;
   isEs: boolean;
-  taxonomy: ExerciseTaxonomyBundle;
   onOpen: () => void;
   onEdit: () => void;
   onPersonalize: () => void;
@@ -25,10 +24,12 @@ export function WlExerciseCard({
   onArchive: () => void;
   onDelete: () => void;
 }) {
-  const family = definitionFamily(def);
-  const token = family ? FAMILY_TOKEN[family] : null;
-  const familyLabel = taxonomyLabel(taxonomy.families, family, isEs);
-  const typeLabel = taxonomyLabel(taxonomy.objectives, def.objective, isEs);
+  const usageLabel =
+    item.usageCount > 0
+      ? isEs
+        ? `${item.usageCount} ${item.usageCount === 1 ? 'programa' : 'programas'}`
+        : `${item.usageCount} ${item.usageCount === 1 ? 'program' : 'programs'}`
+      : null;
 
   return (
     <article
@@ -43,20 +44,25 @@ export function WlExerciseCard({
         }
       }}
     >
-      <div
-        className="wl-exercise-card__thumb"
-        style={{ background: token?.gradient ?? '#3f3f46', color: token ? '#0b0b0d' : '#fafafa' }}
-        aria-hidden
-      >
-        {token?.abbr ?? 'EX'}
-      </div>
+      <FamilyAvatar family={item.family} size={36} />
       <div className="wl-exercise-card__body">
-        <h3 className="wl-exercise-card__name">{def.effectiveDisplayName}</h3>
+        <div className="wl-exercise-card__line1">
+          <h3 className="wl-exercise-card__name" title={item.name}>
+            {item.name}
+          </h3>
+          <span
+            className={`wl-exercise-card__badge${item.isOfficial ? ' wl-exercise-card__badge--official' : ' wl-exercise-card__badge--custom'}`}
+          >
+            {item.isOfficial ? (isEs ? 'Oficial' : 'Official') : 'Custom'}
+          </span>
+        </div>
         <p className="wl-exercise-card__meta">
-          {familyLabel} · {typeLabel}
+          {item.familyLabel} · {item.typeLabel}
+          {usageLabel ? ` · ${usageLabel}` : null}
         </p>
       </div>
       <div
+        className="wl-exercise-card__actions"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
         role="presentation"

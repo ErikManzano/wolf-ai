@@ -77,6 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="sidebar-collapse-btn"
             onClick={onToggleCollapsed}
             aria-label={collapsed ? (isEs ? 'Expandir sidebar' : 'Expand sidebar') : (isEs ? 'Colapsar sidebar' : 'Collapse sidebar')}
+            data-wl-tooltip={collapsed ? (isEs ? 'Expandir' : 'Expand') : (isEs ? 'Colapsar' : 'Collapse')}
           >
             {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
@@ -97,7 +98,6 @@ const Sidebar: React.FC<SidebarProps> = ({
               key={item.id}
               className={`nav-item ${activeView === item.id ? 'active' : ''}${item.id === 'programs' ? ' nav-item--programs' : ''}`}
               onClick={() => setActiveView(item.id)}
-              title={label}
               aria-label={label}
             >
               <Icon size={16} className={item.id === 'programs' && activeView === 'programs' ? 'icon-glow' : ''} />
@@ -137,7 +137,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             className={`sidebar-account-btn${activeView === 'account' ? ' active' : ''}`}
             onClick={() => setActiveView('account')}
             aria-label={isEs ? accountItem.labelEs : accountItem.labelEn}
-            title={isEs ? accountItem.labelEs : accountItem.labelEn}
           >
             <AccountIcon size={collapsed ? 13 : 14} aria-hidden />
             <span>{isEs ? accountItem.labelEs : accountItem.labelEn}</span>
@@ -148,7 +147,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           className="sidebar-logout-btn"
           onClick={onLogout}
           aria-label={isEs ? 'Cerrar sesión' : 'Log out'}
-          title={isEs ? 'Cerrar sesión' : 'Log out'}
         >
           <LogOut size={collapsed ? 13 : 14} />
           <span>

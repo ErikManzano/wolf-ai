@@ -1,36 +1,57 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './desktop-tooltip.css';
+
+type TipPlacement = 'top' | 'bottom' | 'right';
 
 interface TipState {
   text: string;
   top: number;
   left: number;
+  placement: TipPlacement;
 }
 
-const SHOW_DELAY_MS = 320;
+const SHOW_DELAY_MS = 280;
+const MAX_TIP_LEN = 48;
+const VIEWPORT_PAD = 10;
 const DESKTOP_MQ = '(hover: hover) and (pointer: fine) and (min-width: 1025px)';
 
 function isDesktopPointer(): boolean {
   return typeof window !== 'undefined' && window.matchMedia(DESKTOP_MQ).matches;
 }
 
+function normalizeTooltipText(text: string): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= MAX_TIP_LEN) return clean;
+  return `${clean.slice(0, MAX_TIP_LEN - 1).trim()}…`;
+}
+
+function hasVisibleLabel(el: HTMLButtonElement): boolean {
+  for (const node of el.childNodes) {
+    if (node instanceof HTMLElement) {
+      if (node.matches('svg, img') || node.getAttribute('aria-hidden') === 'true') continue;
+      const style = window.getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') continue;
+      const rect = node.getBoundingClientRect();
+      const text = node.textContent?.replace(/\s+/g, ' ').trim();
+      if (text && rect.width >= 4 && rect.height >= 4) return true;
+      continue;
+    }
+    if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) return true;
+  }
+  return false;
+}
+
 function getTooltipText(el: HTMLElement): string | null {
   const explicit = el.dataset.wlTooltip?.trim();
-  if (explicit && explicit !== 'off') return explicit;
+  if (explicit === 'off') return null;
+  if (explicit) return normalizeTooltipText(explicit);
 
-  if (el instanceof HTMLButtonElement) {
-    const aria = el.getAttribute('aria-label')?.trim();
-    if (aria) return aria;
+  if (!(el instanceof HTMLButtonElement)) return null;
+  if (hasVisibleLabel(el)) return null;
 
-    const title = el.getAttribute('title')?.trim();
-    if (title) return title;
-
-    const clone = el.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('svg, img, [aria-hidden="true"]').forEach((node) => node.remove());
-    const text = clone.textContent?.replace(/\s+/g, ' ').trim();
-    return text || null;
-  }
+  const aria = el.getAttribute('aria-label')?.trim();
+  if (aria) return normalizeTooltipText(aria);
 
   return null;
 }
@@ -43,27 +64,69 @@ function isTooltipCandidate(el: HTMLElement): boolean {
   const rect = el.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) return false;
 
+  if (el instanceof HTMLButtonElement && hasVisibleLabel(el)) return false;
+
   return Boolean(getTooltipText(el));
 }
 
-function positionForAnchor(el: HTMLElement): Pick<TipState, 'top' | 'left'> {
-  const rect = el.getBoundingClientRect();
+function resolvePlacement(anchor: HTMLElement): TipPlacement {
+  if (anchor.closest('.sidebar.compact')) return 'right';
+  const rect = anchor.getBoundingClientRect();
+  if (rect.top < 56) return 'bottom';
+  return 'top';
+}
+
+function positionForAnchor(anchor: HTMLElement, placement: TipPlacement): Pick<TipState, 'top' | 'left'> {
+  const rect = anchor.getBoundingClientRect();
+  if (placement === 'right') {
+    return {
+      top: rect.top + rect.height / 2,
+      left: rect.right,
+    };
+  }
+  if (placement === 'bottom') {
+    return {
+      top: rect.bottom,
+      left: rect.left + rect.width / 2,
+    };
+  }
   return {
     top: rect.top,
     left: rect.left + rect.width / 2,
   };
 }
 
+function clampTipPosition(
+  tipEl: HTMLElement,
+  draft: TipState,
+): Pick<TipState, 'top' | 'left'> {
+  const rect = tipEl.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  if (draft.placement === 'right') {
+    let top = draft.top;
+    const half = rect.height / 2;
+    top = Math.max(VIEWPORT_PAD + half, Math.min(vh - VIEWPORT_PAD - half, top));
+    return { top, left: draft.left };
+  }
+
+  let left = draft.left;
+  const half = rect.width / 2;
+  left = Math.max(VIEWPORT_PAD + half, Math.min(vw - VIEWPORT_PAD - half, left));
+  return { top: draft.top, left };
+}
+
 function resolveTooltipAnchorAt(x: number, y: number): HTMLElement | null {
   const stack = document.elementsFromPoint(x, y);
   for (const el of stack) {
-    if (el instanceof HTMLElement && el.matches('[data-wl-tooltip-host]')) {
-      const btn = el.querySelector('button');
-      if (btn instanceof HTMLButtonElement) {
-        const label = getTooltipText(btn) ?? getTooltipText(el);
-        if (label) return el;
-      }
+    if (!(el instanceof HTMLElement)) continue;
+
+    if (el.matches('[data-wl-tooltip-host]')) {
       if (isTooltipCandidate(el)) return el;
+      const btn = el.querySelector('button');
+      if (btn instanceof HTMLButtonElement && isTooltipCandidate(btn)) return btn;
+      continue;
     }
 
     if (el instanceof HTMLButtonElement && isTooltipCandidate(el)) {
@@ -73,12 +136,21 @@ function resolveTooltipAnchorAt(x: number, y: number): HTMLElement | null {
   return null;
 }
 
-/** Global desktop-only tooltips for all buttons (uses aria-label, title, or visible text). */
+/** Tooltips de escritorio: solo iconos sin etiqueta visible o `data-wl-tooltip` explícito. */
 export function DesktopTooltipLayer() {
   const [tip, setTip] = useState<TipState | null>(null);
-  const activeButtonRef = useRef<HTMLElement | null>(null);
+  const activeAnchorRef = useRef<HTMLElement | null>(null);
   const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number | null>(null);
+  const tipRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!tip || !tipRef.current) return;
+    const clamped = clampTipPosition(tipRef.current, tip);
+    if (Math.abs(clamped.left - tip.left) > 0.5 || Math.abs(clamped.top - tip.top) > 0.5) {
+      setTip((current) => (current ? { ...current, ...clamped } : null));
+    }
+  }, [tip?.text, tip?.placement, tip?.top, tip?.left]);
 
   useEffect(() => {
     if (!isDesktopPointer()) return undefined;
@@ -92,38 +164,25 @@ export function DesktopTooltipLayer() {
 
     const hide = () => {
       clearShowTimer();
-      activeButtonRef.current = null;
+      activeAnchorRef.current = null;
       setTip(null);
     };
 
     const showFor = (anchor: HTMLElement) => {
-      const btn = anchor.matches('button')
-        ? (anchor as HTMLButtonElement)
-        : anchor.querySelector('button');
-
-      if (btn instanceof HTMLButtonElement) {
-        const nativeTitle = btn.getAttribute('title')?.trim();
-        if (nativeTitle) {
-          if (!btn.dataset.wlTooltip) btn.dataset.wlTooltip = nativeTitle;
-          btn.removeAttribute('title');
-        }
-      }
-
-      const text =
-        getTooltipText(anchor) ??
-        (btn instanceof HTMLButtonElement ? getTooltipText(btn) : null);
+      const text = getTooltipText(anchor);
       if (!text) {
         hide();
         return;
       }
 
-      activeButtonRef.current = anchor;
-      const { top, left } = positionForAnchor(anchor);
-      setTip({ text, top, left });
+      activeAnchorRef.current = anchor;
+      const placement = resolvePlacement(anchor);
+      const { top, left } = positionForAnchor(anchor, placement);
+      setTip({ text, top, left, placement });
     };
 
     const scheduleShow = (anchor: HTMLElement) => {
-      if (anchor === activeButtonRef.current) return;
+      if (anchor === activeAnchorRef.current) return;
       clearShowTimer();
       showTimerRef.current = setTimeout(() => showFor(anchor), SHOW_DELAY_MS);
     };
@@ -133,7 +192,7 @@ export function DesktopTooltipLayer() {
       rafRef.current = requestAnimationFrame(() => {
         const anchor = resolveTooltipAnchorAt(event.clientX, event.clientY);
         if (!anchor) {
-          if (activeButtonRef.current) hide();
+          if (activeAnchorRef.current) hide();
           return;
         }
         scheduleShow(anchor);
@@ -141,18 +200,16 @@ export function DesktopTooltipLayer() {
     };
 
     const onScroll = () => {
-      const anchor = activeButtonRef.current;
+      const anchor = activeAnchorRef.current;
       if (!anchor) return;
-      const btn = anchor.querySelector('button');
-      const text =
-        getTooltipText(anchor) ??
-        (btn instanceof HTMLButtonElement ? getTooltipText(btn) : null);
+      const text = getTooltipText(anchor);
       if (!text) {
         hide();
         return;
       }
-      const { top, left } = positionForAnchor(anchor);
-      setTip({ text, top, left });
+      const placement = resolvePlacement(anchor);
+      const { top, left } = positionForAnchor(anchor, placement);
+      setTip({ text, top, left, placement });
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -185,7 +242,8 @@ export function DesktopTooltipLayer() {
 
   return createPortal(
     <div
-      className="wl-desktop-tooltip"
+      ref={tipRef}
+      className={`wl-desktop-tooltip wl-desktop-tooltip--${tip.placement}`}
       role="tooltip"
       style={{
         top: `${tip.top}px`,

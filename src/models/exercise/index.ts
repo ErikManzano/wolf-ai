@@ -8,3 +8,4 @@ export * from './override';
 export * from './collection';
 export * from './version';
 export * from './registry';
+export * from './coachFamily';

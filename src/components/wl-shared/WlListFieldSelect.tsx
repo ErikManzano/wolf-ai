@@ -6,7 +6,6 @@ export function WlListFieldSelect({
   value,
   onChange,
   ariaLabel,
-  title,
   active = false,
   children,
 }: {
@@ -14,19 +13,17 @@ export function WlListFieldSelect({
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
-  title?: string;
   active?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className={`wl-list-field${active ? ' wl-list-field--active' : ''}`}>
+    <div className={`wl-list-field${active ? ' wl-list-field--active' : ''}`} data-wl-tooltip-off>
       <Icon size={14} className="wl-list-field__icon" aria-hidden />
       <select
         className="wl-list-field__select"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={ariaLabel}
-        title={title}
       >
         {children}
       </select>

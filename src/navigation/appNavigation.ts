@@ -107,6 +107,15 @@ export function getMobileBottomNavIds(
   return base.filter((id) => isNavItemVisible(id, persona, role));
 }
 
+export function getDefaultAppView(
+  persona: 'coach' | 'athlete',
+  role: WolfAppRole | undefined,
+): AppViewId {
+  if (persona === 'athlete') return 'dashboard';
+  if (role === 'super_admin' || persona === 'coach') return 'dashboard';
+  return 'dashboard';
+}
+
 export function getMobileBottomNavCenterId(
   persona: 'coach' | 'athlete',
   role: WolfAppRole | undefined,

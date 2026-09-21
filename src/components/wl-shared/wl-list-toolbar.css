@@ -1,11 +1,11 @@
 /* Shared list toolbar — athletes, programs, and future WL hubs */
 
 .wl-list-toolbar-scope {
-  --wl-list-surface: var(--wl-surface-board, #111318);
-  --wl-list-border: var(--wl-border-subtle, #27272a);
-  --wl-list-text: var(--wl-text-primary, #fafafa);
-  --wl-list-muted: var(--wl-text-muted, #71717a);
-  --wl-list-accent: var(--wl-text-accent, #ff6b1a);
+  --wl-list-surface: var(--v2-surface-raised, var(--wl-surface-board, #111318));
+  --wl-list-border: var(--v2-border, var(--wl-border-subtle, #27272a));
+  --wl-list-text: var(--v2-text, var(--wl-text-primary, #fafafa));
+  --wl-list-muted: var(--v2-text-muted, var(--wl-text-muted, #71717a));
+  --wl-list-accent: var(--v2-accent, var(--wl-text-accent, #ff6b1a));
 }
 
 .wl-list-toolbar {

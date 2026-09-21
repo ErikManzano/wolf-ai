@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import {
-  AlertTriangle,
+  ArrowRight,
+  BookMarked,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
+  LayoutGrid,
+  ListTree,
   Users,
 } from 'lucide-react';
 import type { Athlete as AppAthlete, IntakeData } from '../../context/AppContext';
@@ -20,11 +22,11 @@ import {
   type CoachDashboardScope,
 } from '../../utils/coachDashboardStats';
 import {
-  type ProgramStatsKpiCard,
-  ProgramStatsKpiGrid,
-} from '../session-editor/programStatsShared';
+  buildCoachModuleSnapshots,
+  type CoachHubModuleId,
+} from '../../utils/coachModuleHub';
 import './coach-dashboard.css';
-import '../session-editor/session-sheet-spreadsheet.css';
+import '../SuperDashboard.css';
 
 export interface CoachDashboardProps {
   language: 'ES' | 'EN';
@@ -36,39 +38,26 @@ export interface CoachDashboardProps {
   wlAthletes: Athlete[];
   motorExercises: Exercise[];
   alerts: DashboardAlert[];
+  customExerciseCount: number;
+  customFamilyCount: number;
   onOpenPrograms: (coachProgramId?: string) => void;
   onOpenAthletes: () => void;
+  onOpenExercises: () => void;
+  onOpenPraxiogram: () => void;
 }
 
-function formatRelativeTime(iso: string, isEs: boolean): string {
-  try {
-    const d = new Date(iso);
-    const now = new Date();
-    const sameDay = d.toDateString() === now.toDateString();
-    if (sameDay) {
-      return d.toLocaleTimeString(isEs ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' });
-    }
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diffDays === 1) return isEs ? 'Ayer' : 'Yesterday';
-    return d.toLocaleDateString(isEs ? 'es' : 'en', { day: 'numeric', month: 'short' });
-  } catch {
-    return iso.slice(0, 10);
-  }
-}
+const MODULE_ICONS: Record<CoachHubModuleId, React.ReactNode> = {
+  athletes: <Users size={20} aria-hidden />,
+  programs: <BookMarked size={20} aria-hidden />,
+  'exercise-intelligence': <ListTree size={20} aria-hidden />,
+  praxiogram: <LayoutGrid size={20} aria-hidden />,
+};
 
-function formatTrend(delta: number | null, isEs: boolean, unit?: string): string | undefined {
-  if (delta == null || delta === 0) return isEs ? '— vs periodo anterior' : '— vs prior period';
-  const sign = delta > 0 ? '↑' : '↓';
-  const abs = Math.abs(delta);
-  const suffix = unit ?? (isEs ? 'vs periodo anterior' : 'vs prior period');
-  return `${sign} ${abs} ${suffix}`;
-}
-
-function athleteInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return `${parts[0]![0] ?? ''}${parts[1]![0] ?? ''}`.toUpperCase();
+function greeting(isEs: boolean, ref: Date): string {
+  const hour = ref.getHours();
+  if (hour < 12) return isEs ? 'Buenos días' : 'Good morning';
+  if (hour < 18) return isEs ? 'Buenas tardes' : 'Good afternoon';
+  return isEs ? 'Buenas noches' : 'Good evening';
 }
 
 const CoachDashboard: React.FC<CoachDashboardProps> = ({
@@ -81,11 +70,15 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
   wlAthletes,
   motorExercises,
   alerts,
+  customExerciseCount,
+  customFamilyCount,
   onOpenPrograms,
   onOpenAthletes,
+  onOpenExercises,
+  onOpenPraxiogram,
 }) => {
   const isEs = language === 'ES';
-  const [scope, setScope] = useState<CoachDashboardScope>('week');
+  const [scope, setScope] = useState<CoachDashboardScope>('today');
   const [refDate, setRefDate] = useState(() => new Date());
 
   const model = useMemo(
@@ -118,6 +111,32 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     ],
   );
 
+  const modules = useMemo(
+    () =>
+      buildCoachModuleSnapshots({
+        isEs,
+        alerts,
+        athleteRows: model.athleteRows,
+        wlAthleteCount: wlAthletes.length,
+        assignmentCount: wlProgramAssignments.length,
+        activeProgramCount: model.kpis.activePrograms,
+        exerciseCatalogCount: motorExercises.length,
+        customExerciseCount,
+        customFamilyCount,
+      }),
+    [
+      isEs,
+      alerts,
+      model.athleteRows,
+      model.kpis.activePrograms,
+      wlAthletes.length,
+      wlProgramAssignments.length,
+      motorExercises.length,
+      customExerciseCount,
+      customFamilyCount,
+    ],
+  );
+
   const shiftPeriod = (direction: -1 | 1) => {
     setRefDate((prev) => {
       const d = new Date(prev);
@@ -128,59 +147,12 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     });
   };
 
-  const kpiCards: ProgramStatsKpiCard[] = [
-    {
-      id: 'athletes',
-      label: isEs ? 'Atletas' : 'Athletes',
-      value: String(model.kpis.athletes),
-      sub: formatTrend(model.kpis.athletesActiveDelta, isEs, isEs ? 'activos vs anterior' : 'active vs prior'),
-      subAccent: (model.kpis.athletesActiveDelta ?? 0) >= 0 ? 'success' : 'muted',
-      accent: 'default',
-    },
-    {
-      id: 'programs',
-      label: isEs ? 'Programas activos' : 'Active programs',
-      value: String(model.kpis.activePrograms),
-      sub: isEs ? `${wlProgramAssignments.length} asignaciones` : `${wlProgramAssignments.length} assignments`,
-      subAccent: 'muted',
-      accent: 'exercises',
-    },
-    {
-      id: 'sessions',
-      label:
-        scope === 'today'
-          ? isEs
-            ? 'Sesiones hoy'
-            : 'Sessions today'
-          : scope === 'week'
-            ? isEs
-              ? 'Sesiones esta semana'
-              : 'Sessions this week'
-            : isEs
-              ? 'Sesiones este mes'
-              : 'Sessions this month',
-      value: String(model.kpis.sessionsInScope),
-      sub: formatTrend(model.kpis.sessionsDelta, isEs),
-      subAccent: (model.kpis.sessionsDelta ?? 0) >= 0 ? 'success' : 'muted',
-      accent: 'sets',
-    },
-    {
-      id: 'alerts',
-      label: isEs ? 'Alertas' : 'Alerts',
-      value: String(model.kpis.alertsCount),
-      sub:
-        model.kpis.alertsCount > 0
-          ? isEs
-            ? 'Requieren atención'
-            : 'Need attention'
-          : isEs
-            ? 'Todo en orden'
-            : 'All clear',
-      subAccent: model.kpis.alertsCount > 0 ? 'volume' : 'success',
-      accent: 'intensity',
-      visualValue: model.kpis.alertsCount > 0 ? Math.min(100, model.kpis.alertsCount * 25) : 0,
-    },
-  ];
+  const openModule = (moduleId: CoachHubModuleId) => {
+    if (moduleId === 'athletes') onOpenAthletes();
+    else if (moduleId === 'programs') onOpenPrograms();
+    else if (moduleId === 'exercise-intelligence') onOpenExercises();
+    else if (moduleId === 'praxiogram') onOpenPraxiogram();
+  };
 
   const scopeTabs: { id: CoachDashboardScope; label: string }[] = [
     { id: 'today', label: isEs ? 'Hoy' : 'Today' },
@@ -188,161 +160,127 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     { id: 'month', label: isEs ? 'Mes' : 'Month' },
   ];
 
+  const sessionsLabel =
+    scope === 'today'
+      ? isEs
+        ? 'Sesiones hoy'
+        : 'Sessions today'
+      : scope === 'week'
+        ? isEs
+          ? 'Sesiones semana'
+          : 'Week sessions'
+        : isEs
+          ? 'Sesiones mes'
+          : 'Month sessions';
+
   return (
     <div className="mock-view super-dashboard coach-dashboard">
-      <div className="cd-toolbar">
-        <div className="cd-scope-tabs" role="tablist" aria-label={isEs ? 'Periodo' : 'Period'}>
-          {scopeTabs.map((tab) => (
+      <header className="sd-hero cd-hero">
+        <div className="sd-hero__inner">
+          <div className="sd-hero__titles">
+            <p className="sd-hero__eyebrow">{isEs ? 'Inicio coach' : 'Coach home'}</p>
+            <h1 className="sd-hero__title">{greeting(isEs, refDate)}</h1>
+            <p className="sd-hero__sub">
+              {isEs
+                ? 'Revisa qué hacer en cada módulo y atiende tus pendientes antes de programar.'
+                : 'See what to do in each module and handle pending items before you program.'}
+            </p>
+          </div>
+          <div className="cd-toolbar cd-toolbar--hero">
+            <div className="cd-scope-tabs" role="tablist" aria-label={isEs ? 'Periodo' : 'Period'}>
+              {scopeTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={scope === tab.id}
+                  className={`cd-scope-tab${scope === tab.id ? ' is-active' : ''}`}
+                  onClick={() => setScope(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="cd-period-nav">
+              <button type="button" className="cd-period-nav__btn" onClick={() => shiftPeriod(-1)} aria-label={isEs ? 'Anterior' : 'Previous'}>
+                <ChevronLeft size={18} aria-hidden />
+              </button>
+              <span className="cd-period-nav__label">{model.periodLabel}</span>
+              <button type="button" className="cd-period-nav__btn" onClick={() => shiftPeriod(1)} aria-label={isEs ? 'Siguiente' : 'Next'}>
+                <ChevronRight size={18} aria-hidden />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="cd-metrics cd-metrics--hero">
+          <div className="cd-metric">
+            <span className="cd-metric__label">{isEs ? 'Atletas' : 'Athletes'}</span>
+            <strong className="cd-metric__value">{model.kpis.athletes}</strong>
+          </div>
+          <div className="cd-metric">
+            <span className="cd-metric__label">{isEs ? 'Programas activos' : 'Active programs'}</span>
+            <strong className="cd-metric__value">{model.kpis.activePrograms}</strong>
+          </div>
+          <div className="cd-metric">
+            <span className="cd-metric__label">{sessionsLabel}</span>
+            <strong className="cd-metric__value">{model.kpis.sessionsInScope}</strong>
+          </div>
+          <div className={`cd-metric${model.kpis.alertsCount > 0 ? ' cd-metric--warn' : ''}`}>
+            <span className="cd-metric__label">{isEs ? 'Alertas' : 'Alerts'}</span>
+            <strong className="cd-metric__value">{model.kpis.alertsCount}</strong>
+          </div>
+        </div>
+      </header>
+
+      <section className="sd-section" aria-labelledby="cd-modules-title">
+        <div className="sd-section__head">
+          <div>
+            <h2 id="cd-modules-title" className="sd-section__title">
+              {isEs ? 'Tus módulos' : 'Your modules'}
+            </h2>
+            <p className="sd-section__desc">
+              {isEs
+                ? 'Entra directo a donde tienes trabajo pendiente.'
+                : 'Jump straight to where you have work waiting.'}
+            </p>
+          </div>
+        </div>
+        <div className="cd-module-grid">
+          {modules.map((mod) => (
             <button
-              key={tab.id}
+              key={mod.id}
               type="button"
-              role="tab"
-              aria-selected={scope === tab.id}
-              className={`cd-scope-tab${scope === tab.id ? ' is-active' : ''}`}
-              onClick={() => setScope(tab.id)}
+              className={`cd-module-card${mod.pendingCount > 0 ? ' cd-module-card--pending' : ''}`}
+              onClick={() => openModule(mod.id)}
             >
-              {tab.label}
+              <div className="cd-module-card__head">
+                <span className="cd-module-card__icon">{MODULE_ICONS[mod.id]}</span>
+                <span className="cd-module-card__label">{mod.label}</span>
+                {mod.pendingCount > 0 ? (
+                  <span className="cd-module-card__badge">{mod.pendingCount}</span>
+                ) : null}
+              </div>
+              <p className="cd-module-card__hint">{mod.actionHint}</p>
+              <p className="cd-module-card__summary">{mod.summary}</p>
+              {mod.items.length > 0 ? (
+                <ul className="cd-module-card__items">
+                  {mod.items.map((item) => (
+                    <li key={item.id} className={`cd-module-card__item cd-module-card__item--${item.severity}`}>
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="cd-module-card__ok">{isEs ? 'Sin pendientes urgentes' : 'No urgent pending items'}</p>
+              )}
+              <span className="cd-module-card__cta">
+                {isEs ? 'Abrir módulo' : 'Open module'}
+                <ArrowRight size={14} aria-hidden />
+              </span>
             </button>
           ))}
         </div>
-        <div className="cd-period-nav">
-          <button type="button" className="cd-period-nav__btn" onClick={() => shiftPeriod(-1)} aria-label={isEs ? 'Anterior' : 'Previous'}>
-            <ChevronLeft size={18} aria-hidden />
-          </button>
-          <span className="cd-period-nav__label">{model.periodLabel}</span>
-          <button type="button" className="cd-period-nav__btn" onClick={() => shiftPeriod(1)} aria-label={isEs ? 'Siguiente' : 'Next'}>
-            <ChevronRight size={18} aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      <div className="wolf-program-day-stats wolf-program-day-stats--dashboard cd-kpis">
-        <ProgramStatsKpiGrid cards={kpiCards} />
-      </div>
-
-      <div className="cd-quad-grid">
-        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-athletes-title">
-          <div className="cd-panel__head">
-            <h2 id="cd-athletes-title" className="cd-panel__title">
-              <Users size={16} aria-hidden />
-              {isEs ? 'Estado de atletas' : 'Athlete status'}
-            </h2>
-            <button type="button" className="cd-link-btn" onClick={onOpenAthletes}>
-              {isEs ? 'Ver todos' : 'View all'}
-            </button>
-          </div>
-          <div className="cd-panel__body">
-            <div className="cd-table-shell">
-              {model.athleteRows.length === 0 ? (
-                <p className="cd-empty-hint">{isEs ? 'No hay asignaciones WL.' : 'No WL assignments.'}</p>
-              ) : (
-                <table className="cd-athlete-table">
-                  <thead>
-                    <tr>
-                      <th>{isEs ? 'Atleta' : 'Athlete'}</th>
-                      <th>{isEs ? 'Programa' : 'Program'}</th>
-                      <th>{isEs ? 'Progreso' : 'Progress'}</th>
-                      <th>{isEs ? 'Estado' : 'Status'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {model.athleteRows.map((row) => (
-                      <tr key={row.assignmentId}>
-                        <td>
-                          <div className="cd-athlete-cell">
-                            <span className="cd-avatar" aria-hidden>
-                              {athleteInitials(row.athleteName)}
-                            </span>
-                            <span className="cd-athlete-name">{row.athleteName}</span>
-                          </div>
-                        </td>
-                        <td className="cd-col-program" title={row.programName}>
-                          {row.programName}
-                        </td>
-                        <td className="cd-col-progress">
-                          <span className="cd-week-pill">{row.weekLabel}</span>
-                          <span className="cd-pct-pill">{row.completionPct}%</span>
-                        </td>
-                        <td>
-                          <span className={`cd-status cd-status--${row.status}`}>{row.statusLabel}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-programs-title">
-          <div className="cd-panel__head">
-            <h2 id="cd-programs-title" className="cd-panel__title">
-              <ClipboardList size={16} aria-hidden />
-              {isEs ? 'Programas activos' : 'Active programs'}
-            </h2>
-            <button type="button" className="cd-link-btn" onClick={() => onOpenPrograms()}>
-              {isEs ? 'Ver todos' : 'View all'}
-            </button>
-          </div>
-          <div className="cd-panel__body">
-            {model.activePrograms.length === 0 ? (
-              <p className="cd-empty-hint">{isEs ? 'Sin programas asignados.' : 'No assigned programs.'}</p>
-            ) : (
-              <ul className="cd-program-list">
-                {model.activePrograms.map((prog) => (
-                  <li key={prog.programName} className="cd-program-item">
-                    <div className="cd-program-item__head">
-                      <strong title={prog.programName}>{prog.programName}</strong>
-                      <span className="cd-program-item__stats">
-                        <span>{prog.weekLabel}</span>
-                        <span>{prog.completionPct}%</span>
-                      </span>
-                    </div>
-                    <div className="cd-progress" aria-hidden>
-                      <span className="cd-progress__fill" style={{ width: `${prog.completionPct}%` }} />
-                    </div>
-                    <div className="cd-program-item__meta">
-                      <span>
-                        {prog.athleteCount}{' '}
-                        {isEs ? (prog.athleteCount === 1 ? 'atleta' : 'atletas') : prog.athleteCount === 1 ? 'athlete' : 'athletes'}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        <section className="cd-panel cd-panel--dense" aria-labelledby="cd-activity-title">
-          <div className="cd-panel__head">
-            <h2 id="cd-activity-title" className="cd-panel__title">
-              <AlertTriangle size={16} aria-hidden />
-              {isEs ? 'Actividad reciente' : 'Recent activity'}
-            </h2>
-          </div>
-          <div className="cd-panel__body">
-            {model.recentActivity.length === 0 ? (
-              <p className="cd-empty-hint">{isEs ? 'Sin actividad registrada aún.' : 'No activity logged yet.'}</p>
-            ) : (
-              <ul className="cd-activity-feed">
-                {model.recentActivity.map((item) => (
-                  <li key={item.id} className={`cd-activity-item cd-activity-item--${item.kind}`}>
-                    <span className="cd-activity-item__dot" aria-hidden />
-                    <div className="cd-activity-item__body">
-                      <p>
-                        <strong>{item.athleteName}</strong> {item.label}
-                      </p>
-                      <time dateTime={item.at}>{formatRelativeTime(item.at, isEs)}</time>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      </div>
+      </section>
     </div>
   );
 };

@@ -15,7 +15,7 @@ import { MobileBottomNav } from './components/navigation/MobileBottomNav';
 import { MobileTopBar } from './components/navigation/MobileTopBar';
 import { NotificationsBell } from './components/notifications/NotificationsBell';
 import { MobileTopBarProvider, useMobileTopBarContext } from './context/MobileTopBarContext';
-import type { AppViewId } from './navigation/appNavigation';
+import { getDefaultAppView, type AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
 import { DesktopTooltipLayer } from './components/ui/DesktopTooltipLayer';
 import { ThemeProvider } from './context/ThemeContext';
@@ -32,7 +32,7 @@ function AppShell() {
     const link = typeof window !== 'undefined' ? parseHashDeepLink() : null;
     if (link && isAppViewId(link.view)) return link.view;
     if (link?.view === 'legal-terms' || link?.view === 'legal-privacy') return link.view;
-    return 'programs';
+    return 'dashboard';
   });
   const [language, setLanguage] = useState<'ES' | 'EN'>('ES');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,11 +86,8 @@ function AppShell() {
       }
     }
 
-    setActiveView(
-      currentUser.role === 'athlete'
-        ? 'dashboard'
-        : 'programs',
-    );
+    const persona = currentUser.role === 'athlete' ? 'athlete' : 'coach';
+    setActiveView(getDefaultAppView(persona, currentUser.role));
   }, [isAuthenticated, currentUser?.id, currentUser?.role, setUserRole, openProgramEditor]);
 
   /** Keep hash URL in sync with view (shareable deep links). */

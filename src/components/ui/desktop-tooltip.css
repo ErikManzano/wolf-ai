@@ -1,15 +1,42 @@
 .wl-desktop-tooltip {
   --wl-tooltip-bg: #292524;
   --wl-tooltip-fg: #fafaf9;
-  --wl-tooltip-border: rgba(255, 255, 255, 0.16);
-  --wl-tooltip-shadow: 0 10px 28px rgba(28, 25, 23, 0.24);
+  --wl-tooltip-border: color-mix(in srgb, #fafaf9 14%, transparent);
+  --wl-tooltip-shadow: 0 8px 24px rgba(28, 25, 23, 0.22);
+  position: fixed;
+  z-index: 12000;
+  max-width: min(240px, calc(100vw - 20px));
+  padding: 5px 9px;
+  border-radius: 10px;
+  border: 1px solid var(--wl-tooltip-border);
+  background: var(--wl-tooltip-bg);
+  color: var(--wl-tooltip-fg);
+  font-family: var(--font-family, system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  box-shadow: var(--wl-tooltip-shadow);
+  animation: wl-desktop-tooltip-in 0.12s ease-out;
+}
+
+:root[data-theme='light'] .wl-desktop-tooltip {
+  --wl-tooltip-bg: #292524;
+  --wl-tooltip-fg: #fafaf9;
+  --wl-tooltip-border: color-mix(in srgb, #fafaf9 12%, transparent);
+  --wl-tooltip-shadow: 0 10px 28px rgba(28, 25, 23, 0.18);
 }
 
 :root[data-theme='dark'] .wl-desktop-tooltip {
-  --wl-tooltip-bg: #f1f5f9;
-  --wl-tooltip-fg: #111827;
-  --wl-tooltip-border: rgba(15, 23, 42, 0.18);
-  --wl-tooltip-shadow: 0 12px 32px rgba(0, 0, 0, 0.52);
+  --wl-tooltip-bg: var(--v2-surface-raised, #1a1d24);
+  --wl-tooltip-fg: var(--v2-text, #f4f4f5);
+  --wl-tooltip-border: var(--v2-border, #3a4252);
+  --wl-tooltip-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
 }
 
 .wl-tooltip-host {
@@ -22,38 +49,51 @@
   pointer-events: none;
 }
 
-.wl-desktop-tooltip {
-  position: fixed;
-  z-index: 12000;
-  max-width: min(280px, calc(100vw - 24px));
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--wl-tooltip-border);
-  background: var(--wl-tooltip-bg);
-  color: var(--wl-tooltip-fg);
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: 0.01em;
-  text-align: center;
-  overflow-wrap: anywhere;
-  pointer-events: none;
+.wl-desktop-tooltip--top {
   transform: translate(-50%, calc(-100% - 8px));
-  box-shadow: var(--wl-tooltip-shadow);
-  animation: wl-desktop-tooltip-in 0.14s ease-out;
 }
 
-.wl-desktop-tooltip::after {
+.wl-desktop-tooltip--bottom {
+  transform: translate(-50%, 8px);
+}
+
+.wl-desktop-tooltip--right {
+  transform: translate(8px, -50%);
+}
+
+.wl-desktop-tooltip--top::after,
+.wl-desktop-tooltip--bottom::after,
+.wl-desktop-tooltip--right::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -5px;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   background: inherit;
+  transform: rotate(45deg);
+}
+
+.wl-desktop-tooltip--top::after {
+  left: 50%;
+  bottom: -4px;
+  margin-left: -4px;
   border-right: 1px solid var(--wl-tooltip-border);
   border-bottom: 1px solid var(--wl-tooltip-border);
-  transform: translateX(-50%) rotate(45deg);
+}
+
+.wl-desktop-tooltip--bottom::after {
+  left: 50%;
+  top: -4px;
+  margin-left: -4px;
+  border-left: 1px solid var(--wl-tooltip-border);
+  border-top: 1px solid var(--wl-tooltip-border);
+}
+
+.wl-desktop-tooltip--right::after {
+  left: -4px;
+  top: 50%;
+  margin-top: -4px;
+  border-left: 1px solid var(--wl-tooltip-border);
+  border-bottom: 1px solid var(--wl-tooltip-border);
 }
 
 @media (forced-colors: active) {
@@ -68,12 +108,10 @@
 @keyframes wl-desktop-tooltip-in {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-100% - 4px));
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, calc(-100% - 8px));
   }
 }
 

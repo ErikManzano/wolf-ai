@@ -1,9 +1,10 @@
 /* WL Athletes dashboard — premium coach roster */
 
 .wl-athletes-section {
+  background: transparent;
   --wl-dash-bg: var(--wl-surface-main, #09090b);
-  --wl-dash-surface: var(--wl-surface-board, #111318);
-  --wl-dash-surface-2: var(--wl-surface-board, #111318);
+  --wl-dash-surface: var(--v2-surface-raised, var(--wl-surface-board, #111318));
+  --wl-dash-surface-2: var(--v2-surface-subtle, var(--wl-surface-board, #111318));
   --wl-dash-border: var(--wl-border-subtle, #27272a);
   --wl-dash-text: var(--wl-text-primary, #fafafa);
   --wl-dash-muted: var(--wl-text-muted, #71717a);

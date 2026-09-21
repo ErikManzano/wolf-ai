@@ -3,10 +3,10 @@
     { "code": "snatch", "labelEs": "Snatch", "labelEn": "Snatch", "sortOrder": 1 },
     { "code": "clean", "labelEs": "Clean", "labelEn": "Clean", "sortOrder": 2 },
     { "code": "jerk", "labelEs": "Jerk", "labelEn": "Jerk", "sortOrder": 3 },
-    { "code": "pull", "labelEs": "Tirón", "labelEn": "Pull", "sortOrder": 4 },
-    { "code": "squat", "labelEs": "Sentadilla", "labelEn": "Squat", "sortOrder": 5 },
+    { "code": "pull", "labelEs": "Pull", "labelEn": "Pull", "sortOrder": 4 },
+    { "code": "squat", "labelEs": "Squat", "labelEn": "Squat", "sortOrder": 5 },
     { "code": "press", "labelEs": "Press", "labelEn": "Press", "sortOrder": 6 },
-    { "code": "accessory", "labelEs": "Accesorio", "labelEn": "Accessory", "sortOrder": 7 }
+    { "code": "accessory", "labelEs": "Accessory", "labelEn": "Accessory", "sortOrder": 7 }
   ],
   "variations": [
     { "code": "classic", "labelEs": "Clásico", "labelEn": "Classic", "sortOrder": 1 },

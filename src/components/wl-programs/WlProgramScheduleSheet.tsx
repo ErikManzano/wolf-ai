@@ -142,6 +142,18 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
         </label>
 
         <label className="wl-form-sheet-field">
+          <span className="wl-form-sheet-label">{isEs ? 'Fecha límite' : 'End date'}</span>
+          <input
+            type="date"
+            className="wl-form-sheet-input"
+            value={endDate}
+            min={startDate}
+            onChange={(e) => handleEndChange(e.target.value)}
+            aria-invalid={endBeforeStart}
+          />
+        </label>
+
+        <label className="wl-form-sheet-field wl-form-sheet-field--weeks">
           <span className="wl-form-sheet-label">{isEs ? 'Semanas' : 'Weeks'}</span>
           <WlFormNumberStepper
             value={totalWeeks}
@@ -154,32 +166,13 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
           />
         </label>
 
-        <label className="wl-form-sheet-field">
-          <span className="wl-form-sheet-label">
-            {isEs ? 'Fecha límite (competición)' : 'Deadline (competition)'}
-          </span>
-          <input
-            type="date"
-            className="wl-form-sheet-input"
-            value={endDate}
-            min={startDate}
-            onChange={(e) => handleEndChange(e.target.value)}
-            aria-invalid={endBeforeStart}
-          />
-          {endBeforeStart ? (
-            <span className="wl-form-sheet-hint wl-form-sheet-hint--error">
-              {isEs
-                ? 'La fecha límite no puede ser anterior al inicio.'
-                : 'Deadline cannot be before the start date.'}
-            </span>
-          ) : (
-            <span className="wl-form-sheet-hint">
-              {isEs
-                ? 'Tope hacia la competencia o peak.'
-                : 'Competition / peak cutoff.'}
-            </span>
-          )}
-        </label>
+        {endBeforeStart ? (
+          <p className="wl-form-sheet-hint wl-form-sheet-hint--error wl-form-sheet-field--full">
+            {isEs
+              ? 'La fecha límite no puede ser anterior al inicio.'
+              : 'Deadline cannot be before the start date.'}
+          </p>
+        ) : null}
 
         <label className="wl-form-sheet-field wl-form-sheet-field--full">
           <span className="wl-form-sheet-label">{isEs ? 'Días / semana' : 'Days / week'}</span>

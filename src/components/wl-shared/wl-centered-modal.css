@@ -17,16 +17,41 @@
   max-height: min(88dvh, 720px);
 }
 
+.wl-centered-modal--wide {
+  width: min(620px, 100%);
+  max-height: min(90dvh, 760px);
+}
+
+.wl-centered-modal__header-extra {
+  flex-shrink: 0;
+  padding: 0 20px 14px;
+  border-bottom: 1px solid var(--wl-sheet-border);
+}
+
+.wl-form-sheet-head__content {
+  min-width: 0;
+}
+
+.wl-form-sheet-head__content .wl-form-sheet-title,
+.wl-form-sheet-head__content .wl-form-sheet-meta {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 520px) {
   .wl-centered-modal-overlay {
     align-items: center;
     padding: 12px;
   }
 
-  .wl-centered-modal {
+  .wl-centered-modal,
+  .wl-centered-modal--wide {
     width: 100%;
     max-height: min(90dvh, 720px);
     border-radius: 18px;
+  }
+
+  .wl-centered-modal__header-extra {
+    padding: 0 16px 12px;
   }
 }
 

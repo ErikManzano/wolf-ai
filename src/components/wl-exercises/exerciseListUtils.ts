@@ -1,11 +1,30 @@
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import type {
+  ExerciseDefinitionInput,
   ExerciseFamilyCode,
+  ExerciseLoadAnchorCode,
   MergedDefinitionView,
+  TrainingObjectiveCode,
 } from '../../models/exercise';
+import {
+  customFamilyFilterKey,
+  customFamilyIdFromTags,
+  isCustomFamilyFilter,
+  parseCustomFamilyFilterKey,
+} from '../../models/exercise/coachFamily';
 import { isSingleComposition } from '../../models/exercise';
+import type { Exercise } from '../../models/training';
+import type {
+  ExerciseFamilyId,
+  ExerciseListItem,
+  ExerciseListNode,
+  ExerciseListSortState,
+  ExerciseQuickFilter,
+  ExerciseSortColumn,
+  ExerciseSortDirection,
+} from './types';
 
-export type ExerciseFamilyFilter = ExerciseFamilyCode | 'all';
+export type ExerciseFamilyFilter = ExerciseFamilyCode | 'all' | `folder:${string}`;
 export type MuscleGroupFilter =
   | 'all'
   | 'chest'
@@ -20,7 +39,7 @@ export type MuscleGroupFilter =
   | 'core'
   | 'full_body';
 export type ExerciseOriginFilter = 'all' | 'official' | 'mine' | 'archived';
-export type ExerciseSortId = 'name_asc' | 'recent';
+export type ExerciseSortId = 'name_asc' | 'usage_desc' | 'recent' | 'family';
 export type ExerciseDisciplineFilter =
   | 'all'
   | 'weightlifting'
@@ -69,6 +88,40 @@ export const FAMILY_CHIP_ORDER: ExerciseFamilyCode[] = [
   'accessory',
 ];
 
+/** Nombres de familia en inglés de coaching — no mezclar con español. */
+export const FAMILY_DISPLAY_LABEL: Record<ExerciseFamilyId, string> = {
+  snatch: 'Snatch',
+  clean: 'Clean',
+  jerk: 'Jerk',
+  pull: 'Pull',
+  squat: 'Squat',
+  press: 'Press',
+  accessory: 'Accessory',
+  core: 'Core',
+};
+
+export const INTENSITY_REF_LABEL: Record<ExerciseLoadAnchorCode, string | null> = {
+  auto: null,
+  snatch: 'Snatch',
+  clean_jerk: 'C&J',
+  back_squat: 'Back squat',
+  front_squat: 'Front squat',
+};
+
+/** Colores de punto por objetivo de entrenamiento. */
+export const OBJECTIVE_DOT_COLOR: Record<TrainingObjectiveCode, string> = {
+  technique: '#ea580c',
+  strength: '#2563eb',
+  speed: '#7c3aed',
+  positional: '#d97706',
+  pulling_strength: '#15803d',
+  recovery: '#71717a',
+};
+
+export const GROUP_HEADER_HEIGHT = 32;
+export const LIST_ROW_HEIGHT_COMPACT = 40;
+export const LIST_ROW_HEIGHT_DETAILED = 56;
+
 export const DISCIPLINE_OPTIONS: {
   id: ExerciseDisciplineFilter;
   labelEs: string;
@@ -92,9 +145,17 @@ export const ORIGIN_OPTIONS: { id: ExerciseOriginFilter; labelEs: string; labelE
   { id: 'archived', labelEs: 'Archivados', labelEn: 'Archived' },
 ];
 
-export const SORT_OPTIONS: { id: ExerciseSortId; labelEs: string; labelEn: string }[] = [
-  { id: 'name_asc', labelEs: 'A–Z', labelEn: 'A–Z' },
-  { id: 'recent', labelEs: 'Recientes', labelEn: 'Recent' },
+export const SORT_OPTIONS: {
+  id: ExerciseSortId;
+  labelEs: string;
+  labelEn: string;
+  shortEs: string;
+  shortEn: string;
+}[] = [
+  { id: 'name_asc', labelEs: 'A–Z', labelEn: 'A–Z', shortEs: 'A–Z', shortEn: 'A–Z' },
+  { id: 'usage_desc', labelEs: 'Más usados', labelEn: 'Most used', shortEs: 'Uso', shortEn: 'Usage' },
+  { id: 'recent', labelEs: 'Recientes', labelEn: 'Recent', shortEs: 'Reciente', shortEn: 'Recent' },
+  { id: 'family', labelEs: 'Familia', labelEn: 'Family', shortEs: 'Familia', shortEn: 'Family' },
 ];
 
 export function inferExerciseDiscipline(def: MergedDefinitionView): 'weightlifting' | 'accessory' {
@@ -120,6 +181,28 @@ export function definitionFamily(def: MergedDefinitionView): ExerciseFamilyCode 
   return def.composition.segments[0]?.family ?? null;
 }
 
+/** True si el input cambia composición u objetivo respecto al ejercicio base (no solo carpeta). */
+export function hasExerciseDefinitionChanged(
+  initial: MergedDefinitionView,
+  input: ExerciseDefinitionInput,
+): boolean {
+  if (input.objective !== initial.objective) return true;
+  if (input.loadAnchor !== initial.loadAnchor) return true;
+  if (input.kind !== initial.kind) return true;
+  if (input.kind === 'complex' || initial.kind === 'complex') {
+    return JSON.stringify(input.composition) !== JSON.stringify(initial.composition);
+  }
+  if (!isSingleComposition(input.composition) || !isSingleComposition(initial.composition)) return true;
+  const next = input.composition;
+  const seed = initial.composition;
+  return (
+    next.family !== seed.family ||
+    next.variation !== seed.variation ||
+    next.startPosition !== seed.startPosition ||
+    JSON.stringify(next.modifiers) !== JSON.stringify(seed.modifiers)
+  );
+}
+
 export function filterExerciseDefinitions(
   definitions: MergedDefinitionView[],
   opts: {
@@ -128,9 +211,15 @@ export function filterExerciseDefinitions(
     muscleGroup?: MuscleGroupFilter;
     origin: ExerciseOriginFilter;
     discipline: ExerciseDisciplineFilter;
+    minUsage?: number;
+    usageById?: Map<string, number>;
+    quickFilter?: ExerciseQuickFilter;
+    favoriteIds?: Set<string>;
+    recentIds?: Set<string>;
   },
 ): MergedDefinitionView[] {
   const q = opts.search.trim().toLowerCase();
+  const minUsage = opts.minUsage ?? 0;
   return definitions.filter((def) => {
     if (opts.origin === 'official' && def.coachId) return false;
     if (opts.origin === 'mine' && !def.coachId) return false;
@@ -162,7 +251,22 @@ export function filterExerciseDefinitions(
       if (group !== opts.muscleGroup) return false;
     }
 
-    if (opts.family !== 'all' && definitionFamily(def) !== opts.family) return false;
+    if (opts.quickFilter === 'favorites' && !opts.favoriteIds?.has(def.id)) return false;
+    if (opts.quickFilter === 'recent' && !opts.recentIds?.has(def.id)) return false;
+
+    if (opts.family !== 'all') {
+      const customFilterId = parseCustomFamilyFilterKey(opts.family);
+      if (customFilterId) {
+        if (customFamilyIdFromTags(def.tags) !== customFilterId) return false;
+      } else if (definitionFamily(def) !== opts.family) {
+        return false;
+      }
+    }
+
+    if (minUsage > 0) {
+      const used = opts.usageById?.get(def.id) ?? 0;
+      if (used < minUsage) return false;
+    }
 
     if (!q) return true;
     return (
@@ -173,30 +277,161 @@ export function filterExerciseDefinitions(
   });
 }
 
+export function sortStateToSortId(state: ExerciseListSortState): ExerciseSortId {
+  if (state.column === 'recent') return 'recent';
+  if (state.column === 'usage' && state.direction === 'desc') return 'usage_desc';
+  if (state.column === 'family' && state.direction === 'asc') return 'family';
+  if (state.column === 'name' && state.direction === 'asc') return 'name_asc';
+  return 'name_asc';
+}
+
+export function sortIdToSortState(sort: ExerciseSortId): ExerciseListSortState {
+  switch (sort) {
+    case 'usage_desc':
+      return { column: 'usage', direction: 'desc' };
+    case 'recent':
+      return { column: 'recent', direction: 'desc' };
+    case 'family':
+      return { column: 'family', direction: 'asc' };
+    default:
+      return { column: 'name', direction: 'asc' };
+  }
+}
+
+export function toggleColumnSort(
+  current: ExerciseListSortState,
+  column: ExerciseSortColumn,
+): ExerciseListSortState {
+  if (current.column === column) {
+    return { column, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+  }
+  const defaultDir: ExerciseSortDirection =
+    column === 'usage' || column === 'recent' ? 'desc' : 'asc';
+  return { column, direction: defaultDir };
+}
+
 export function sortExerciseDefinitions(
   definitions: MergedDefinitionView[],
   sort: ExerciseSortId,
+  extra?: {
+    usageById?: Map<string, number>;
+    recentOrder?: string[];
+  },
+): MergedDefinitionView[] {
+  return sortExerciseDefinitionsByState(definitions, sortIdToSortState(sort), extra);
+}
+
+export function sortExerciseDefinitionsByState(
+  definitions: MergedDefinitionView[],
+  state: ExerciseListSortState,
+  extra?: {
+    usageById?: Map<string, number>;
+    recentOrder?: string[];
+  },
 ): MergedDefinitionView[] {
   const copy = [...definitions];
-  if (sort === 'recent') {
+  const dir = state.direction === 'asc' ? 1 : -1;
+
+  const compareName = (a: MergedDefinitionView, b: MergedDefinitionView) =>
+    a.effectiveDisplayName.localeCompare(b.effectiveDisplayName, 'es');
+
+  if (state.column === 'recent') {
+    const order = extra?.recentOrder;
+    if (order && order.length > 0) {
+      const rank = new Map(order.map((id, index) => [id, index]));
+      copy.sort((a, b) => {
+        const aRank = rank.get(a.id);
+        const bRank = rank.get(b.id);
+        if (aRank != null && bRank != null) return (aRank - bRank) * dir;
+        if (aRank != null) return -1;
+        if (bRank != null) return 1;
+        const aTime = Date.parse(a.updatedAt ?? a.createdAt ?? '') || 0;
+        const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? '') || 0;
+        return (bTime - aTime) * dir;
+      });
+      return copy;
+    }
     copy.sort((a, b) => {
       const aTime = Date.parse(a.updatedAt ?? a.createdAt ?? '') || 0;
       const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? '') || 0;
-      return bTime - aTime;
+      return (bTime - aTime) * dir;
     });
     return copy;
   }
-  copy.sort((a, b) => a.effectiveDisplayName.localeCompare(b.effectiveDisplayName, 'es'));
+
+  if (state.column === 'usage') {
+    const usage = extra?.usageById;
+    copy.sort((a, b) => {
+      const diff = (usage?.get(a.id) ?? 0) - (usage?.get(b.id) ?? 0);
+      if (diff !== 0) return diff * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  if (state.column === 'family') {
+    copy.sort((a, b) => {
+      const aFam = definitionFamily(a) ?? 'accessory';
+      const bFam = definitionFamily(b) ?? 'accessory';
+      const aIdx = FAMILY_CHIP_ORDER.indexOf(aFam);
+      const bIdx = FAMILY_CHIP_ORDER.indexOf(bFam);
+      const famDiff = (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+      if (famDiff !== 0) return famDiff * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  if (state.column === 'type') {
+    copy.sort((a, b) => {
+      const diff = a.objective.localeCompare(b.objective, 'es');
+      if (diff !== 0) return diff * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  if (state.column === 'ref') {
+    copy.sort((a, b) => {
+      const diff = a.loadAnchor.localeCompare(b.loadAnchor, 'es');
+      if (diff !== 0) return diff * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  if (state.column === 'state') {
+    copy.sort((a, b) => {
+      const aOfficial = a.coachId ? 1 : 0;
+      const bOfficial = b.coachId ? 1 : 0;
+      if (aOfficial !== bOfficial) return (aOfficial - bOfficial) * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  copy.sort((a, b) => compareName(a, b) * dir);
   return copy;
 }
 
 export function familyCounts(definitions: MergedDefinitionView[]): Record<string, number> {
   const counts: Record<string, number> = { all: definitions.length };
   for (const def of definitions) {
+    const customId = customFamilyIdFromTags(def.tags);
+    if (customId) {
+      const key = customFamilyFilterKey(customId);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
     const family = definitionFamily(def) ?? 'accessory';
     counts[family] = (counts[family] ?? 0) + 1;
   }
   return counts;
+}
+
+export function isExerciseFamilyFilter(value: string): value is ExerciseFamilyFilter {
+  if (value === 'all') return true;
+  if (isCustomFamilyFilter(value)) return true;
+  return FAMILY_CHIP_ORDER.includes(value as ExerciseFamilyCode);
 }
 
 export function muscleGroupCounts(definitions: MergedDefinitionView[]): Record<string, number> {
@@ -208,28 +443,45 @@ export function muscleGroupCounts(definitions: MergedDefinitionView[]): Record<s
   return counts;
 }
 
-export function countExerciseUsage(programs: CoachProgramRow[], def: MergedDefinitionView): number {
-  const ids = new Set([def.id, def.legacyExerciseId].filter((id): id is string => Boolean(id)));
-  let n = 0;
-  for (const row of programs) {
-    let used = false;
+export function collectProgramExerciseIds(programs: CoachProgramRow[]): Set<string>[] {
+  return programs.map((row) => {
+    const ids = new Set<string>();
     for (const week of row.program.weeks ?? []) {
       for (const day of week.days ?? []) {
         for (const block of day.session?.exercises ?? []) {
-          if (ids.has(block.exerciseId)) {
-            used = true;
-            break;
-          }
-          if (block.segments?.some((seg) => ids.has(seg.exerciseId))) {
-            used = true;
-            break;
+          if (block.exerciseId) ids.add(block.exerciseId);
+          for (const seg of block.segments ?? []) {
+            if (seg.exerciseId) ids.add(seg.exerciseId);
           }
         }
-        if (used) break;
       }
-      if (used) break;
     }
-    if (used) n += 1;
+    return ids;
+  });
+}
+
+export function usageCountsByDefinition(
+  programs: CoachProgramRow[],
+  definitions: MergedDefinitionView[],
+): Map<string, number> {
+  const usedSets = collectProgramExerciseIds(programs);
+  const map = new Map<string, number>();
+  for (const def of definitions) {
+    const keys = [def.id, def.legacyExerciseId].filter((id): id is string => Boolean(id));
+    let n = 0;
+    for (const used of usedSets) {
+      if (keys.some((key) => used.has(key))) n += 1;
+    }
+    map.set(def.id, n);
+  }
+  return map;
+}
+
+export function countExerciseUsage(programs: CoachProgramRow[], def: MergedDefinitionView): number {
+  const ids = new Set([def.id, def.legacyExerciseId].filter((id): id is string => Boolean(id)));
+  let n = 0;
+  for (const used of collectProgramExerciseIds(programs)) {
+    if (ids.size > 0 && [...ids].some((id) => used.has(id))) n += 1;
   }
   return n;
 }
@@ -243,4 +495,163 @@ export function taxonomyLabel(
   const item = items.find((entry) => entry.code === code);
   if (!item) return code;
   return isEs ? item.labelEs : item.labelEn;
+}
+
+export function familyDisplayLabel(family: ExerciseFamilyId | null): string {
+  if (!family) return '—';
+  return FAMILY_DISPLAY_LABEL[family] ?? family;
+}
+
+export function intensityRefLabel(anchor: ExerciseLoadAnchorCode | null | undefined): string | null {
+  if (!anchor) return null;
+  return INTENSITY_REF_LABEL[anchor] ?? null;
+}
+
+/** Etiqueta de referencia de intensidad; `auto` → Propio/Self. */
+export function intensityRefDisplayLabel(
+  anchor: ExerciseLoadAnchorCode | null | undefined,
+  isEs: boolean,
+): string {
+  if (!anchor || anchor === 'auto') return isEs ? 'Propio' : 'Self';
+  return INTENSITY_REF_LABEL[anchor] ?? anchor;
+}
+
+export function isDefinitionArchived(def: MergedDefinitionView): boolean {
+  return Boolean(def.hiddenByCoach) || def.lifecycleStatus === 'deprecated';
+}
+
+/** Multiplicador 1RM desde catálogo legacy; null si es 1.0 o no existe. */
+export function loadScaleForDefinition(motorExercises: Exercise[], def: MergedDefinitionView): number | null {
+  const keys = new Set([def.id, def.legacyExerciseId].filter((id): id is string => Boolean(id)));
+  for (const ex of motorExercises) {
+    if (!keys.has(ex.id)) continue;
+    const scale = ex.loadScale;
+    if (scale != null && Number.isFinite(scale) && scale !== 1) {
+      return Math.round(scale * 1000) / 1000;
+    }
+  }
+  return null;
+}
+
+export function buildExerciseListNodes(
+  items: ExerciseListItem[],
+  groupByFamily: boolean,
+  familyFilter: ExerciseFamilyFilter,
+): ExerciseListNode[] {
+  if (!groupByFamily || familyFilter !== 'all') {
+    return items.map((item) => ({ kind: 'row' as const, id: item.id, item }));
+  }
+
+  const buckets = new Map<ExerciseFamilyId, ExerciseListItem[]>();
+  for (const item of items) {
+    const list = buckets.get(item.family) ?? [];
+    list.push(item);
+    buckets.set(item.family, list);
+  }
+
+  const nodes: ExerciseListNode[] = [];
+  for (const code of FAMILY_CHIP_ORDER) {
+    const groupItems = buckets.get(code);
+    if (!groupItems?.length) continue;
+    nodes.push({
+      kind: 'group',
+      id: `group-${code}`,
+      family: code,
+      label: FAMILY_DISPLAY_LABEL[code].toUpperCase(),
+      count: groupItems.length,
+    });
+    for (const item of groupItems) {
+      nodes.push({ kind: 'row', id: item.id, item });
+    }
+    buckets.delete(code);
+  }
+
+  for (const [family, groupItems] of buckets) {
+    if (!groupItems.length) continue;
+    nodes.push({
+      kind: 'group',
+      id: `group-${family}`,
+      family,
+      label: FAMILY_DISPLAY_LABEL[family].toUpperCase(),
+      count: groupItems.length,
+    });
+    for (const item of groupItems) {
+      nodes.push({ kind: 'row', id: item.id, item });
+    }
+  }
+
+  return nodes;
+}
+
+export function listNodeHeight(
+  node: ExerciseListNode,
+  density: import('./types').ExerciseListDensity,
+): number {
+  if (node.kind === 'group') return GROUP_HEADER_HEIGHT;
+  return density === 'detailed' ? LIST_ROW_HEIGHT_DETAILED : LIST_ROW_HEIGHT_COMPACT;
+}
+
+export function listNodesTotalHeight(
+  nodes: ExerciseListNode[],
+  density: import('./types').ExerciseListDensity,
+): number {
+  return nodes.reduce((sum, node) => sum + listNodeHeight(node, density), 0);
+}
+
+export function findNodeOffset(
+  nodes: ExerciseListNode[],
+  startIndex: number,
+  density: import('./types').ExerciseListDensity,
+): number {
+  let offset = 0;
+  for (let i = 0; i < startIndex; i += 1) {
+    offset += listNodeHeight(nodes[i]!, density);
+  }
+  return offset;
+}
+
+export function formatExerciseMetaLine(opts: {
+  familyLabel: string;
+  typeLabel: string;
+  intensityLabel: string | null;
+  usageCount: number;
+  isEs: boolean;
+}): string {
+  const parts = [opts.familyLabel, opts.typeLabel];
+  if (opts.intensityLabel) parts.push(`Ref: ${opts.intensityLabel}`);
+  if (opts.usageCount > 0) {
+    parts.push(opts.isEs ? `${opts.usageCount} programas` : `${opts.usageCount} programs`);
+  }
+  return parts.join(' · ');
+}
+
+export function toExerciseListItem(
+  def: MergedDefinitionView,
+  opts: {
+    isEs: boolean;
+    typeLabel: string;
+    usageCount: number;
+    isFavorite: boolean;
+    loadScale?: number | null;
+    lastUsedAt?: string;
+    familyLabel?: string;
+  },
+): ExerciseListItem {
+  const family = (definitionFamily(def) ?? 'accessory') as ExerciseFamilyId;
+  return {
+    id: def.id,
+    name: def.effectiveDisplayName,
+    family,
+    familyLabel: opts.familyLabel ?? familyDisplayLabel(family),
+    type: def.objective,
+    typeLabel: opts.typeLabel,
+    intensityRef: intensityRefDisplayLabel(def.loadAnchor, opts.isEs),
+    intensityBasis: def.loadAnchor,
+    loadScale: opts.loadScale ?? null,
+    usageCount: opts.usageCount,
+    isOfficial: !def.coachId,
+    isFavorite: opts.isFavorite,
+    isArchived: isDefinitionArchived(def),
+    lastUsedAt: opts.lastUsedAt,
+  };
 }
