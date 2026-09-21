@@ -1592,7 +1592,11 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
     <div className="central-panel">
       {activeView === 'dashboard' &&
         (persona === 'athlete' ? (
-          <AthleteDashboard language={language} onOpenPlan={() => setActiveView('my-wl-plan')} />
+          <AthleteDashboard
+            language={language}
+            onOpenPlan={() => setActiveView('my-wl-plan')}
+            onOpenCalendar={() => setActiveView('global-calendar')}
+          />
         ) : (
           renderDashboard()
         ))}

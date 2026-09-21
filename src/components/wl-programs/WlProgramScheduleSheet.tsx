@@ -31,14 +31,22 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
   onSave,
 }) => {
   const initialWeeks = Math.max(1, program.totalWeeks || program.weeks.length || 1);
-  const initialDays = Math.max(1, program.daysPerWeek || program.weeks[0]?.days.length || 3);
   const initialStart = program.startDate || new Date().toISOString().slice(0, 10);
   const initialEnd = program.endDate || computeProgramEndDate(initialStart, initialWeeks);
+
+  const daysPerWeek = useMemo(
+    () =>
+      Math.max(
+        1,
+        program.daysPerWeek,
+        ...program.weeks.map((w) => w.days.length),
+      ),
+    [program.daysPerWeek, program.weeks],
+  );
 
   const [startDate, setStartDate] = useState(initialStart);
   const [endDate, setEndDate] = useState(initialEnd);
   const [totalWeeks, setTotalWeeks] = useState(initialWeeks);
-  const [daysPerWeek, setDaysPerWeek] = useState(initialDays);
   const [saving, setSaving] = useState(false);
 
   const endBeforeStart = Boolean(endDate && startDate && endDate < startDate);
@@ -50,7 +58,7 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
   const weeksFromRange = endBeforeStart ? totalWeeks : computeWeeksFromDateRange(startDate, endDate);
   const structureMismatch = weeksFromRange !== totalWeeks;
 
-  const canSave = !endBeforeStart && totalWeeks >= 1 && daysPerWeek >= 1 && !saving;
+  const canSave = !endBeforeStart && totalWeeks >= 1 && !saving;
 
   const handleStartChange = (next: string) => {
     if (!next) return;
@@ -123,8 +131,8 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
       title={isEs ? 'Fechas del programa' : 'Program dates'}
       subtitle={
         isEs
-          ? `Define inicio, fecha límite y la estructura semanal de «${programName}».`
-          : `Set start, deadline, and weekly structure for “${programName}”.`
+          ? `Define inicio, fecha límite y semanas de «${programName}». Los días se editan en el editor.`
+          : `Set start, deadline, and weeks for “${programName}”. Edit days in the program editor.`
       }
       titleId="wl-program-schedule-title"
       onClose={onClose}
@@ -173,63 +181,50 @@ const WlProgramScheduleSheet: React.FC<WlProgramScheduleSheetProps> = ({
               : 'Deadline cannot be before the start date.'}
           </p>
         ) : null}
-
-        <label className="wl-form-sheet-field wl-form-sheet-field--full">
-          <span className="wl-form-sheet-label">{isEs ? 'Días / semana' : 'Days / week'}</span>
-          <WlFormNumberStepper
-            value={daysPerWeek}
-            min={1}
-            max={7}
-            onChange={setDaysPerWeek}
-            aria-label={isEs ? 'Días por semana' : 'Days per week'}
-            decrementAria={isEs ? 'Menos días' : 'Fewer days'}
-            incrementAria={isEs ? 'Más días' : 'More days'}
-          />
-        </label>
       </div>
 
-      <section className="wl-form-sheet-summary" aria-live="polite">
+      <section className="wl-form-sheet-summary wl-form-sheet-summary--compact" aria-live="polite">
         <p className="wl-form-sheet-summary__eyebrow">
-          <CalendarRange size={14} aria-hidden />{' '}
-          {isEs ? 'Alineación con el calendario' : 'Calendar alignment'}
+          <CalendarRange size={14} aria-hidden /> {isEs ? 'Resumen' : 'Summary'}
         </p>
-        <p className="wl-form-sheet-summary__lead">
+        <div className="wl-form-sheet-summary__stats">
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{totalWeeks}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Semanas' : 'Weeks'}</span>
+          </div>
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{daysPerWeek}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Días/sem' : 'Days/wk'}</span>
+          </div>
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{trainingDays}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Sesiones' : 'Sessions'}</span>
+          </div>
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{spanDays}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Días ventana' : 'Window days'}</span>
+          </div>
+        </div>
+        <p className="wl-form-sheet-summary__range">
+          {formatShortDateFriendly(startDate, isEs)} → {formatShortDateFriendly(endDate, isEs)}
+        </p>
+        {structureMismatch ? (
+          <div className="wl-form-sheet-callout wl-form-sheet-callout--warn">
+            <p className="wl-form-sheet-callout__text">
+              {isEs
+                ? `Las fechas sugieren ${weeksFromRange} semanas; el mesociclo tiene ${totalWeeks}.`
+                : `Dates suggest ${weeksFromRange} weeks; mesocycle has ${totalWeeks}.`}
+            </p>
+            <button type="button" className="wl-form-sheet-callout__btn" onClick={syncWeeksToDeadline}>
+              {isEs ? `Usar ${weeksFromRange} semanas` : `Use ${weeksFromRange} weeks`}
+            </button>
+          </div>
+        ) : null}
+        <p className="wl-form-sheet-summary__foot">
           {isEs
-            ? `${formatShortDateFriendly(startDate, true)} → ${formatShortDateFriendly(endDate, true)} · ${spanDays} días de ventana · ${trainingDays} sesiones prescritas.`
-            : `${formatShortDateFriendly(startDate, false)} → ${formatShortDateFriendly(endDate, false)} · ${spanDays}-day window · ${trainingDays} prescribed sessions.`}
+            ? 'Al guardar solo se ajustan semanas vacías. Los días se editan en el editor.'
+            : 'Saving only adjusts empty weeks. Edit days in the program editor.'}
         </p>
-        <ul className="wl-form-sheet-summary__list">
-          <li>
-            {isEs
-              ? `Estructura: ${totalWeeks} semana${totalWeeks === 1 ? '' : 's'} × ${daysPerWeek} día${daysPerWeek === 1 ? '' : 's'}.`
-              : `Structure: ${totalWeeks} week${totalWeeks === 1 ? '' : 's'} × ${daysPerWeek} day${daysPerWeek === 1 ? '' : 's'}.`}
-          </li>
-          {structureMismatch ? (
-            <li>
-              {isEs
-                ? `La ventana de fechas implica ~${weeksFromRange} semanas; el mesociclo está en ${totalWeeks}.`
-                : `The date window implies ~${weeksFromRange} weeks; the mesocycle is set to ${totalWeeks}.`}{' '}
-              <button
-                type="button"
-                className="wl-form-sheet-link"
-                onClick={syncWeeksToDeadline}
-              >
-                {isEs ? 'Ajustar semanas a la fecha límite' : 'Match weeks to deadline'}
-              </button>
-            </li>
-          ) : (
-            <li>
-              {isEs
-                ? 'Semanas y fecha límite están alineadas.'
-                : 'Weeks and deadline are aligned.'}
-            </li>
-          )}
-          <li>
-            {isEs
-              ? 'Al guardar se crean o recortan semanas/días vacíos para coincidir con esta estructura.'
-              : 'Saving adds or trims empty weeks/days to match this structure.'}
-          </li>
-        </ul>
       </section>
     </WlFormSheet>
   );

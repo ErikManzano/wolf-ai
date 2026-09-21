@@ -180,25 +180,30 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
         ) : null}
       </div>
 
-      <section className="wl-form-sheet-summary" aria-live="polite">
-        <p className="wl-form-sheet-summary__eyebrow">{isEs ? 'Resumen del mesociclo' : 'Mesocycle summary'}</p>
-        <p className="wl-form-sheet-summary__lead">
-          {isEs
-            ? `${trainingDays} días de entrenamiento distribuidos en ${totalWeeks} semana${totalWeeks === 1 ? '' : 's'} (${DEFAULT_DAYS_PER_WEEK} días por semana).`
-            : `${trainingDays} training days across ${totalWeeks} week${totalWeeks === 1 ? '' : 's'} (${DEFAULT_DAYS_PER_WEEK} days per week).`}
+      <section className="wl-form-sheet-summary wl-form-sheet-summary--compact" aria-live="polite">
+        <p className="wl-form-sheet-summary__eyebrow">{isEs ? 'Resumen' : 'Summary'}</p>
+        <div className="wl-form-sheet-summary__stats">
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{totalWeeks}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Semanas' : 'Weeks'}</span>
+          </div>
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{DEFAULT_DAYS_PER_WEEK}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Días/sem' : 'Days/wk'}</span>
+          </div>
+          <div className="wl-form-sheet-stat">
+            <span className="wl-form-sheet-stat__value">{trainingDays}</span>
+            <span className="wl-form-sheet-stat__label">{isEs ? 'Sesiones' : 'Sessions'}</span>
+          </div>
+        </div>
+        <p className="wl-form-sheet-summary__range">
+          {formatShortDateFriendly(startDate, isEs)} → {formatShortDateFriendly(endDate, isEs)}
         </p>
-        <ul className="wl-form-sheet-summary__list">
-          <li>
-            {isEs
-              ? `Calendario: ${formatShortDateFriendly(startDate, true)} → ${formatShortDateFriendly(endDate, true)}.`
-              : `Calendar: ${formatShortDateFriendly(startDate, false)} → ${formatShortDateFriendly(endDate, false)}.`}
-          </li>
-          <li>
-            {isEs
-              ? 'Después podrás ajustar semanas, días y sesiones en el editor.'
-              : 'You can refine weeks, days, and sessions in the editor after creation.'}
-          </li>
-        </ul>
+        <p className="wl-form-sheet-summary__foot">
+          {isEs
+            ? 'Podrás afinar semanas, días y sesiones en el editor.'
+            : 'You can refine weeks, days, and sessions in the editor.'}
+        </p>
       </section>
     </WlFormSheet>
   );
