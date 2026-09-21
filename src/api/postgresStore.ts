@@ -1,5 +1,8 @@
 import { Pool } from 'pg';
 import type { Exercise, ProgramAssignment, RepOutcome, SessionCompletion, SetCompletionLog, WolfUser, Athlete, CoachWlProgramTemplate, GeneratedProgram, AthleteLevel } from '../models/training';
+import type { AthleteLiftLog, CreateAthleteLiftLogInput } from '../models/liftLogs';
+import { PR_LIFTS } from '../components/wl-prs/PrLiftCatalog';
+import { epleyE1rm } from '../components/wl-prs/e1rm';
 import type { CoachProgram, CoachProgramStatus } from '../models/coach-architecture';
 import { mockExercises, mockAthletes, mockUsers } from '../data/loadMockData';
 import { normalizeExercise } from '../utils/exerciseCatalog';
@@ -222,6 +225,23 @@ export class PostgresStore {
     `);
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS wl_athlete_profiles_coach_id_idx ON wl_athlete_profiles (coach_id);
+    `);
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS athlete_lift_logs (
+        id TEXT PRIMARY KEY,
+        athlete_profile_id TEXT NOT NULL REFERENCES wl_athlete_profiles(id) ON DELETE CASCADE,
+        lift_id TEXT NOT NULL,
+        kg NUMERIC NOT NULL,
+        reps INTEGER NOT NULL,
+        logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        notes TEXT,
+        created_by_user_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+    await this.pool.query(`
+      CREATE INDEX IF NOT EXISTS athlete_lift_logs_athlete_idx
+        ON athlete_lift_logs (athlete_profile_id, lift_id, logged_at DESC);
     `);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS coach_wl_templates (
@@ -1607,6 +1627,92 @@ export class PostgresStore {
     const existing = await this.getAthleteProfileById(id);
     if (!existing) return { ok: false, error: 'Not found.' };
     return this.deleteAthleteProfile(existing.coachId, id);
+  }
+
+  private mapAthleteLiftLogRow(row: Record<string, unknown>): AthleteLiftLog {
+    const notes = typeof row.notes === 'string' && row.notes.trim() ? row.notes : undefined;
+    const createdBy = typeof row.created_by_user_id === 'string' ? row.created_by_user_id : undefined;
+    return {
+      id: row.id as string,
+      athleteProfileId: row.athlete_profile_id as string,
+      liftId: row.lift_id as AthleteLiftLog['liftId'],
+      kg: Number(row.kg),
+      reps: Number(row.reps),
+      loggedAt: new Date(row.logged_at as string | Date).toISOString(),
+      notes,
+      createdByUserId: createdBy,
+    };
+  }
+
+  async listAthleteLiftLogs(athleteProfileId: string): Promise<AthleteLiftLog[]> {
+    const result = await this.pool.query(
+      `
+      SELECT id, athlete_profile_id, lift_id, kg, reps, logged_at, notes, created_by_user_id
+      FROM athlete_lift_logs
+      WHERE athlete_profile_id = $1
+      ORDER BY logged_at DESC, created_at DESC;
+      `,
+      [athleteProfileId],
+    );
+    return result.rows.map((row) => this.mapAthleteLiftLogRow(row));
+  }
+
+  async createAthleteLiftLog(
+    athleteProfileId: string,
+    input: CreateAthleteLiftLogInput & { id: string; createdByUserId?: string },
+  ): Promise<AthleteLiftLog> {
+    const result = await this.pool.query(
+      `
+      INSERT INTO athlete_lift_logs (
+        id, athlete_profile_id, lift_id, kg, reps, logged_at, notes, created_by_user_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, athlete_profile_id, lift_id, kg, reps, logged_at, notes, created_by_user_id;
+      `,
+      [
+        input.id,
+        athleteProfileId,
+        input.liftId,
+        input.kg,
+        input.reps,
+        input.loggedAt ?? new Date().toISOString(),
+        input.notes?.trim() || null,
+        input.createdByUserId ?? null,
+      ],
+    );
+    await this.syncAnchorOneRmFromLogs(athleteProfileId, input.liftId);
+    return this.mapAthleteLiftLogRow(result.rows[0]);
+  }
+
+  async deleteAthleteLiftLog(athleteProfileId: string, logId: string): Promise<boolean> {
+    const existing = await this.pool.query(
+      `SELECT lift_id FROM athlete_lift_logs WHERE id = $1 AND athlete_profile_id = $2 LIMIT 1;`,
+      [logId, athleteProfileId],
+    );
+    if (existing.rows.length === 0) return false;
+    await this.pool.query(
+      `DELETE FROM athlete_lift_logs WHERE id = $1 AND athlete_profile_id = $2;`,
+      [logId, athleteProfileId],
+    );
+    await this.syncAnchorOneRmFromLogs(athleteProfileId, existing.rows[0].lift_id as AthleteLiftLog['liftId']);
+    return true;
+  }
+
+  async syncAnchorOneRmFromLogs(athleteProfileId: string, liftId: AthleteLiftLog['liftId']): Promise<Athlete | null> {
+    const oneRmKey = PR_LIFTS[liftId]?.oneRmKey;
+    if (!oneRmKey) return null;
+    const profile = await this.getAthleteProfileById(athleteProfileId);
+    if (!profile) return null;
+    const logs = await this.listAthleteLiftLogs(athleteProfileId);
+    let best = 0;
+    for (const log of logs) {
+      if (log.liftId !== liftId) continue;
+      best = Math.max(best, epleyE1rm(log.kg, log.reps));
+    }
+    const rounded = Math.round(best);
+    if (rounded <= 0 || rounded <= (profile.oneRM[oneRmKey] ?? 0)) return profile;
+    return this.updateAthleteProfileById(athleteProfileId, {
+      oneRM: { ...profile.oneRM, [oneRmKey]: rounded },
+    });
   }
 
   async listCoachTemplates(coachId: string): Promise<CoachWlProgramTemplate[]> {

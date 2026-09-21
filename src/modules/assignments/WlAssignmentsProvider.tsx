@@ -37,7 +37,7 @@ import {
   persistCompletionsLocal,
   persistSetLogsLocal,
 } from './assignmentStore';
-import { upsertAssignmentInList } from '../../utils/wlAssignmentRules';
+import { athleteCanTakeProgram, upsertAssignmentInList } from '../../utils/wlAssignmentRules';
 import { filterAssignmentsForAthlete } from './athleteAssignmentFilter';
 import { loadAthletesFromLocal } from '../wl-athletes/athleteStore';
 import type { PlanChangeNotification, ProgramEditContext } from '../../models/notifications';
@@ -409,6 +409,12 @@ export function WlAssignmentsProvider({
         ...(coachProgramId ? { coachProgramId } : {}),
       };
 
+      if (!athleteCanTakeProgram(assignments, athleteProfileId, coachProgramId)) {
+        const msg = 'Cada atleta puede tener como máximo 2 programas.';
+        pushAlert({ tone: 'error', title: 'Límite de programas', message: msg });
+        throw new Error(msg);
+      }
+
       if (!apiMode) {
         const id = `asg-${Date.now()}`;
         const next: ProgramAssignment = {
@@ -457,7 +463,7 @@ export function WlAssignmentsProvider({
       });
       return saved.id;
     },
-    [apiMode, apiToken, currentUser, users, pushAlert],
+    [apiMode, apiToken, assignments, currentUser, users, pushAlert],
   );
 
   const updateAssignmentProgram = useCallback(

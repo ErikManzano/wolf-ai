@@ -146,9 +146,22 @@
   color: var(--color-text-primary);
 }
 
-.ad-pr-card__sub {
-  font-size: 0.68rem;
-  color: var(--color-text-secondary);
+.ad-pr-card--nav {
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.ad-pr-card--nav:hover,
+.ad-pr-card--nav:focus-visible {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  outline: none;
+}
+
+.ad-pr-card--nav:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .ad-next-session {

@@ -1,7 +1,7 @@
-import { Gauge, MoreHorizontal } from 'lucide-react';
 import type { WlAthleteRosterRow } from '../../utils/wlAthleteRoster';
 import { AthleteAvatar } from './AthleteAvatar';
 import { AthletePrSummary } from './AthletePrSummary';
+import { AthleteActionsMenu } from './AthleteActionsMenu';
 import { LevelBadge } from './LevelBadge';
 import { StatusBadge } from './StatusBadge';
 
@@ -18,6 +18,10 @@ export function WlAthletesTable({
   canEdit,
   onSelect,
   onEdit,
+  onAssign,
+  onUnassign,
+  onInvite,
+  onDelete,
   onOpenProgram,
 }: {
   rows: WlAthleteRosterRow[];
@@ -25,6 +29,10 @@ export function WlAthletesTable({
   canEdit: boolean;
   onSelect: (profileId: string) => void;
   onEdit: (profileId: string) => void;
+  onAssign: (profileId: string) => void;
+  onUnassign: (profileId: string) => void;
+  onInvite: (profileId: string) => void;
+  onDelete: (profileId: string) => void;
   onOpenProgram?: (coachProgramId: string) => void;
 }) {
   return (
@@ -36,7 +44,7 @@ export function WlAthletesTable({
             <th className="wl-athletes-col-level">{isEs ? 'Nivel' : 'Level'}</th>
             <th>PRs</th>
             <th className="wl-athletes-col-account">{isEs ? 'Cuenta' : 'Account'}</th>
-            <th className="wl-athletes-col-program">{isEs ? 'Rutina' : 'Program'}</th>
+            <th className="wl-athletes-col-program">{isEs ? 'Programa' : 'Program'}</th>
             <th className="wl-athletes-col-adherence">{isEs ? 'Adherencia' : 'Adherence'}</th>
             {canEdit ? <th className="wl-athletes-col-actions">{isEs ? 'Acciones' : 'Actions'}</th> : null}
           </tr>
@@ -91,7 +99,7 @@ export function WlAthletesTable({
                     )}
                   </div>
                 ) : (
-                  <StatusBadge variant="none">{isEs ? 'Sin rutina' : 'No program'}</StatusBadge>
+                  <StatusBadge variant="none">{isEs ? 'Sin programa' : 'No program'}</StatusBadge>
                 )}
               </td>
               <td className="wl-athletes-col-adherence">
@@ -107,29 +115,17 @@ export function WlAthletesTable({
                 )}
               </td>
               {canEdit ? (
-                <td>
-                  <div className="wl-athletes-actions">
-                    <button
-                      type="button"
-                      className="btn-outline wl-athletes-btn-edit"
-                      aria-label={isEs ? 'Editar PRs' : 'Edit PRs'}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onEdit(row.profileId);
-                      }}
-                    >
-                      <Gauge size={16} strokeWidth={2.25} aria-hidden />
-                      <span className="wl-athletes-btn-edit__label">{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="wl-athletes-btn-more"
-                      aria-label={isEs ? 'Más acciones' : 'More actions'}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </div>
+                <td className="wl-athletes-col-actions">
+                  <AthleteActionsMenu
+                    isEs={isEs}
+                    hasProgram={row.assignmentStatus === 'active'}
+                    hasAccess={row.hasPlatformAccount}
+                    onEdit={() => onEdit(row.profileId)}
+                    onAssign={() => onAssign(row.profileId)}
+                    onUnassign={() => onUnassign(row.profileId)}
+                    onInvite={() => onInvite(row.profileId)}
+                    onDelete={() => onDelete(row.profileId)}
+                  />
                 </td>
               ) : null}
             </tr>

@@ -15,6 +15,7 @@ import type { CoachProgramRow } from '../../models/coach-architecture';
 import type { AthleteLevel } from '../../models/training';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import ConfirmationModal from '../ConfirmationModal';
+import { athleteCanTakeProgram } from '../../utils/wlAssignmentRules';
 import {
   athleteInitials,
   buildProgramEnrollmentRows,
@@ -114,12 +115,23 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
   );
 
   const assignableSelected = useMemo(
-    () => selectedRows.filter((r) => !r.enrollment).map((r) => r.athlete.id),
-    [selectedRows],
+    () =>
+      selectedRows
+        .filter((r) => !r.enrollment && athleteCanTakeProgram(assignments, r.athlete.id, program.id))
+        .map((r) => r.athlete.id),
+    [selectedRows, assignments, program.id],
   );
 
-  const parallelCount = selectedRows.filter((r) => r.otherPrograms.length > 0 && !r.enrollment).length;
+  const parallelCount = selectedRows.filter(
+    (r) =>
+      r.otherPrograms.length > 0 &&
+      !r.enrollment &&
+      athleteCanTakeProgram(assignments, r.athlete.id, program.id),
+  ).length;
   const alreadyOnProgramCount = selectedRows.filter((r) => r.enrollment).length;
+  const atLimitCount = selectedRows.filter(
+    (r) => !r.enrollment && !athleteCanTakeProgram(assignments, r.athlete.id, program.id),
+  ).length;
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -276,6 +288,7 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
               <span>{selected.size} {isEs ? 'sel.' : 'sel.'}</span>
               <span>{assignableSelected.length} {isEs ? 'nuevos' : 'new'}</span>
               {parallelCount > 0 ? <span>{parallelCount} {isEs ? 'paralelo' : 'parallel'}</span> : null}
+              {atLimitCount > 0 ? <span>{atLimitCount} {isEs ? 'al límite' : 'at limit'}</span> : null}
               {alreadyOnProgramCount > 0 ? <span>{alreadyOnProgramCount} {isEs ? 'ya aquí' : 'here'}</span> : null}
             </div>
           )}
@@ -327,6 +340,15 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
           {isEs
             ? `${parallelCount} recibirán este plan además de los que ya tienen.`
             : `${parallelCount} will get this plan in addition to current ones.`}
+        </p>
+      ) : null}
+
+      {isInline && atLimitCount > 0 ? (
+        <p className="wl-program-enrollments-warn">
+          <AlertCircle size={14} aria-hidden />
+          {isEs
+            ? `${atLimitCount} ya tienen 2 programas. Quita uno para asignar este.`
+            : `${atLimitCount} already have 2 programs. Remove one to assign this.`}
         </p>
       ) : null}
 

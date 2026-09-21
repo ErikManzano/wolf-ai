@@ -19,6 +19,9 @@ export interface ExerciseDefinition {
   legacyExerciseId?: string | null;
   searchText: string;
   tags: string[];
+  /** Official catalog copy — CONCENTRADO / accessory seed */
+  cuesEn?: string | null;
+  cuesEs?: string | null;
   lifecycleStatus?: ExerciseLifecycleStatus;
   parentDefinitionId?: string | null;
   version?: number;

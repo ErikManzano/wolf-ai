@@ -186,6 +186,11 @@ interface WolfAssignContextValue {
   ) => Promise<import('../models/training').Athlete | null>;
   updateWlAthlete: (id: string, patch: Partial<import('../models/training').Athlete>) => Promise<import('../models/training').Athlete | null>;
   deleteWlAthlete: (id: string) => Promise<boolean>;
+  inviteWlAthlete: (
+    id: string,
+    input: { email: string; password: string },
+  ) => Promise<{ email: string; temporaryPassword: string } | null>;
+  reloadUsersFromApi: () => Promise<void>;
   coachPrograms: import('../models/coach-architecture').CoachProgramRow[];
   programsLoading: boolean;
   programsView: import('../modules/wl-programs').WlProgramsView;
@@ -1435,6 +1440,9 @@ export const WolfAssignProvider = ({ children }: { children: ReactNode }) => {
     resetUserPassword,
     deleteUser,
     clearApiSession,
+    reloadUsersFromApi: async () => {
+      await loadUsersFromApi();
+    },
     motorExercises,
     sessionExercisePicker,
     sessionExercisePickerSingles,
@@ -1534,6 +1542,7 @@ function WlTemplatesBridge({
     | 'createWlAthlete'
     | 'updateWlAthlete'
     | 'deleteWlAthlete'
+    | 'inviteWlAthlete'
     | 'coachPrograms'
     | 'programsLoading'
     | 'programsView'
@@ -1650,6 +1659,7 @@ function WolfAssignMergedProvider({
     | 'createWlAthlete'
     | 'updateWlAthlete'
     | 'deleteWlAthlete'
+    | 'inviteWlAthlete'
     | 'coachPrograms'
     | 'programsLoading'
     | 'programsView'
@@ -1714,6 +1724,7 @@ function WolfAssignMergedProvider({
     createWlAthlete: athletesCtx.createAthlete,
     updateWlAthlete: athletesCtx.updateAthlete,
     deleteWlAthlete: athletesCtx.deleteAthlete,
+    inviteWlAthlete: athletesCtx.inviteAthlete,
     coachPrograms: programsCtx.coachPrograms,
     programsLoading: programsCtx.programsLoading,
     programsView: programsCtx.programsView,

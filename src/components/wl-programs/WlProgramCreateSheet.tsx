@@ -7,6 +7,7 @@ import {
   buildStarterProgramDraft,
   computeProgramEndDate,
   computeWeeksFromDateRange,
+  formatShortDateFriendly,
   todayIsoDate,
   totalTrainingDays,
 } from '../../utils/programSchedule';
@@ -113,8 +114,8 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
       onClose={onClose}
       footer={footer}
     >
-      <div className="wl-form-sheet-grid">
-        <label className="wl-form-sheet-field wl-form-sheet-field--full">
+      <div className="wl-form-sheet-grid wl-form-sheet-grid--single">
+        <label className="wl-form-sheet-field">
           <span className="wl-form-sheet-label">{isEs ? 'Nombre del programa' : 'Program name'}</span>
           <input
             className="wl-form-sheet-input"
@@ -124,7 +125,9 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
             autoFocus
           />
         </label>
+      </div>
 
+      <div className="wl-form-sheet-grid wl-form-sheet-grid--calendar">
         <label className="wl-form-sheet-field">
           <span className="wl-form-sheet-label">{isEs ? 'Fecha de inicio' : 'Start date'}</span>
           <input
@@ -132,6 +135,19 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
             className="wl-form-sheet-input"
             value={startDate}
             onChange={(e) => handleStartDateChange(e.target.value)}
+          />
+        </label>
+
+        <label className="wl-form-sheet-field">
+          <span className="wl-form-sheet-label">{isEs ? 'Semanas' : 'Weeks'}</span>
+          <WlFormNumberStepper
+            value={totalWeeks}
+            min={1}
+            max={52}
+            onChange={handleWeeksChange}
+            aria-label={isEs ? 'Semanas' : 'Weeks'}
+            decrementAria={isEs ? 'Menos semanas' : 'Fewer weeks'}
+            incrementAria={isEs ? 'Más semanas' : 'More weeks'}
           />
         </label>
 
@@ -154,26 +170,13 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
           ) : (
             <span className="wl-form-sheet-hint">
               {isEs
-                ? 'Al cambiarla se ajustan las semanas del mesociclo.'
-                : 'Changing it updates mesocycle weeks.'}
+                ? 'Al cambiarla se ajustan las semanas.'
+                : 'Changing it updates weeks.'}
             </span>
           )}
         </label>
 
-        <label className="wl-form-sheet-field">
-          <span className="wl-form-sheet-label">{isEs ? 'Semanas' : 'Weeks'}</span>
-          <WlFormNumberStepper
-            value={totalWeeks}
-            min={1}
-            max={52}
-            onChange={handleWeeksChange}
-            aria-label={isEs ? 'Semanas' : 'Weeks'}
-            decrementAria={isEs ? 'Menos semanas' : 'Fewer weeks'}
-            incrementAria={isEs ? 'Más semanas' : 'More weeks'}
-          />
-        </label>
-
-        <label className="wl-form-sheet-field">
+        <label className="wl-form-sheet-field wl-form-sheet-field--full">
           <span className="wl-form-sheet-label">{isEs ? 'Días por semana' : 'Days per week'}</span>
           <WlFormNumberStepper
             value={daysPerWeek}
@@ -197,8 +200,8 @@ const WlProgramCreateSheet: React.FC<WlProgramCreateSheetProps> = ({
         <ul className="wl-form-sheet-summary__list">
           <li>
             {isEs
-              ? `Calendario: ${startDate} → ${endDate}.`
-              : `Calendar: ${startDate} → ${endDate}.`}
+              ? `Calendario: ${formatShortDateFriendly(startDate, true)} → ${formatShortDateFriendly(endDate, true)}.`
+              : `Calendar: ${formatShortDateFriendly(startDate, false)} → ${formatShortDateFriendly(endDate, false)}.`}
           </li>
           <li>
             {isEs

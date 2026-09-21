@@ -7,6 +7,8 @@ export interface OverridePatch {
   notes?: string;
   hidden?: boolean;
   methodology?: string;
+  cues?: string[];
+  videoUrl?: string | null;
 }
 
 export interface CoachExerciseOverride {

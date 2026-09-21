@@ -572,7 +572,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
                 <div className="wolf-login-onb-welcome-bg" aria-hidden />
                 <div className="wolf-login-onb-welcome-inner">
                   <div className="wolf-login-logo wolf-login-logo--onb">
-                    <LogoIcon size={22} aria-hidden />
+                    <LogoIcon size={22} variant="monochrome" aria-hidden />
                     <span>{t.brandShort}</span>
                   </div>
                   <h2 className="wolf-login-onb-headline">
@@ -621,7 +621,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
           <div className="wolf-login-get-started">
             <div className="wolf-login-get-started-brand">
               <div className="wolf-login-logo wolf-login-logo--get-started" aria-hidden>
-                <LogoIcon size={24} />
+                <LogoIcon size={24} variant="monochrome" />
                 <span>Homilos</span>
               </div>
             </div>
@@ -728,7 +728,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ language, onLogin, onRegister
         <aside className="wolf-login-brand">
           <div className="wolf-login-brand-top">
             <div className="wolf-login-logo">
-              <LogoIcon size={22} aria-hidden />
+              <LogoIcon size={22} variant="monochrome" aria-hidden />
               <span>Homilos Builder</span>
             </div>
             <h2 className="wolf-login-headline">

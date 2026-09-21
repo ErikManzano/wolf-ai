@@ -126,3 +126,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS workout_set_logs_slot_idx
   ON workout_set_logs (
     assignment_id, week_number, day_number, exercise_index, scheme_index, set_instance
   );
+
+-- ─── Athlete lift logs (PR tracker) ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS athlete_lift_logs (
+  id                   TEXT PRIMARY KEY,
+  athlete_profile_id   TEXT NOT NULL REFERENCES wl_athlete_profiles(id) ON DELETE CASCADE,
+  lift_id              TEXT NOT NULL,
+  kg                   NUMERIC NOT NULL,
+  reps                 INTEGER NOT NULL,
+  logged_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+  notes                TEXT,
+  created_by_user_id   TEXT,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS athlete_lift_logs_athlete_idx
+  ON athlete_lift_logs (athlete_profile_id, lift_id, logged_at DESC);

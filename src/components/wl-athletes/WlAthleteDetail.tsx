@@ -1,5 +1,7 @@
-import { ArrowLeft, ChevronRight, Gauge, MoreHorizontal, X } from 'lucide-react';
+import { ArrowLeft, ChevronRight, X } from 'lucide-react';
 import type { WlAthleteRosterRow } from '../../utils/wlAthleteRoster';
+import type { PrLiftId } from '../../models/liftLogs';
+import { AthleteActionsMenu } from './AthleteActionsMenu';
 import { LevelBadge } from './LevelBadge';
 import { StatusBadge } from './StatusBadge';
 
@@ -20,7 +22,12 @@ export function WlAthleteDetail({
   showNav = true,
   onBack,
   onEdit,
+  onAssign,
+  onUnassign,
+  onInvite,
+  onDelete,
   onOpenProgram,
+  onOpenPrs,
 }: {
   row: WlAthleteRosterRow;
   isEs: boolean;
@@ -29,13 +36,31 @@ export function WlAthleteDetail({
   showNav?: boolean;
   onBack?: () => void;
   onEdit: () => void;
+  onAssign: () => void;
+  onUnassign: () => void;
+  onInvite: () => void;
+  onDelete: () => void;
   onOpenProgram?: (coachProgramId: string) => void;
+  onOpenPrs?: (liftId?: PrLiftId | null) => void;
 }) {
-  const prCards = [
+  const prCards: { key: PrLiftId; label: string; value: number }[] = [
     { key: 'snatch', label: isEs ? 'Snatch' : 'Snatch', value: row.snatch },
-    { key: 'cj', label: isEs ? 'Clean & Jerk' : 'Clean & Jerk', value: row.cleanJerk },
-    { key: 'sq', label: isEs ? 'Squat' : 'Squat', value: row.backSquat },
+    { key: 'clean_jerk', label: isEs ? 'Clean & Jerk' : 'Clean & Jerk', value: row.cleanJerk },
+    { key: 'back_squat', label: isEs ? 'Squat' : 'Squat', value: row.backSquat },
   ];
+
+  const actions = canEdit ? (
+    <AthleteActionsMenu
+      isEs={isEs}
+      hasProgram={row.assignmentStatus === 'active'}
+      hasAccess={row.hasPlatformAccount}
+      onEdit={onEdit}
+      onAssign={onAssign}
+      onUnassign={onUnassign}
+      onInvite={onInvite}
+      onDelete={onDelete}
+    />
+  ) : null;
 
   return (
     <div className={`wl-athlete-detail wl-athlete-detail--${layout}`}>
@@ -45,9 +70,19 @@ export function WlAthleteDetail({
             <button type="button" className="wl-athlete-detail__icon-btn" onClick={onBack} aria-label={isEs ? 'Volver' : 'Back'}>
               <ArrowLeft size={20} />
             </button>
-            <button type="button" className="wl-athlete-detail__icon-btn" aria-label={isEs ? 'Más opciones' : 'More options'}>
-              <MoreHorizontal size={20} />
-            </button>
+            {canEdit ? (
+              <AthleteActionsMenu
+                isEs={isEs}
+                variant="card"
+                hasProgram={row.assignmentStatus === 'active'}
+                hasAccess={row.hasPlatformAccount}
+                onEdit={onEdit}
+                onAssign={onAssign}
+                onUnassign={onUnassign}
+                onInvite={onInvite}
+                onDelete={onDelete}
+              />
+            ) : null}
           </div>
         ) : showNav && layout === 'desktop' ? (
           <div className="wl-athlete-detail__head-top wl-athlete-detail__head-top--desktop">
@@ -58,21 +93,15 @@ export function WlAthleteDetail({
             ) : (
               <span aria-hidden />
             )}
-            {canEdit ? (
-              <button type="button" className="btn-outline wl-athlete-detail__edit-btn" onClick={onEdit}>
-                <Gauge size={16} strokeWidth={2.25} aria-hidden />
-                <span>{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
-              </button>
-            ) : null}
+            {actions}
           </div>
         ) : canEdit && layout === 'desktop' ? (
           <div className="wl-athlete-detail__head-top wl-athlete-detail__head-top--desktop wl-athlete-detail__head-top--actions-only">
-            {canEdit ? (
-              <button type="button" className="btn-outline wl-athlete-detail__edit-btn" onClick={onEdit}>
-                <Gauge size={16} strokeWidth={2.25} aria-hidden />
-                <span>{isEs ? 'Editar PRs' : 'Edit PRs'}</span>
-              </button>
-            ) : null}
+            {actions}
+          </div>
+        ) : canEdit && layout === 'mobile' ? (
+          <div className="wl-athlete-detail__head-top wl-athlete-detail__head-top--actions-only">
+            {actions}
           </div>
         ) : null}
         <div className="wl-athlete-detail__title-wrap">
@@ -84,20 +113,44 @@ export function WlAthleteDetail({
       <section className="wl-athlete-detail__section">
         <div className="wl-athlete-detail__section-head">
           <h3 className="wl-athlete-detail__section-title">{isEs ? 'PRs' : 'PRs'}</h3>
-          <button type="button" className="wl-athlete-detail__refresh">
-            {isEs ? 'Actualizar' : 'Refresh'}
-          </button>
+          <div className="wl-athlete-detail__section-actions">
+            {onOpenPrs ? (
+              <button type="button" className="wl-athlete-detail__refresh" onClick={() => onOpenPrs(null)}>
+                {isEs ? 'Ver todos' : 'See all'}
+              </button>
+            ) : null}
+            {canEdit ? (
+              <button type="button" className="wl-athlete-detail__refresh" onClick={onEdit}>
+                {isEs ? 'Perfil' : 'Profile'}
+              </button>
+            ) : null}
+          </div>
         </div>
         <div className="wl-athletes-pr-cards">
-          {prCards.map((pr) => (
-            <div key={pr.key} className="wl-athletes-pr-card">
-              <span className="wl-athletes-pr-card__label">{pr.label}</span>
-              <strong className="wl-athletes-pr-card__value">
-                {pr.value}
-                <span className="wl-athletes-pr-card__unit">kg</span>
-              </strong>
-            </div>
-          ))}
+          {prCards.map((pr) =>
+            onOpenPrs ? (
+              <button
+                key={pr.key}
+                type="button"
+                className="wl-athletes-pr-card wl-athletes-pr-card--nav"
+                onClick={() => onOpenPrs(pr.key)}
+              >
+                <span className="wl-athletes-pr-card__label">{pr.label}</span>
+                <strong className="wl-athletes-pr-card__value">
+                  {pr.value}
+                  <span className="wl-athletes-pr-card__unit">kg</span>
+                </strong>
+              </button>
+            ) : (
+              <div key={pr.key} className="wl-athletes-pr-card">
+                <span className="wl-athletes-pr-card__label">{pr.label}</span>
+                <strong className="wl-athletes-pr-card__value">
+                  {pr.value}
+                  <span className="wl-athletes-pr-card__unit">kg</span>
+                </strong>
+              </div>
+            ),
+          )}
         </div>
       </section>
 
@@ -105,10 +158,10 @@ export function WlAthleteDetail({
         <h3 className="wl-athlete-detail__section-title">
           {row.activePrograms.length > 1
             ? isEs
-              ? 'Planes activos'
+              ? 'Programas activos'
               : 'Active programs'
             : isEs
-              ? 'Rutina actual'
+              ? 'Programa actual'
               : 'Current program'}
         </h3>
         {row.assignmentStatus === 'active' ? (
@@ -144,7 +197,7 @@ export function WlAthleteDetail({
             })}
           </div>
         ) : (
-          <StatusBadge variant="none">{isEs ? 'Sin rutina WL' : 'No WL program'}</StatusBadge>
+          <StatusBadge variant="none">{isEs ? 'Sin programa WL' : 'No WL program'}</StatusBadge>
         )}
       </section>
 

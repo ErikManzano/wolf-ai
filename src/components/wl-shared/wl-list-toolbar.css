@@ -56,6 +56,10 @@
   white-space: nowrap;
   font-weight: 700;
   font-size: 0.88rem;
+  background: var(--color-accent-gradient);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px var(--color-accent-glow, rgba(224, 96, 72, 0.22));
 }
 
 .wl-list-toolbar__cta-label {
@@ -193,18 +197,18 @@
 
 .wl-list-toolbar__icon-btn--accent {
   border-color: transparent;
-  background: var(--wl-list-accent);
+  background: var(--color-accent-gradient);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(255, 107, 26, 0.38);
+  box-shadow: 0 4px 14px var(--color-accent-glow, rgba(224, 96, 72, 0.22));
 }
 
 .wl-list-toolbar__icon-btn--accent:hover {
-  background: #ff8a3d;
+  filter: brightness(1.06);
   color: #fff;
 }
 
 .wl-list-toolbar__icon-btn--accent:active {
-  background: #e85f12;
+  filter: brightness(0.95);
   color: #fff;
 }
 

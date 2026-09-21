@@ -61,11 +61,11 @@ const WlAthleteEditPrSheet: React.FC<WlAthleteEditPrSheetProps> = ({ isEs, athle
     <WlFormSheet
       isEs={isEs}
       kicker={isEs ? 'Marcas y perfil' : 'Marks & profile'}
-      title={isEs ? 'Editar PRs' : 'Edit PRs'}
+      title={isEs ? 'Editar atleta' : 'Edit athlete'}
       subtitle={
         isEs
-          ? `Actualiza datos de referencia de ${athlete.name}.`
-          : `Update reference data for ${athlete.name}.`
+          ? `Nombre, nivel, peso y PRs de ${athlete.name}.`
+          : `Name, level, bodyweight, and PRs for ${athlete.name}.`
       }
       titleId="wl-athlete-edit-pr-title"
       onClose={onClose}

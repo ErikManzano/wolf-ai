@@ -2,22 +2,43 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
+  /* Brand coral chrome — semaphore stays success/warning/danger */
+  --brand-coral-deep: #9a3828;
+  --brand-coral: #c84838;
+  --brand-coral-mid: #e06048;
+  --brand-coral-warm: #f07858;
+  --brand-coral-light: #ff9668;
+  --brand-coral-veil: rgba(255, 220, 190, 0.28);
+  --brand-chrome-fg: #ffffff;
+  --brand-chrome-fg-muted: rgba(255, 255, 255, 0.82);
+  --brand-chrome-fg-soft: rgba(255, 255, 255, 0.62);
+  --brand-chrome-gradient:
+    linear-gradient(322deg, var(--brand-coral-veil) 0%, rgba(255, 170, 130, 0.1) 34%, transparent 58%),
+    linear-gradient(
+      178deg,
+      var(--brand-coral-deep) 0%,
+      var(--brand-coral) 24%,
+      var(--brand-coral-mid) 48%,
+      var(--brand-coral-warm) 72%,
+      var(--brand-coral-light) 100%
+    );
+
   /* Wolf V2 semantic palette */
-  --v2-canvas: #f5f5f4;
+  --v2-canvas: color-mix(in srgb, #f5f5f4 94%, var(--brand-coral-mid) 6%);
   --v2-surface: #ffffff;
   --v2-surface-subtle: #fafaf9;
   --v2-surface-raised: #ffffff;
   --v2-surface-hover: #f4f4f3;
-  --v2-surface-active: #fff7ed;
+  --v2-surface-active: color-mix(in srgb, var(--brand-coral-light) 16%, #ffffff);
   --v2-border: #e7e5e4;
   --v2-border-strong: #d6d3d1;
   --v2-text: #292524;
   --v2-text-secondary: #57534e;
   --v2-text-muted: #a8a29e;
-  --v2-accent: #FF7A00;
-  --v2-accent-hover: #e66e00;
-  --v2-accent-soft: #fff1e7;
-  --v2-accent-ring: rgba(255, 122, 0, 0.22);
+  --v2-accent: var(--brand-coral-mid);
+  --v2-accent-hover: var(--brand-coral);
+  --v2-accent-soft: color-mix(in srgb, var(--brand-coral-light) 22%, #ffffff);
+  --v2-accent-ring: color-mix(in srgb, var(--brand-coral-mid) 22%, transparent);
   --v2-success: #15803d;
   --v2-success-soft: #ecfdf3;
   --v2-warning: #b45309;
@@ -43,7 +64,12 @@
   --color-accent: var(--v2-accent);
   --color-accent-hover: var(--v2-accent-hover);
   --color-accent-glow: var(--v2-accent-ring);
-  --color-accent-gradient: linear-gradient(135deg, #ff9a3d 0%, #FF7A00 55%, #e66e00 100%);
+  --color-accent-gradient: linear-gradient(
+    135deg,
+    var(--brand-coral-light) 0%,
+    var(--brand-coral-mid) 55%,
+    var(--brand-coral) 100%
+  );
   --color-success: var(--v2-success);
   --color-warning: var(--v2-warning);
   --color-danger: var(--v2-danger);
@@ -59,31 +85,52 @@
   --wl-text-muted: var(--v2-text-muted);
   --wl-text-accent: var(--v2-accent);
 
-  /* Homilos mark — light surfaces: dark H + orange wings */
+  /* Homilos mark — light surfaces: dark H + coral wings */
   --brand-mark-h: #111111;
-  --brand-mark-wings: #FF7A00;
+  --brand-mark-wings: var(--brand-coral-mid);
   --brand-wordmark: #111111;
-  --brand-builder: #FF7A00;
+  --brand-builder: var(--brand-coral-mid);
+  --theme-color: #f4ecea;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --v2-canvas: #0a0c10;
+  --brand-coral-deep: #5c2218;
+  --brand-coral: #8a3428;
+  --brand-coral-mid: #c84838;
+  --brand-coral-warm: #e06048;
+  --brand-coral-light: #f07858;
+  --brand-coral-veil: rgba(255, 180, 150, 0.12);
+  --brand-chrome-fg: #ffffff;
+  --brand-chrome-fg-muted: rgba(255, 255, 255, 0.82);
+  --brand-chrome-fg-soft: rgba(255, 255, 255, 0.62);
+  --brand-chrome-gradient:
+    linear-gradient(322deg, var(--brand-coral-veil) 0%, rgba(255, 170, 130, 0.08) 34%, transparent 58%),
+    linear-gradient(
+      178deg,
+      var(--brand-coral-deep) 0%,
+      var(--brand-coral) 24%,
+      var(--brand-coral-mid) 48%,
+      var(--brand-coral-warm) 72%,
+      var(--brand-coral-light) 100%
+    );
+
+  --v2-canvas: color-mix(in srgb, #0a0c10 94%, var(--brand-coral-mid) 6%);
   --v2-surface: #14171d;
   --v2-surface-subtle: #12151c;
   --v2-surface-raised: #1a1f28;
   --v2-surface-hover: #1e222a;
-  --v2-surface-active: rgba(249, 115, 22, 0.12);
+  --v2-surface-active: color-mix(in srgb, var(--brand-coral-mid) 14%, transparent);
   --v2-border: #2a3140;
   --v2-border-strong: #3f4757;
   --v2-text: #f8fafc;
   --v2-text-secondary: #94a3b8;
   --v2-text-muted: #64748b;
-  --v2-accent: #FF7A00;
-  --v2-accent-hover: #ff9a3d;
-  --v2-accent-soft: rgba(255, 122, 0, 0.12);
-  --v2-accent-ring: rgba(255, 122, 0, 0.22);
+  --v2-accent: var(--brand-coral-warm);
+  --v2-accent-hover: var(--brand-coral-light);
+  --v2-accent-soft: color-mix(in srgb, var(--brand-coral-mid) 16%, transparent);
+  --v2-accent-ring: color-mix(in srgb, var(--brand-coral-warm) 28%, transparent);
   --v2-success: #22c55e;
   --v2-success-soft: rgba(34, 197, 94, 0.12);
   --v2-warning: #facc15;
@@ -108,7 +155,12 @@
   --color-accent: var(--v2-accent);
   --color-accent-hover: var(--v2-accent-hover);
   --color-accent-glow: var(--v2-accent-ring);
-  --color-accent-gradient: linear-gradient(135deg, #FF7A00 0%, #e66e00 100%);
+  --color-accent-gradient: linear-gradient(
+    135deg,
+    var(--brand-coral-warm) 0%,
+    var(--brand-coral-mid) 55%,
+    var(--brand-coral) 100%
+  );
   --color-success: var(--v2-success);
   --color-warning: var(--v2-warning);
   --color-danger: var(--v2-danger);
@@ -124,11 +176,12 @@
   --wl-text-muted: var(--v2-text-muted);
   --wl-text-accent: var(--v2-accent);
 
-  /* Homilos mark — dark surfaces: white H + orange wings */
-  --brand-mark-h: #FFFFFF;
-  --brand-mark-wings: #FF7A00;
-  --brand-wordmark: #FFFFFF;
-  --brand-builder: #FF7A00;
+  /* Homilos mark — dark surfaces: white H + coral wings */
+  --brand-mark-h: #ffffff;
+  --brand-mark-wings: var(--brand-coral-warm);
+  --brand-wordmark: #ffffff;
+  --brand-builder: var(--brand-coral-warm);
+  --theme-color: #0a0c10;
 }
 
 html,

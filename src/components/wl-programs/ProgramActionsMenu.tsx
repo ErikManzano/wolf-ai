@@ -1,4 +1,4 @@
-import { Copy, MoreVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Copy, CalendarRange, MoreVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 type ProgramActionsVariant = 'inline' | 'card';
@@ -11,6 +11,7 @@ export function ProgramActionsMenu({
   isEs,
   variant = 'inline',
   onEdit,
+  onSchedule,
   onAssign,
   onDuplicate,
   onDelete,
@@ -18,6 +19,7 @@ export function ProgramActionsMenu({
   isEs: boolean;
   variant?: ProgramActionsVariant;
   onEdit: () => void;
+  onSchedule: () => void;
   onAssign: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -51,6 +53,17 @@ export function ProgramActionsMenu({
         >
           <Pencil size={16} strokeWidth={2.1} aria-hidden />
           <span>{isEs ? 'Editar' : 'Edit'}</span>
+        </button>
+        <button
+          type="button"
+          className="wl-programs-action-chip"
+          onClick={(event) => {
+            stopRowClick(event);
+            onSchedule();
+          }}
+        >
+          <CalendarRange size={16} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Fechas' : 'Dates'}</span>
         </button>
         <button
           type="button"
@@ -107,6 +120,9 @@ export function ProgramActionsMenu({
         <div className="wl-programs-actions-menu__list">
           <button type="button" onClick={onEdit}>
             {isEs ? 'Editar' : 'Edit'}
+          </button>
+          <button type="button" onClick={onSchedule}>
+            {isEs ? 'Fechas / calendario' : 'Dates / schedule'}
           </button>
           <button type="button" onClick={onAssign}>
             {isEs ? 'Asignar atleta' : 'Assign athlete'}

@@ -345,14 +345,20 @@ export function WlProgramsProvider({
       const source = rawPrograms.find((p) => p.id === programId);
       if (!source) return [];
 
-      const { toAssign, skippedAlreadyOnProgram } = filterAthletesForProgramAssign(
+      const { toAssign, skippedAlreadyOnProgram, skippedAtLimit } = filterAthletesForProgramAssign(
         programId,
         athleteProfileIds,
         assignments,
       );
 
       if (toAssign.length === 0) {
-        if (skippedAlreadyOnProgram.length > 0) {
+        if (skippedAtLimit.length > 0) {
+          pushAlert({
+            tone: 'info',
+            title: 'Límite de programas',
+            message: 'Cada atleta puede tener como máximo 2 programas. Quita uno para asignar otro.',
+          });
+        } else if (skippedAlreadyOnProgram.length > 0) {
           pushAlert({
             tone: 'info',
             title: 'Sin cambios',
@@ -361,6 +367,14 @@ export function WlProgramsProvider({
         }
         return [];
       }
+
+      const successMessage = (count: number, parallel: number) => {
+        const extra =
+          parallel > 0 ? ` ${parallel} ya tenían otro programa (máximo 2 por atleta).` : '';
+        const skipped =
+          skippedAtLimit.length > 0 ? ` ${skippedAtLimit.length} ya tienen 2 programas.` : '';
+        return `${count} atleta(s) con este plan activo.${extra}${skipped}`;
+      };
 
       if (!apiMode && assignProgramToAthlete) {
         const ids: string[] = [];
@@ -381,10 +395,7 @@ export function WlProgramsProvider({
         pushAlert({
           tone: 'success',
           title: 'Programa asignado',
-          message:
-            replaced > 0
-              ? `${ids.length} atleta(s) con este plan. ${replaced} ya tenían otros planes activos en paralelo.`
-              : `${ids.length} atleta(s) con este plan activo.`,
+          message: successMessage(ids.length, replaced),
         });
         await reloadAssignmentsFromApi?.();
         return ids;
@@ -420,10 +431,7 @@ export function WlProgramsProvider({
       pushAlert({
         tone: 'success',
         title: 'Programa asignado',
-        message:
-          parallel > 0
-            ? `${saved.length} atleta(s) con este plan. ${parallel} ya tenían otros planes activos en paralelo.`
-            : `${saved.length} atleta(s) con este plan activo.`,
+        message: successMessage(saved.length, parallel),
       });
       await loadProgramsFromApi();
       await reloadAssignmentsFromApi?.();

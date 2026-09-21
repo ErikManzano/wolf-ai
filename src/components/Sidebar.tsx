@@ -1,20 +1,23 @@
 import React from 'react';
-import { Bot, LogOut, Moon, PanelLeftClose, PanelLeftOpen, ShieldCheck, Sun } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
 import './Sidebar.css';
 import '../styles/interactive.css';
 import { useAppContext } from '../context/AppContext';
 import { useWolfAssign } from '../context/WolfAssignContext';
-import { useTheme } from '../context/ThemeContext';
 import {
   APP_NAV_ITEMS,
   getMobileSecondaryNavItems,
   getVisibleNavItems,
   isNavItemVisible,
 } from '../navigation/appNavigation';
-import { LogoIcon } from './branding';
+import { LogoIcon, type LogoIconProps } from './branding';
 
-const BrandIcon = ({ size = 28, className = '' }) => (
-  <LogoIcon size={size} className={className} />
+const BrandIcon = ({
+  size = 28,
+  className = '',
+  variant = 'monochrome',
+}: Pick<LogoIconProps, 'size' | 'className' | 'variant'>) => (
+  <LogoIcon size={size} className={className} variant={variant} />
 );
 
 interface SidebarProps {
@@ -27,9 +30,6 @@ interface SidebarProps {
   showRailToggle?: boolean;
   /** Mobile drawer: only secondary items + account controls. */
   mobileDrawer?: boolean;
-  showAssistantEntry?: boolean;
-  assistantOpen?: boolean;
-  onToggleAssistant?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -41,14 +41,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapsed,
   showRailToggle = true,
   mobileDrawer = false,
-  showAssistantEntry = false,
-  assistantOpen = false,
-  onToggleAssistant,
 }) => {
   const isEs = language === 'ES';
   const { userRole } = useAppContext();
   const { persona, currentUser } = useWolfAssign();
-  const { theme, toggleTheme } = useTheme();
 
   const visibleMenuItems = getVisibleNavItems(persona, currentUser?.role);
   const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
@@ -65,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <div className={`sidebar${collapsed ? ' compact' : ''}${mobileDrawer ? ' sidebar--mobile-drawer' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
-          <BrandIcon size={collapsed ? 26 : 32} className="logo-icon" />
+          <BrandIcon size={collapsed ? 26 : 32} className="logo-icon" variant="monochrome" />
           {mobileDrawer ? (
             <h2 className="logo-wordmark logo-wordmark--plain">{isEs ? 'Más opciones' : 'More options'}</h2>
           ) : (
@@ -112,38 +108,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="sidebar-footer">
-        <button
-          type="button"
-          className="sidebar-theme-btn"
-          onClick={toggleTheme}
-          aria-label={
-            theme === 'light'
-              ? isEs ? 'Activar tema oscuro' : 'Use dark theme'
-              : isEs ? 'Activar tema claro' : 'Use light theme'
-          }
-          title={theme === 'light' ? (isEs ? 'Tema oscuro' : 'Dark theme') : (isEs ? 'Tema claro' : 'Light theme')}
-        >
-          {theme === 'light' ? <Moon size={collapsed ? 14 : 16} /> : <Sun size={collapsed ? 14 : 16} />}
-          <span>{theme === 'light' ? (isEs ? 'Oscuro' : 'Dark') : (isEs ? 'Claro' : 'Light')}</span>
-        </button>
-        {showAssistantEntry && onToggleAssistant ? (
-          <button
-            type="button"
-            className={`sidebar-assistant-btn${assistantOpen ? ' active' : ''}`}
-            onClick={onToggleAssistant}
-            aria-expanded={assistantOpen}
-            aria-label={isEs ? 'Asistente de tips' : 'Tips assistant'}
-            title={isEs ? 'Asistente de tips' : 'Tips assistant'}
-          >
-            <Bot size={collapsed ? 14 : 16} aria-hidden />
-            <span>{collapsed ? (isEs ? 'Tips' : 'Tips') : isEs ? 'Asistente' : 'Assistant'}</span>
-          </button>
-        ) : null}
         <div
-          className="user-profile"
-          style={{ transition: 'all 0.2s', border: userRole === 'admin' ? '1px solid var(--color-accent)' : '1px solid transparent' }}
+          className={`user-profile${userRole === 'admin' ? ' user-profile--admin' : ''}`}
         >
-          <div className="avatar" style={{ background: userRole === 'admin' ? 'var(--color-accent-gradient)' : 'var(--color-bg-secondary)' }}>
+          <div className={`avatar${userRole === 'admin' ? ' avatar--admin' : ''}`}>
             {userRole === 'admin' ? <ShieldCheck size={14} /> : currentUser?.name?.[0]?.toUpperCase() ?? (persona === 'athlete' ? 'E' : 'I')}
           </div>
           <div className="user-info">

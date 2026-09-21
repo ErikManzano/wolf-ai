@@ -17,6 +17,10 @@ export interface WlAthletesContextValue {
   createAthlete: (input: CreateWlAthleteInput) => Promise<Athlete | null>;
   updateAthlete: (id: string, patch: Partial<Athlete>) => Promise<Athlete | null>;
   deleteAthlete: (id: string) => Promise<boolean>;
+  inviteAthlete: (
+    id: string,
+    input: { email: string; password: string },
+  ) => Promise<{ email: string; temporaryPassword: string } | null>;
   reloadAthletesFromApi: () => Promise<void>;
   rosterForCoach: (coach: WolfUser | undefined) => Athlete[];
 }

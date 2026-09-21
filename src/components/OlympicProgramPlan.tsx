@@ -1768,7 +1768,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         selectedDay={selectedDay}
                         weekData={selectedWeekData}
                         program={program}
-                        onSelectDay={handleWeekStatsDaySelect}
                         dayDateIso={selectedDayDateIso}
                       />
                     ) : null}

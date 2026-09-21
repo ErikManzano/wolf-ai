@@ -535,8 +535,4 @@ export function programDayDate(
   return d.toISOString().slice(0, 10);
 }
 
-export function formatShortDate(iso: string, isEs: boolean): string {
-  const d = new Date(`${iso}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(isEs ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' });
-}
+export { formatShortDateFriendly as formatShortDate } from '../../utils/programSchedule';

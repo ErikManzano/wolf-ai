@@ -45,8 +45,10 @@
     z-index: 60;
     height: calc(56px + var(--safe-top));
     padding: var(--safe-top) max(12px, var(--safe-right)) 0 max(12px, var(--safe-left));
-    background: var(--color-bg-main);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--brand-coral-light) 14%, transparent) 0%, transparent 100%),
+      var(--color-bg-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--brand-coral) 22%, var(--color-border));
   }
 
   .mobile-header--stacked {
@@ -333,18 +335,18 @@
     min-width: 40px;
     min-height: 40px;
     border-radius: 999px;
-    background: #ff6b1a;
+    background: var(--color-accent-gradient);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(255, 107, 26, 0.38);
+    box-shadow: 0 4px 14px var(--color-accent-glow);
   }
 
   .mobile-header-btn--fab:hover {
-    background: #ff8a3d;
+    filter: brightness(1.06);
     color: #fff;
   }
 
   .mobile-header-btn--fab:active {
-    background: #e85f12;
+    filter: brightness(0.95);
     color: #fff;
   }
 

@@ -8,7 +8,7 @@
  *   PGSSL_DISABLE=1  — disable SSL (local Postgres only)
  */
 import { Pool } from 'pg';
-import { mockExercises } from '../src/data/loadMockData';
+import { OFFICIAL_CATALOG_SIZE } from '../src/api/exerciseCatalogSeed';
 import {
   getExerciseCatalogStats,
   initExerciseCatalogTables,
@@ -36,7 +36,7 @@ async function main() {
     console.log('Seeding taxonomy + relationship rules…');
     await seedExerciseTaxonomy(pool);
 
-    console.log(`Upserting ${mockExercises.length} official definitions (exercises.json + Bulgarian catalog)…`);
+    console.log(`Upserting ${OFFICIAL_CATALOG_SIZE} official definitions (WL + CONCENTRADO accessory)…`);
     const upserted = await seedExerciseDefinitionsFromLegacy(pool);
 
     console.log('Seeding technical collections…');

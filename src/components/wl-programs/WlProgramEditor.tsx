@@ -18,7 +18,9 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
+import WlProgramScheduleSheet from './WlProgramScheduleSheet';
 import { WlProgramPublishButton } from './WlProgramPublishButton';
+import { formatProgramDateRange } from '../../utils/programSchedule';
 import { countBlocksInProgramDay, isStructuralProgramChange, type ProgramSyncState } from './programSync';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
@@ -64,6 +66,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
     rosterForCoach,
     currentUser,
     wlAthletes,
+    motorExercises,
   } = useWolfAssign();
 
   const coachProgram = getCoachProgramById(programId);
@@ -79,6 +82,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const [programTitle, setProgramTitle] = useState(() => coachProgram?.name ?? '');
   const [publishing, setPublishing] = useState(false);
   const [showEnrollmentsSheet, setShowEnrollmentsSheet] = useState(false);
+  const [showScheduleSheet, setShowScheduleSheet] = useState(false);
   const [mobilePinnedChrome, setMobilePinnedChrome] = useState<React.ReactNode>(null);
   const [mobileExerciseFocus, setMobileExerciseFocus] = useState<{
     onBackToDay: () => void;
@@ -460,14 +464,16 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   const syncStatusChip =
     hasProgram && syncHint ? (
       <span
-        className={`wl-programs-sync-status wl-programs-sync-status--${syncState}`}
+        className={`wl-programs-sync-status wl-programs-sync-status--${syncState}${syncState === 'saved' ? ' wl-programs-sync-status--icon-only' : ''}`}
         role="status"
         aria-live="polite"
         title={cloudSyncLabel}
         aria-label={cloudSyncLabel}
       >
         <SyncCloudIcon size={14} strokeWidth={2.25} className="wl-programs-sync-status__icon" aria-hidden />
-        <span className="wl-programs-sync-status__label">{syncHint}</span>
+        {syncState !== 'saved' ? (
+          <span className="wl-programs-sync-status__label">{syncHint}</span>
+        ) : null}
       </span>
     ) : null;
 
@@ -493,22 +499,36 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
       </span>
       {syncStatusChip}
       {hasProgram ? (
-        <button
-          type="button"
-          className="wl-programs-enrolled-chip wl-programs-enrolled-chip--action"
-          onClick={() => setShowEnrollmentsSheet(true)}
-          aria-haspopup="dialog"
-        >
-          <Users size={14} aria-hidden />
-          {coachProgram.enrolledAthletes.length === 0
-            ? isEs
-              ? 'Gestionar inscritos'
-              : 'Manage enrollments'
-            : isEs
-              ? `${coachProgram.enrolledAthletes.length} inscrito${coachProgram.enrolledAthletes.length === 1 ? '' : 's'}`
-              : `${coachProgram.enrolledAthletes.length} enrolled`}
-          <ChevronDown size={14} aria-hidden className="wl-programs-enrolled-chip__chev" />
-        </button>
+        <>
+          <button
+            type="button"
+            className="wl-programs-enrolled-chip wl-programs-enrolled-chip--action wl-programs-enrolled-chip--dates"
+            onClick={() => setShowScheduleSheet(true)}
+            aria-haspopup="dialog"
+            title={formatProgramDateRange(program!, isEs) ?? (isEs ? 'Fechas del programa' : 'Program dates')}
+          >
+            <CalendarRange size={14} aria-hidden />
+            <span className="wl-programs-enrolled-chip__text">
+              {formatProgramDateRange(program!, isEs) ?? (isEs ? 'Fechas' : 'Dates')}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="wl-programs-enrolled-chip wl-programs-enrolled-chip--action"
+            onClick={() => setShowEnrollmentsSheet(true)}
+            aria-haspopup="dialog"
+          >
+            <Users size={14} aria-hidden />
+            <span className="wl-programs-enrolled-chip__text">
+              {coachProgram.enrolledAthletes.length === 0
+                ? isEs
+                  ? 'Inscritos'
+                  : 'Enrolled'
+                : String(coachProgram.enrolledAthletes.length)}
+            </span>
+            <ChevronDown size={14} aria-hidden className="wl-programs-enrolled-chip__chev" />
+          </button>
+        </>
       ) : null}
     </div>
   );
@@ -688,6 +708,35 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
           isEs={isEs}
           program={coachProgram}
           onClose={() => setShowEnrollmentsSheet(false)}
+        />
+      ) : null}
+
+      {showScheduleSheet && program ? (
+        <WlProgramScheduleSheet
+          isEs={isEs}
+          programName={programTitle || coachProgram.name}
+          program={program}
+          exercises={motorExercises}
+          onClose={() => setShowScheduleSheet(false)}
+          onSave={async (next) => {
+            setProgram(next);
+            setSyncState('saving');
+            const saved = await updateCoachProgram(programId, { program: next });
+            if (saved) {
+              setProgram(saved.program);
+              setSyncState('saved');
+              setLastSavedAt(new Date().toISOString());
+              pushAlert({
+                tone: 'success',
+                title: isEs ? 'Calendario actualizado' : 'Schedule updated',
+                message: isEs
+                  ? 'Fechas y estructura del mesociclo guardadas.'
+                  : 'Mesocycle dates and structure saved.',
+              });
+            } else {
+              setSyncState('pending');
+            }
+          }}
         />
       ) : null}
     </div>

@@ -374,13 +374,13 @@
 }
 
 .wl-mgmt-status-badge--active {
-  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  color: var(--color-accent);
+  background: var(--v2-success-soft);
+  color: var(--v2-success);
 }
 
 .wl-mgmt-status-badge--complete {
-  background: color-mix(in srgb, #22c55e 20%, transparent);
-  color: #16a34a;
+  background: var(--v2-success-soft);
+  color: var(--v2-success);
 }
 
 .wl-mgmt-progress-bar {

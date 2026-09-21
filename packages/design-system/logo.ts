@@ -74,9 +74,9 @@ export const logoVariants = {
    */
   default: {
     h: 'var(--brand-mark-h, #111111)',
-    wings: 'var(--brand-mark-wings, #FF7A00)',
+    wings: 'var(--brand-mark-wings, #e06048)',
     wordmark: 'var(--brand-wordmark, #111111)',
-    builder: 'var(--brand-builder, #FF7A00)',
+    builder: 'var(--brand-builder, #e06048)',
     background: 'transparent',
   },
 } as const;

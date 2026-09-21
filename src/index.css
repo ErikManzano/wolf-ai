@@ -11,8 +11,8 @@
   --color-wolf-muted: #64748b;
   --color-wolf-text: #f8fafc;
   --color-wolf-subtle: #94a3b8;
-  --color-wolf-accent: #f97316;
-  --color-wolf-accent-soft: rgba(249, 115, 22, 0.12);
+  --color-wolf-accent: #e06048;
+  --color-wolf-accent-soft: rgba(224, 96, 72, 0.12);
   --color-wolf-success: #22c55e;
   --color-wolf-danger: #f43f5e;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -40,13 +40,11 @@
   --color-text-secondary: #94a3b8;
   --color-text-muted: #475569;
 
-  /* Vibrant Orange-Red Gradient & Accents (Minimalist 2026) */
-  --color-accent: #f97316;
-  /* Bright Orange */
-  --color-accent-hover: #fb923c;
-  --color-accent-glow: rgba(249, 115, 22, 0.15);
-  --color-accent-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
-  /* Orange to Red */
+  /* Coral chrome accents — overridden by theme.css after this file */
+  --color-accent: #e06048;
+  --color-accent-hover: #c84838;
+  --color-accent-glow: rgba(224, 96, 72, 0.22);
+  --color-accent-gradient: linear-gradient(135deg, #ff9668 0%, #e06048 55%, #c84838 100%);
 
   --color-success: #22c55e;
   --color-warning: #facc15;

@@ -1,6 +1,8 @@
 import type { ProgramEnrollment } from '../models/coach-architecture';
 import type { ProgramAssignment, SessionCompletion } from '../models/training';
 
+export const MAX_ACTIVE_PROGRAMS_PER_ATHLETE = 2;
+
 /** Assignments for one athlete, newest first. */
 export function getAssignmentsForProfile(
   assignments: ProgramAssignment[],
@@ -83,6 +85,21 @@ export function getEnrollmentsForCoachProgram(
   return enrolled;
 }
 
+/** True when this assign replaces an existing slot or the athlete is still under the 2-program cap. */
+export function athleteCanTakeProgram(
+  assignments: ProgramAssignment[],
+  athleteProfileId: string,
+  programId?: string,
+): boolean {
+  const existing = getAssignmentsForProfile(assignments, athleteProfileId);
+  if (programId) {
+    if (existing.some((a) => a.coachProgramId === programId)) return true;
+  } else if (existing.some((a) => !a.coachProgramId)) {
+    return true;
+  }
+  return existing.length < MAX_ACTIVE_PROGRAMS_PER_ATHLETE;
+}
+
 export function filterAthletesForProgramAssign(
   programId: string,
   athleteProfileIds: string[],
@@ -90,9 +107,11 @@ export function filterAthletesForProgramAssign(
 ): {
   toAssign: string[];
   skippedAlreadyOnProgram: string[];
+  skippedAtLimit: string[];
 } {
   const toAssign: string[] = [];
   const skippedAlreadyOnProgram: string[] = [];
+  const skippedAtLimit: string[] = [];
 
   for (const athleteProfileId of [...new Set(athleteProfileIds)]) {
     const alreadyOnProgram = assignments.some(
@@ -102,10 +121,14 @@ export function filterAthletesForProgramAssign(
       skippedAlreadyOnProgram.push(athleteProfileId);
       continue;
     }
+    if (!athleteCanTakeProgram(assignments, athleteProfileId, programId)) {
+      skippedAtLimit.push(athleteProfileId);
+      continue;
+    }
     toAssign.push(athleteProfileId);
   }
 
-  return { toAssign, skippedAlreadyOnProgram };
+  return { toAssign, skippedAlreadyOnProgram, skippedAtLimit };
 }
 
 /** Other active coach programs for this athlete (parallel training blocks). */

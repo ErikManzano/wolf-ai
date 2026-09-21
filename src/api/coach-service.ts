@@ -25,7 +25,11 @@ import type { GeneratedProgram, ProgramAssignment, ProgramAssignmentVersion, Wol
 import type { PlanChangeNotification, ProgramEditContext } from '../models/notifications';
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
 import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
-import { getEnrollmentsForCoachProgram } from '../utils/wlAssignmentRules';
+import {
+  athleteCanTakeProgram,
+  getEnrollmentsForCoachProgram,
+  MAX_ACTIVE_PROGRAMS_PER_ATHLETE,
+} from '../utils/wlAssignmentRules';
 import type { ProgramSyncPayload } from './programSyncQueue';
 import { incrementSaveMetric } from './saveMetrics';
 import { buildStarterProgramDraft } from '../utils/programSchedule';
@@ -377,7 +381,7 @@ export class CoachService {
     input: AssignCoachProgramInput,
     resolveAthleteUserId: (profileId: string) => string | undefined,
   ): Promise<ActiveAssignment[]> {
-    // Athletes may carry multiple coach programs in parallel; re-assigning updates the same program slot.
+    // Athletes may carry up to two coach programs in parallel; re-assigning updates the same program slot.
     const coachProgram = await this.store.getCoachProgramById(coachId, programId);
     if (!coachProgram) {
       throw new CoachServiceError('PROGRAM_NOT_FOUND', 'Coach program not found.');
@@ -387,12 +391,22 @@ export class CoachService {
       throw new CoachServiceError('ATHLETE_NOT_FOUND', 'No athlete profiles selected.');
     }
 
-    const created: ActiveAssignment[] = [];
     for (const athleteProfileId of ids) {
       const profile = await this.store.getAthleteProfileById(athleteProfileId);
       if (!profile || profile.coachId !== coachId) {
         throw new CoachServiceError('ATHLETE_NOT_FOUND', `Athlete profile not found: ${athleteProfileId}`);
       }
+      const existing = await this.store.getAssignmentsByAthleteProfileId(athleteProfileId);
+      if (!athleteCanTakeProgram(existing, athleteProfileId, programId)) {
+        throw new CoachServiceError(
+          'ASSIGNMENT_LIMIT',
+          `Athlete already has ${MAX_ACTIVE_PROGRAMS_PER_ATHLETE} programs assigned.`,
+        );
+      }
+    }
+
+    const created: ActiveAssignment[] = [];
+    for (const athleteProfileId of ids) {
       const clonedProgram = cloneProgramForAthlete(coachProgram.program, athleteProfileId, {
         name: coachProgram.name,
       });
@@ -449,6 +463,14 @@ export class CoachService {
       throw new CoachServiceError('ATHLETE_NOT_FOUND', 'Athlete profile not found for this coach.');
     }
 
+    const existing = await this.store.getAssignmentsByAthleteProfileId(input.athleteProfileId);
+    if (!athleteCanTakeProgram(existing, input.athleteProfileId)) {
+      throw new CoachServiceError(
+        'ASSIGNMENT_LIMIT',
+        `Athlete already has ${MAX_ACTIVE_PROGRAMS_PER_ATHLETE} programs assigned.`,
+      );
+    }
+
     const clonedProgram = cloneProgramForAthlete(template.program, input.athleteProfileId, {
       name: input.programName?.trim() || template.name,
     });
@@ -476,6 +498,14 @@ export class CoachService {
     const profile = await this.store.getAthleteProfileById(athleteProfileId);
     if (!profile || profile.coachId !== coachId) {
       throw new CoachServiceError('ATHLETE_NOT_FOUND', 'Athlete profile not found for this coach.');
+    }
+
+    const existing = await this.store.getAssignmentsByAthleteProfileId(athleteProfileId);
+    if (!athleteCanTakeProgram(existing, athleteProfileId, coachProgramId)) {
+      throw new CoachServiceError(
+        'ASSIGNMENT_LIMIT',
+        `Athlete already has ${MAX_ACTIVE_PROGRAMS_PER_ATHLETE} programs assigned.`,
+      );
     }
 
     const clonedProgram = cloneProgramForAthlete(program, athleteProfileId);
@@ -539,6 +569,7 @@ export class CoachServiceError extends Error {
     | 'PROGRAM_HAS_ENROLLMENTS'
     | 'ATHLETE_NOT_FOUND'
     | 'ASSIGNMENT_NOT_FOUND'
+    | 'ASSIGNMENT_LIMIT'
     | 'UPDATE_FAILED';
 
   constructor(code: CoachServiceError['code'], message: string) {

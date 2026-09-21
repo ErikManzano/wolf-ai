@@ -20,6 +20,7 @@ import CoachDashboard from './coach-dashboard/CoachDashboard';
 import AthleteTrainingView from './AthleteTrainingView';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { appAthleteIdForWlProfile } from '../utils/wlStatsBridge';
+import { formatShortDateFriendly } from '../utils/programSchedule';
 import {
   aggregateTemplateLogging,
   aggregateWlAttendance,
@@ -1187,7 +1188,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
 
                     const endDate = new Date(start);
                     endDate.setDate(endDate.getDate() + (totalWeeks * 7));
-                    endDateStr = endDate.toISOString().split('T')[0];
+                    endDateStr = formatShortDateFriendly(endDate.toISOString().slice(0, 10), isEs);
 
                     if (remaining <= 0) {
                       status = 'Finished';

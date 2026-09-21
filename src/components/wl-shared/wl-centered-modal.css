@@ -1,0 +1,37 @@
+.wl-centered-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(0, 0, 0, 0.72);
+  animation: wl-form-sheet-overlay-in 0.22s ease-out;
+}
+
+.wl-centered-modal {
+  width: min(480px, 100%);
+  max-height: min(88dvh, 720px);
+}
+
+@media (max-width: 520px) {
+  .wl-centered-modal-overlay {
+    align-items: center;
+    padding: 12px;
+  }
+
+  .wl-centered-modal {
+    width: 100%;
+    max-height: min(90dvh, 720px);
+    border-radius: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-centered-modal-overlay {
+    animation: none;
+  }
+}

@@ -1,6 +1,16 @@
-import { SlidersHorizontal } from 'lucide-react';
-import type { AthleteSortId } from './athleteListUtils';
-import { WlListActionBar } from '../wl-shared/WlListActionBar';
+import { ArrowUpDown, Filter, Plus } from 'lucide-react';
+import type { AthleteFilterId, AthleteSortId } from './athleteListUtils';
+import { WlListFieldSelect } from '../wl-shared/WlListFieldSelect';
+import { WlSearchField } from '../wl-shared/WlSearchField';
+
+const FILTER_OPTIONS: { id: AthleteFilterId; labelEs: string; labelEn: string }[] = [
+  { id: 'all', labelEs: 'Todos', labelEn: 'All' },
+  { id: 'no_program', labelEs: 'Sin programa', labelEn: 'No program' },
+  { id: 'low_adherence', labelEs: 'Baja adherencia', labelEn: 'Low adherence' },
+  { id: 'beginner', labelEs: 'Principiante', labelEn: 'Beginner' },
+  { id: 'intermediate', labelEs: 'Intermedio', labelEn: 'Intermediate' },
+  { id: 'advanced', labelEs: 'Avanzado', labelEn: 'Advanced' },
+];
 
 const SORT_OPTIONS: {
   id: AthleteSortId;
@@ -38,6 +48,8 @@ export function WlAthletesToolbar({
   isEs,
   search,
   onSearchChange,
+  filter,
+  onFilterChange,
   sort,
   onSortChange,
   canAdd,
@@ -46,6 +58,8 @@ export function WlAthletesToolbar({
   isEs: boolean;
   search: string;
   onSearchChange: (v: string) => void;
+  filter: AthleteFilterId;
+  onFilterChange: (id: AthleteFilterId) => void;
   sort: AthleteSortId;
   onSortChange: (id: AthleteSortId) => void;
   canAdd?: boolean;
@@ -53,26 +67,53 @@ export function WlAthletesToolbar({
 }) {
   return (
     <div className="wl-athletes-toolbar">
-      <WlListActionBar
-        searchValue={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder={isEs ? 'Buscar atleta…' : 'Search athlete…'}
-        searchAriaLabel={isEs ? 'Buscar atleta' : 'Search athlete'}
-        filterIcon={SlidersHorizontal}
-        filterValue={sort}
-        onFilterChange={(value) => onSortChange(value as AthleteSortId)}
-        filterAriaLabel={isEs ? 'Ordenar atletas' : 'Sort athletes'}
-        filterOptions={SORT_OPTIONS.map((option) => ({
-          id: option.id,
-          label: isEs ? option.labelEs : option.labelEn,
-          shortLabel: isEs ? option.shortEs : option.shortEn,
-        }))}
-        filterActive={sort !== 'name_asc'}
-        primaryLabel={isEs ? 'Añadir atleta' : 'Add athlete'}
-        primaryAriaLabel={isEs ? 'Añadir atleta' : 'Add athlete'}
-        onPrimaryClick={() => onAdd?.()}
-        showPrimary={Boolean(canAdd && onAdd)}
-      />
+      <div className="wl-list-toolbar wl-list-toolbar--action-bar">
+        <WlSearchField
+          value={search}
+          onChange={onSearchChange}
+          placeholder={isEs ? 'Buscar atleta…' : 'Search athlete…'}
+          ariaLabel={isEs ? 'Buscar atleta' : 'Search athlete'}
+        />
+        <WlListFieldSelect
+          icon={Filter}
+          value={filter}
+          onChange={(value) => onFilterChange(value as AthleteFilterId)}
+          ariaLabel={isEs ? 'Filtrar atletas' : 'Filter athletes'}
+          active={filter !== 'all'}
+          title={FILTER_OPTIONS.find((option) => option.id === filter)?.[isEs ? 'labelEs' : 'labelEn']}
+        >
+          {FILTER_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {isEs ? option.labelEs : option.labelEn}
+            </option>
+          ))}
+        </WlListFieldSelect>
+        <WlListFieldSelect
+          icon={ArrowUpDown}
+          value={sort}
+          onChange={(value) => onSortChange(value as AthleteSortId)}
+          ariaLabel={isEs ? 'Ordenar atletas' : 'Sort athletes'}
+          active={sort !== 'name_asc'}
+          title={SORT_OPTIONS.find((option) => option.id === sort)?.[isEs ? 'labelEs' : 'labelEn']}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id} title={isEs ? option.labelEs : option.labelEn}>
+              {isEs ? option.shortEs : option.shortEn}
+            </option>
+          ))}
+        </WlListFieldSelect>
+        {canAdd && onAdd ? (
+          <button
+            type="button"
+            className="btn-primary wl-list-toolbar__cta"
+            onClick={onAdd}
+            aria-label={isEs ? 'Añadir atleta' : 'Add athlete'}
+          >
+            <Plus size={16} strokeWidth={2.25} aria-hidden />
+            <span className="wl-list-toolbar__cta-label">{isEs ? 'Añadir atleta' : 'Add athlete'}</span>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

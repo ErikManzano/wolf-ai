@@ -77,7 +77,7 @@ export function AppIconMark({
       aria-label="Homilos Builder"
       {...rest}
     >
-      <rect width="64" height="64" rx="14" fill="#FF7A00" />
+      <rect width="64" height="64" rx="14" fill="#e06048" />
       <g transform="translate(11.52 11.52) scale(0.64)">
         <path d={markWingsPath} fill="#FFFFFF" />
         <path d={markPathsCompact.h} fill="#111111" />

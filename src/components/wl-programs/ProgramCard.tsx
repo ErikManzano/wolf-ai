@@ -1,5 +1,6 @@
 import { Calendar, LayoutGrid } from 'lucide-react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
+import { formatProgramDateRange, formatShortDateFriendly } from '../../utils/programSchedule';
 import { ProgramActionsMenu } from './ProgramActionsMenu';
 import { ProgramEnrolledAvatars } from './ProgramEnrolledAvatars';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
@@ -9,6 +10,7 @@ export function ProgramCard({
   isEs,
   onOpen,
   onEdit,
+  onSchedule,
   onAssign,
   onDuplicate,
   onDelete,
@@ -17,12 +19,14 @@ export function ProgramCard({
   isEs: boolean;
   onOpen: () => void;
   onEdit: () => void;
+  onSchedule: () => void;
   onAssign: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const weeks = row.program.totalWeeks ?? row.program.weeks?.length ?? 0;
   const daysPerWeek = row.program.daysPerWeek ?? row.program.weeks?.[0]?.days?.length ?? 0;
+  const dateRange = formatProgramDateRange(row.program, isEs);
   const adherence = row.avgAdherencePct;
   const adherenceClass =
     adherence == null
@@ -59,6 +63,7 @@ export function ProgramCard({
             isEs={isEs}
             variant="card"
             onEdit={onEdit}
+            onSchedule={onSchedule}
             onAssign={onAssign}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
@@ -69,7 +74,7 @@ export function ProgramCard({
       <div className="wl-program-card__meta">
         <span>
           <Calendar size={14} aria-hidden />
-          {isEs ? `${weeks} semanas` : `${weeks} weeks`}
+          {dateRange ?? (isEs ? `${weeks} semanas` : `${weeks} weeks`)}
         </span>
         <span>
           <LayoutGrid size={14} aria-hidden />
@@ -107,7 +112,7 @@ export function ProgramCard({
         <p className="wl-program-card__label">{isEs ? 'Actualización' : 'Updated'}</p>
         <p className="wl-program-card__updated">
           <Calendar size={14} aria-hidden />
-          {new Date(row.updatedAt).toLocaleDateString(isEs ? 'es' : 'en')}
+          {formatShortDateFriendly(row.updatedAt, isEs)}
         </p>
       </section>
     </article>

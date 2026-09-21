@@ -13,9 +13,9 @@ import type {
   TechnicalCollectionWithItems,
 } from '../models/exercise';
 import taxonomyJson from '../data/exercise-taxonomy/taxonomy.json';
-import { mockExercises } from '../data/loadMockData';
+import { seedExerciseDefinitionsFromLegacy as buildOfficialDefinitions } from './exerciseCatalogSeed';
 import { buildExerciseDefinition } from '../services/exercise/buildDefinition';
-import { definitionsToLegacyExercises, fromLegacyExercise, getExerciseTaxonomy } from '../services/exercise';
+import { definitionsToLegacyExercises, getExerciseTaxonomy } from '../services/exercise';
 import type { Exercise } from '../models/training';
 
 export async function initExerciseCatalogTables(pool: Pool): Promise<void> {
@@ -142,6 +142,8 @@ async function migrateExerciseIntelligenceSchema(pool: Pool): Promise<void> {
   await pool.query(`ALTER TABLE exercise_definitions ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 1`);
   await pool.query(`ALTER TABLE exercise_definitions ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ`);
   await pool.query(`ALTER TABLE exercise_definitions ADD COLUMN IF NOT EXISTS deprecated_at TIMESTAMPTZ`);
+  await pool.query(`ALTER TABLE exercise_definitions ADD COLUMN IF NOT EXISTS cues_en TEXT`);
+  await pool.query(`ALTER TABLE exercise_definitions ADD COLUMN IF NOT EXISTS cues_es TEXT`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS coach_exercise_overrides (
@@ -258,19 +260,16 @@ export async function seedExerciseTaxonomy(pool: Pool): Promise<void> {
   }
 }
 
-/** Upserts official catalog from exercises.json (does not overwrite coach-owned rows). */
+/** Upserts official catalog (WL legacy + CONCENTRADO accessory; does not overwrite coach-owned rows). */
 export async function seedExerciseDefinitionsFromLegacy(pool: Pool): Promise<number> {
-  const bundle = getExerciseTaxonomy();
-  let n = 0;
-  for (const ex of mockExercises) {
-    const displayName = ex.name;
-    const def = fromLegacyExercise(ex, displayName);
+  const defs = buildOfficialDefinitions();
+  for (const def of defs) {
     await pool.query(
       `INSERT INTO exercise_definitions (
         id, coach_id, kind, family_id, variation_id, start_position_id, objective_id, load_anchor,
         composition, display_name, signature, legacy_exercise_id, search_text, tags,
-        lifecycle_status, version
-      ) VALUES ($1,NULL,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,'official',1)
+        cues_en, cues_es, lifecycle_status, version
+      ) VALUES ($1,NULL,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15,'official',1)
       ON CONFLICT (id) DO UPDATE SET
         kind = EXCLUDED.kind,
         family_id = EXCLUDED.family_id,
@@ -284,6 +283,8 @@ export async function seedExerciseDefinitionsFromLegacy(pool: Pool): Promise<num
         legacy_exercise_id = EXCLUDED.legacy_exercise_id,
         search_text = EXCLUDED.search_text,
         tags = EXCLUDED.tags,
+        cues_en = COALESCE(EXCLUDED.cues_en, exercise_definitions.cues_en),
+        cues_es = COALESCE(EXCLUDED.cues_es, exercise_definitions.cues_es),
         updated_at = now()
       WHERE exercise_definitions.coach_id IS NULL`,
       [
@@ -300,12 +301,12 @@ export async function seedExerciseDefinitionsFromLegacy(pool: Pool): Promise<num
         def.legacyExerciseId,
         def.searchText,
         def.tags,
+        def.cuesEn ?? null,
+        def.cuesEs ?? null,
       ],
     );
-    n += 1;
   }
-  void bundle;
-  return n;
+  return defs.length;
 }
 
 export async function getExerciseCatalogStats(pool: Pool): Promise<{
@@ -346,6 +347,8 @@ function mapDefinitionRow(row: Record<string, unknown>): ExerciseDefinition {
     legacyExerciseId: (row.legacy_exercise_id as string | null) ?? null,
     searchText: row.search_text as string,
     tags: (row.tags as string[]) ?? [],
+    cuesEn: (row.cues_en as string | null) ?? null,
+    cuesEs: (row.cues_es as string | null) ?? null,
     lifecycleStatus: (row.lifecycle_status as ExerciseDefinition['lifecycleStatus']) ?? undefined,
     parentDefinitionId: (row.parent_definition_id as string | null) ?? null,
     version: row.version != null ? Number(row.version) : 1,

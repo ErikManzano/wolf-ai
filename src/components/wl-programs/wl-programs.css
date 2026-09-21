@@ -57,6 +57,13 @@
   color: var(--wl-prog-text);
 }
 
+.wl-programs-table-row__dates {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--wl-prog-muted);
+}
+
 .wl-programs-head__cta {
   min-height: 44px;
   border-radius: 12px;
@@ -174,9 +181,9 @@
 }
 
 .wl-programs-status-badge--published {
-  color: #ff8a3d;
-  border: 1px solid rgba(255, 107, 26, 0.3);
-  background: rgba(255, 107, 26, 0.12);
+  color: var(--v2-success);
+  border: 1px solid color-mix(in srgb, var(--v2-success) 30%, transparent);
+  background: var(--v2-success-soft);
 }
 
 .wl-programs-status-badge--draft {
@@ -186,9 +193,9 @@
 }
 
 .wl-programs-status-badge--archived {
-  color: #93c5fd;
-  border: 1px solid rgba(147, 197, 253, 0.3);
-  background: rgba(147, 197, 253, 0.12);
+  color: var(--v2-info);
+  border: 1px solid color-mix(in srgb, var(--v2-info) 30%, transparent);
+  background: var(--v2-info-soft);
 }
 
 .wl-programs-actions-menu {
@@ -598,6 +605,37 @@
   font-size: 0.76rem !important;
 }
 
+.wl-program-mobile-detail__calendar {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.wl-program-mobile-detail__label {
+  margin: 0 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--wl-prog-muted);
+}
+
+.wl-program-mobile-detail__link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--wl-prog-accent, #ff7a00);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .wl-program-mobile-detail__athlete-row {
   display: flex;
   align-items: center;
@@ -943,10 +981,10 @@
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__bar {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) auto minmax(0, 1.25fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
     min-width: 0;
   }
@@ -955,19 +993,21 @@
     position: relative;
     z-index: 1;
     min-width: 0;
-    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__tabs,
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-toolbar-anchor {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-50%);
+    position: relative;
+    left: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
     z-index: 2;
     width: auto;
-    flex: 0 0 auto;
+    justify-self: center;
     pointer-events: none;
   }
 
@@ -978,9 +1018,10 @@
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-sticky-head__status {
     position: relative;
     z-index: 1;
-    margin-left: auto;
-    flex: 0 1 auto;
+    margin-left: 0;
+    justify-self: end;
     min-width: 0;
+    max-width: 100%;
   }
 
   .wl-programs-editor-sticky-head--unified .wl-programs-editor-chrome-anchor {
@@ -1088,11 +1129,31 @@
     font-size: 0.64rem;
   }
 
+  .wl-programs-editor-sticky-head .wl-programs-sync-status--icon-only {
+    padding: 3px 6px;
+  }
+
+  .wl-programs-editor-sticky-head .wl-programs-editor-hero-meta {
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
   .wl-programs-editor-sticky-head .wl-programs-enrolled-chip {
     min-height: 30px;
-    padding: 4px 10px;
-    font-size: 0.74rem;
-    max-width: min(200px, 28vw);
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    max-width: min(168px, 22vw);
+  }
+
+  .wl-programs-editor-sticky-head .wl-programs-enrolled-chip--dates {
+    max-width: min(148px, 20vw);
+  }
+
+  .wl-programs-editor-sticky-head .wl-programs-enrolled-chip__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .wl-programs-editor-sticky-head .wl-programs-enrolled-chip__chev {
@@ -1331,6 +1392,11 @@
   color: #86efac;
   background: color-mix(in srgb, #22c55e 12%, transparent);
   border-color: color-mix(in srgb, #22c55e 28%, transparent);
+}
+
+.wl-programs-sync-status--icon-only {
+  padding: 4px 7px;
+  gap: 0;
 }
 
 .wl-programs-sync-status--pending {

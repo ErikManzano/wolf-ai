@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import './styles/interactive.css';
 import './components/navigation/mobile-top-bar.css';
@@ -9,7 +9,6 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { WolfAssignProvider } from './context/WolfAssignContext';
 import { WolfAlertProvider } from './context/WolfAlertContext';
 import { useWolfAssign } from './context/WolfAssignContext';
-import { ChevronsLeft } from 'lucide-react';
 import LoginScreen from './components/LoginScreen';
 import ConfirmationModal from './components/ConfirmationModal';
 import { MobileBottomNav } from './components/navigation/MobileBottomNav';
@@ -18,11 +17,6 @@ import { NotificationsBell } from './components/notifications/NotificationsBell'
 import { MobileTopBarProvider, useMobileTopBarContext } from './context/MobileTopBarContext';
 import type { AppViewId } from './navigation/appNavigation';
 import type { WolfAppRole } from './models/training';
-import {
-  SIDEBAR_COMPACT_WIDTH,
-  SIDEBAR_WIDTH_MAX,
-  useSidebarResize,
-} from './hooks/useSidebarResize';
 import { DesktopTooltipLayer } from './components/ui/DesktopTooltipLayer';
 import { ThemeProvider } from './context/ThemeContext';
 import {
@@ -44,11 +38,6 @@ function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => localStorage.getItem('wolf_sidebar_compact_v1') === '1');
-  const [sidebarToggleAnimating, setSidebarToggleAnimating] = useState(false);
-  const sidebarToggleAnimTimerRef = useRef<number | null>(null);
-  /** Asistente AI en drawer lateral (escritorio); el rail derecho queda desactivado. */
-  const [sidebarChatOpen, setSidebarChatOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem(AUTH_STORAGE) === '1');
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [isNarrowLayout, setIsNarrowLayout] = useState<boolean>(() =>
@@ -141,18 +130,6 @@ function AppShell() {
   }, [openProgramEditor]);
 
   useEffect(() => {
-    return () => {
-      if (sidebarToggleAnimTimerRef.current != null) {
-        window.clearTimeout(sidebarToggleAnimTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('wolf_sidebar_compact_v1', sidebarCollapsed ? '1' : '0');
-  }, [sidebarCollapsed]);
-
-  useEffect(() => {
     const onSessionExpired = () => {
       setIsAuthenticated(false);
       setMobileMenuOpen(false);
@@ -181,43 +158,12 @@ function AppShell() {
 
   const isProgramEditorActive =
     activeView === 'programs' && programsView === 'editor' && Boolean(editingProgramId);
-  const effectiveSidebarCollapsed = isNarrowLayout ? false : sidebarCollapsed;
-  const sidebarResizeEnabled = !isNarrowLayout;
-  const {
-    width: sidebarWidth,
-    isResizing: sidebarResizing,
-    nearCollapse: sidebarNearCollapse,
-    onPointerDown: onSidebarResizeDown,
-    onDoubleClick: onSidebarResizeReset,
-    consumeToggleClick: consumeSidebarToggleClick,
-  } = useSidebarResize({
-    enabled: sidebarResizeEnabled,
-    collapsed: effectiveSidebarCollapsed,
-    onCollapse: () => setSidebarCollapsed(true),
-    onExpand: () => setSidebarCollapsed(false),
-  });
-
-  const triggerSidebarToggleAnimation = () => {
-    setSidebarToggleAnimating(true);
-    if (sidebarToggleAnimTimerRef.current != null) {
-      window.clearTimeout(sidebarToggleAnimTimerRef.current);
-    }
-    sidebarToggleAnimTimerRef.current = window.setTimeout(() => {
-      setSidebarToggleAnimating(false);
-      sidebarToggleAnimTimerRef.current = null;
-    }, 420);
-  };
-
-  const showSidebarCollapsed = effectiveSidebarCollapsed && !sidebarResizing;
+  /** Desktop always uses the compact icon rail; mobile uses the expanded drawer. */
+  const showSidebarCollapsed = !isNarrowLayout;
 
   const lockMobileEdgeSwipe =
     Boolean(mobileTopBarConfig?.lockEdgeSwipe) ||
     (isNarrowLayout && isProgramEditorActive);
-
-  const sidebarUsesCustomWidth = sidebarResizeEnabled && (!showSidebarCollapsed || sidebarResizing);
-  const appContainerStyle = sidebarUsesCustomWidth
-    ? ({ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties)
-    : undefined;
 
   if (!isAuthenticated) {
     return (
@@ -254,8 +200,7 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${sidebarResizing ? ' app-container--sidebar-resizing' : ''}${isProgramEditorActive ? ' app-container--program-editor' : ''}`}
-        style={appContainerStyle}
+        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${isProgramEditorActive ? ' app-container--program-editor' : ''}`}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
           gestureRef.current = { startX: e.clientX, startY: e.clientY, tracking: true };
@@ -310,77 +255,23 @@ function AppShell() {
         )}
 
         <div
-          className={`sidebar-area${mobileMenuOpen ? ' open' : ''}${sidebarResizing ? ' sidebar-area--resizing' : ''}`}
+          className={`sidebar-area${mobileMenuOpen ? ' open' : ''}`}
           inert={isNarrowLayout && !mobileMenuOpen ? true : undefined}
         >
           <Sidebar 
             activeView={activeView} 
-            setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); setSidebarChatOpen(false); }} 
+            setActiveView={(v) => { setActiveView(v); setMobileMenuOpen(false); }} 
             language={language}
             collapsed={showSidebarCollapsed}
             showRailToggle={false}
             mobileDrawer={isNarrowLayout}
-            assistantOpen={sidebarChatOpen}
-            showAssistantEntry={!isNarrowLayout}
-            onToggleAssistant={() => setSidebarChatOpen((open) => !open)}
             onToggleCollapsed={() => {
-              if (isNarrowLayout) {
-                setMobileMenuOpen((v) => !v);
-                return;
-              }
-              setSidebarCollapsed((v) => !v);
+              if (isNarrowLayout) setMobileMenuOpen((v) => !v);
             }}
             onLogout={() => {
               setLogoutConfirmOpen(true);
             }}
           />
-          {sidebarResizeEnabled ? (
-            <div
-              className={`sidebar-resize-handle${sidebarNearCollapse ? ' sidebar-resize-handle--collapse-zone' : ''}${showSidebarCollapsed ? ' sidebar-resize-handle--compact' : ''}${sidebarResizing ? ' sidebar-resize-handle--active' : ''}`}
-              role="separator"
-              aria-orientation="vertical"
-              aria-label={
-                language === 'ES'
-                  ? 'Redimensionar sidebar; arrastra a la izquierda para plegar a iconos'
-                  : 'Resize sidebar; drag left to collapse to icons'
-              }
-              aria-valuemin={SIDEBAR_COMPACT_WIDTH}
-              aria-valuemax={SIDEBAR_WIDTH_MAX}
-              aria-valuenow={showSidebarCollapsed && !sidebarResizing ? SIDEBAR_COMPACT_WIDTH : sidebarWidth}
-              title={
-                language === 'ES'
-                  ? 'Arrastra para redimensionar. Suelta estrecho para modo iconos. Doble clic: ancho predeterminado.'
-                  : 'Drag to resize. Release narrow for icon mode. Double-click: default width.'
-              }
-              onPointerDown={onSidebarResizeDown}
-              onDoubleClick={onSidebarResizeReset}
-            >
-              <button
-                type="button"
-                className={`sidebar-resize-toggle${showSidebarCollapsed ? ' sidebar-resize-toggle--collapsed' : ''}${sidebarToggleAnimating ? ' sidebar-resize-toggle--animating' : ''}${sidebarResizing ? ' sidebar-resize-toggle--resizing' : ''}`}
-                aria-label={
-                  showSidebarCollapsed
-                    ? language === 'ES'
-                      ? 'Expandir sidebar'
-                      : 'Expand sidebar'
-                    : language === 'ES'
-                      ? 'Colapsar sidebar'
-                      : 'Collapse sidebar'
-                }
-                onDoubleClick={(event) => event.stopPropagation()}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={() => {
-                  if (consumeSidebarToggleClick()) return;
-                  triggerSidebarToggleAnimation();
-                  setSidebarCollapsed((collapsed) => !collapsed);
-                }}
-              >
-                <span className="sidebar-resize-toggle-icon" aria-hidden>
-                  <ChevronsLeft size={14} strokeWidth={2.35} />
-                </span>
-              </button>
-            </div>
-          ) : null}
         </div>
         
         {/* Workspace */}
@@ -408,22 +299,6 @@ function AppShell() {
           <div className={`chat-area ${mobileChatOpen ? 'open' : ''}`}>
             <ChatPanel language={language} />
           </div>
-        ) : sidebarChatOpen ? (
-          <>
-            <button
-              type="button"
-              className="chat-sidebar-backdrop"
-              aria-label={language === 'ES' ? 'Cerrar asistente' : 'Close assistant'}
-              onClick={() => setSidebarChatOpen(false)}
-            />
-            <div className="chat-sidebar-drawer">
-              <ChatPanel
-                language={language}
-                variant="drawer"
-                onClose={() => setSidebarChatOpen(false)}
-              />
-            </div>
-          </>
         ) : null}
 
         {isNarrowLayout ? (

@@ -250,6 +250,69 @@ export function removeDayFromGeneratedWeek(
   return syncProgramMeta(next);
 }
 
+/**
+ * Align program calendar + grid: start/end dates, week count, days/week.
+ * Adds or trims weeks/days to match the competition window structure.
+ */
+export function applyProgramSchedule(
+  program: GeneratedProgram,
+  schedule: {
+    startDate: string;
+    endDate: string;
+    totalWeeks: number;
+    daysPerWeek: number;
+  },
+  athlete: Athlete,
+  exercises: Exercise[],
+): GeneratedProgram {
+  let next = cloneProgram(program);
+  const totalWeeks = Math.max(
+    PROGRAM_STRUCTURE_LIMITS.MIN_WEEKS,
+    Math.min(PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS, Math.round(schedule.totalWeeks)),
+  );
+  const daysPerWeek = Math.max(
+    PROGRAM_STRUCTURE_LIMITS.MIN_DAYS_PER_WEEK,
+    Math.min(PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK, Math.round(schedule.daysPerWeek)),
+  );
+
+  next.startDate = schedule.startDate;
+  next.endDate =
+    schedule.endDate >= schedule.startDate ? schedule.endDate : schedule.startDate;
+
+  while (next.weeks.length < totalWeeks) {
+    next = addWeekToGeneratedProgram(next, athlete, exercises);
+  }
+  while (next.weeks.length > totalWeeks) {
+    const lastWeek = next.weeks[next.weeks.length - 1]?.weekNumber;
+    if (lastWeek == null) break;
+    next = removeWeekFromGeneratedProgram(next, lastWeek);
+  }
+
+  const weekNumbers = next.weeks.map((w) => w.weekNumber);
+  for (const weekNumber of weekNumbers) {
+    let guard = 0;
+    while (guard++ < 16) {
+      const week = next.weeks.find((w) => w.weekNumber === weekNumber);
+      if (!week) break;
+      if (week.days.length < daysPerWeek) {
+        next = addDayToGeneratedWeek(next, weekNumber, athlete, exercises);
+        continue;
+      }
+      if (week.days.length > daysPerWeek) {
+        const lastDay = week.days[week.days.length - 1]?.dayNumber;
+        if (lastDay == null) break;
+        next = removeDayFromGeneratedWeek(next, weekNumber, lastDay);
+        continue;
+      }
+      break;
+    }
+  }
+
+  next.totalWeeks = totalWeeks;
+  next.daysPerWeek = daysPerWeek;
+  return syncProgramMeta(next);
+}
+
 export function reorderWeeksInGeneratedProgram(
   program: GeneratedProgram,
   fromWeekNumber: number,

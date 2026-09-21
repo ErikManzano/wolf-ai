@@ -1,5 +1,17 @@
-import { ArrowLeft, CalendarDays, ChevronRight, Clock3, Copy, Pencil, Trash2, UserMinus, UserPlus } from 'lucide-react';
+import {
+  ArrowLeft,
+  CalendarDays,
+  CalendarRange,
+  ChevronRight,
+  Clock3,
+  Copy,
+  Pencil,
+  Trash2,
+  UserMinus,
+  UserPlus,
+} from 'lucide-react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
+import { formatProgramDateRange, formatShortDateFriendly } from '../../utils/programSchedule';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 
 export function ProgramMobileDetail({
@@ -8,6 +20,7 @@ export function ProgramMobileDetail({
   showBack = true,
   onBack,
   onEdit,
+  onSchedule,
   onAssign,
   onDuplicate,
   onDelete,
@@ -18,6 +31,7 @@ export function ProgramMobileDetail({
   showBack?: boolean;
   onBack: () => void;
   onEdit: () => void;
+  onSchedule: () => void;
   onAssign: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -25,6 +39,7 @@ export function ProgramMobileDetail({
 }) {
   const weeks = row.program.totalWeeks ?? row.program.weeks?.length ?? 0;
   const daysPerWeek = row.program.daysPerWeek ?? row.program.weeks?.[0]?.days?.length ?? 0;
+  const dateRange = formatProgramDateRange(row.program, isEs);
 
   return (
     <section className="wl-program-mobile-detail">
@@ -52,6 +67,10 @@ export function ProgramMobileDetail({
         >
           <Pencil size={18} strokeWidth={2.1} aria-hidden />
           <span>{isEs ? 'Editar' : 'Edit'}</span>
+        </button>
+        <button type="button" className="wl-program-mobile-detail__action-chip" onClick={onSchedule}>
+          <CalendarRange size={18} strokeWidth={2.1} aria-hidden />
+          <span>{isEs ? 'Fechas' : 'Dates'}</span>
         </button>
         <button type="button" className="wl-program-mobile-detail__action-chip" onClick={onAssign}>
           <UserPlus size={18} strokeWidth={2.1} aria-hidden />
@@ -89,6 +108,17 @@ export function ProgramMobileDetail({
             <Clock3 size={18} />
           </article>
         </div>
+        {dateRange ? (
+          <div className="wl-program-mobile-detail__panel wl-program-mobile-detail__calendar">
+            <p className="wl-program-mobile-detail__label">
+              {isEs ? 'Calendario competitivo' : 'Competition calendar'}
+            </p>
+            <p>{dateRange}</p>
+            <button type="button" className="wl-program-mobile-detail__link" onClick={onSchedule}>
+              {isEs ? 'Editar fechas' : 'Edit dates'}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       <section className="wl-program-mobile-detail__section">
@@ -153,7 +183,7 @@ export function ProgramMobileDetail({
         <h3 className="wl-program-mobile-detail__section-title">{isEs ? 'Actualizado' : 'Updated'}</h3>
         <div className="wl-program-mobile-detail__panel">
           <p>
-            {new Date(row.updatedAt).toLocaleDateString(isEs ? 'es' : 'en')}
+            {formatShortDateFriendly(row.updatedAt, isEs)}
           </p>
         </div>
       </section>

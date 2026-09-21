@@ -1,10 +1,12 @@
 import { Filter } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
+import type { GeneratedProgram } from '../../models/training';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
+import { formatProgramDateRange, formatShortDateFriendly } from '../../utils/programSchedule';
 import ConfirmationModal from '../ConfirmationModal';
 import { WlListActionBar } from '../wl-shared/WlListActionBar';
 import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
@@ -16,6 +18,7 @@ import { ProgramStatusBadge } from './ProgramStatusBadge';
 import { ProgramEnrolledAvatars } from './ProgramEnrolledAvatars';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
 import WlProgramCreateSheet from './WlProgramCreateSheet';
+import WlProgramScheduleSheet from './WlProgramScheduleSheet';
 
 export const WL_PROGRAMS_FOCUS_KEY = 'wolf_programs_focus_id';
 
@@ -80,6 +83,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     coachPrograms,
     programsLoading,
     createCoachProgram,
+    updateCoachProgram,
     openProgramEditor,
     duplicateCoachProgram,
     deleteCoachProgram,
@@ -94,6 +98,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
   const [assignProgramId, setAssignProgramId] = useState<string | null>(null);
   const [assignAthleteId, setAssignAthleteId] = useState<string | undefined>();
+  const [scheduleProgramId, setScheduleProgramId] = useState<string | null>(null);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     program: CoachProgramRow;
@@ -130,9 +135,31 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     setAssignAthleteId(athleteProfileId);
   };
 
+  const openSchedule = (program: CoachProgramRow) => {
+    setScheduleProgramId(program.id);
+  };
+
   const assignProgram = assignProgramId
     ? coachPrograms.find((program) => program.id === assignProgramId) ?? null
     : null;
+
+  const scheduleProgram = scheduleProgramId
+    ? coachPrograms.find((program) => program.id === scheduleProgramId) ?? null
+    : null;
+
+  const handleSaveSchedule = async (program: GeneratedProgram) => {
+    if (!scheduleProgram) return;
+    const saved = await updateCoachProgram(scheduleProgram.id, { program });
+    if (saved) {
+      pushAlert({
+        tone: 'success',
+        title: isEs ? 'Calendario actualizado' : 'Schedule updated',
+        message: isEs
+          ? `Fechas y estructura de «${scheduleProgram.name}» guardadas.`
+          : `Dates and structure for "${scheduleProgram.name}" saved.`,
+      });
+    }
+  };
 
   const handleRemoveEnrollment = async (assignmentId: string, athleteName: string, programName: string) => {
     const ok = window.confirm(
@@ -195,6 +222,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
               : `"${program.name}" was removed successfully.`,
           });
           if (mobileDetailId === program.id) setMobileDetailId(null);
+          if (scheduleProgramId === program.id) setScheduleProgramId(null);
         }
       } else {
         const copy = await duplicateCoachProgram(program.id);
@@ -219,6 +247,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
     isEs,
     mobileDetailId,
     pushAlert,
+    scheduleProgramId,
   ]);
 
   const openProgramRow = (row: CoachProgramRow) => {
@@ -240,58 +269,65 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((row) => (
-            <tr
-              key={row.id}
-              className="wl-programs-table-row"
-              tabIndex={0}
-              aria-label={
-                isEs ? `Abrir programa ${row.name}` : `Open program ${row.name}`
-              }
-              onClick={(e) => {
-                if (programRowClickIgnores(e.target)) return;
-                openProgramRow(row);
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' && e.key !== ' ') return;
-                if (programRowClickIgnores(e.target)) return;
-                e.preventDefault();
-                openProgramRow(row);
-              }}
-            >
-              <td>
-                <strong className="wl-programs-table-row__name">{row.name}</strong>
-              </td>
-              <td className="wl-programs-col-status">
-                <ProgramStatusBadge status={row.status} isEs={isEs} />
-              </td>
-              <td>
-                <ProgramEnrolledAvatars
-                  enrolledAthletes={row.enrolledAthletes}
-                  isEs={isEs}
-                  onClick={row.enrolledAthletes.length > 0 ? () => openAssign(row) : undefined}
-                />
-              </td>
-              <td>
-                <div className="wl-programs-adherence-cell">
-                  <span>{row.avgAdherencePct != null ? `${row.avgAdherencePct}%` : '—'}</span>
-                  <div className="wl-programs-adherence-bar" aria-hidden>
-                    <i style={{ width: `${row.avgAdherencePct ?? 0}%` }} />
+          {filtered.map((row) => {
+            const dateRange = formatProgramDateRange(row.program, isEs);
+            return (
+              <tr
+                key={row.id}
+                className="wl-programs-table-row"
+                tabIndex={0}
+                aria-label={
+                  isEs ? `Abrir programa ${row.name}` : `Open program ${row.name}`
+                }
+                onClick={(e) => {
+                  if (programRowClickIgnores(e.target)) return;
+                  openProgramRow(row);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  if (programRowClickIgnores(e.target)) return;
+                  e.preventDefault();
+                  openProgramRow(row);
+                }}
+              >
+                <td>
+                  <strong className="wl-programs-table-row__name">{row.name}</strong>
+                  {dateRange ? (
+                    <p className="wl-programs-table-row__dates">{dateRange}</p>
+                  ) : null}
+                </td>
+                <td className="wl-programs-col-status">
+                  <ProgramStatusBadge status={row.status} isEs={isEs} />
+                </td>
+                <td>
+                  <ProgramEnrolledAvatars
+                    enrolledAthletes={row.enrolledAthletes}
+                    isEs={isEs}
+                    onClick={row.enrolledAthletes.length > 0 ? () => openAssign(row) : undefined}
+                  />
+                </td>
+                <td>
+                  <div className="wl-programs-adherence-cell">
+                    <span>{row.avgAdherencePct != null ? `${row.avgAdherencePct}%` : '—'}</span>
+                    <div className="wl-programs-adherence-bar" aria-hidden>
+                      <i style={{ width: `${row.avgAdherencePct ?? 0}%` }} />
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>{new Date(row.updatedAt).toLocaleDateString(isEs ? 'es' : 'en')}</td>
-              <td className="wl-programs-col-actions">
-                <ProgramActionsMenu
-                  isEs={isEs}
-                  onEdit={() => runProgramAction(row, 'edit')}
-                  onAssign={() => runProgramAction(row, 'assign')}
-                  onDuplicate={() => runProgramAction(row, 'duplicate')}
-                  onDelete={() => runProgramAction(row, 'delete')}
-                />
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>{formatShortDateFriendly(row.updatedAt, isEs)}</td>
+                <td className="wl-programs-col-actions">
+                  <ProgramActionsMenu
+                    isEs={isEs}
+                    onEdit={() => runProgramAction(row, 'edit')}
+                    onSchedule={() => openSchedule(row)}
+                    onAssign={() => runProgramAction(row, 'assign')}
+                    onDuplicate={() => runProgramAction(row, 'duplicate')}
+                    onDelete={() => runProgramAction(row, 'delete')}
+                  />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -319,6 +355,17 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
         setAssignProgramId(null);
         setAssignAthleteId(undefined);
       }}
+    />
+  ) : null;
+
+  const scheduleSheet = scheduleProgram ? (
+    <WlProgramScheduleSheet
+      isEs={isEs}
+      programName={scheduleProgram.name}
+      program={scheduleProgram.program}
+      exercises={motorExercises}
+      onClose={() => setScheduleProgramId(null)}
+      onSave={handleSaveSchedule}
     />
   ) : null;
 
@@ -357,6 +404,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             showBack={false}
             onBack={() => setMobileDetailId(null)}
             onEdit={() => runProgramAction(mobileDetailProgram, 'edit')}
+            onSchedule={() => openSchedule(mobileDetailProgram)}
             onAssign={() => runProgramAction(mobileDetailProgram, 'assign')}
             onDuplicate={() => runProgramAction(mobileDetailProgram, 'duplicate')}
             onDelete={() => runProgramAction(mobileDetailProgram, 'delete')}
@@ -365,6 +413,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
             }
           />
           {assignSheet}
+          {scheduleSheet}
           {createSheet}
         </section>
         {confirmModal}
@@ -421,6 +470,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
                 isEs={isEs}
                 onOpen={() => setMobileDetailId(row.id)}
                 onEdit={() => runProgramAction(row, 'edit')}
+                onSchedule={() => openSchedule(row)}
                 onAssign={() => runProgramAction(row, 'assign')}
                 onDuplicate={() => runProgramAction(row, 'duplicate')}
                 onDelete={() => runProgramAction(row, 'delete')}
@@ -432,6 +482,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
         {!programsLoading && filtered.length > 0 && !isMobile ? programsTable : null}
 
         {assignSheet}
+        {scheduleSheet}
         {createSheet}
       </div>
       {confirmModal}

@@ -112,7 +112,7 @@
 }
 
 .app-breadcrumb__current {
-  color: var(--wl-text-primary, #fafafa);
+  color: var(--wl-text-accent, var(--v2-accent));
   font-size: var(--wl-type-body-size, 0.8125rem);
   font-weight: var(--wl-type-body-weight-strong, 600);
   letter-spacing: 0;
@@ -128,7 +128,11 @@
   font-weight: var(--wl-type-page-title-weight, 700);
   letter-spacing: var(--wl-type-page-title-tracking, -0.02em);
   line-height: var(--wl-type-page-title-leading, 1.2);
-  color: #ffffff;
+  background: var(--color-accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 /* Icon-only back control (editor sticky head, compact chrome) */

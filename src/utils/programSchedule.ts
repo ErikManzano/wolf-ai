@@ -12,7 +12,8 @@ export interface ProgramDraftInput {
   primaryGoal?: SessionGoal;
 }
 
-const TEMPLATE_ATHLETE: Athlete = {
+/** Template athlete used when building/resizing coach programs without a live profile. */
+export const TEMPLATE_ATHLETE: Athlete = {
   id: TEMPLATE_PROGRAM_ATHLETE_ID,
   name: 'Template',
   level: 'intermediate',
@@ -138,4 +139,25 @@ export function buildProgramDraft(input: ProgramDraftInput): GeneratedProgram {
 
 export function totalTrainingDays(totalWeeks: number, daysPerWeek: number): number {
   return Math.max(1, Math.round(totalWeeks)) * Math.max(1, Math.round(daysPerWeek));
+}
+
+/** Short date for UI (e.g. 3 jul / Jul 3). Accepts YYYY-MM-DD or full ISO. */
+export function formatShortDateFriendly(iso: string, isEs: boolean): string {
+  const raw = iso.trim();
+  const d = raw.includes('T') ? new Date(raw) : new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(isEs ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' });
+}
+
+/** Compact range label for program lists. */
+export function formatProgramDateRange(
+  program: Pick<GeneratedProgram, 'startDate' | 'endDate' | 'totalWeeks'>,
+  isEs: boolean,
+): string | null {
+  if (!program.startDate) return null;
+  const end =
+    program.endDate && program.endDate >= program.startDate
+      ? program.endDate
+      : computeProgramEndDate(program.startDate, program.totalWeeks || 1);
+  return `${formatShortDateFriendly(program.startDate, isEs)} → ${formatShortDateFriendly(end, isEs)}`;
 }

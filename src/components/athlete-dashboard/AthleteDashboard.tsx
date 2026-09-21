@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   ArrowRight,
@@ -16,6 +16,8 @@ import { useWolfAssign } from '../../context/WolfAssignContext';
 import PerformanceStatsHistory from '../PerformanceStatsHistory';
 import { buildAthleteDashboardModel } from '../../utils/athleteDashboardStats';
 import { LevelBadge } from '../wl-athletes/LevelBadge';
+import { WlPrsFlow } from '../wl-prs/WlPrsFlow';
+import type { PrLiftId } from '../../models/liftLogs';
 import {
   type ProgramStatsKpiCard,
   ProgramStatsKpiGrid,
@@ -59,6 +61,7 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
     unreadPlanChangeCount,
     markPlanChangeNotificationRead,
     loadPlanChangeNotifications,
+    reloadWlAthletesFromApi,
   } = useWolfAssign();
 
   useEffect(() => {
@@ -144,13 +147,41 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
     },
   ];
 
-  const prMarks = [
-    { key: 'sn', label: 'Snatch', value: model.oneRM.snatch },
-    { key: 'cj', label: 'C&J', value: model.oneRM.cleanJerk },
-    { key: 'bs', label: isEs ? 'Sentadilla' : 'Back squat', value: model.oneRM.backSquat },
-    { key: 'fs', label: 'Front squat', value: model.oneRM.frontSquat },
-    ...(model.deadliftKg ? [{ key: 'dl', label: 'Deadlift', value: model.deadliftKg }] : []),
+  const [prsView, setPrsView] = useState<PrLiftId | 'hub' | null>(null);
+  const linkedAthleteId = athleteUser?.linkedAthleteId;
+  const profile = useMemo(
+    () => wlAthletes.find((a) => a.id === linkedAthleteId),
+    [wlAthletes, linkedAthleteId],
+  );
+
+  const openPrs = (liftId: PrLiftId | 'hub') => {
+    if (!linkedAthleteId) return;
+    setPrsView(liftId);
+  };
+
+  const prMarks: { key: string; label: string; value: number; liftId: PrLiftId }[] = [
+    { key: 'sn', label: 'Snatch', value: model.oneRM.snatch, liftId: 'snatch' },
+    { key: 'cj', label: 'C&J', value: model.oneRM.cleanJerk, liftId: 'clean_jerk' },
+    { key: 'bs', label: isEs ? 'Sentadilla' : 'Back squat', value: model.oneRM.backSquat, liftId: 'back_squat' },
+    { key: 'fs', label: 'Front squat', value: model.oneRM.frontSquat, liftId: 'front_squat' },
+    ...(model.deadliftKg ? [{ key: 'dl', label: 'Deadlift', value: model.deadliftKg, liftId: 'deadlift' as const }] : []),
   ];
+
+  if (prsView && linkedAthleteId) {
+    return (
+      <WlPrsFlow
+        athleteId={linkedAthleteId}
+        athleteName={model.displayName}
+        isEs={isEs}
+        canLog
+        oneRM={profile?.oneRM ?? model.oneRM}
+        createdByUserId={currentUser?.id}
+        initialLiftId={prsView === 'hub' ? null : prsView}
+        onClose={() => setPrsView(null)}
+        onLogsChanged={() => void reloadWlAthletesFromApi()}
+      />
+    );
+  }
 
   return (
     <div className="mock-view super-dashboard athlete-dashboard">
@@ -211,20 +242,31 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({ language, onOpenPla
         <ProgramStatsKpiGrid cards={kpiCards} />
       </div>
 
-      <section className="cd-panel cd-panel--dense ad-pr-panel" aria-label={isEs ? 'Marcas actuales' : 'Current marks'}>
+      <section className="cd-panel cd-panel--dense ad-pr-panel" aria-label={isEs ? 'Mis PRs' : 'My PRs'}>
         <div className="cd-panel__head">
           <h2 className="cd-panel__title">
             <Award size={16} aria-hidden />
-            {isEs ? 'Marcas actuales' : 'Current marks'}
+            {isEs ? 'Mis PRs' : 'My PRs'}
           </h2>
+          {linkedAthleteId ? (
+            <button type="button" className="cd-link-btn" onClick={() => openPrs('hub')}>
+              {isEs ? 'Ver todos' : 'See all'}
+            </button>
+          ) : null}
         </div>
         <div className="cd-panel__body ad-pr-panel__body">
           <div className="ad-pr-strip">
             {prMarks.map((pr) => (
-              <div key={pr.key} className="ad-pr-card">
+              <button
+                key={pr.key}
+                type="button"
+                className="ad-pr-card ad-pr-card--nav"
+                onClick={() => openPrs(pr.liftId)}
+                disabled={!linkedAthleteId}
+              >
                 <span className="ad-pr-card__label">{pr.label}</span>
                 <strong className="ad-pr-card__value">{pr.value > 0 ? `${pr.value} kg` : '—'}</strong>
-              </div>
+              </button>
             ))}
             {model.sinclair ? (
               <div className="ad-pr-card ad-pr-card--accent">

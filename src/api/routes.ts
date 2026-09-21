@@ -1,5 +1,8 @@
 import { Router, type IRouter, type Request } from 'express';
 import type { Athlete, Exercise, ProgramAssignment, ProgramAssignmentVersion, RepOutcome, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
+import type { AthleteLiftLog, CreateAthleteLiftLogInput } from '../models/liftLogs';
+import { isPrLiftId, PR_LIFTS } from '../components/wl-prs/PrLiftCatalog';
+import { epleyE1rm } from '../components/wl-prs/e1rm';
 import type {
   AthleteLoadCalibration,
   CoachExerciseOverride,
@@ -32,7 +35,7 @@ import { PostgresStore } from './postgresStore';
 import { CoachService, CoachServiceError } from './coach-service';
 import { cloneProgramForAthlete } from '../models/coach-architecture';
 import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../models/coach-architecture';
-import { getEnrollmentsForCoachProgram, upsertAssignmentInList } from '../utils/wlAssignmentRules';
+import { athleteCanTakeProgram, getEnrollmentsForCoachProgram, MAX_ACTIVE_PROGRAMS_PER_ATHLETE, upsertAssignmentInList } from '../utils/wlAssignmentRules';
 import { hashPassword, matchesStoredPassword } from '../utils/passwordCrypto';
 import { userMatchesLoginId } from '../utils/loginIdentifier';
 import { signAccessToken, verifyAccessToken } from './authTokens';
@@ -63,6 +66,7 @@ export interface MockApiState {
   coachPrograms: CoachProgram[];
   /** athleteProfileId → coachId dueño (modo memoria sin Postgres) */
   wlAthleteCoachById: Record<string, string>;
+  athleteLiftLogs: AthleteLiftLog[];
   planChangeNotifications: PlanChangeNotification[];
 }
 type RealtimeNotifier = (event: string, payload?: unknown) => void;
@@ -244,6 +248,57 @@ function listMockWlAthletes(actor: WolfUser, state: MockApiState): Athlete[] {
 function coachScopeId(actor: WolfUser): string {
   if (actor.role === 'coach') return actor.id;
   return 'user-coach-wl';
+}
+
+async function canAccessAthleteLiftLogs(
+  actor: WolfUser,
+  athleteId: string,
+  state: MockApiState,
+  store?: PostgresStore,
+): Promise<boolean> {
+  if (actor.role === 'super_admin') return true;
+  if (actor.role === 'athlete') return actor.linkedAthleteId === athleteId;
+  if (actor.role === 'coach') {
+    if (store) {
+      const profile = await store.getAthleteProfileById(athleteId);
+      return profile?.coachId === actor.id;
+    }
+    return coachIdForMockAthlete(athleteId, state.users, state.wlAthleteCoachById) === actor.id;
+  }
+  return false;
+}
+
+function parseLiftLogBody(body: unknown): CreateAthleteLiftLogInput | { error: string } {
+  const raw = (body ?? {}) as Partial<CreateAthleteLiftLogInput> & { lift_id?: string };
+  const liftId = (raw.liftId ?? raw.lift_id ?? '').trim();
+  if (!isPrLiftId(liftId)) return { error: 'liftId is required and must be a known lift.' };
+  const kg = Number(raw.kg);
+  const reps = Math.round(Number(raw.reps));
+  if (!Number.isFinite(kg) || kg <= 0 || kg > 500) return { error: 'kg must be between 0 and 500.' };
+  if (!Number.isInteger(reps) || reps < 1 || reps > 30) return { error: 'reps must be an integer 1–30.' };
+  const notes = typeof raw.notes === 'string' ? raw.notes.trim() : '';
+  return {
+    liftId,
+    kg,
+    reps,
+    notes: notes || undefined,
+    loggedAt: typeof raw.loggedAt === 'string' && raw.loggedAt ? raw.loggedAt : undefined,
+  };
+}
+
+function syncMockAnchorOneRm(state: MockApiState, athleteId: string, liftId: AthleteLiftLog['liftId']): void {
+  const oneRmKey = PR_LIFTS[liftId]?.oneRmKey;
+  if (!oneRmKey) return;
+  const athlete = state.athletes.find((a) => a.id === athleteId);
+  if (!athlete) return;
+  let best = 0;
+  for (const log of state.athleteLiftLogs) {
+    if (log.athleteProfileId !== athleteId || log.liftId !== liftId) continue;
+    best = Math.max(best, epleyE1rm(log.kg, log.reps));
+  }
+  const rounded = Math.round(best);
+  if (rounded <= 0 || rounded <= (athlete.oneRM[oneRmKey] ?? 0)) return;
+  athlete.oneRM = { ...athlete.oneRM, [oneRmKey]: rounded };
 }
 
 function coachProgramsScope(actor: WolfUser): string {
@@ -1487,7 +1542,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(403).json({ error: 'Coach session required.' });
       return;
     }
-    const body = req.body as { coachId?: string; athleteProfileId?: string; athleteUserId?: string; program?: ProgramAssignment['program'] };
+    const body = req.body as { coachId?: string; athleteProfileId?: string; athleteUserId?: string; program?: ProgramAssignment['program']; coachProgramId?: string };
     if (!body.coachId || !body.athleteProfileId || !body.program) {
       res.status(400).json({ error: 'coachId, athleteProfileId and program are required.' });
       return;
@@ -1503,6 +1558,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
           body.athleteProfileId,
           body.program,
           body.athleteUserId,
+          body.coachProgramId,
         );
         res.status(201).json(created);
         return;
@@ -1514,6 +1570,10 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
         throw err;
       }
     }
+    if (!athleteCanTakeProgram(state.assignments, body.athleteProfileId, body.coachProgramId)) {
+      res.status(400).json({ error: `Athlete already has ${MAX_ACTIVE_PROGRAMS_PER_ATHLETE} programs assigned.` });
+      return;
+    }
     const id = `asg-${Date.now()}`;
     const clonedProgram = cloneProgramForAthlete(body.program, body.athleteProfileId);
     const next: ProgramAssignment = {
@@ -1521,6 +1581,7 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       coachId: body.coachId,
       athleteProfileId: body.athleteProfileId,
       ...(body.athleteUserId ? { athleteUserId: body.athleteUserId } : {}),
+      ...(body.coachProgramId ? { coachProgramId: body.coachProgramId } : {}),
       version: 1,
       versionHistory: [],
       program: clonedProgram,
@@ -2412,21 +2473,108 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     res.json(state.athletes[idx]);
   });
 
+  router.post('/wl-athletes/:id/invite', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    const body = (req.body ?? {}) as { email?: string; password?: string };
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password?.trim();
+    if (!email || !password || password.length < 6) {
+      res.status(400).json({ error: 'email and password (min 6) are required for invite.' });
+      return;
+    }
+
+    const users = store ? await store.getUsers() : state.users;
+    if (users.some((u) => u.email?.toLowerCase() === email)) {
+      res.status(409).json({ error: 'Email already registered.' });
+      return;
+    }
+    if (users.some((u) => u.linkedAthleteId === id)) {
+      res.status(409).json({ error: 'Athlete already has app access.' });
+      return;
+    }
+
+    if (store) {
+      const existing = await store.getAthleteProfileById(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      if (actor.role === 'coach' && existing.coachId !== actor.id) {
+        res.status(403).json({ error: 'Not your athlete.' });
+        return;
+      }
+      await store.createUser({
+        id: `user-${Date.now()}`,
+        name: existing.name,
+        role: 'athlete',
+        email,
+        password,
+        coachId: existing.coachId,
+        linkedAthleteId: existing.id,
+      });
+      notify?.('wl-athletes:changed', { coachId: existing.coachId });
+      const { coachId: _c, createdAt: _ca, updatedAt: _ua, ...profile } = existing;
+      res.status(201).json({
+        athlete: profile,
+        login: { email, temporaryPassword: password },
+      });
+      return;
+    }
+
+    const athlete = state.athletes.find((a) => a.id === id);
+    if (!athlete) {
+      res.status(404).json({ error: 'Not found.' });
+      return;
+    }
+    const ownerCoachId = coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById);
+    if (actor.role === 'coach' && ownerCoachId !== actor.id) {
+      res.status(403).json({ error: 'Not your athlete.' });
+      return;
+    }
+    state.users.push({
+      id: `user-${Date.now()}`,
+      name: athlete.name,
+      role: 'athlete',
+      email,
+      passwordHash: hashPassword(password),
+      coachId: ownerCoachId,
+      linkedAthleteId: id,
+    });
+    notify?.('wl-athletes:changed', { coachId: ownerCoachId });
+    res.status(201).json({
+      athlete,
+      login: { email, temporaryPassword: password },
+    });
+  });
+
   router.delete('/wl-athletes/:id', async (req, res) => {
     const actor = await userFromBearer(req, state, store);
-    if (!actor || actor.role !== 'super_admin') {
-      res.status(403).json({ error: 'Super admin session required.' });
+    if (!isCoachOrAdmin(actor)) {
+      res.status(403).json({ error: 'Coach session required.' });
       return;
     }
     const { id } = req.params as { id: string };
     if (store) {
       const existing = await store.getAthleteProfileById(id);
+      if (!existing) {
+        res.status(404).json({ error: 'Not found.' });
+        return;
+      }
+      if (actor.role === 'coach' && existing.coachId !== actor.id) {
+        res.status(403).json({ error: 'Not your athlete.' });
+        return;
+      }
       const result = await store.deleteAthleteProfileById(id);
       if (!result.ok) {
         res.status(result.error?.includes('active') ? 409 : 404).json({ error: result.error ?? 'Not found.' });
         return;
       }
-      notify?.('wl-athletes:changed', { coachId: existing?.coachId });
+      notify?.('wl-athletes:changed', { coachId: existing.coachId });
       res.status(204).send();
       return;
     }
@@ -2435,13 +2583,142 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(404).json({ error: 'Not found.' });
       return;
     }
+    if (actor.role === 'coach' && coachId !== actor.id) {
+      res.status(403).json({ error: 'Not your athlete.' });
+      return;
+    }
     if (state.assignments.some((a) => a.athleteProfileId === id)) {
       res.status(409).json({ error: 'Cannot delete athlete with an active assignment.' });
       return;
     }
     state.athletes = state.athletes.filter((a) => a.id !== id);
     delete state.wlAthleteCoachById[id];
+    state.athleteLiftLogs = state.athleteLiftLogs.filter((log) => log.athleteProfileId !== id);
     notify?.('wl-athletes:changed', { coachId });
+    res.status(204).send();
+  });
+
+  router.get('/wl-athletes/:id/lift-logs', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (!(await canAccessAthleteLiftLogs(actor, id, state, store))) {
+      res.status(403).json({ error: 'Not your athlete.' });
+      return;
+    }
+    if (store) {
+      const profile = await store.getAthleteProfileById(id);
+      if (!profile) {
+        res.status(404).json({ error: 'Athlete profile not found.' });
+        return;
+      }
+      res.json(await store.listAthleteLiftLogs(id));
+      return;
+    }
+    if (!state.athletes.some((a) => a.id === id)) {
+      res.status(404).json({ error: 'Athlete profile not found.' });
+      return;
+    }
+    res.json(
+      state.athleteLiftLogs
+        .filter((log) => log.athleteProfileId === id)
+        .sort((a, b) => b.loggedAt.localeCompare(a.loggedAt)),
+    );
+  });
+
+  router.post('/wl-athletes/:id/lift-logs', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+    const { id } = req.params as { id: string };
+    if (!(await canAccessAthleteLiftLogs(actor, id, state, store))) {
+      res.status(403).json({ error: 'Not your athlete.' });
+      return;
+    }
+    const parsed = parseLiftLogBody(req.body);
+    if ('error' in parsed) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    if (store) {
+      const profile = await store.getAthleteProfileById(id);
+      if (!profile) {
+        res.status(404).json({ error: 'Athlete profile not found.' });
+        return;
+      }
+      const log = await store.createAthleteLiftLog(id, {
+        ...parsed,
+        id: `liftlog-${randomUUID()}`,
+        createdByUserId: actor.id,
+      });
+      notify?.('wl-athletes:changed', { coachId: profile.coachId });
+      res.status(201).json(log);
+      return;
+    }
+    if (!state.athletes.some((a) => a.id === id)) {
+      res.status(404).json({ error: 'Athlete profile not found.' });
+      return;
+    }
+    const log: AthleteLiftLog = {
+      id: `liftlog-${randomUUID()}`,
+      athleteProfileId: id,
+      liftId: parsed.liftId,
+      kg: parsed.kg,
+      reps: parsed.reps,
+      loggedAt: parsed.loggedAt ?? new Date().toISOString(),
+      notes: parsed.notes,
+      createdByUserId: actor.id,
+    };
+    state.athleteLiftLogs.push(log);
+    syncMockAnchorOneRm(state, id, parsed.liftId);
+    notify?.('wl-athletes:changed', {
+      coachId: coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById),
+    });
+    res.status(201).json(log);
+  });
+
+  router.delete('/wl-athletes/:id/lift-logs/:logId', async (req, res) => {
+    const actor = await userFromBearer(req, state, store);
+    if (!actor) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+    const { id, logId } = req.params as { id: string; logId: string };
+    if (!(await canAccessAthleteLiftLogs(actor, id, state, store))) {
+      res.status(403).json({ error: 'Not your athlete.' });
+      return;
+    }
+    if (store) {
+      const profile = await store.getAthleteProfileById(id);
+      if (!profile) {
+        res.status(404).json({ error: 'Athlete profile not found.' });
+        return;
+      }
+      const ok = await store.deleteAthleteLiftLog(id, logId);
+      if (!ok) {
+        res.status(404).json({ error: 'Log not found.' });
+        return;
+      }
+      notify?.('wl-athletes:changed', { coachId: profile.coachId });
+      res.status(204).send();
+      return;
+    }
+    const idx = state.athleteLiftLogs.findIndex((log) => log.id === logId && log.athleteProfileId === id);
+    if (idx < 0) {
+      res.status(404).json({ error: 'Log not found.' });
+      return;
+    }
+    const liftId = state.athleteLiftLogs[idx]!.liftId;
+    state.athleteLiftLogs.splice(idx, 1);
+    syncMockAnchorOneRm(state, id, liftId);
+    notify?.('wl-athletes:changed', {
+      coachId: coachIdForMockAthlete(id, state.users, state.wlAthleteCoachById),
+    });
     res.status(204).send();
   });
 
@@ -3006,13 +3283,19 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
       res.status(404).json({ error: 'Coach program not found.' });
       return;
     }
-    const created: ProgramAssignment[] = [];
     for (const athleteProfileId of athleteProfileIds) {
       const owner = coachIdForMockAthlete(athleteProfileId, state.users, state.wlAthleteCoachById);
       if (owner !== coachId) {
         res.status(404).json({ error: `Athlete profile not found: ${athleteProfileId}` });
         return;
       }
+      if (!athleteCanTakeProgram(state.assignments, athleteProfileId, id)) {
+        res.status(400).json({ error: `Athlete already has ${MAX_ACTIVE_PROGRAMS_PER_ATHLETE} programs assigned.` });
+        return;
+      }
+    }
+    const created: ProgramAssignment[] = [];
+    for (const athleteProfileId of athleteProfileIds) {
       const clonedProgram = cloneProgramForAthlete(program.program, athleteProfileId, { name: program.name });
       const next: ProgramAssignment = {
         id: `asg-${Date.now()}-${athleteProfileId}`,

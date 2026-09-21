@@ -284,13 +284,20 @@ export function WlAthletesProvider({
 
   const deleteAthlete = useCallback(
     async (id: string): Promise<boolean> => {
-      if (!canManageWlAthletes) {
+      if (!canEditWlRoster) {
         pushAlert({
           tone: 'error',
           title: 'Sin permiso',
-          message: 'Solo el super admin puede eliminar perfiles WL.',
+          message: 'No puedes eliminar atletas de este roster.',
         });
         return false;
+      }
+      if (currentUser?.role === 'coach') {
+        const owned = athletes.some((a) => a.id === id);
+        if (!owned) {
+          pushAlert({ tone: 'error', title: 'Sin permiso', message: 'Ese atleta no está en tu roster.' });
+          return false;
+        }
       }
       if (!apiMode) {
         const ownerCoachId = coachIdForAthleteLocal(id) ?? coachScopeId(currentUser);
@@ -312,8 +319,69 @@ export function WlAthletesProvider({
       setAthletes((prev) => prev.filter((a) => a.id !== id));
       return true;
     },
-    [apiMode, apiToken, currentUser, canManageWlAthletes, pushAlert],
+    [apiMode, apiToken, currentUser, athletes, canEditWlRoster, pushAlert],
   );
+
+  const inviteAthlete = useCallback(
+    async (
+      id: string,
+      input: { email: string; password: string },
+    ): Promise<{ email: string; temporaryPassword: string } | null> => {
+      if (!canEditWlRoster) {
+        pushAlert({
+          tone: 'error',
+          title: 'Sin permiso',
+          message: 'No puedes invitar atletas de este roster.',
+        });
+        return null;
+      }
+      if (currentUser?.role === 'coach') {
+        const owned = athletes.some((a) => a.id === id);
+        if (!owned) {
+          pushAlert({ tone: 'error', title: 'Sin permiso', message: 'Ese atleta no está en tu roster.' });
+          return null;
+        }
+      }
+      if (!apiMode || !apiToken) {
+        pushAlert({
+          tone: 'error',
+          title: 'Sin sesión API',
+          message: 'Vuelve a iniciar sesión para crear el acceso.',
+        });
+        return null;
+      }
+
+      const res = await wlAthletesApiFetch(`/wl-athletes/${id}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: input.email, password: input.password }),
+      });
+      if (!res.ok) {
+        const detail = await readApiError(res);
+        pushAlert({ tone: 'error', title: 'No se pudo crear el acceso', message: detail });
+        return null;
+      }
+
+      const json = (await res.json()) as { login?: { email?: string; temporaryPassword?: string } };
+      const email = json.login?.email ?? input.email;
+      const temporaryPassword = json.login?.temporaryPassword ?? input.password;
+      pushAlert({
+        tone: 'success',
+        title: 'Acceso creado',
+        message: email,
+      });
+      return { email, temporaryPassword };
+    },
+    [apiMode, apiToken, currentUser, athletes, canEditWlRoster, pushAlert],
+  );
+
+  const reloadAthletesFromApi = useCallback(async () => {
+    if (currentUser?.role === 'athlete') {
+      await loadOwnAthleteProfile();
+      return;
+    }
+    await loadAthletesFromApi();
+  }, [currentUser?.role, loadOwnAthleteProfile, loadAthletesFromApi]);
 
   const value = useMemo<WlAthletesContextValue>(
     () => ({
@@ -324,10 +392,11 @@ export function WlAthletesProvider({
       createAthlete,
       updateAthlete,
       deleteAthlete,
-      reloadAthletesFromApi: loadAthletesFromApi,
+      inviteAthlete,
+      reloadAthletesFromApi,
       rosterForCoach,
     }),
-    [athletes, athletesLoading, canManageWlAthletes, canEditWlRoster, createAthlete, updateAthlete, deleteAthlete, loadAthletesFromApi, rosterForCoach],
+    [athletes, athletesLoading, canManageWlAthletes, canEditWlRoster, createAthlete, updateAthlete, deleteAthlete, inviteAthlete, reloadAthletesFromApi, rosterForCoach],
   );
 
   return <WlAthletesContext.Provider value={value}>{children}</WlAthletesContext.Provider>;

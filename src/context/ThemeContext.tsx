@@ -40,7 +40,7 @@ function applyTheme(theme: WolfTheme): void {
   document.documentElement.style.colorScheme = theme;
   document
     .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-    ?.setAttribute('content', theme === 'light' ? '#f5f5f4' : '#0a0c10');
+    ?.setAttribute('content', theme === 'light' ? '#f4ecea' : '#0a0c10');
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
