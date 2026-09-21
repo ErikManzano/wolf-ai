@@ -56,7 +56,7 @@ import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
 import { SessionWeekStatsPanel } from './session-editor/SessionWeekStatsPanel';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
 import { EditorProgrammingRail } from './session-editor/EditorProgrammingRail';
-import { formatShortDate, programDayDate } from './session-editor/programScienceStats';
+import { programDayDate } from './session-editor/programScienceStats';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useWolfAlert } from '../context/WolfAlertContext';
 
@@ -1207,9 +1207,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [statsAthleteOptions],
   );
 
-  const isTabletSplit = useMediaQuery('(min-width: 1100px)');
   const showProgrammingRail = Boolean(program) && sessionEditorView === 'sheet';
-  const programmingRailOverlay = !isTabletSplit;
 
   const copyJson = useCallback(async () => {
     if (!program) return;
@@ -1744,73 +1742,63 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               id="wolf-program-panel-editor"
               role="tabpanel"
               aria-labelledby="wolf-program-tab-editor"
-              className={`wolf-program-customize-panel wolf-program-customize-panel--editor${showProgrammingRail ? ' wolf-program-customize-panel--editor-split' : ''}`}
+              className="wolf-program-customize-panel wolf-program-customize-panel--editor"
             >
               <div
-                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}${showProgrammingRail && isTabletSplit ? ' wolf-program-day-board--with-stats-rail' : ''}`}
+                className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}`}
               >
                 {sessionEditorView === 'sheet'
                   ? chromePortalNode
                     ? programDayNavigation
                     : programFullNavigation
                   : null}
-                <div className="wolf-program-editor-split">
-                  <div className="wolf-program-editor-split__main">
-                    {daySession ? (
-                      <div
-                        key={`${selectedWeek}-${selectedDay}`}
-                        id="wolf-program-day-panel-session"
-                        className="wolf-program-session-pane wolf-program-day-board__pane"
-                      >
-                        {selectedDayDateIso && sessionEditorView === 'sheet' ? (
-                          <p className="wl-day-date-chip">
-                            {formatShortDate(selectedDayDateIso, isEs)}
-                          </p>
-                        ) : null}
-                        <OlympicSessionEditor
-                          session={daySession}
-                          athlete={athleteForEngine}
-                          exercises={motorExercises}
-                          catalog={sessionCatalog}
-                          isEs={isEs}
-                          onChange={handleSessionEdit}
-                          draftSavedAt={sessionSavedAt}
-                          syncPending={sessionSyncPending}
-                          saveState={sessionSaveState ?? undefined}
-                          onRetrySave={onRetryProgramSave}
-                          onFlushAutosave={onFlushAutosave}
-                          dayLabel={selectedDayLabel}
-                          weekNumber={selectedWeek}
-                          dayNumber={selectedDay}
-                          embedded
-                          onViewChange={setSessionEditorView}
-                          onMobileExerciseFocusChange={
-                            pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
-                          }
-                          onDuplicateDay={handleDuplicateDay}
-                          canDuplicateDay={canAddDay}
-                          onRemoveDay={() => handleRemoveDay(selectedDay)}
-                          canRemoveDay={canRemoveDay}
-                        />
-                      </div>
+                {daySession ? (
+                  <div
+                    key={`${selectedWeek}-${selectedDay}`}
+                    id="wolf-program-day-panel-session"
+                    className="wolf-program-session-pane wolf-program-day-board__pane"
+                  >
+                    {showProgrammingRail && program ? (
+                      <EditorProgrammingRail
+                        key={`prog-bar-${selectedWeek}-${statsAthleteId || 'none'}`}
+                        athlete={statsAthleteForEngine}
+                        exercises={motorExercises}
+                        isEs={isEs}
+                        weekNumber={selectedWeek}
+                        selectedDay={selectedDay}
+                        weekData={selectedWeekData}
+                        program={program}
+                        onSelectDay={handleWeekStatsDaySelect}
+                        dayDateIso={selectedDayDateIso}
+                      />
                     ) : null}
-                  </div>
-                  {showProgrammingRail && program ? (
-                    <EditorProgrammingRail
-                      key={`prog-rail-${selectedWeek}-${statsAthleteId || 'none'}`}
-                      athlete={statsAthleteForEngine}
+                    <OlympicSessionEditor
+                      session={daySession}
+                      athlete={athleteForEngine}
                       exercises={motorExercises}
+                      catalog={sessionCatalog}
                       isEs={isEs}
+                      onChange={handleSessionEdit}
+                      draftSavedAt={sessionSavedAt}
+                      syncPending={sessionSyncPending}
+                      saveState={sessionSaveState ?? undefined}
+                      onRetrySave={onRetryProgramSave}
+                      onFlushAutosave={onFlushAutosave}
+                      dayLabel={selectedDayLabel}
                       weekNumber={selectedWeek}
-                      selectedDay={selectedDay}
-                      weekData={selectedWeekData}
-                      program={program}
-                      previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
-                      onSelectDay={handleWeekStatsDaySelect}
-                      overlay={programmingRailOverlay}
+                      dayNumber={selectedDay}
+                      embedded
+                      onViewChange={setSessionEditorView}
+                      onMobileExerciseFocusChange={
+                        pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
+                      }
+                      onDuplicateDay={handleDuplicateDay}
+                      canDuplicateDay={canAddDay}
+                      onRemoveDay={() => handleRemoveDay(selectedDay)}
+                      canRemoveDay={canRemoveDay}
                     />
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
