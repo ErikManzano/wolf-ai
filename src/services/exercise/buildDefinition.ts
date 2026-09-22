@@ -10,7 +10,7 @@ export function buildExerciseDefinition(
   options?: { coachId?: string | null; legacyExerciseId?: string | null; locale?: 'es' | 'en' },
 ): ExerciseDefinition {
   const locale = options?.locale ?? 'en';
-  const displayName = composeDisplayName(input.composition, bundle, locale);
+  const displayName = input.displayName?.trim() || composeDisplayName(input.composition, bundle, locale);
   const signature = buildSignature(input.composition);
   const family = isSingleComposition(input.composition) ? input.composition.family : input.composition.segments[0]?.family ?? null;
 

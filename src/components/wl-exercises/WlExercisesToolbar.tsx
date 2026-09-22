@@ -26,8 +26,6 @@ export function WlExercisesToolbar({
   filtersOpen,
   onFiltersOpenChange,
   onCreate,
-  onManageFamilies,
-  onManageLibrary,
 }: {
   isEs: boolean;
   search: string;
@@ -43,8 +41,6 @@ export function WlExercisesToolbar({
   filtersOpen: boolean;
   onFiltersOpenChange: (open: boolean) => void;
   onCreate: () => void;
-  onManageFamilies: () => void;
-  onManageLibrary: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const filtersActive = discipline !== 'all' || origin !== 'all' || sort !== 'name_asc';
@@ -90,16 +86,6 @@ export function WlExercisesToolbar({
           {filtersOpen ? (
             <div className="wl-exercises-filters-popover" role="dialog" aria-label={isEs ? 'Filtros' : 'Filters'}>
               <label>
-                {isEs ? 'Orden' : 'Sort'}
-                <select value={sort} onChange={(event) => onSortChange(event.target.value as ExerciseSortId)}>
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {isEs ? option.labelEs : option.labelEn}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
                 {isEs ? 'Disciplina' : 'Discipline'}
                 <select
                   value={discipline}
@@ -122,14 +108,16 @@ export function WlExercisesToolbar({
                   ))}
                 </select>
               </label>
-              <div className="wl-exercises-filters-popover__footer">
-                <button type="button" className="wl-exercises-filters-popover__link" onClick={onManageFamilies}>
-                  {isEs ? 'Gestionar carpetas' : 'Manage folders'}
-                </button>
-                <button type="button" className="wl-exercises-filters-popover__link" onClick={onManageLibrary}>
-                  {isEs ? 'Copia de seguridad' : 'Backup'}
-                </button>
-              </div>
+              <label>
+                {isEs ? 'Orden' : 'Sort'}
+                <select value={sort} onChange={(event) => onSortChange(event.target.value as ExerciseSortId)}>
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {isEs ? option.labelEs : option.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           ) : null}
         </div>

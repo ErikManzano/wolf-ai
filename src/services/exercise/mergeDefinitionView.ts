@@ -4,6 +4,7 @@ import type {
   ExerciseLifecycleStatus,
   MergedDefinitionView,
 } from '../../models/exercise';
+import { sanitizeExerciseDisplayName } from '../../utils/exerciseDisplayName';
 import { customFamilyTag, stripCustomFamilyTags } from '../../models/exercise/coachFamily';
 import { inferLifecycleStatus } from '../../models/exercise/lifecycle';
 
@@ -13,7 +14,8 @@ export function mergeDefinitionView(
 ): MergedDefinitionView {
   const lifecycleStatus = inferLifecycleStatus(def);
   const hiddenByCoach = Boolean(coachOverride?.override.hidden);
-  const effectiveDisplayName = coachOverride?.override.displayName?.trim() || def.displayName;
+  const rawDisplayName = coachOverride?.override.displayName?.trim() || def.displayName;
+  const effectiveDisplayName = sanitizeExerciseDisplayName(rawDisplayName);
   const overrideFolderId = coachOverride?.override.customFamilyId;
   const tags =
     overrideFolderId !== undefined

@@ -2,6 +2,7 @@ import concentradoJson from './exercises-concentrado.json';
 import type { ExerciseDefinition } from '../models/exercise';
 import type { TrainingObjectiveCode } from '../models/exercise/taxonomy';
 import type { SingleComposition } from '../models/exercise/composition';
+import { sanitizeExerciseDisplayName } from '../utils/exerciseDisplayName';
 import { buildExerciseDefinition } from '../services/exercise/buildDefinition';
 import { buildSearchText } from '../services/exercise/composeDisplayName';
 import { getExerciseTaxonomy } from '../services/exercise';
@@ -77,14 +78,16 @@ export function buildConcentradoDefinition(item: ConcentradoExercise): ExerciseD
   );
   const cuesEn = [item.cuesEn, item.variations?.join(' ')].filter(Boolean).join(' ').trim() || null;
   const cuesEs = item.cuesEs.trim() || null;
+  const displayName = sanitizeExerciseDisplayName(item.nameEn);
   return {
     ...base,
-    displayName: item.nameEn,
+    displayName,
     cuesEn,
     cuesEs,
     searchText: [
-      buildSearchText(item.nameEn, ACCESSORY_SINGLE),
+      buildSearchText(displayName, ACCESSORY_SINGLE),
       item.nameEs.toLowerCase(),
+      displayName.toLowerCase(),
       item.nameEn.toLowerCase(),
       ...tags,
     ]

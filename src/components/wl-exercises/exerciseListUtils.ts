@@ -119,8 +119,17 @@ export const OBJECTIVE_DOT_COLOR: Record<TrainingObjectiveCode, string> = {
 };
 
 export const GROUP_HEADER_HEIGHT = 32;
-export const LIST_ROW_HEIGHT_COMPACT = 40;
+export const LIST_ROW_HEIGHT_COMPACT = 46;
 export const LIST_ROW_HEIGHT_DETAILED = 56;
+export const EXERCISES_PAGE_SIZE = 40;
+export const EXERCISES_PAGE_SIZE_MOBILE = 20;
+
+export function initialExercisePageSize(): number {
+  if (typeof window === 'undefined') return EXERCISES_PAGE_SIZE;
+  return window.matchMedia('(max-width: 768px)').matches
+    ? EXERCISES_PAGE_SIZE_MOBILE
+    : EXERCISES_PAGE_SIZE;
+}
 
 export const DISCIPLINE_OPTIONS: {
   id: ExerciseDisciplineFilter;
@@ -216,6 +225,7 @@ export function filterExerciseDefinitions(
     quickFilter?: ExerciseQuickFilter;
     favoriteIds?: Set<string>;
     recentIds?: Set<string>;
+    accessorySubFilter?: 'all' | 'unfiled';
   },
 ): MergedDefinitionView[] {
   const q = opts.search.trim().toLowerCase();
@@ -261,6 +271,10 @@ export function filterExerciseDefinitions(
       } else if (definitionFamily(def) !== opts.family) {
         return false;
       }
+    }
+
+    if (opts.family === 'accessory' && opts.accessorySubFilter === 'unfiled') {
+      if (customFamilyIdFromTags(def.tags)) return false;
     }
 
     if (minUsage > 0) {
@@ -412,6 +426,25 @@ export function sortExerciseDefinitionsByState(
 
   copy.sort((a, b) => compareName(a, b) * dir);
   return copy;
+}
+
+export function accessoryFolderCounts(definitions: MergedDefinitionView[]): {
+  unfiled: number;
+  folders: Record<string, number>;
+} {
+  let unfiled = 0;
+  const folders: Record<string, number> = {};
+  for (const def of definitions) {
+    if (definitionFamily(def) !== 'accessory') continue;
+    const folderId = customFamilyIdFromTags(def.tags);
+    if (folderId) {
+      const key = customFamilyFilterKey(folderId);
+      folders[key] = (folders[key] ?? 0) + 1;
+    } else {
+      unfiled += 1;
+    }
+  }
+  return { unfiled, folders };
 }
 
 export function familyCounts(definitions: MergedDefinitionView[]): Record<string, number> {
@@ -620,7 +653,14 @@ export function formatExerciseMetaLine(opts: {
   const parts = [opts.familyLabel, opts.typeLabel];
   if (opts.intensityLabel) parts.push(`Ref: ${opts.intensityLabel}`);
   if (opts.usageCount > 0) {
-    parts.push(opts.isEs ? `${opts.usageCount} programas` : `${opts.usageCount} programs`);
+    const label = opts.isEs
+      ? opts.usageCount === 1
+        ? '1 programa'
+        : `${opts.usageCount} programas`
+      : opts.usageCount === 1
+        ? '1 program'
+        : `${opts.usageCount} programs`;
+    parts.push(label);
   }
   return parts.join(' · ');
 }

@@ -78,7 +78,6 @@ export function ExerciseListTable({
       >
         <ExerciseListHeader
           isEs={isEs}
-          isMobile={isMobile}
           sort={sort}
           allSelected={allSelected}
           someSelected={someSelected}
@@ -97,7 +96,6 @@ export function ExerciseListTable({
             return (
               <ExerciseRow
                 item={node.item}
-                isMobile={isMobile}
                 selected={selectedIds.has(node.item.id)}
                 onToggleSelect={() => onToggleSelect(node.item.id)}
                 onShiftSelect={() => onShiftSelect(node.item.id)}

@@ -7,7 +7,6 @@ export function ExerciseRow({
   item,
   def,
   isEs,
-  isMobile,
   selected,
   onOpen,
   onEdit,
@@ -21,7 +20,6 @@ export function ExerciseRow({
   item: ExerciseListItem;
   def: MergedDefinitionView;
   isEs: boolean;
-  isMobile: boolean;
   selected: boolean;
   onOpen: () => void;
   onEdit: () => void;
@@ -34,12 +32,6 @@ export function ExerciseRow({
 }) {
   const isOfficial = !def.coachId;
   const typeDot = OBJECTIVE_DOT_COLOR[item.type] ?? '#71717a';
-  const usageLabel =
-    item.usageCount > 0
-      ? isEs
-        ? `${item.usageCount} ${item.usageCount === 1 ? 'programa' : 'programas'}`
-        : `${item.usageCount} ${item.usageCount === 1 ? 'program' : 'programs'}`
-      : '—';
 
   return (
     <article
@@ -80,41 +72,29 @@ export function ExerciseRow({
         <span className="wl-exercise-table-row__name" title={item.name}>
           {item.name}
         </span>
-        {isMobile ? (
-          <span className="wl-exercise-table-row__mobile-meta">
-            {item.familyLabel} · {item.typeLabel}
-          </span>
-        ) : null}
+        <span className="wl-exercise-table-row__mobile-meta">
+          {item.familyLabel} · {item.typeLabel}
+        </span>
       </div>
 
-      {!isMobile ? (
-        <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--family" role="gridcell">
-          <span className="wl-exercise-table-row__muted">{item.familyLabel}</span>
-        </div>
-      ) : null}
-
-      {!isMobile ? (
-        <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--type" role="gridcell">
-          <span className="wl-exercise-table-row__type">
-            <span className="wl-exercise-table-row__type-dot" style={{ background: typeDot }} aria-hidden />
-            {item.typeLabel}
-          </span>
-        </div>
-      ) : null}
-
-      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--usage" role="gridcell">
-        <span className="wl-exercise-table-row__usage-text">{usageLabel}</span>
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--family" role="gridcell">
+        <span className="wl-exercise-table-row__muted">{item.familyLabel}</span>
       </div>
 
-      {!isMobile ? (
-        <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--state" role="gridcell">
-          <span
-            className={`wl-exercise-table-badge${item.isOfficial ? ' wl-exercise-table-badge--official' : ' wl-exercise-table-badge--custom'}`}
-          >
-            {item.isOfficial ? (isEs ? 'OFICIAL' : 'OFFICIAL') : 'CUSTOM'}
-          </span>
-        </div>
-      ) : null}
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--type" role="gridcell">
+        <span className="wl-exercise-table-row__type">
+          <span className="wl-exercise-table-row__type-dot" style={{ background: typeDot }} aria-hidden />
+          {item.typeLabel}
+        </span>
+      </div>
+
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--state" role="gridcell">
+        <span
+          className={`wl-exercise-table-badge${item.isOfficial ? ' wl-exercise-table-badge--official' : ' wl-exercise-table-badge--custom'}`}
+        >
+          {item.isOfficial ? (isEs ? 'Oficial' : 'Official') : 'Custom'}
+        </span>
+      </div>
 
       <div
         className="wl-exercise-table-row__cell wl-exercise-table-row__cell--actions"

@@ -10,7 +10,6 @@ function SortArrow({ active, direction }: { active: boolean; direction: 'asc' | 
 
 export function ExerciseListHeader({
   isEs,
-  isMobile,
   sort,
   allSelected,
   someSelected,
@@ -18,7 +17,6 @@ export function ExerciseListHeader({
   onSortColumn,
 }: {
   isEs: boolean;
-  isMobile: boolean;
   sort: ExerciseListSortState;
   allSelected: boolean;
   someSelected: boolean;
@@ -59,26 +57,19 @@ export function ExerciseListHeader({
       <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--name" role="columnheader">
         {headerBtn('name', isEs ? 'EJERCICIO' : 'EXERCISE')}
       </div>
-      {!isMobile ? (
-        <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--family" role="columnheader">
-          {headerBtn('family', isEs ? 'FAMILIA' : 'FAMILY')}
-        </div>
-      ) : null}
-      {!isMobile ? (
-        <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--type" role="columnheader">
-          {headerBtn('type', isEs ? 'TIPO' : 'TYPE')}
-        </div>
-      ) : null}
-      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--usage" role="columnheader">
-        {headerBtn('usage', isEs ? 'USO' : 'USAGE')}
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--family" role="columnheader">
+        {headerBtn('family', isEs ? 'FAMILIA' : 'FAMILY')}
       </div>
-      {!isMobile ? (
-        <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--state" role="columnheader">
-          {headerBtn('state', isEs ? 'ESTADO' : 'STATUS')}
-        </div>
-      ) : null}
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--type" role="columnheader">
+        {headerBtn('type', isEs ? 'TIPO' : 'TYPE')}
+      </div>
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--state" role="columnheader">
+        {headerBtn('state', isEs ? 'ESTADO' : 'STATUS')}
+      </div>
       <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--actions" role="columnheader">
-        <span className="wl-exercise-table-header__label">{isEs ? 'ACCIONES' : 'ACTIONS'}</span>
+        <span className="wl-exercise-table-header__label wl-exercise-table-header__label--sr">
+          {isEs ? 'Acciones' : 'Actions'}
+        </span>
       </div>
     </div>
   );

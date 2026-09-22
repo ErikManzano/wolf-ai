@@ -36,6 +36,7 @@ export interface ExerciseDefinitionInput {
   composition: ExerciseComposition;
   objective: TrainingObjectiveCode;
   loadAnchor: ExerciseLoadAnchorCode;
+  displayName?: string;
   tags?: string[];
 }
 

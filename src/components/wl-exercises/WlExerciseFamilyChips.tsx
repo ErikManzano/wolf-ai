@@ -1,5 +1,4 @@
-import { customFamilyFilterKey, type CoachExerciseFamily } from '../../models/exercise/coachFamily';
-import { familyLabel } from '../../services/exercise/coachFamilyStore';
+import { isCustomFamilyFilter } from '../../models/exercise/coachFamily';
 import { WlExerciseChipBar, type ExerciseChipItem } from './WlExerciseChipBar';
 import {
   FAMILY_CHIP_ORDER,
@@ -13,7 +12,6 @@ export function WlExerciseFamilyChips({
   isEs,
   family,
   counts,
-  customFamilies,
   onFamilyChange,
   onQuickFilterChange,
 }: {
@@ -21,13 +19,18 @@ export function WlExerciseFamilyChips({
   family: ExerciseFamilyFilter;
   quickFilter?: ExerciseQuickFilter;
   counts: Record<string, number>;
-  customFamilies: CoachExerciseFamily[];
+  customFamilies?: unknown[];
   favoriteCount?: number;
   recentCount?: number;
   onFamilyChange: (family: ExerciseFamilyFilter) => void;
   onQuickFilterChange: (filter: ExerciseQuickFilter) => void;
 }) {
-  const activeId = family === 'all' ? 'all' : family;
+  const activeId =
+    family === 'all'
+      ? 'all'
+      : isCustomFamilyFilter(family)
+        ? 'accessory'
+        : family;
 
   const items: ExerciseChipItem[] = [
     { id: 'all', label: isEs ? 'Todos' : 'All', count: counts.all ?? 0 },
@@ -36,16 +39,6 @@ export function WlExerciseFamilyChips({
       label: FAMILY_DISPLAY_LABEL[code],
       count: counts[code] ?? 0,
     })),
-    ...customFamilies.map((entry) => {
-      const id = customFamilyFilterKey(entry.id);
-      return {
-        id,
-        label: familyLabel(entry, isEs),
-        count: counts[id] ?? 0,
-        swatchColor: entry.color?.trim() || '#d6d3d1',
-        variant: 'folder' as const,
-      };
-    }),
   ];
 
   const handleChange = (id: string) => {

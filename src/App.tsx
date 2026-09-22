@@ -155,6 +155,8 @@ function AppShell() {
 
   const isProgramEditorActive =
     activeView === 'programs' && programsView === 'editor' && Boolean(editingProgramId);
+  const isExercisesHubActive =
+    activeView === 'exercise-intelligence' || activeView === 'wl-exercises';
   /** Desktop always uses the compact icon rail; mobile uses the expanded drawer. */
   const showSidebarCollapsed = !isNarrowLayout;
 
@@ -197,7 +199,7 @@ function AppShell() {
 
   return (
       <div
-        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${isProgramEditorActive ? ' app-container--program-editor' : ''}`}
+        className={`app-container${showSidebarCollapsed ? ' app-container--sidebar-collapsed' : ''}${isProgramEditorActive ? ' app-container--program-editor' : ''}${isExercisesHubActive ? ' app-container--exercises-hub' : ''}`}
         onPointerDown={(e) => {
           if (!isNarrowLayout || e.pointerType === 'mouse' || lockMobileEdgeSwipe) return;
           gestureRef.current = { startX: e.clientX, startY: e.clientY, tracking: true };

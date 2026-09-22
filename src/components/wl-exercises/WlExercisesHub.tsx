@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   ExerciseDefinitionInput,
-  ExerciseDefinitionVersion,
   MergedDefinitionView,
   OverridePatch,
 } from '../../models/exercise';
@@ -17,19 +16,25 @@ import { customFamilyIdFromTags, customFamilyTag, stripCustomFamilyTags } from '
 import { familyLabel } from '../../services/exercise/coachFamilyStore';
 import { ExerciseBulkBar } from './ExerciseBulkBar';
 import { ExerciseLibraryManageModal, type LibraryModalFocus } from './ExerciseLibraryManageModal';
+import { ExerciseListPager } from './ExerciseListPager';
 import { ExerciseListTable } from './ExerciseListTable';
 import { ExerciseSkeletonGrid } from './ExerciseSkeletonGrid';
 import { WlExerciseCard } from './WlExerciseCard';
 import { WlExerciseDetail } from './WlExerciseDetail';
+import { WlExerciseAccessoryFolderChips } from './WlExerciseAccessoryFolderChips';
 import { WlExerciseFamilyChips } from './WlExerciseFamilyChips';
 import { WlExerciseMuscleChips } from './WlExerciseMuscleChips';
 import { WlExerciseFormModal, type ExerciseFormMode } from './WlExerciseFormModal';
 import { WlExercisesToolbar } from './WlExercisesToolbar';
 import {
   DISCIPLINE_OPTIONS,
+  accessoryFolderCounts,
   buildExerciseListNodes,
   countExerciseUsage,
+  EXERCISES_PAGE_SIZE,
+  EXERCISES_PAGE_SIZE_MOBILE,
   familyCounts,
+  initialExercisePageSize,
   filterExerciseDefinitions,
   hasExerciseDefinitionChanged,
   loadScaleForDefinition,
@@ -82,7 +87,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const {
     registryBrowse,
     exerciseTaxonomy,
-    exerciseRelationships,
     coachPrograms,
     refreshExerciseCatalog,
     createExerciseDefinition,
@@ -90,7 +94,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     forkExerciseDefinition,
     deleteExerciseDefinition,
     upsertCoachOverride,
-    fetchDefinitionDetail,
     motorExercises,
     motorExerciseDefinitions,
     coachExerciseOverrides,
@@ -103,6 +106,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [family, setFamily] = useState<ExerciseFamilyFilter>('all');
+  const [accessorySubFilter, setAccessorySubFilter] = useState<'all' | 'unfiled'>('all');
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroupFilter>('all');
   const [discipline, setDiscipline] = useState<ExerciseDisciplineFilter>('all');
   const [origin, setOrigin] = useState<ExerciseOriginFilter>('all');
@@ -112,6 +116,8 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [viewMode, setViewMode] = useState<ExerciseViewMode>(() => readExerciseViewMode());
   const [groupByFamily] = useState(() => readExerciseGroupByFamily());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [visibleLimit, setVisibleLimit] = useState(initialExercisePageSize);
+  const pageSize = isMobile ? EXERCISES_PAGE_SIZE_MOBILE : EXERCISES_PAGE_SIZE;
   const lastSelectedIdRef = useRef<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readExerciseFavorites());
   const [recentIds, setRecentIds] = useState<string[]>(() => readExerciseRecents());
@@ -126,6 +132,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [libraryFocus, setLibraryFocus] = useState<LibraryModalFocus>('families');
   const [libraryStartFamilyForm, setLibraryStartFamilyForm] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
+  const [detailInitialTab, setDetailInitialTab] = useState<'intel' | 'personalize'>('intel');
 
   const openLibrary = useCallback(
     (focus: LibraryModalFocus = 'families', opts?: { startFamilyForm?: boolean }) => {
@@ -135,8 +142,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     },
     [],
   );
-  const [versions, setVersions] = useState<ExerciseDefinitionVersion[]>([]);
-
   const familyLabelForDef = useCallback(
     (def: MergedDefinitionView) => {
       const customId = customFamilyIdFromTags(def.tags);
@@ -188,6 +193,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       quickFilter,
       favoriteIds: favoriteSet,
       recentIds: recentSet,
+      accessorySubFilter: muscleChipMode ? undefined : accessorySubFilter,
     });
     const effectiveSort: ExerciseListSortState =
       quickFilter === 'recent' ? { column: 'recent', direction: 'desc' } : columnSort;
@@ -210,7 +216,15 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     recentSet,
     recentIds,
     muscleChipMode,
+    accessorySubFilter,
   ]);
+
+  const accessoryFolderStats = useMemo(() => accessoryFolderCounts(scoped), [scoped]);
+
+  const displayedDefs = useMemo(
+    () => visibleDefs.slice(0, visibleLimit),
+    [visibleDefs, visibleLimit],
+  );
 
   const sort = useMemo(() => sortStateToSortId(columnSort), [columnSort]);
 
@@ -228,7 +242,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   );
   const listItems = useMemo(
     () =>
-      visibleDefs.map((def) =>
+      displayedDefs.map((def) =>
         toExerciseListItem(def, {
           isEs,
           typeLabel: taxonomyLabel(exerciseTaxonomy.objectives, def.objective, isEs),
@@ -238,7 +252,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
           familyLabel: familyLabelForDef(def),
         }),
       ),
-    [visibleDefs, isEs, exerciseTaxonomy.objectives, usageById, favoriteSet, motorExercises, familyLabelForDef],
+    [displayedDefs, isEs, exerciseTaxonomy.objectives, usageById, favoriteSet, motorExercises, familyLabelForDef],
   );
 
   const effectiveGroupByFamily = groupByFamily && !muscleChipMode && family === 'all';
@@ -250,7 +264,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     () => listNodes.filter((node) => node.kind === 'row').map((node) => node.item.id),
     [listNodes],
   );
-  const defById = useMemo(() => new Map(visibleDefs.map((def) => [def.id, def])), [visibleDefs]);
+  const defById = useMemo(() => new Map(displayedDefs.map((def) => [def.id, def])), [displayedDefs]);
   const selected = selectedId ? browse.definitions.find((def) => def.id === selectedId) ?? null : null;
   const usageCount = selected ? countExerciseUsage(coachPrograms, selected) : 0;
   const disciplineMeta = DISCIPLINE_OPTIONS.find((option) => option.id === discipline);
@@ -260,11 +274,20 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     setFamily('all');
     setMuscleGroup('all');
     setQuickFilter('none');
+    setAccessorySubFilter('all');
   }, [discipline]);
+
+  const handleFamilyChange = (nextFamily: ExerciseFamilyFilter) => {
+    setFamily(nextFamily);
+    if (nextFamily !== 'accessory' && !String(nextFamily).startsWith('folder:')) {
+      setAccessorySubFilter('all');
+    }
+  };
 
   useEffect(() => {
     setSelectedIds(new Set());
     lastSelectedIdRef.current = null;
+    setVisibleLimit(pageSize);
   }, [search, family, muscleGroup, origin, discipline, minUsage, quickFilter, viewMode]);
 
   useEffect(() => {
@@ -335,9 +358,10 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     lastSelectedIdRef.current = visibleRowIds[visibleRowIds.length - 1] ?? null;
   };
 
-  const openDetail = useCallback((def: MergedDefinitionView) => {
+  const openDetail = useCallback((def: MergedDefinitionView, opts?: { initialTab?: 'intel' | 'personalize' }) => {
     setSelectedId(def.id);
     setView('detail');
+    setDetailInitialTab(opts?.initialTab ?? 'intel');
     setRecentIds((current) => recordExerciseRecent(def.id, current));
     const url = new URL(window.location.href);
     url.searchParams.set('definitionId', def.legacyExerciseId ?? def.id);
@@ -347,6 +371,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const closeDetail = useCallback(() => {
     setView('library');
     setSelectedId(null);
+    setDetailInitialTab('intel');
     const url = new URL(window.location.href);
     url.searchParams.delete('definitionId');
     window.history.replaceState({}, '', url.toString());
@@ -364,16 +389,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       setView('detail');
     }
   }, [browse.definitions]);
-
-  useEffect(() => {
-    if (!selected?.id) {
-      setVersions([]);
-      return;
-    }
-    void fetchDefinitionDetail(selected.id).then((detail) => {
-      if (detail) setVersions(detail.versions);
-    });
-  }, [selected?.id, fetchDefinitionDetail]);
 
   const mobileTopBar = useMemo(
     () =>
@@ -462,7 +477,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     }
     pushAlert({
       tone: 'success',
-      message: isEs ? 'Override guardado' : 'Override saved',
+      message: isEs ? 'Personalización guardada' : 'Personalization saved',
     });
     await refreshExerciseCatalog();
     if (patch.hidden) closeDetail();
@@ -657,7 +672,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     isEs,
     onOpen: () => openDetail(def),
     onEdit: () => openForm('edit', def),
-    onPersonalize: () => openForm('fork', def),
+    onPersonalize: () => openDetail(def, { initialTab: 'personalize' }),
     onDuplicate: () => openForm('duplicate', def),
     onArchive: () => setConfirm({ action: 'archive' as const, def }),
     onDelete: () => {
@@ -808,11 +823,16 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
           def={selected}
           isEs={isEs}
           taxonomy={exerciseTaxonomy}
-          relationships={exerciseRelationships}
-          versions={versions}
           usageCount={usageCount}
+          initialTab={detailInitialTab}
           onBack={closeDetail}
-          onPrimary={() => openForm(selected.coachId ? 'edit' : 'fork', selected)}
+          onEdit={selected.coachId ? () => openForm('edit', selected) : undefined}
+          onDuplicate={() => openForm('duplicate', selected)}
+          onArchive={() => setConfirm({ action: 'archive', def: selected })}
+          onDelete={() => {
+            const used = usageById.get(selected.id) ?? 0;
+            setConfirm({ action: used > 0 ? 'archive' : 'delete', def: selected });
+          }}
           onSaveOverride={handleSaveOverride}
         />
         {formModal}
@@ -852,8 +872,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
           filtersOpen={filtersOpen}
           onFiltersOpenChange={setFiltersOpen}
           onCreate={openCreate}
-          onManageFamilies={() => openLibrary('families')}
-          onManageLibrary={() => openLibrary('backup')}
         />
 
         {muscleChipMode ? (
@@ -868,17 +886,26 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
             onQuickFilterChange={setQuickFilter}
           />
         ) : (
-          <WlExerciseFamilyChips
-            isEs={isEs}
-            family={family}
-            quickFilter={quickFilter}
-            counts={counts}
-            customFamilies={customFamilies}
-            favoriteCount={favoriteCount}
-            recentCount={recentCount}
-            onFamilyChange={setFamily}
-            onQuickFilterChange={setQuickFilter}
-          />
+          <>
+            <WlExerciseFamilyChips
+              isEs={isEs}
+              family={family}
+              quickFilter={quickFilter}
+              counts={counts}
+              onFamilyChange={handleFamilyChange}
+              onQuickFilterChange={setQuickFilter}
+            />
+            <WlExerciseAccessoryFolderChips
+              isEs={isEs}
+              family={family}
+              accessorySubFilter={accessorySubFilter}
+              unfiledCount={accessoryFolderStats.unfiled}
+              folderCounts={accessoryFolderStats.folders}
+              customFamilies={customFamilies}
+              onFamilyChange={handleFamilyChange}
+              onAccessorySubFilterChange={setAccessorySubFilter}
+            />
+          </>
         )}
 
         {browse.definitions.length === 0 && !catalogEmpty ? (
@@ -918,37 +945,48 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
             ) : null}
           </div>
         ) : viewMode === 'list' ? (
-          <ExerciseListTable
-            isEs={isEs}
-            isMobile={isMobile}
-            nodes={listNodes}
-            sort={quickFilter === 'recent' ? { column: 'recent', direction: 'desc' } : columnSort}
-            defById={defById}
-            selectedIds={selectedIds}
-            visibleRowIds={visibleRowIds}
-            onSortColumn={handleSortColumn}
-            onToggleAll={handleToggleAll}
-            onToggleSelect={handleToggleSelect}
-            onShiftSelect={handleShiftSelect}
-            bindItem={bindItem}
-            bulkBusy={confirmBusy}
-            onBulkFavorite={() => {
-              if (selectedIds.size === 0) return;
-              void runBulkFavorite();
-            }}
-            onBulkArchive={() => {
-              if (selectedIds.size === 0) return;
-              setBulkConfirm('archive');
-            }}
-            onBulkDelete={() => {
-              if (selectedIds.size === 0) return;
-              setBulkConfirm('delete');
-            }}
-            onBulkClear={() => {
-              setSelectedIds(new Set());
-              lastSelectedIdRef.current = null;
-            }}
-          />
+          <>
+            <ExerciseListTable
+              isEs={isEs}
+              isMobile={isMobile}
+              nodes={listNodes}
+              sort={quickFilter === 'recent' ? { column: 'recent', direction: 'desc' } : columnSort}
+              defById={defById}
+              selectedIds={selectedIds}
+              visibleRowIds={visibleRowIds}
+              onSortColumn={handleSortColumn}
+              onToggleAll={handleToggleAll}
+              onToggleSelect={handleToggleSelect}
+              onShiftSelect={handleShiftSelect}
+              bindItem={bindItem}
+              bulkBusy={confirmBusy}
+              onBulkFavorite={() => {
+                if (selectedIds.size === 0) return;
+                void runBulkFavorite();
+              }}
+              onBulkArchive={() => {
+                if (selectedIds.size === 0) return;
+                setBulkConfirm('archive');
+              }}
+              onBulkDelete={() => {
+                if (selectedIds.size === 0) return;
+                setBulkConfirm('delete');
+              }}
+              onBulkClear={() => {
+                setSelectedIds(new Set());
+                lastSelectedIdRef.current = null;
+              }}
+            />
+            <ExerciseListPager
+              isEs={isEs}
+              isMobile={isMobile}
+              shown={displayedDefs.length}
+              total={visibleDefs.length}
+              pageSize={pageSize}
+              dockHidden={selectedIds.size > 0}
+              onShowMore={() => setVisibleLimit((current) => current + pageSize)}
+            />
+          </>
         ) : (
           <>
             {selectedIds.size > 0 ? (
@@ -983,6 +1021,15 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
                 return <WlExerciseCard key={item.id} item={item} {...bindItem(def)} />;
               })}
             </div>
+            <ExerciseListPager
+              isEs={isEs}
+              isMobile={isMobile}
+              shown={displayedDefs.length}
+              total={visibleDefs.length}
+              pageSize={pageSize}
+              dockHidden={selectedIds.size > 0}
+              onShowMore={() => setVisibleLimit((current) => current + pageSize)}
+            />
           </>
         )}
       </div>

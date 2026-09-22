@@ -10,12 +10,14 @@ export function ExerciseMedia({
   mediaUrl,
   isEs,
   priority = true,
+  className,
 }: {
   name: string;
   family: ExerciseFamilyId | null;
   mediaUrl?: string | null;
   isEs: boolean;
   priority?: boolean;
+  className?: string;
 }) {
   const media = resolveExerciseMedia(mediaUrl, family);
   const [loaded, setLoaded] = useState(false);
@@ -48,7 +50,10 @@ export function ExerciseMedia({
   }, [expanded]);
 
   return (
-    <section className="wl-exercise-media" aria-label={isEs ? 'Imagen del ejercicio' : 'Exercise image'}>
+    <section
+      className={`wl-exercise-media${className ? ` ${className}` : ''}`}
+      aria-label={isEs ? 'Imagen del ejercicio' : 'Exercise image'}
+    >
       <div
         className="wl-exercise-media__frame"
         style={{ backgroundImage: failed ? undefined : `url("${media.lqip}")` }}

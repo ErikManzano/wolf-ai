@@ -77,12 +77,15 @@ export function WlExerciseFormModal({
   const [modifiers, setModifiers] = useState<ExerciseModifierCode[]>(seeded.modifiers);
   const [objective, setObjective] = useState<TrainingObjectiveCode>(initial?.objective ?? 'technique');
   const [loadAnchor, setLoadAnchor] = useState<ExerciseLoadAnchorCode>(initial?.loadAnchor ?? 'auto');
+  const [displayName, setDisplayName] = useState(initial?.effectiveDisplayName ?? '');
   const [customFamilyId, setCustomFamilyId] = useState<string | null>(() =>
     customFamilyIdFromTags(initial?.tags),
   );
   const { currentUserId } = useWolfAssign();
   const { families: customFamilies } = useCoachExerciseFamilies(currentUserId);
   const isComplex = Boolean(initial && !isSingleComposition(initial.composition));
+  const isFullForm = mode === 'create' || mode === 'edit' || mode === 'duplicate';
+  const loadAnchorLabel = isEs ? 'Referencia de intensidad' : 'Intensity reference';
 
   useEffect(() => {
     if (customFamilyId && !customFamilies.some((family) => family.id === customFamilyId)) {
@@ -99,6 +102,7 @@ export function WlExerciseFormModal({
     setModifiers(single.modifiers);
     setObjective(initial?.objective ?? 'technique');
     setLoadAnchor(initial?.loadAnchor ?? 'auto');
+    setDisplayName(initial?.effectiveDisplayName ?? '');
     setCustomFamilyId(customFamilyIdFromTags(initial?.tags));
   }, [initial, mode]);
 
@@ -137,6 +141,7 @@ export function WlExerciseFormModal({
           composition: initial.composition,
           objective,
           loadAnchor,
+          displayName: isFullForm ? displayName.trim() || undefined : undefined,
           tags: buildTags(),
         },
         { folderId: customFamilyId },
@@ -149,6 +154,7 @@ export function WlExerciseFormModal({
         composition,
         objective,
         loadAnchor,
+        displayName: isFullForm ? displayName.trim() || undefined : undefined,
         tags: buildTags(),
       },
       { folderId: customFamilyId },
@@ -160,7 +166,7 @@ export function WlExerciseFormModal({
       isEs={isEs}
       kicker={isEs ? 'Ejercicios' : 'Exercises'}
       title={isEs ? titles[mode].es : titles[mode].en}
-      subtitle={previewName}
+      subtitle={isFullForm && displayName.trim() ? displayName.trim() : previewName}
       className="wl-centered-modal--exercises-light"
       onClose={onClose}
       footer={
@@ -180,6 +186,19 @@ export function WlExerciseFormModal({
       }
     >
       <div className="wl-exercise-form-stack">
+        {isFullForm ? (
+          <label className="wl-form-sheet-field">
+            <span className="wl-form-sheet-label">{isEs ? 'Nombre' : 'Name'}</span>
+            <input
+              className="wl-form-sheet-input"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder={previewName}
+              autoComplete="off"
+            />
+          </label>
+        ) : null}
+
         <label className="wl-form-sheet-field">
           <span className="wl-form-sheet-label">{isEs ? 'Disciplina' : 'Discipline'}</span>
           <select
@@ -223,7 +242,7 @@ export function WlExerciseFormModal({
               </select>
             </label>
             <label className="wl-form-sheet-field">
-              <span className="wl-form-sheet-label">{isEs ? 'Ancla de carga' : 'Load anchor'}</span>
+              <span className="wl-form-sheet-label">{loadAnchorLabel}</span>
               <select
                 className="wl-form-sheet-select"
                 value={loadAnchor}
@@ -310,7 +329,7 @@ export function WlExerciseFormModal({
               </select>
             </label>
             <label className="wl-form-sheet-field">
-              <span className="wl-form-sheet-label">{isEs ? 'Ancla de carga' : 'Load anchor'}</span>
+              <span className="wl-form-sheet-label">{loadAnchorLabel}</span>
               <select
                 className="wl-form-sheet-select"
                 value={loadAnchor}
