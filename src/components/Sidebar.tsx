@@ -7,7 +7,7 @@ import { useWolfAssign } from '../context/WolfAssignContext';
 import {
   APP_NAV_ITEMS,
   getMobileSecondaryNavItems,
-  getVisibleNavItems,
+  getSidebarNavItems,
   isNavItemVisible,
 } from '../navigation/appNavigation';
 import { LogoIcon, type LogoIconProps } from './branding';
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { userRole } = useAppContext();
   const { persona, currentUser } = useWolfAssign();
 
-  const visibleMenuItems = getVisibleNavItems(persona, currentUser?.role);
+  const visibleMenuItems = getSidebarNavItems(persona, currentUser?.role);
   const accountItem = APP_NAV_ITEMS.find((item) => item.id === 'account');
   const showAccount =
     accountItem && isNavItemVisible('account', persona, currentUser?.role);

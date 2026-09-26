@@ -4,6 +4,8 @@ import { ExerciseGroupHeader } from './ExerciseGroupHeader';
 import { ExerciseListHeader } from './ExerciseListHeader';
 import { ExerciseRow } from './ExerciseRow';
 import { ExerciseVirtualList } from './ExerciseVirtualList';
+import { ExerciseListPager } from './ExerciseListPager';
+import type { ExercisesPageSize } from './exerciseListUtils';
 import type { ExerciseListNode, ExerciseListSortState, ExerciseSortColumn } from './types';
 
 export function ExerciseListTable({
@@ -24,6 +26,11 @@ export function ExerciseListTable({
   onBulkArchive,
   onBulkDelete,
   onBulkClear,
+  page,
+  pageSize,
+  totalCount,
+  onPageChange,
+  onPageSizeChange,
 }: {
   isEs: boolean;
   isMobile: boolean;
@@ -51,6 +58,11 @@ export function ExerciseListTable({
   onBulkArchive: () => void;
   onBulkDelete: () => void;
   onBulkClear: () => void;
+  page: number;
+  pageSize: ExercisesPageSize;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: ExercisesPageSize) => void;
 }) {
   const selectedVisible = visibleRowIds.filter((id) => selectedIds.has(id)).length;
   const allSelected = visibleRowIds.length > 0 && selectedVisible === visibleRowIds.length;
@@ -72,11 +84,12 @@ export function ExerciseListTable({
           />
         </div>
       ) : null}
-      <div
-        className={`wl-exercise-table-wrap${isMobile ? ' wl-exercise-table-wrap--mobile' : ''}`}
-        role="grid"
-      >
-        <ExerciseListHeader
+      <div className="wl-exercise-table-scroll">
+        <div
+          className={`wl-exercise-table-wrap${isMobile ? ' wl-exercise-table-wrap--mobile' : ''}`}
+          role="grid"
+        >
+          <ExerciseListHeader
           isEs={isEs}
           sort={sort}
           allSelected={allSelected}
@@ -104,7 +117,16 @@ export function ExerciseListTable({
             );
           }}
         />
+        </div>
       </div>
+      <ExerciseListPager
+        isEs={isEs}
+        page={page}
+        pageSize={pageSize}
+        total={totalCount}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+      />
     </div>
   );
 }

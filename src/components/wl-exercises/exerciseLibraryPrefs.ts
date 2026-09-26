@@ -1,3 +1,8 @@
+import {
+  DEFAULT_EXERCISES_PAGE_SIZE,
+  isExercisesPageSize,
+  type ExercisesPageSize,
+} from './exerciseListUtils';
 import type { ExerciseListDensity, ExerciseViewMode } from './types';
 
 const FAVORITES_KEY = 'wolf_exercise_favorites';
@@ -5,6 +10,7 @@ const RECENTS_KEY = 'wolf_exercise_recents';
 const VIEW_KEY = 'wolf_exercise_view_mode';
 const LIST_DENSITY_KEY = 'wolf_exercise_list_density';
 const GROUP_BY_FAMILY_KEY = 'wolf_exercise_group_by_family';
+const PAGE_SIZE_KEY = 'wolf_exercise_page_size';
 const MAX_RECENTS = 30;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -78,4 +84,13 @@ export function readExerciseGroupByFamily(): boolean {
 
 export function writeExerciseGroupByFamily(enabled: boolean) {
   writeJson(GROUP_BY_FAMILY_KEY, enabled);
+}
+
+export function readExercisePageSize(): ExercisesPageSize {
+  const value = readJson<unknown>(PAGE_SIZE_KEY, DEFAULT_EXERCISES_PAGE_SIZE);
+  return typeof value === 'number' && isExercisesPageSize(value) ? value : DEFAULT_EXERCISES_PAGE_SIZE;
+}
+
+export function writeExercisePageSize(size: ExercisesPageSize) {
+  writeJson(PAGE_SIZE_KEY, size);
 }

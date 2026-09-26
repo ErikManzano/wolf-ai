@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   ArrowRight,
   BookMarked,
+  CalendarRange,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
@@ -23,7 +24,9 @@ import {
 } from '../../utils/coachDashboardStats';
 import {
   buildCoachModuleSnapshots,
+  buildCoachToolSnapshots,
   type CoachHubModuleId,
+  type CoachHubToolId,
 } from '../../utils/coachModuleHub';
 import './coach-dashboard.css';
 import '../SuperDashboard.css';
@@ -44,13 +47,18 @@ export interface CoachDashboardProps {
   onOpenAthletes: () => void;
   onOpenExercises: () => void;
   onOpenPraxiogram: () => void;
+  onOpenCalendar: () => void;
 }
 
 const MODULE_ICONS: Record<CoachHubModuleId, React.ReactNode> = {
   athletes: <Users size={20} aria-hidden />,
   programs: <BookMarked size={20} aria-hidden />,
   'exercise-intelligence': <ListTree size={20} aria-hidden />,
+};
+
+const TOOL_ICONS: Record<CoachHubToolId, React.ReactNode> = {
   praxiogram: <LayoutGrid size={20} aria-hidden />,
+  'global-calendar': <CalendarRange size={20} aria-hidden />,
 };
 
 function greeting(isEs: boolean, ref: Date): string {
@@ -76,6 +84,7 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
   onOpenAthletes,
   onOpenExercises,
   onOpenPraxiogram,
+  onOpenCalendar,
 }) => {
   const isEs = language === 'ES';
   const [scope, setScope] = useState<CoachDashboardScope>('today');
@@ -110,6 +119,8 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
       isEs,
     ],
   );
+
+  const tools = useMemo(() => buildCoachToolSnapshots(isEs), [isEs]);
 
   const modules = useMemo(
     () =>
@@ -151,7 +162,11 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
     if (moduleId === 'athletes') onOpenAthletes();
     else if (moduleId === 'programs') onOpenPrograms();
     else if (moduleId === 'exercise-intelligence') onOpenExercises();
-    else if (moduleId === 'praxiogram') onOpenPraxiogram();
+  };
+
+  const openTool = (toolId: CoachHubToolId) => {
+    if (toolId === 'praxiogram') onOpenPraxiogram();
+    else if (toolId === 'global-calendar') onOpenCalendar();
   };
 
   const scopeTabs: { id: CoachDashboardScope; label: string }[] = [
@@ -275,6 +290,42 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({
               )}
               <span className="cd-module-card__cta">
                 {isEs ? 'Abrir módulo' : 'Open module'}
+                <ArrowRight size={14} aria-hidden />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="sd-section" aria-labelledby="cd-tools-title">
+        <div className="sd-section__head">
+          <div>
+            <h2 id="cd-tools-title" className="sd-section__title">
+              {isEs ? 'Herramientas del coach' : 'Coach tools'}
+            </h2>
+            <p className="sd-section__desc">
+              {isEs
+                ? 'Utilidades de planificación fuera del flujo principal de programas.'
+                : 'Planning utilities outside the main program workflow.'}
+            </p>
+          </div>
+        </div>
+        <div className="cd-module-grid cd-tool-grid">
+          {tools.map((tool) => (
+            <button
+              key={tool.id}
+              type="button"
+              className="cd-module-card cd-tool-card"
+              onClick={() => openTool(tool.id)}
+            >
+              <div className="cd-module-card__head">
+                <span className="cd-module-card__icon">{TOOL_ICONS[tool.id]}</span>
+                <span className="cd-module-card__label">{tool.label}</span>
+              </div>
+              <p className="cd-module-card__hint">{tool.actionHint}</p>
+              <p className="cd-module-card__summary">{tool.summary}</p>
+              <span className="cd-module-card__cta">
+                {isEs ? 'Abrir herramienta' : 'Open tool'}
                 <ArrowRight size={14} aria-hidden />
               </span>
             </button>

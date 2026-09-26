@@ -1,7 +1,16 @@
 import type { DashboardAlert } from './dashboardStats';
 import type { CoachAthleteStatusRow } from './coachDashboardStats';
 
-export type CoachHubModuleId = 'athletes' | 'programs' | 'exercise-intelligence' | 'praxiogram';
+export type CoachHubModuleId = 'athletes' | 'programs' | 'exercise-intelligence';
+
+export type CoachHubToolId = 'praxiogram' | 'global-calendar';
+
+export type CoachToolSnapshot = {
+  id: CoachHubToolId;
+  label: string;
+  actionHint: string;
+  summary: string;
+};
 
 export type CoachModuleSnapshot = {
   id: CoachHubModuleId;
@@ -41,13 +50,27 @@ const MODULE_META: Record<
     pendingEs: 'acciones',
     pendingEn: 'actions',
   },
+};
+
+const TOOL_META: Record<
+  CoachHubToolId,
+  { labelEs: string; labelEn: string; hintEs: string; hintEn: string; summaryEs: string; summaryEn: string }
+> = {
   praxiogram: {
     labelEs: 'Praxiograma',
     labelEn: 'Praxiogram',
-    hintEs: 'Diseña periodización visual',
-    hintEn: 'Design visual periodization',
-    pendingEs: 'borradores',
-    pendingEn: 'drafts',
+    hintEs: 'Diseña periodización visual del mesociclo',
+    hintEn: 'Design visual mesocycle periodization',
+    summaryEs: 'Mapas tácticos de bloques y semanas',
+    summaryEn: 'Tactical block and week maps',
+  },
+  'global-calendar': {
+    labelEs: 'Calendario',
+    labelEn: 'Calendar',
+    hintEs: 'Vista global de entrenamientos y eventos',
+    hintEn: 'Global training and events view',
+    summaryEs: 'Competiciones, sesiones y carga del roster',
+    summaryEn: 'Competitions, sessions, and roster load',
   },
 };
 
@@ -149,18 +172,21 @@ export function buildCoachModuleSnapshots(input: {
         : `${input.exerciseCatalogCount} exercises · ${input.customFamilyCount} families`,
       items: exerciseItems,
     },
-    {
-      id: 'praxiogram',
-      label: isEs ? MODULE_META.praxiogram.labelEs : MODULE_META.praxiogram.labelEn,
-      actionHint: isEs ? MODULE_META.praxiogram.hintEs : MODULE_META.praxiogram.hintEn,
-      pendingCount: 0,
-      pendingLabel: isEs ? MODULE_META.praxiogram.pendingEs : MODULE_META.praxiogram.pendingEn,
-      summary: isEs ? 'Periodización visual del mesociclo' : 'Visual mesocycle periodization',
-      items: [],
-    },
   ];
 
   return modules;
+}
+
+export function buildCoachToolSnapshots(isEs: boolean): CoachToolSnapshot[] {
+  return (Object.keys(TOOL_META) as CoachHubToolId[]).map((id) => {
+    const meta = TOOL_META[id];
+    return {
+      id,
+      label: isEs ? meta.labelEs : meta.labelEn,
+      actionHint: isEs ? meta.hintEs : meta.hintEn,
+      summary: isEs ? meta.summaryEs : meta.summaryEn,
+    };
+  });
 }
 
 export function alertTargetModule(alert: DashboardAlert): CoachHubModuleId {

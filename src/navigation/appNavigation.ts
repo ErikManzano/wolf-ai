@@ -43,7 +43,6 @@ const COACH_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
-  'praxiogram',
   'athletes',
 ];
 
@@ -52,9 +51,11 @@ const SUPER_ADMIN_MOBILE_BOTTOM: AppViewId[] = [
   'dashboard',
   'exercise-intelligence',
   'programs',
-  'praxiogram',
   'athletes',
 ];
+
+/** Accesibles desde el dashboard coach; ocultos en sidebar desktop. */
+const COACH_DASHBOARD_TOOL_NAV = new Set<AppViewId>(['praxiogram', 'global-calendar']);
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { id: 'dashboard', labelEs: 'Inicio', labelEn: 'Home', icon: LayoutDashboard },
@@ -92,6 +93,16 @@ export function getVisibleNavItems(
   role: WolfAppRole | undefined,
 ): AppNavItem[] {
   return APP_NAV_ITEMS.filter((item) => isNavItemVisible(item.id, persona, role));
+}
+
+export function getSidebarNavItems(
+  persona: 'coach' | 'athlete',
+  role: WolfAppRole | undefined,
+): AppNavItem[] {
+  return getVisibleNavItems(persona, role).filter((item) => {
+    if (persona === 'athlete') return true;
+    return !COACH_DASHBOARD_TOOL_NAV.has(item.id);
+  });
 }
 
 export function getMobileBottomNavIds(
@@ -143,7 +154,7 @@ export function getMobileSecondaryNavItems(
     (item) =>
       !primary.has(item.id) &&
       !topBar.has(item.id) &&
-      !(persona === 'coach' && item.id === 'global-calendar'),
+      !(persona === 'coach' && COACH_DASHBOARD_TOOL_NAV.has(item.id)),
   );
 }
 

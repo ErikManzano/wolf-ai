@@ -138,3 +138,21 @@ export function resolveExerciseMedia(
     lqip: optimizeRemoteImage(fallback, 24),
   };
 }
+
+/** Poster para la pestaña Imagen (ignora URLs de video). */
+export function resolveExercisePoster(
+  mediaUrl: string | null | undefined,
+  family: ExerciseFamilyId | null,
+): ExerciseMediaResolved {
+  const raw = mediaUrl?.trim() ?? '';
+  if (raw && isDirectImageUrl(raw)) {
+    return resolveExerciseMedia(raw, family);
+  }
+  return resolveExerciseMedia(null, family);
+}
+
+export function hasExerciseVideoEmbed(mediaUrl: string | null | undefined): boolean {
+  const raw = mediaUrl?.trim() ?? '';
+  if (!raw) return false;
+  return Boolean(youtubeIdFromUrl(raw) || vimeoIdFromUrl(raw));
+}

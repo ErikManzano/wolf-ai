@@ -1,6 +1,7 @@
 import type { MergedDefinitionView } from '../../models/exercise';
 import { ExerciseActionsMenu } from './ExerciseActionsMenu';
-import { OBJECTIVE_DOT_COLOR } from './exerciseListUtils';
+import { ExerciseListThumb } from './ExerciseListThumb';
+import { formatExerciseListDate, OBJECTIVE_DOT_COLOR } from './exerciseListUtils';
 import type { ExerciseListItem } from './types';
 
 export function ExerciseRow({
@@ -32,6 +33,9 @@ export function ExerciseRow({
 }) {
   const isOfficial = !def.coachId;
   const typeDot = OBJECTIVE_DOT_COLOR[item.type] ?? '#71717a';
+  const touchDate = formatExerciseListDate(item.updatedAt ?? item.createdAt, isEs);
+  const mobileMetaParts = [item.familyLabel, item.typeLabel];
+  if (touchDate !== '—') mobileMetaParts.push(touchDate);
 
   return (
     <article
@@ -68,13 +72,27 @@ export function ExerciseRow({
         />
       </div>
 
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--thumb" role="gridcell">
+        <ExerciseListThumb
+          name={item.name}
+          family={item.family}
+          mediaUrl={item.mediaUrl}
+          isEs={isEs}
+        />
+      </div>
+
       <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--name" role="gridcell">
-        <span className="wl-exercise-table-row__name" title={item.name}>
-          {item.name}
-        </span>
-        <span className="wl-exercise-table-row__mobile-meta">
-          {item.familyLabel} · {item.typeLabel}
-        </span>
+        <div className="wl-exercise-table-row__title-row">
+          <span className="wl-exercise-table-row__name" title={item.name}>
+            {item.name}
+          </span>
+          <span
+            className={`wl-exercise-table-badge${item.isOfficial ? ' wl-exercise-table-badge--official' : ' wl-exercise-table-badge--custom'}`}
+          >
+            {item.isOfficial ? (isEs ? 'Oficial' : 'Official') : 'Custom'}
+          </span>
+        </div>
+        <span className="wl-exercise-table-row__mobile-meta">{mobileMetaParts.join(' · ')}</span>
       </div>
 
       <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--family" role="gridcell">
@@ -88,11 +106,15 @@ export function ExerciseRow({
         </span>
       </div>
 
-      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--state" role="gridcell">
-        <span
-          className={`wl-exercise-table-badge${item.isOfficial ? ' wl-exercise-table-badge--official' : ' wl-exercise-table-badge--custom'}`}
-        >
-          {item.isOfficial ? (isEs ? 'Oficial' : 'Official') : 'Custom'}
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--created" role="gridcell">
+        <span className="wl-exercise-table-row__date" title={item.createdAt}>
+          {formatExerciseListDate(item.createdAt, isEs)}
+        </span>
+      </div>
+
+      <div className="wl-exercise-table-row__cell wl-exercise-table-row__cell--updated" role="gridcell">
+        <span className="wl-exercise-table-row__date" title={item.updatedAt ?? item.createdAt}>
+          {formatExerciseListDate(item.updatedAt ?? item.createdAt, isEs)}
         </span>
       </div>
 

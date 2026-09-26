@@ -4,6 +4,7 @@ import { WlSearchField } from '../wl-shared/WlSearchField';
 import {
   DISCIPLINE_OPTIONS,
   ORIGIN_OPTIONS,
+  DEFAULT_EXERCISE_SORT,
   SORT_OPTIONS,
   type ExerciseDisciplineFilter,
   type ExerciseOriginFilter,
@@ -43,7 +44,7 @@ export function WlExercisesToolbar({
   onCreate: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const filtersActive = discipline !== 'all' || origin !== 'all' || sort !== 'name_asc';
+  const filtersActive = discipline !== 'all' || origin !== 'all' || sort !== DEFAULT_EXERCISE_SORT;
 
   useEffect(() => {
     if (!filtersOpen) return;

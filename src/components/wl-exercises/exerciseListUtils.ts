@@ -39,7 +39,9 @@ export type MuscleGroupFilter =
   | 'core'
   | 'full_body';
 export type ExerciseOriginFilter = 'all' | 'official' | 'mine' | 'archived';
-export type ExerciseSortId = 'name_asc' | 'usage_desc' | 'recent' | 'family';
+export type ExerciseSortId = 'created_desc' | 'name_asc' | 'usage_desc' | 'recent' | 'family';
+
+export const DEFAULT_EXERCISE_SORT: ExerciseSortId = 'created_desc';
 export type ExerciseDisciplineFilter =
   | 'all'
   | 'weightlifting'
@@ -121,14 +123,12 @@ export const OBJECTIVE_DOT_COLOR: Record<TrainingObjectiveCode, string> = {
 export const GROUP_HEADER_HEIGHT = 32;
 export const LIST_ROW_HEIGHT_COMPACT = 46;
 export const LIST_ROW_HEIGHT_DETAILED = 56;
-export const EXERCISES_PAGE_SIZE = 40;
-export const EXERCISES_PAGE_SIZE_MOBILE = 20;
+export const EXERCISES_PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+export type ExercisesPageSize = (typeof EXERCISES_PAGE_SIZE_OPTIONS)[number];
+export const DEFAULT_EXERCISES_PAGE_SIZE: ExercisesPageSize = 25;
 
-export function initialExercisePageSize(): number {
-  if (typeof window === 'undefined') return EXERCISES_PAGE_SIZE;
-  return window.matchMedia('(max-width: 768px)').matches
-    ? EXERCISES_PAGE_SIZE_MOBILE
-    : EXERCISES_PAGE_SIZE;
+export function isExercisesPageSize(value: number): value is ExercisesPageSize {
+  return (EXERCISES_PAGE_SIZE_OPTIONS as readonly number[]).includes(value);
 }
 
 export const DISCIPLINE_OPTIONS: {
@@ -161,6 +161,7 @@ export const SORT_OPTIONS: {
   shortEs: string;
   shortEn: string;
 }[] = [
+  { id: 'created_desc', labelEs: 'Más recientes', labelEn: 'Newest first', shortEs: 'Reciente', shortEn: 'Newest' },
   { id: 'name_asc', labelEs: 'A–Z', labelEn: 'A–Z', shortEs: 'A–Z', shortEn: 'A–Z' },
   { id: 'usage_desc', labelEs: 'Más usados', labelEn: 'Most used', shortEs: 'Uso', shortEn: 'Usage' },
   { id: 'recent', labelEs: 'Recientes', labelEn: 'Recent', shortEs: 'Reciente', shortEn: 'Recent' },
@@ -293,14 +294,17 @@ export function filterExerciseDefinitions(
 
 export function sortStateToSortId(state: ExerciseListSortState): ExerciseSortId {
   if (state.column === 'recent') return 'recent';
+  if (state.column === 'created' && state.direction === 'desc') return 'created_desc';
   if (state.column === 'usage' && state.direction === 'desc') return 'usage_desc';
   if (state.column === 'family' && state.direction === 'asc') return 'family';
   if (state.column === 'name' && state.direction === 'asc') return 'name_asc';
-  return 'name_asc';
+  return DEFAULT_EXERCISE_SORT;
 }
 
 export function sortIdToSortState(sort: ExerciseSortId): ExerciseListSortState {
   switch (sort) {
+    case 'created_desc':
+      return { column: 'created', direction: 'desc' };
     case 'usage_desc':
       return { column: 'usage', direction: 'desc' };
     case 'recent':
@@ -320,7 +324,9 @@ export function toggleColumnSort(
     return { column, direction: current.direction === 'asc' ? 'desc' : 'asc' };
   }
   const defaultDir: ExerciseSortDirection =
-    column === 'usage' || column === 'recent' ? 'desc' : 'asc';
+    column === 'usage' || column === 'recent' || column === 'created' || column === 'updated'
+      ? 'desc'
+      : 'asc';
   return { column, direction: defaultDir };
 }
 
@@ -414,11 +420,23 @@ export function sortExerciseDefinitionsByState(
     return copy;
   }
 
-  if (state.column === 'state') {
+  if (state.column === 'created') {
+    const createdTime = (def: MergedDefinitionView) =>
+      Date.parse(def.createdAt ?? def.updatedAt ?? '') || 0;
     copy.sort((a, b) => {
-      const aOfficial = a.coachId ? 1 : 0;
-      const bOfficial = b.coachId ? 1 : 0;
-      if (aOfficial !== bOfficial) return (aOfficial - bOfficial) * dir;
+      const aTime = createdTime(a);
+      const bTime = createdTime(b);
+      if (aTime !== bTime) return (aTime - bTime) * dir;
+      return compareName(a, b);
+    });
+    return copy;
+  }
+
+  if (state.column === 'updated') {
+    copy.sort((a, b) => {
+      const aTime = Date.parse(a.updatedAt ?? a.createdAt ?? '') || 0;
+      const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? '') || 0;
+      if (aTime !== bTime) return (aTime - bTime) * dir;
       return compareName(a, b);
     });
     return copy;
@@ -665,6 +683,18 @@ export function formatExerciseMetaLine(opts: {
   return parts.join(' · ');
 }
 
+export function formatExerciseListDate(iso: string | undefined, isEs: boolean): string {
+  if (!iso?.trim()) return '—';
+  const raw = iso.trim();
+  const d = raw.includes('T') ? new Date(raw) : new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString(isEs ? 'es-ES' : 'en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 export function toExerciseListItem(
   def: MergedDefinitionView,
   opts: {
@@ -693,5 +723,8 @@ export function toExerciseListItem(
     isFavorite: opts.isFavorite,
     isArchived: isDefinitionArchived(def),
     lastUsedAt: opts.lastUsedAt,
+    mediaUrl: def.coachOverride?.override.videoUrl ?? null,
+    createdAt: def.createdAt,
+    updatedAt: def.updatedAt,
   };
 }

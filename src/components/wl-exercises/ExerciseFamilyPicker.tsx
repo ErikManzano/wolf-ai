@@ -14,6 +14,7 @@ export function ExerciseFamilyPicker({
   onOfficialChange,
   onCustomChange,
   onManageFamilies,
+  sections = 'all',
 }: {
   isEs: boolean;
   officialFamily: ExerciseFamilyCode;
@@ -22,13 +23,17 @@ export function ExerciseFamilyPicker({
   onOfficialChange: (family: ExerciseFamilyCode) => void;
   onCustomChange: (id: string | null) => void;
   onManageFamilies?: () => void;
+  sections?: 'all' | 'technical' | 'folder';
 }) {
+  const showTechnical = sections === 'all' || sections === 'technical';
+  const showFolder = sections === 'all' || sections === 'folder';
   const selectedCustom = customFamilyId
     ? customFamilies.find((family) => family.id === customFamilyId) ?? null
     : null;
 
   return (
     <div className="wl-exercise-family-pick">
+      {showTechnical ? (
       <div className="wl-exercise-family-pick__section">
         <div className="wl-exercise-family-pick__head">
           <span className="wl-form-sheet-label">{isEs ? 'Familia técnica' : 'Technical family'}</span>
@@ -60,9 +65,11 @@ export function ExerciseFamilyPicker({
           })}
         </div>
       </div>
+      ) : null}
 
-      <div className="wl-exercise-family-pick__divider" aria-hidden />
+      {showTechnical && showFolder ? <div className="wl-exercise-family-pick__divider" aria-hidden /> : null}
 
+      {showFolder ? (
       <div className="wl-exercise-family-pick__section">
         <div className="wl-exercise-family-pick__head">
           <span className="wl-form-sheet-label">
@@ -137,20 +144,21 @@ export function ExerciseFamilyPicker({
           </button>
         ) : null}
       </div>
+      ) : null}
 
-      {selectedCustom ? (
+      {showFolder && selectedCustom ? (
         <p className="wl-form-sheet-hint wl-exercise-family-pick__hint">
           {isEs
             ? `Se listará en la carpeta «${familyLabel(selectedCustom, isEs)}». La familia técnica (${FAMILY_DISPLAY_LABEL[officialFamily as ExerciseFamilyId] ?? officialFamily}) no cambia.`
             : `Will appear in folder “${familyLabel(selectedCustom, isEs)}”. Technical family (${FAMILY_DISPLAY_LABEL[officialFamily as ExerciseFamilyId] ?? officialFamily}) stays the same.`}
         </p>
-      ) : (
+      ) : showFolder ? (
         <p className="wl-form-sheet-hint wl-exercise-family-pick__hint">
           {isEs
             ? 'Puedes crear carpetas como Prehab, Hombros o Core para organizar tu biblioteca.'
             : 'Create folders like Prehab, Shoulders, or Core to organize your library.'}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

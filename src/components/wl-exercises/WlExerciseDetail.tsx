@@ -336,31 +336,23 @@ export function WlExerciseDetail({
         ) : null}
       </div>
 
-      <div className="wl-exercise-detail__snapshot">
-        <div className="wl-exercise-detail__media-wrap">
+      <div className="wl-exercise-detail__snapshot wl-exercise-compose">
+        <div className="wl-exercise-compose__media wl-exercise-detail__media-wrap">
           <ExerciseMedia
             name={titleDisplay}
             family={family}
             mediaUrl={form.videoUrl || def.coachOverride?.override.videoUrl}
             isEs={isEs}
             className="wl-exercise-detail__media"
+            showTabs
+            allowImageUpload={editing && isOfficial}
+            editing={editing && isOfficial}
+            videoUrl={form.videoUrl}
+            onVideoUrlChange={(url) => setForm((current) => ({ ...current, videoUrl: url }))}
           />
-          {editing && isOfficial ? (
-            <label className="wl-exercise-detail__inline-field wl-exercise-detail__inline-field--media">
-              <span>{isEs ? 'Video propio' : 'Custom video'}</span>
-              <input
-                type="url"
-                inputMode="url"
-                value={form.videoUrl}
-                onChange={(event) => setForm((current) => ({ ...current, videoUrl: event.target.value }))}
-                placeholder="https://youtube.com/…"
-                autoComplete="off"
-              />
-            </label>
-          ) : null}
         </div>
-        <div className="wl-exercise-detail__snapshot-main">
-        <div className="wl-exercise-detail__snapshot-meta">
+        <div className="wl-exercise-compose__main wl-exercise-detail__snapshot-main">
+        <div className="wl-exercise-compose__panel wl-exercise-detail__snapshot-meta">
           <div className="wl-exercise-detail__meta-block wl-exercise-detail__meta-block--spec">
             <div className="wl-exercise-detail__block-head">
               <h3 className="wl-exercise-detail__intel-title">

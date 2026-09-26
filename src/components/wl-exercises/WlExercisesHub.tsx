@@ -24,17 +24,17 @@ import { WlExerciseDetail } from './WlExerciseDetail';
 import { WlExerciseAccessoryFolderChips } from './WlExerciseAccessoryFolderChips';
 import { WlExerciseFamilyChips } from './WlExerciseFamilyChips';
 import { WlExerciseMuscleChips } from './WlExerciseMuscleChips';
-import { WlExerciseFormModal, type ExerciseFormMode } from './WlExerciseFormModal';
+import { WlExerciseFormModal, type ExerciseFormMode, type ExerciseFormSaveOpts } from './WlExerciseFormModal';
+import { buildSignature } from '../../services/exercise/signature';
 import { WlExercisesToolbar } from './WlExercisesToolbar';
 import {
+  DEFAULT_EXERCISE_SORT,
   DISCIPLINE_OPTIONS,
   accessoryFolderCounts,
   buildExerciseListNodes,
   countExerciseUsage,
-  EXERCISES_PAGE_SIZE,
-  EXERCISES_PAGE_SIZE_MOBILE,
   familyCounts,
-  initialExercisePageSize,
+  type ExercisesPageSize,
   filterExerciseDefinitions,
   hasExerciseDefinitionChanged,
   loadScaleForDefinition,
@@ -56,8 +56,10 @@ import {
 import {
   readExerciseFavorites,
   readExerciseGroupByFamily,
+  readExercisePageSize,
   readExerciseRecents,
   readExerciseViewMode,
+  writeExercisePageSize,
   recordExerciseRecent,
   writeExerciseFavorites,
   writeExerciseViewMode,
@@ -110,14 +112,16 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroupFilter>('all');
   const [discipline, setDiscipline] = useState<ExerciseDisciplineFilter>('all');
   const [origin, setOrigin] = useState<ExerciseOriginFilter>('all');
-  const [columnSort, setColumnSort] = useState<ExerciseListSortState>(() => sortIdToSortState('name_asc'));
+  const [columnSort, setColumnSort] = useState<ExerciseListSortState>(() =>
+    sortIdToSortState(DEFAULT_EXERCISE_SORT),
+  );
   const minUsage = 0;
   const [quickFilter, setQuickFilter] = useState<ExerciseQuickFilter>('none');
   const [viewMode, setViewMode] = useState<ExerciseViewMode>(() => readExerciseViewMode());
   const [groupByFamily] = useState(() => readExerciseGroupByFamily());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [visibleLimit, setVisibleLimit] = useState(initialExercisePageSize);
-  const pageSize = isMobile ? EXERCISES_PAGE_SIZE_MOBILE : EXERCISES_PAGE_SIZE;
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState<ExercisesPageSize>(() => readExercisePageSize());
   const lastSelectedIdRef = useRef<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readExerciseFavorites());
   const [recentIds, setRecentIds] = useState<string[]>(() => readExerciseRecents());
@@ -221,9 +225,13 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
 
   const accessoryFolderStats = useMemo(() => accessoryFolderCounts(scoped), [scoped]);
 
+  const totalExerciseCount = visibleDefs.length;
+  const totalPages = Math.max(1, Math.ceil(totalExerciseCount / pageSize));
+  const safePageIndex = Math.min(pageIndex, totalPages - 1);
+
   const displayedDefs = useMemo(
-    () => visibleDefs.slice(0, visibleLimit),
-    [visibleDefs, visibleLimit],
+    () => visibleDefs.slice(safePageIndex * pageSize, safePageIndex * pageSize + pageSize),
+    [visibleDefs, safePageIndex, pageSize],
   );
 
   const sort = useMemo(() => sortStateToSortId(columnSort), [columnSort]);
@@ -287,8 +295,20 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   useEffect(() => {
     setSelectedIds(new Set());
     lastSelectedIdRef.current = null;
-    setVisibleLimit(pageSize);
-  }, [search, family, muscleGroup, origin, discipline, minUsage, quickFilter, viewMode]);
+    setPageIndex(0);
+  }, [search, family, muscleGroup, origin, discipline, minUsage, quickFilter, viewMode, columnSort, accessorySubFilter]);
+
+  useEffect(() => {
+    if (pageIndex >= totalPages) {
+      setPageIndex(Math.max(0, totalPages - 1));
+    }
+  }, [pageIndex, totalPages]);
+
+  const handlePageSizeChange = useCallback((size: ExercisesPageSize) => {
+    setPageSize(size);
+    writeExercisePageSize(size);
+    setPageIndex(0);
+  }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -420,13 +440,20 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     setFormSeed(null);
   };
 
-  const handleSaveForm = async (
-    input: ExerciseDefinitionInput,
-    opts: { folderId: string | null },
-  ) => {
+  const applyFormExtras = async (defId: string, opts: ExerciseFormSaveOpts) => {
+    const patch: Parameters<typeof upsertCoachOverride>[1] = {
+      customFamilyId: opts.folderId,
+    };
+    if (opts.videoUrl) patch.videoUrl = opts.videoUrl;
+    if (opts.cues?.length) patch.cues = opts.cues;
+    return upsertCoachOverride(defId, patch);
+  };
+
+  const handleSaveForm = async (input: ExerciseDefinitionInput, opts: ExerciseFormSaveOpts) => {
     if (!formMode) return;
     setFormBusy(true);
     let err: string | null = null;
+    let savedId: string | null = formSeed?.id ?? null;
     const folderId = opts.folderId;
     const defInput: ExerciseDefinitionInput = {
       ...input,
@@ -436,26 +463,36 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       folderId
         ? { ...payload, tags: [...stripCustomFamilyTags(payload.tags), customFamilyTag(folderId)] }
         : payload;
+    const signature = buildSignature(input.composition);
 
     if (formMode === 'edit' && formSeed?.coachId) {
       if (hasExerciseDefinitionChanged(formSeed, defInput)) {
         err = await updateExerciseDefinition(formSeed.id, defInput);
       }
-      if (!err) err = await upsertCoachOverride(formSeed.id, { customFamilyId: folderId });
+      if (!err) err = await applyFormExtras(formSeed.id, opts);
     } else if (formMode === 'fork' && formSeed) {
       if (!formSeed.coachId) {
         if (hasExerciseDefinitionChanged(formSeed, defInput)) {
           err = await forkExerciseDefinition(formSeed.id, withFolderTags(defInput));
         } else {
-          err = await upsertCoachOverride(formSeed.id, { customFamilyId: folderId });
+          err = await applyFormExtras(formSeed.id, opts);
         }
       } else if (hasExerciseDefinitionChanged(formSeed, defInput)) {
         err = await forkExerciseDefinition(formSeed.id, withFolderTags(defInput));
       } else {
-        err = await upsertCoachOverride(formSeed.id, { customFamilyId: folderId });
+        err = await applyFormExtras(formSeed.id, opts);
       }
     } else {
       err = await createExerciseDefinition(withFolderTags(defInput));
+      if (!err) {
+        await refreshExerciseCatalog();
+        const created =
+          registryBrowse({ includeDeprecated: true }).definitions.find(
+            (def) => def.coachId && def.signature === signature,
+          ) ?? null;
+        savedId = created?.id ?? null;
+        if (created) err = await applyFormExtras(created.id, opts);
+      }
     }
     setFormBusy(false);
     if (err) {
@@ -467,6 +504,10 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       message: isEs ? 'Ejercicio guardado' : 'Exercise saved',
     });
     closeForm();
+    if (formMode === 'create' && savedId) {
+      setSelectedId(savedId);
+      setView('detail');
+    }
   };
 
   const handleSaveOverride = async (baseId: string, patch: OverridePatch) => {
@@ -976,15 +1017,11 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
                 setSelectedIds(new Set());
                 lastSelectedIdRef.current = null;
               }}
-            />
-            <ExerciseListPager
-              isEs={isEs}
-              isMobile={isMobile}
-              shown={displayedDefs.length}
-              total={visibleDefs.length}
+              page={safePageIndex}
               pageSize={pageSize}
-              dockHidden={selectedIds.size > 0}
-              onShowMore={() => setVisibleLimit((current) => current + pageSize)}
+              totalCount={totalExerciseCount}
+              onPageChange={setPageIndex}
+              onPageSizeChange={handlePageSizeChange}
             />
           </>
         ) : (
@@ -1023,12 +1060,11 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
             </div>
             <ExerciseListPager
               isEs={isEs}
-              isMobile={isMobile}
-              shown={displayedDefs.length}
-              total={visibleDefs.length}
+              page={safePageIndex}
               pageSize={pageSize}
-              dockHidden={selectedIds.size > 0}
-              onShowMore={() => setVisibleLimit((current) => current + pageSize)}
+              total={totalExerciseCount}
+              onPageChange={setPageIndex}
+              onPageSizeChange={handlePageSizeChange}
             />
           </>
         )}

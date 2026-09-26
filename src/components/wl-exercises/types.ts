@@ -16,7 +16,7 @@ export type ExerciseQuickFilter = 'none' | 'favorites' | 'recent';
 export type ExerciseFamilyId = ExerciseFamilyCode | 'core';
 
 /** Columnas ordenables en la tabla de ejercicios. */
-export type ExerciseSortColumn = 'name' | 'family' | 'type' | 'ref' | 'usage' | 'state' | 'recent';
+export type ExerciseSortColumn = 'name' | 'family' | 'type' | 'ref' | 'usage' | 'created' | 'updated' | 'recent';
 
 export type ExerciseSortDirection = 'asc' | 'desc';
 
@@ -42,6 +42,9 @@ export interface ExerciseListItem {
   isFavorite: boolean;
   isArchived: boolean;
   lastUsedAt?: string;
+  mediaUrl?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Nodo de lista virtual: fila de datos o cabecera de grupo. */

@@ -1,106 +1,100 @@
-import { ChevronDown } from 'lucide-react';
-import { createPortal } from 'react-dom';
-import {
-  EXERCISES_PAGE_SIZE,
-  EXERCISES_PAGE_SIZE_MOBILE,
-} from './exerciseListUtils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { EXERCISES_PAGE_SIZE_OPTIONS, type ExercisesPageSize } from './exerciseListUtils';
 
 export function ExerciseListPager({
   isEs,
-  isMobile = false,
-  shown,
-  total,
+  page,
   pageSize,
-  dockHidden = false,
-  onShowMore,
+  total,
+  onPageChange,
+  onPageSizeChange,
 }: {
   isEs: boolean;
-  isMobile?: boolean;
-  shown: number;
+  page: number;
+  pageSize: ExercisesPageSize;
   total: number;
-  pageSize?: number;
-  dockHidden?: boolean;
-  onShowMore: () => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: ExercisesPageSize) => void;
 }) {
-  const effectivePageSize =
-    pageSize ?? (isMobile ? EXERCISES_PAGE_SIZE_MOBILE : EXERCISES_PAGE_SIZE);
+  if (total === 0) return null;
 
-  if (total === 0 || total <= effectivePageSize) return null;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(0, page), totalPages - 1);
+  const start = safePage * pageSize + 1;
+  const end = Math.min((safePage + 1) * pageSize, total);
+  const canPrev = safePage > 0;
+  const canNext = safePage < totalPages - 1;
 
-  const remaining = total - shown;
-  const nextBatch = Math.min(effectivePageSize, remaining);
-  const progress = Math.min(100, Math.round((shown / total) * 100));
-  const showDock = isMobile && remaining > 0 && !dockHidden;
-
-  const metaShort = isEs ? `${shown} / ${total}` : `${shown} / ${total}`;
-  const metaLong = isEs
-    ? `Mostrando ${shown} de ${total} ejercicios`
-    : `Showing ${shown} of ${total} exercises`;
-
-  const btnLabel = isEs
-    ? isMobile
-      ? `Ver más (+${nextBatch})`
-      : `Ver más ejercicios (${nextBatch})`
-    : isMobile
-      ? `See more (+${nextBatch})`
-      : `See more exercises (${nextBatch})`;
-
-  const progressLabel = isEs
-    ? `${progress}% de la biblioteca visible`
-    : `${progress}% of library visible`;
-
-  const dock = showDock ? (
-    <div
-      className="wl-exercises-pager wl-exercises-pager--dock"
-      role="region"
-      aria-label={isEs ? 'Cargar más ejercicios' : 'Load more exercises'}
-    >
-      <div
-        className="wl-exercises-pager__progress"
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={progressLabel}
-      >
-        <span className="wl-exercises-pager__progress-fill" style={{ width: `${progress}%` }} />
-      </div>
-      <div className="wl-exercises-pager__dock-row">
-        <span className="wl-exercises-pager__meta wl-exercises-pager__meta--dock">{metaShort}</span>
-        <button type="button" className="wl-exercises-pager__btn wl-exercises-pager__btn--dock" onClick={onShowMore}>
-          <span>{btnLabel}</span>
-          <ChevronDown size={16} strokeWidth={2.5} aria-hidden />
-        </button>
-      </div>
-    </div>
-  ) : null;
+  const sizeLabel = isEs ? 'Filas por página' : 'Rows per page';
+  const prevLabel = isEs ? 'Página anterior' : 'Previous page';
+  const nextLabel = isEs ? 'Página siguiente' : 'Next page';
 
   return (
-    <>
-      {dock && typeof document !== 'undefined' ? createPortal(dock, document.body) : null}
-
-      {showDock ? <div className="wl-exercises-pager__spacer" aria-hidden /> : null}
-
-      {!showDock ? (
-        <div className="wl-exercises-pager">
-          <div
-            className="wl-exercises-pager__progress wl-exercises-pager__progress--inline"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={progressLabel}
-          >
-            <span className="wl-exercises-pager__progress-fill" style={{ width: `${progress}%` }} />
+    <nav
+      className="wl-exercises-pager wl-exercises-pager--classic"
+      aria-label={isEs ? 'Paginación de ejercicios' : 'Exercise pagination'}
+    >
+      <div className="wl-exercises-pager__bar">
+        <div className="wl-exercises-pager__cluster wl-exercises-pager__cluster--size">
+          <span className="wl-exercises-pager__cluster-label">{sizeLabel}</span>
+          <div className="wl-exercises-pager__segments" role="group" aria-label={sizeLabel}>
+            {EXERCISES_PAGE_SIZE_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`wl-exercises-pager__segment${pageSize === option ? ' is-active' : ''}`}
+                aria-pressed={pageSize === option}
+                onClick={() => onPageSizeChange(option)}
+              >
+                {option}
+              </button>
+            ))}
           </div>
-          <p className="wl-exercises-pager__meta">{metaLong}</p>
-          {remaining > 0 ? (
-            <button type="button" className="wl-exercises-pager__btn" onClick={onShowMore}>
-              {btnLabel}
-            </button>
-          ) : null}
         </div>
-      ) : null}
-    </>
+
+        <p className="wl-exercises-pager__range" aria-live="polite">
+          <span className="wl-exercises-pager__range-strong">
+            {start}–{end}
+          </span>
+          <span className="wl-exercises-pager__range-sep" aria-hidden>
+            /
+          </span>
+          <span className="wl-exercises-pager__range-total">{total}</span>
+          <span className="wl-exercises-pager__range-unit">
+            {isEs ? 'ejercicios' : 'exercises'}
+          </span>
+        </p>
+
+        <div className="wl-exercises-pager__cluster wl-exercises-pager__cluster--nav">
+          <div className="wl-exercises-pager__nav">
+            <button
+              type="button"
+              className="wl-exercises-pager__nav-btn"
+              disabled={!canPrev}
+              aria-label={prevLabel}
+              onClick={() => onPageChange(safePage - 1)}
+            >
+              <ChevronLeft size={18} strokeWidth={2.5} aria-hidden />
+            </button>
+            <span className="wl-exercises-pager__page-indicator">
+              <span className="wl-exercises-pager__page-current">{safePage + 1}</span>
+              <span className="wl-exercises-pager__page-sep" aria-hidden>
+                /
+              </span>
+              <span className="wl-exercises-pager__page-total">{totalPages}</span>
+            </span>
+            <button
+              type="button"
+              className="wl-exercises-pager__nav-btn"
+              disabled={!canNext}
+              aria-label={nextLabel}
+              onClick={() => onPageChange(safePage + 1)}
+            >
+              <ChevronRight size={18} strokeWidth={2.5} aria-hidden />
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 }

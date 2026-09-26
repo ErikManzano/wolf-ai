@@ -705,6 +705,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
         onOpenAthletes={() => setActiveView('athletes')}
         onOpenExercises={() => setActiveView('exercise-intelligence')}
         onOpenPraxiogram={() => setActiveView('praxiogram')}
+        onOpenCalendar={() => setActiveView('global-calendar')}
       />
     );
   };

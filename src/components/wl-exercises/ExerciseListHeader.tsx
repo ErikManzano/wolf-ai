@@ -54,6 +54,11 @@ export function ExerciseListHeader({
           onChange={onToggleAll}
         />
       </div>
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--thumb" role="columnheader">
+        <span className="wl-exercise-table-header__label wl-exercise-table-header__label--sr">
+          {isEs ? 'Vista previa' : 'Preview'}
+        </span>
+      </div>
       <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--name" role="columnheader">
         {headerBtn('name', isEs ? 'EJERCICIO' : 'EXERCISE')}
       </div>
@@ -63,8 +68,11 @@ export function ExerciseListHeader({
       <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--type" role="columnheader">
         {headerBtn('type', isEs ? 'TIPO' : 'TYPE')}
       </div>
-      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--state" role="columnheader">
-        {headerBtn('state', isEs ? 'ESTADO' : 'STATUS')}
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--created" role="columnheader">
+        {headerBtn('created', isEs ? 'CREADO' : 'CREATED')}
+      </div>
+      <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--updated" role="columnheader">
+        {headerBtn('updated', isEs ? 'MODIFICADO' : 'UPDATED')}
       </div>
       <div className="wl-exercise-table-header__cell wl-exercise-table-header__cell--actions" role="columnheader">
         <span className="wl-exercise-table-header__label wl-exercise-table-header__label--sr">
