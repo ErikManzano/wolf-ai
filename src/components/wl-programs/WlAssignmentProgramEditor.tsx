@@ -12,7 +12,6 @@ import { AppBreadcrumb } from '../wl-shared/AppBreadcrumb';
 import { WlEditorTitleField, WL_EDITOR_TITLE_MAX_LEN } from '../wl-shared/WlEditorTitleField';
 import { formatProgramDateRange } from '../../utils/programSchedule';
 import type { ProgramSyncState } from './programSync';
-import { WlInstanceEditBanner } from './WlInstanceEditBanner';
 import '../wl-shared/app-breadcrumb.css';
 import '../OlympicEnginePanel.css';
 import './wl-programs.css';
@@ -285,14 +284,6 @@ const WlAssignmentProgramEditor: React.FC<WlAssignmentProgramEditorProps> = ({
       </header>
 
       <div className="wl-programs-editor-body">
-        <WlInstanceEditBanner
-          isEs={isEs}
-          athleteName={athleteDisplayName}
-          coachProgramId={assignment.coachProgramId}
-          onViewTemplate={() => {
-            if (assignment.coachProgramId) openProgramEditor(assignment.coachProgramId);
-          }}
-        />
         <div className="wl-programs-editor-stage">
           <div className="wl-programs-customize-wrap wolf-engine--customize wl-programs-embedded-plan">
             {program ? (

@@ -29,7 +29,6 @@ export function ProgramContextPanel({
   templateMetrics = false,
   selectedDayLabel,
   onClearExerciseSelection,
-  onOpenMesocycleStats,
 }: {
   isEs: boolean;
   editorMode?: ProgramEditorMode;
@@ -51,8 +50,6 @@ export function ProgramContextPanel({
   templateMetrics?: boolean;
   selectedDayLabel?: string;
   onClearExerciseSelection?: () => void;
-  /** Abre la pestaña Estadísticas del plan (mesociclo completo). */
-  onOpenMesocycleStats?: () => void;
 }) {
   const isTemplate = editorMode === 'template';
   const athleteForMetrics = previewAthlete;
@@ -202,17 +199,6 @@ export function ProgramContextPanel({
           </div>
         ) : null}
       </div>
-      {onOpenMesocycleStats ? (
-        <div className="wl-program-context-panel__footer">
-          <button
-            type="button"
-            className="wl-program-context-link wl-program-context-panel__stats-link"
-            onClick={onOpenMesocycleStats}
-          >
-            {isEs ? 'Ver mesociclo en Estadísticas →' : 'Open full stats →'}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

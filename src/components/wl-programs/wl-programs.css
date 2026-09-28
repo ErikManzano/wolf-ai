@@ -311,7 +311,20 @@
   flex-direction: column;
 }
 
+.wl-programs-actions-menu__list--portal {
+  z-index: 5000;
+  box-shadow:
+    0 4px 6px rgb(15 23 42 / 8%),
+    0 12px 28px rgb(15 23 42 / 14%);
+  max-height: min(70vh, 320px);
+  overflow-y: auto;
+}
+
 .wl-programs-actions-menu__list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   border: none;
   background: transparent;
   color: var(--wl-prog-text);
@@ -319,6 +332,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 0.82rem;
+  cursor: pointer;
 }
 
 .wl-programs-actions-menu__list button:hover {
@@ -2374,6 +2388,13 @@
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__col-exercise {
   min-width: 300px;
+}
+
+.app-container--program-editor
+  .wl-program-editor-sheet-sidebar__body
+  .wolf-session-editor--embedded
+  .wolf-se-spreadsheet__col-exercise {
+  min-width: 0;
 }
 
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block td.wolf-se-spreadsheet__col-exercise {
@@ -5070,6 +5091,12 @@
 
   .wl-programs-panel.wl-programs-editor {
     padding: var(--wl-space-editor-y, 1.5rem) var(--wl-space-editor-x, 2rem) var(--wl-space-editor-y, 1.5rem);
+  }
+
+  .app-container--program-editor .wl-programs-panel.wl-programs-editor {
+    padding: 0;
+    width: 100%;
+    max-width: none;
   }
 
   .wl-programs-panel.wl-programs-editor .wl-programs-action-dock {

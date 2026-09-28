@@ -28,6 +28,7 @@ import {
   type MetricDeltaTone,
 } from './statsComparison';
 import type { ContextComparisonRow } from './program-context/ContextComparisonTable';
+import { intensityMetricLabel, intensityMetricTooltip } from './statsLabels';
 
 function fromCompactDelta(
   compact: ReturnType<typeof buildCompactDelta> | ReturnType<typeof buildCompactPtsDelta> | undefined,
@@ -426,7 +427,8 @@ export function buildDayComparisonRows(params: {
       ),
     },
     {
-      label: 'IMP',
+      label: intensityMetricLabel(isEs),
+      title: intensityMetricTooltip(isEs),
       current: current.intensityWeighted > 0 ? `${current.intensityWeighted}%` : '—',
       prev: prev && prev.intensityWeighted > 0 ? `${prev.intensityWeighted}%` : '—',
       ...fromCompactDelta(
@@ -528,7 +530,8 @@ export function buildWeekComparisonRows(params: {
       ),
     },
     {
-      label: 'IMP',
+      label: intensityMetricLabel(isEs),
+      title: intensityMetricTooltip(isEs),
       current: metrics.avgPct > 0 ? `${metrics.avgPct}%` : '—',
       prev: prev && prev.avgPct > 0 ? `${prev.avgPct}%` : '—',
       ...fromCompactDelta(

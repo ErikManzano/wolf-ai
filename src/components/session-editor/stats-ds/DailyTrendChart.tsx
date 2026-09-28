@@ -3,12 +3,13 @@ import type { DailyTrendChartData } from '../programChartSeries';
 import { formatStatsKg } from '../statsTonnage';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTooltip } from './ChartTooltip';
-import { formatAxisKg, formatAxisPct, niceLinearTicks, padDomain } from './chartFormat';
+import { intensityAxisTitle, intensityMetricLabel, intensityMetricTooltip } from '../statsLabels';
+import { formatAxisPct, formatVolumeTicks, niceLinearTicks, padDomain } from './chartFormat';
 
 export interface DailyTrendChartProps {
   data: DailyTrendChartData;
   isEs: boolean;
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'compact' | 'context' | 'detail';
   /** Etiqueta corta de la semana de referencia (p. ej. Sem 3). */
   prevWeekLabel?: string;
 }
@@ -54,13 +55,16 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   variant = 'compact',
   prevWeekLabel,
 }) => {
+  const isDetail = variant === 'detail';
+  const isContext = variant === 'context';
   const compact = variant === 'compact';
-  const width = compact ? 280 : 360;
-  const height = compact ? 188 : 240;
-  const padL = compact ? 38 : 44;
-  const padR = compact ? 34 : 40;
-  const padT = compact ? 8 : 12;
-  const padB = compact ? 28 : 34;
+  const width = isDetail ? 920 : isContext ? 320 : compact ? 280 : 360;
+  const height = isDetail ? 460 : isContext ? 228 : compact ? 188 : 240;
+  const padL = isDetail ? 72 : isContext ? 46 : compact ? 42 : 52;
+  const padR = isDetail ? 64 : isContext ? 44 : compact ? 40 : 48;
+  const padT = isDetail ? 28 : isContext ? 18 : compact ? 16 : 20;
+  const padB = isDetail ? 44 : isContext ? 32 : compact ? 28 : 36;
+  const labelSize = isDetail ? 14 : isContext ? 10 : compact ? 9 : 11;
   const plotW = width - padL - padR;
   const plotH = height - padT - padB;
 
@@ -115,6 +119,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
 
   const volTicks = niceLinearTicks(volDom.min, volDom.max, 4);
   const impTicks = niceLinearTicks(impDom.min, impDom.max, 4);
+  const volTickLabels = formatVolumeTicks(volTicks, true);
 
   const volSegments = buildSegments(data.tonnage);
   const impSegments = buildSegments(data.imp);
@@ -122,16 +127,21 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
 
   const prevRef = prevWeekLabel && prevWeekLabel !== '—' ? prevWeekLabel : isEs ? 'sem. ant.' : 'prev wk';
 
+  const intensityLabel = intensityMetricLabel(isEs);
+  const intensityTitle = intensityMetricTooltip(isEs);
+
   return (
-    <div className={`wl-stats-daily${compact ? ' wl-stats-daily--compact' : ''}`}>
+    <div
+      className={`wl-stats-daily${compact ? ' wl-stats-daily--compact' : ''}${isContext ? ' wl-stats-daily--context' : ''}${isDetail ? ' wl-stats-daily--detail' : ''}`}
+    >
       <ul className="wl-stats-daily__legend" aria-hidden>
         <li className="wl-stats-daily__legend-item">
           <span className="wl-stats-daily__swatch wl-stats-daily__swatch--vol" />
           {isEs ? 'Volumen' : 'Volume'}
         </li>
-        <li className="wl-stats-daily__legend-item">
+        <li className="wl-stats-daily__legend-item" title={intensityTitle}>
           <span className="wl-stats-daily__swatch wl-stats-daily__swatch--imp" />
-          IMP
+          {intensityLabel}
         </li>
         <li className="wl-stats-daily__legend-item">
           <span className="wl-stats-daily__swatch wl-stats-daily__swatch--baseline" />
@@ -147,8 +157,12 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
         <svg
           className="wl-stats-daily__svg"
           viewBox={`0 0 ${width} ${height}`}
+          width={width}
+          height={height}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={isEs ? 'Tendencia diaria volumen e intensidad' : 'Daily volume and intensity trend'}
+          style={{ width: '100%', height: 'auto', aspectRatio: `${width} / ${height}` }}
         >
           {volTicks.map((tick) => (
             <line
@@ -232,15 +246,16 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             );
           })}
 
-          {volTicks.map((tick) => (
+          {volTicks.map((tick, index) => (
             <text
-              key={`yl-${tick}`}
-              x={padL - 5}
-              y={yVol(tick) + 3}
+              key={`yl-${tick}-${index}`}
+              x={padL - 6}
+              y={yVol(tick) + 4}
               className="wl-stats-daily__tick-label"
               textAnchor="end"
+              fontSize={labelSize}
             >
-              {formatAxisKg(tick, true)}
+              {volTickLabels[index]}
             </text>
           ))}
           {impTicks.map((tick) => (
@@ -250,8 +265,9 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
               y={yImp(tick) + 3}
               className="wl-stats-daily__tick-label wl-stats-daily__tick-label--right"
               textAnchor="start"
+              fontSize={labelSize}
             >
-              {formatAxisPct(tick)}
+              {formatAxisPct(tick, 0)}
             </text>
           ))}
 
@@ -262,6 +278,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
               y={height - 10}
               className="wl-stats-daily__x-label"
               textAnchor="middle"
+              fontSize={labelSize}
             >
               {label}
             </text>
@@ -272,6 +289,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             y={padT - 2}
             className="wl-stats-daily__axis-title"
             textAnchor="start"
+            fontSize={Math.max(9, labelSize - 1)}
           >
             {isEs ? 'kg' : 'kg'}
           </text>
@@ -280,8 +298,9 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             y={padT - 2}
             className="wl-stats-daily__axis-title wl-stats-daily__axis-title--right"
             textAnchor="end"
+            fontSize={Math.max(9, labelSize - 1)}
           >
-            {isEs ? '%1RM' : '%1RM'}
+            {intensityAxisTitle(isEs)}
           </text>
 
           {data.labels.map((_, i) => (
@@ -314,7 +333,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
                   deltaTone: pctDelta(data.tonnage[hoverIndex], data.prevTonnage[hoverIndex])?.tone,
                 },
                 {
-                  label: 'IMP',
+                  label: intensityLabel,
                   value:
                     data.imp[hoverIndex] != null
                       ? `${Math.round((data.imp[hoverIndex] as number) * 10) / 10}%`

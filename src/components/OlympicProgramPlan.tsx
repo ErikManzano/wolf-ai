@@ -1532,22 +1532,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const customizeToolbarPortaled =
     toolbarPortalNode && customizeToolbar ? createPortal(customizeToolbar, toolbarPortalNode) : null;
 
-  const statsToolbar =
-    showCustomize && customizeSubview === 'stats' ? (
-      <div className="wolf-program-day-board__stats-scope-bar">
-        <p className="wl-program-context-empty">
-          {isTemplateEditor
-            ? isEs
-              ? 'Mesociclo de la plantilla (%1RM). Tonelaje en kg en cada plan individual.'
-              : 'Template mesocycle (%1RM). Kg tonnage on each individual plan.'
-            : isEs
-              ? 'Día y semana: pestaña Editor + panel Contexto. Aquí: resumen del mesociclo.'
-              : 'Day/week: use Editor tab + Context panel. Here: mesocycle summary.'}
-        </p>
-        {programAthleteSelector}
-      </div>
-    ) : null;
-
   return (
     <div className={`wolf-program-plan${showCustomize && !showCreate ? ' wolf-program-plan--edit' : ''}`}>
       {showCreate && (
@@ -1736,7 +1720,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                   selectedWeek={selectedWeek}
                   onSelectWeek={handleProgramStatsWeekSelect}
                   executionContext={statsExecutionContext}
-                  toolbar={statsToolbar}
                   rosterAthletes={isTemplateEditor ? [] : rosterAthletes}
                   selectedAthleteId={
                     resolvedEditorMode === 'legacy' ? previewAthleteId || undefined : athleteId
@@ -1831,7 +1814,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         templateMetrics={isTemplateEditor}
                         selectedDayLabel={selectedDayLabel}
                         onClearExerciseSelection={() => setSelectedContextBlockIndex(null)}
-                        onOpenMesocycleStats={() => switchCustomizeSubview('stats')}
                       />
                     }
                   />

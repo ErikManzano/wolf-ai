@@ -2,6 +2,8 @@ import type { MetricDeltaTone } from '../statsComparison';
 
 export type ContextComparisonRow = {
   label: string;
+  /** Accessible tooltip on the metric name (e.g. IMP definition). */
+  title?: string;
   current: string;
   prev: string;
   delta?: string;
@@ -54,7 +56,7 @@ export function ContextComparisonTable({
       <tbody>
         {rows.map((row) => (
             <tr key={row.label} className="wl-context-compare-row">
-              <th scope="row" className="wl-context-compare-row__label">
+              <th scope="row" className="wl-context-compare-row__label" title={row.title}>
                 {row.label}
               </th>
               <td className="wl-context-compare-row__current">{row.current}</td>

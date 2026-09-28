@@ -495,7 +495,7 @@ export function buildWeekDailyTrendChartData(params: {
   };
 }
 
-/** Day tab: single point for current session (optional compare same day other weeks). */
+/** Day tab: same weekday across weeks (current week highlighted). */
 export function buildDayScatterSeries(params: {
   program: GeneratedProgram;
   weekNumber: number;
@@ -506,20 +506,25 @@ export function buildDayScatterSeries(params: {
   templateMetrics?: boolean;
 }): VolumeIntensityScatterPoint[] {
   const { program, weekNumber, dayNumber, athlete, exercises, isEs, templateMetrics = false } = params;
-  const week = program.weeks.find((w) => w.weekNumber === weekNumber);
-  const day = week?.days.find((d) => d.dayNumber === dayNumber);
-  if (!day?.session.exercises.length) return [];
-  const pt = sessionToScatterPoint(
-    day.session,
-    athlete,
-    exercises,
-    weekNumber,
-    dayNumber,
-    isEs ? `D${dayNumber}` : `D${dayNumber}`,
-    templateMetrics,
-    true,
-  );
-  return pt ? [pt] : [];
+  const points: VolumeIntensityScatterPoint[] = [];
+  const weeks = [...program.weeks].sort((a, b) => a.weekNumber - b.weekNumber);
+  for (const week of weeks) {
+    const day = week.days.find((d) => d.dayNumber === dayNumber);
+    if (!day?.session.exercises.length) continue;
+    const label = isEs ? `S${week.weekNumber} · D${dayNumber}` : `W${week.weekNumber} · D${dayNumber}`;
+    const pt = sessionToScatterPoint(
+      day.session,
+      athlete,
+      exercises,
+      week.weekNumber,
+      dayNumber,
+      label,
+      templateMetrics,
+      week.weekNumber === weekNumber,
+    );
+    if (pt) points.push(pt);
+  }
+  return points;
 }
 
 export function histogramMetricValue(bin: IntensityHistogramBin, metric: IntensityHistogramMetric): number {

@@ -7,12 +7,15 @@ import {
 } from '../programChartSeries';
 import { ChartEmptyState } from './ChartEmptyState';
 import { ChartTooltip } from './ChartTooltip';
-import { formatAxisKg, formatAxisPct, niceLinearTicks, padDomain } from './chartFormat';
+import { intensityAxisTitle } from '../statsLabels';
+import { formatAxisPct, formatVolumeTicks, niceLinearTicks, padDomain } from './chartFormat';
 
 export interface VolumeIntensityScatterProps {
   points: VolumeIntensityScatterPoint[];
   isEs: boolean;
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'compact' | 'context' | 'detail';
+  /** Override default empty state when fewer than 2 points. */
+  emptyMessage?: string;
 }
 
 const ZONE_BANDS = [
@@ -25,14 +28,18 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
   points,
   isEs,
   variant = 'full',
+  emptyMessage,
 }) => {
-  const compact = variant === 'compact';
-  const width = compact ? 280 : 360;
-  const height = compact ? 168 : 240;
-  const padL = compact ? 40 : 48;
-  const padR = compact ? 10 : 14;
-  const padT = compact ? 22 : 28;
-  const padB = compact ? 32 : 40;
+  const isDetail = variant === 'detail';
+  const isContext = variant === 'context';
+  const compact = variant === 'compact' || isContext;
+  const width = isDetail ? 920 : isContext ? 300 : compact ? 280 : 360;
+  const height = isDetail ? 460 : isContext ? 210 : compact ? 180 : 240;
+  const padL = isDetail ? 64 : isContext ? 42 : compact ? 44 : 52;
+  const padR = isDetail ? 24 : isContext ? 12 : compact ? 12 : 16;
+  const padT = isDetail ? 20 : isContext ? 14 : compact ? 18 : 24;
+  const padB = isDetail ? 48 : isContext ? 36 : compact ? 34 : 42;
+  const labelSize = isDetail ? 14 : isContext ? 10 : compact ? 9 : 11;
   const plotW = width - padL - padR;
   const plotH = height - padT - padB;
 
@@ -58,9 +65,10 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
     return (
       <ChartEmptyState
         message={
-          isEs
+          emptyMessage ??
+          (isEs
             ? 'Necesitas al menos 2 días con sesión para ver la distribución.'
-            : 'You need at least 2 session days to see the distribution.'
+            : 'You need at least 2 session days to see the distribution.')
         }
       />
     );
@@ -71,27 +79,42 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
   const yAt = (pct: number) =>
     padT + plotH - ((pct - yDom.min) / (yDom.max - yDom.min)) * plotH;
 
-  const xTicks = niceLinearTicks(xDom.min, xDom.max, compact ? 4 : 5);
-  const yTicks = niceLinearTicks(yDom.min, yDom.max, compact ? 4 : 5);
+  const xTicks = niceLinearTicks(xDom.min, xDom.max, isDetail ? 5 : 4);
+  const yTicks = niceLinearTicks(yDom.min, yDom.max, isDetail ? 5 : 4);
+  const xTickLabels = formatVolumeTicks(xTicks, true);
 
   const meanVol = points.reduce((s, p) => s + p.tonnage, 0) / points.length;
   const meanImp =
     points.filter((p) => p.avgPct > 0).reduce((s, p) => s + p.avgPct, 0) /
     Math.max(points.filter((p) => p.avgPct > 0).length, 1);
 
-  const r = compact ? 4.5 : 5.5;
-  const rCurrent = compact ? 5.5 : 7;
+  const r = isDetail ? 6 : compact ? 4.5 : 5.5;
+  const rCurrent = isDetail ? 8 : compact ? 5.5 : 7;
 
   const hoverPt = points.find((p) => p.id === hoverId);
 
   const zoneLegend = (['technique', 'accumulation', 'neural'] as const).map((key) => ({
     key,
-    label: scienceZoneLabel(key, isEs),
+    label: isContext && !isDetail
+      ? key === 'technique'
+        ? isEs
+          ? 'Técnica'
+          : 'Tech'
+        : key === 'accumulation'
+          ? isEs
+            ? 'Acum.'
+            : 'Accum.'
+          : isEs
+            ? 'Neural'
+            : 'Neural'
+      : scienceZoneLabel(key, isEs),
     color: SCATTER_ZONE_COLORS[key],
   }));
 
   return (
-    <div className={`wl-stats-scatter${compact ? ' wl-stats-scatter--compact' : ''}`}>
+    <div
+      className={`wl-stats-scatter${compact && !isDetail ? ' wl-stats-scatter--compact' : ''}${isContext ? ' wl-stats-scatter--context' : ''}${isDetail ? ' wl-stats-scatter--detail' : ''}`}
+    >
       <ul className="wl-stats-scatter__legend wl-stats-scatter__legend--top" aria-hidden>
         {zoneLegend.map((z) => (
           <li key={z.key} className="wl-stats-scatter__legend-item">
@@ -101,7 +124,7 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
         ))}
         <li className="wl-stats-scatter__legend-item">
           <span className="wl-stats-scatter__swatch wl-stats-scatter__swatch--ring" />
-          {isEs ? 'Sem. anterior' : 'Prev week'}
+          {isContext && !isDetail ? (isEs ? 'Sem. ant.' : 'Prev wk') : isEs ? 'Sem. anterior' : 'Prev week'}
         </li>
       </ul>
 
@@ -109,8 +132,12 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
         <svg
           className="wl-stats-scatter__svg"
           viewBox={`0 0 ${width} ${height}`}
+          width={width}
+          height={height}
+          preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={isEs ? 'Dispersión volumen por intensidad' : 'Volume vs intensity scatter'}
+          style={{ width: '100%', height: 'auto', aspectRatio: `${width} / ${height}` }}
         >
           {ZONE_BANDS.map((band) => {
             const yTop = yAt(Math.min(band.y1, yDom.max));
@@ -142,8 +169,8 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
             );
           })}
 
-          {xTicks.map((tick) => (
-            <g key={`xt-${tick}`}>
+          {xTicks.map((tick, index) => (
+            <g key={`xt-${tick}-${index}`}>
               <line
                 x1={xAt(tick)}
                 x2={xAt(tick)}
@@ -153,11 +180,12 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
               />
               <text
                 x={xAt(tick)}
-                y={height - 14}
+                y={height - 16}
                 className="wl-stats-scatter__tick-label"
                 textAnchor="middle"
+                fontSize={labelSize}
               >
-                {formatAxisKg(tick, compact)}
+                {xTickLabels[index]}
               </text>
             </g>
           ))}
@@ -175,8 +203,9 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
                 y={yAt(tick) + 3}
                 className="wl-stats-scatter__tick-label"
                 textAnchor="end"
+                fontSize={labelSize}
               >
-                {formatAxisPct(tick)}
+                {formatAxisPct(tick, 0)}
               </text>
             </g>
           ))}
@@ -251,17 +280,19 @@ export const VolumeIntensityScatter: React.FC<VolumeIntensityScatterProps> = ({
             y={height - 2}
             className="wl-stats-scatter__axis-title"
             textAnchor="middle"
+            fontSize={Math.max(9, labelSize - 1)}
           >
-            {isEs ? 'Volumen (kg)' : 'Volume (kg)'}
+            {isEs ? 'Volumen' : 'Volume'}
           </text>
           <text
-            x={8}
+            x={isDetail ? 22 : isContext ? 10 : 8}
             y={padT + plotH / 2}
             className="wl-stats-scatter__axis-title"
             textAnchor="middle"
-            transform={`rotate(-90, 8, ${padT + plotH / 2})`}
+            fontSize={Math.max(9, labelSize - 1)}
+            transform={`rotate(-90, ${isDetail ? 22 : isContext ? 10 : 8}, ${padT + plotH / 2})`}
           >
-            {isEs ? 'IMP (%1RM)' : 'IMP (%1RM)'}
+            {intensityAxisTitle(isEs)}
           </text>
         </svg>
 

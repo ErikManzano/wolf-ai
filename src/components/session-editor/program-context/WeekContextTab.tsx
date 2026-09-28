@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Athlete, Exercise, GeneratedProgram, ProgramWeek } from '../../../models/training';
 import { buildWeekComparisonRows } from '../programMetricsService';
 import {
@@ -13,7 +13,12 @@ import {
   VolumeIntensityScatter,
 } from '../stats-ds';
 import { ProgramContextSection } from './ProgramContextSection';
+import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
+import { ProgramContextChartDetail } from './ProgramContextChartDetail';
+import { ProgramContextChartExpandButton } from './ProgramContextChartExpandButton';
+
+type WeekExpandedChart = 'dailyTrend' | 'scatter' | null;
 
 export function WeekContextTab({
   program,
@@ -83,6 +88,15 @@ export function WeekContextTab({
       ? 'Primera semana del programa'
       : 'First week of the program';
 
+  const loadGroupTitle = isEs ? 'Carga' : 'Load';
+  const distributionTitle = isEs ? 'Distribución' : 'Distribution';
+  const detailTitle = isEs ? 'Detalle' : 'Detail';
+
+  const dailyTrendTitle = isEs ? 'Tendencia diaria' : 'Daily trend';
+  const scatterTitle = isEs ? 'Volumen × intensidad (semana)' : 'Volume × intensity (week)';
+
+  const [expandedChart, setExpandedChart] = useState<WeekExpandedChart>(null);
+
   return (
     <div className="wl-program-context-tab">
       <ProgramContextSection
@@ -97,42 +111,92 @@ export function WeekContextTab({
         />
       </ProgramContextSection>
 
-      <ProgramContextSection
-        title={isEs ? 'Volumen × intensidad (semana)' : 'Volume × intensity (week)'}
-      >
-        <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="compact" />
-      </ProgramContextSection>
-
-      <ProgramContextSection title={isEs ? 'Tendencia diaria' : 'Daily trend'}>
-        <DailyTrendChart data={dailyTrend} isEs={isEs} variant="compact" prevWeekLabel={prevLabel} />
-      </ProgramContextSection>
-
-      {comparison.weekStimulus.length > 0 ? (
-        <ProgramContextSection title={isEs ? 'Zonas (semana)' : 'Zones (week)'}>
-          <ScienceDistributionBar
-            slices={comparison.weekStimulus}
+      <ProgramContextGroup title={loadGroupTitle}>
+        <ProgramContextSection
+          title={dailyTrendTitle}
+          action={
+            <ProgramContextChartExpandButton
+              isEs={isEs}
+              chartTitle={dailyTrendTitle}
+              onClick={() => setExpandedChart('dailyTrend')}
+            />
+          }
+        >
+          <DailyTrendChart
+            data={dailyTrend}
             isEs={isEs}
-            compact
-            showRepsInLegend
-            singleZoneVolumeHint
-            animateOnMount
-            showTooltips
+            variant="context"
+            prevWeekLabel={prevLabel}
           />
         </ProgramContextSection>
+
+        <ProgramContextSection
+          title={scatterTitle}
+          action={
+            <ProgramContextChartExpandButton
+              isEs={isEs}
+              chartTitle={scatterTitle}
+              onClick={() => setExpandedChart('scatter')}
+            />
+          }
+        >
+          <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="context" />
+        </ProgramContextSection>
+      </ProgramContextGroup>
+
+      <ProgramContextChartDetail
+        open={expandedChart === 'dailyTrend'}
+        title={dailyTrendTitle}
+        isEs={isEs}
+        onClose={() => setExpandedChart(null)}
+      >
+        <DailyTrendChart
+          data={dailyTrend}
+          isEs={isEs}
+          variant="detail"
+          prevWeekLabel={prevLabel}
+        />
+      </ProgramContextChartDetail>
+
+      <ProgramContextChartDetail
+        open={expandedChart === 'scatter'}
+        title={scatterTitle}
+        isEs={isEs}
+        onClose={() => setExpandedChart(null)}
+      >
+        <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="detail" />
+      </ProgramContextChartDetail>
+
+      {comparison.weekStimulus.length > 0 ? (
+        <ProgramContextGroup title={distributionTitle}>
+          <ProgramContextSection title={isEs ? 'Zonas (semana)' : 'Zones (week)'}>
+            <ScienceDistributionBar
+              slices={comparison.weekStimulus}
+              isEs={isEs}
+              compact
+              showRepsInLegend
+              singleZoneVolumeHint
+              animateOnMount
+              showTooltips
+            />
+          </ProgramContextSection>
+        </ProgramContextGroup>
       ) : null}
 
       {comparison.exerciseVolumes.length > 0 || comparison.exerciseVolumeRemainder ? (
-        <ProgramContextSection
-          title={isEs ? 'Top 5 ejercicios (tonnage semana)' : 'Top 5 exercises (week tonnage)'}
-        >
-          <ExerciseRanking
-            slices={comparison.exerciseVolumes}
-            isEs={isEs}
-            maxSlices={PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT}
-            remainder={comparison.exerciseVolumeRemainder}
-            animateOnMount
-          />
-        </ProgramContextSection>
+        <ProgramContextGroup title={detailTitle}>
+          <ProgramContextSection
+            title={isEs ? 'Top 5 ejercicios (tonnage semana)' : 'Top 5 exercises (week tonnage)'}
+          >
+            <ExerciseRanking
+              slices={comparison.exerciseVolumes}
+              isEs={isEs}
+              maxSlices={PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT}
+              remainder={comparison.exerciseVolumeRemainder}
+              animateOnMount
+            />
+          </ProgramContextSection>
+        </ProgramContextGroup>
       ) : null}
     </div>
   );
