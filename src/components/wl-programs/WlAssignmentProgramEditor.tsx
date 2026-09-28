@@ -50,7 +50,6 @@ const WlAssignmentProgramEditor: React.FC<WlAssignmentProgramEditorProps> = ({
     assignments,
     updateAssignmentProgram,
     wlAthletes,
-    openProgramEditor,
   } = useWolfAssign();
 
   const assignment = useMemo(
