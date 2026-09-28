@@ -153,7 +153,7 @@ export function WeekContextTab({
         <DailyTrendChart
           data={dailyTrend}
           isEs={isEs}
-          variant="detail"
+          variant="context"
           prevWeekLabel={prevLabel}
         />
       </ProgramContextChartDetail>
@@ -164,7 +164,7 @@ export function WeekContextTab({
         isEs={isEs}
         onClose={() => setExpandedChart(null)}
       >
-        <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="detail" />
+        <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="context" />
       </ProgramContextChartDetail>
 
       {comparison.weekStimulus.length > 0 ? (

@@ -3,7 +3,10 @@
 /* Tokens for section cards + charts outside full .wl-stats-ds shell (e.g. context panel) */
 .wl-stats-section,
 .wl-stats-dist,
-.wl-stats-rank {
+.wl-stats-rank,
+.wl-stats-daily,
+.wl-stats-scatter,
+.wl-stats-hist {
   --stats-space-1: 4px;
   --stats-space-2: 8px;
   --stats-space-3: 12px;
@@ -1661,7 +1664,7 @@ button.wl-stats-roster__row:hover,
 }
 
 .wl-stats-daily__grid {
-  stroke: color-mix(in srgb, var(--stats-border) 55%, transparent);
+  stroke: color-mix(in srgb, var(--stats-border, #e7e5e4) 55%, transparent);
   stroke-width: 1;
 }
 
@@ -1673,7 +1676,7 @@ button.wl-stats-roster__row:hover,
 }
 
 .wl-stats-daily__line-vol {
-  stroke: var(--stats-orange);
+  stroke: var(--stats-orange, #ff4d00);
   stroke-width: 2.25;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1681,7 +1684,7 @@ button.wl-stats-roster__row:hover,
 }
 
 .wl-stats-daily__line-imp {
-  stroke: var(--stats-blue);
+  stroke: var(--stats-blue, #2563eb);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1702,15 +1705,15 @@ button.wl-stats-roster__row:hover,
 }
 
 .wl-stats-daily__dot--vol {
-  fill: var(--stats-orange);
+  fill: var(--stats-orange, #ff4d00);
 }
 
 .wl-stats-daily__dot--imp {
-  fill: var(--stats-blue);
+  fill: var(--stats-blue, #2563eb);
 }
 
 .wl-stats-daily__tick-label {
-  fill: var(--stats-muted);
+  fill: var(--stats-muted, #78716c);
   font-weight: 600;
 }
 

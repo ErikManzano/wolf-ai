@@ -10,7 +10,6 @@ export function ProgramEditorContextLayout({
   contextOpen,
   onToggleContext,
   mobileContextOpen,
-  onMobileContextOpenChange,
   isMobile,
 }: {
   isEs: boolean;
@@ -20,7 +19,6 @@ export function ProgramEditorContextLayout({
   contextOpen: boolean;
   onToggleContext: () => void;
   mobileContextOpen: boolean;
-  onMobileContextOpenChange: (open: boolean) => void;
   isMobile: boolean;
 }) {
   const panelTitle = programContextPanelTitle(isEs);
@@ -79,34 +77,14 @@ export function ProgramEditorContextLayout({
         </aside>
       ) : null}
 
-      {isMobile ? (
-        <>
-          <button
-            type="button"
-            className="wl-program-editor-split__mobile-fab"
-            onClick={() => onMobileContextOpenChange(true)}
-          >
-            {panelTitle}
-          </button>
-          {mobileContextOpen ? (
-            <div className="wl-program-context-drawer" role="dialog" aria-modal="true">
-              <div
-                className="wl-program-context-drawer__backdrop"
-                onClick={() => onMobileContextOpenChange(false)}
-                aria-hidden
-              />
-              <div className="wl-program-context-drawer__sheet">
-                <div className="wl-program-editor-split__context-head">
-                  <span className="wl-program-editor-split__context-title">{panelTitle}</span>
-                  <button type="button" onClick={() => onMobileContextOpenChange(false)}>
-                    {isEs ? 'Cerrar' : 'Close'}
-                  </button>
-                </div>
-                {context}
-              </div>
-            </div>
-          ) : null}
-        </>
+      {isMobile && mobileContextOpen ? (
+        <div
+          className="wl-program-editor-split__mobile-context"
+          role="tabpanel"
+          aria-label={isEs ? 'Panel de análisis del programa' : 'Program analysis panel'}
+        >
+          {context}
+        </div>
       ) : null}
     </div>
   );

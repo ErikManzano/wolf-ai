@@ -158,7 +158,7 @@ export function DayContextTab({
         <VolumeIntensityScatter
           points={scatterPoints}
           isEs={isEs}
-          variant="detail"
+          variant="context"
           emptyMessage={dayScatterEmptyMessage}
         />
       </ProgramContextChartDetail>

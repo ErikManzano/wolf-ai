@@ -1746,12 +1746,27 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     contextOpen={contextOpen}
                     onToggleContext={toggleContext}
                     mobileContextOpen={mobileContextOpen}
-                    onMobileContextOpenChange={setMobileContextOpen}
                     isMobile={isMobileLayout}
                     sidebar={
                       <ProgramEditorSheetSidebar
                         navigation={
                           sessionEditorView === 'sheet' ? programFullNavigation : null
+                        }
+                        hideBody={isMobileLayout && mobileContextOpen}
+                        analysisTab={
+                          isMobileLayout && sessionEditorView === 'sheet' ? (
+                            <div className="wl-program-editor-sheet-sidebar__analysis" role="tablist">
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={mobileContextOpen}
+                                className={`wl-program-editor-sheet-sidebar__analysis-btn${mobileContextOpen ? ' is-active' : ''}`}
+                                onClick={() => setMobileContextOpen(!mobileContextOpen)}
+                              >
+                                {isEs ? 'Análisis' : 'Analysis'}
+                              </button>
+                            </div>
+                          ) : null
                         }
                       >
                         <div
