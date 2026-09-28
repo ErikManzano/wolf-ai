@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './CentralPanel.css';
 import './SuperDashboard.css';
 import '../styles/interactive.css';

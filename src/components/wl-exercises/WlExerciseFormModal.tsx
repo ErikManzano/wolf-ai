@@ -20,8 +20,9 @@ import {
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useCoachExerciseFamilies } from '../../hooks/useCoachExerciseFamilies';
 import { composeDisplayName } from '../../services/exercise';
+import { cuesToBullets } from '../../utils/exerciseDisplayName';
 import { WlCenteredModal } from '../wl-shared/WlCenteredModal';
-import { ExerciseFamilyPicker } from './ExerciseFamilyPicker';
+import { ExerciseFormFolderChips } from './ExerciseFormFolderChips';
 import { ExerciseTechnicalFamilySelect } from './ExerciseTechnicalFamilySelect';
 import { ExerciseMedia } from './ExerciseMedia';
 import type { ExerciseFamilyId } from './types';
@@ -52,6 +53,24 @@ function seedSingle(initial?: MergedDefinitionView | null): SingleComposition {
 
 function normalizeCues(cues: string[]): string[] {
   return cues.map((cue) => cue.trim()).filter(Boolean);
+}
+
+function seedDisplayName(mode: ExerciseFormMode, initial?: MergedDefinitionView | null): string {
+  if (mode === 'fork') {
+    return initial?.coachOverride?.override.displayName ?? initial?.effectiveDisplayName ?? '';
+  }
+  if (mode === 'edit' && initial?.coachId) {
+    return initial.coachOverride?.override.displayName ?? initial.displayName ?? '';
+  }
+  return initial?.effectiveDisplayName ?? '';
+}
+
+function seedFormCues(initial?: MergedDefinitionView | null): string[] {
+  const saved = initial?.coachOverride?.override.cues?.filter(Boolean) ?? [];
+  if (saved.length) return saved;
+  const official = cuesToBullets(initial?.cuesEs ?? initial?.cuesEn);
+  if (official.length) return official;
+  return [''];
 }
 
 const LOAD_ANCHOR_OPTIONS: { value: ExerciseLoadAnchorCode; labelEs: string; labelEn: string }[] = [
@@ -89,28 +108,22 @@ export function WlExerciseFormModal({
   };
 
   const seeded = seedSingle(initial);
-  const [discipline, setDiscipline] = useState<'weightlifting' | 'accessory'>(
-    initial?.family === 'accessory' ? 'accessory' : 'weightlifting',
-  );
   const [family, setFamily] = useState<ExerciseFamilyCode>(seeded.family);
   const [variation, setVariation] = useState<ExerciseVariationCode>(seeded.variation);
   const [startPosition, setStartPosition] = useState<StartPositionCode>(seeded.startPosition);
   const [modifiers, setModifiers] = useState<ExerciseModifierCode[]>(seeded.modifiers);
   const [objective, setObjective] = useState<TrainingObjectiveCode>(initial?.objective ?? 'technique');
   const [loadAnchor, setLoadAnchor] = useState<ExerciseLoadAnchorCode>(initial?.loadAnchor ?? 'auto');
-  const [displayName, setDisplayName] = useState(initial?.effectiveDisplayName ?? '');
+  const [displayName, setDisplayName] = useState(() => seedDisplayName(mode, initial));
   const [videoUrl, setVideoUrl] = useState(initial?.coachOverride?.override.videoUrl ?? '');
-  const [cues, setCues] = useState<string[]>(() => {
-    const saved = initial?.coachOverride?.override.cues?.filter(Boolean) ?? [];
-    return saved.length ? saved : [''];
-  });
+  const [cues, setCues] = useState<string[]>(() => seedFormCues(initial));
   const [customFamilyId, setCustomFamilyId] = useState<string | null>(() =>
     customFamilyIdFromTags(initial?.tags),
   );
   const { currentUserId } = useWolfAssign();
   const { families: customFamilies } = useCoachExerciseFamilies(currentUserId);
   const isComplex = Boolean(initial && !isSingleComposition(initial.composition));
-  const isFullForm = mode === 'create' || mode === 'edit' || mode === 'duplicate';
+  const isFullForm = mode === 'create' || mode === 'edit' || mode === 'duplicate' || mode === 'fork';
 
   useEffect(() => {
     if (customFamilyId && !customFamilies.some((family) => family.id === customFamilyId)) {
@@ -120,31 +133,28 @@ export function WlExerciseFormModal({
 
   useEffect(() => {
     const single = seedSingle(initial);
-    setDiscipline(initial?.family === 'accessory' ? 'accessory' : 'weightlifting');
     setFamily(single.family);
     setVariation(single.variation);
     setStartPosition(single.startPosition);
     setModifiers(single.modifiers);
     setObjective(initial?.objective ?? 'technique');
     setLoadAnchor(initial?.loadAnchor ?? 'auto');
-    setDisplayName(initial?.effectiveDisplayName ?? '');
+    setDisplayName(seedDisplayName(mode, initial));
     setVideoUrl(initial?.coachOverride?.override.videoUrl ?? '');
-    const savedCues = initial?.coachOverride?.override.cues?.filter(Boolean) ?? [];
-    setCues(savedCues.length ? savedCues : ['']);
+    setCues(seedFormCues(initial));
     setCustomFamilyId(customFamilyIdFromTags(initial?.tags));
   }, [initial, mode]);
 
   const composition = useMemo<SingleComposition>(() => {
-    const nextFamily = discipline === 'accessory' ? 'accessory' : family;
     return {
       kind: 'single',
-      family: nextFamily,
+      family,
       variation,
       startPosition,
       modifiers,
       tempo: null,
     };
-  }, [discipline, family, variation, startPosition, modifiers]);
+  }, [family, variation, startPosition, modifiers]);
 
   const previewName = composeDisplayName(
     isComplex && initial ? initial.composition : composition,
@@ -153,7 +163,7 @@ export function WlExerciseFormModal({
   );
 
   const resolvedName = displayName.trim() || previewName;
-  const previewFamily = (discipline === 'accessory' ? 'accessory' : family) as ExerciseFamilyId;
+  const previewFamily = family as ExerciseFamilyId;
 
   const toggleModifier = (code: ExerciseModifierCode) => {
     setModifiers((prev) => (prev.includes(code) ? prev.filter((item) => item !== code) : [...prev, code]));
@@ -188,56 +198,9 @@ export function WlExerciseFormModal({
 
   const compositionBlock = (
     <div className="wl-exercise-detail__meta-block wl-exercise-detail__meta-block--spec">
-      <div className="wl-exercise-form-spec-head">
-        <h3 className="wl-exercise-detail__intel-title">
-          {isEs ? 'Composición y carga' : 'Composition & load'}
-        </h3>
-
-        <div className="wl-exercise-form-spec-head__row">
-          <label className="wl-exercise-compose__field">
-            <span className="wl-exercise-compose__label">{isEs ? 'Disciplina' : 'Discipline'}</span>
-            <select
-              className="wl-exercise-compose__input"
-              value={discipline}
-              onChange={(event) => {
-                const next = event.target.value as 'weightlifting' | 'accessory';
-                setDiscipline(next);
-                if (next === 'accessory') {
-                  setFamily('accessory');
-                } else if (family === 'accessory') {
-                  setFamily('snatch');
-                }
-              }}
-            >
-              <option value="weightlifting">{isEs ? 'Halterofilia' : 'Weightlifting'}</option>
-              <option value="accessory">{isEs ? 'Accesorios' : 'Accessories'}</option>
-            </select>
-          </label>
-
-          {!isComplex ? (
-            discipline === 'weightlifting' ? (
-              <div className="wl-exercise-compose__field">
-                <span className="wl-exercise-compose__label">{isEs ? 'Familia técnica' : 'Technical family'}</span>
-                <ExerciseTechnicalFamilySelect
-                  isEs={isEs}
-                  value={family}
-                  onChange={(nextFamily) => {
-                    setFamily(nextFamily);
-                    if (nextFamily === 'accessory') setDiscipline('accessory');
-                  }}
-                />
-              </div>
-            ) : (
-              <label className="wl-exercise-compose__field">
-                <span className="wl-exercise-compose__label">{isEs ? 'Familia técnica' : 'Technical family'}</span>
-                <select className="wl-exercise-compose__input" value="accessory" disabled>
-                  <option value="accessory">{isEs ? 'Accesorios' : 'Accessories'}</option>
-                </select>
-              </label>
-            )
-          ) : null}
-        </div>
-      </div>
+      <h3 className="wl-exercise-detail__intel-title">
+        {isEs ? 'Composición y carga' : 'Composition & load'}
+      </h3>
 
       {isComplex && initial ? (
         <p className="wl-exercise-compose__hint">
@@ -247,9 +210,13 @@ export function WlExerciseFormModal({
         </p>
       ) : null}
 
-      <div className="wl-exercise-compose__grid wl-exercise-compose__grid--detail">
+      <div className="wl-exercise-compose__grid wl-exercise-compose__grid--detail wl-exercise-compose__grid--mirror-detail">
         {!isComplex ? (
           <>
+            <div className="wl-exercise-compose__field wl-exercise-compose__field--full">
+              <span className="wl-exercise-compose__label">{isEs ? 'Familia' : 'Family'}</span>
+              <ExerciseTechnicalFamilySelect isEs={isEs} value={family} onChange={setFamily} />
+            </div>
             <label className="wl-exercise-compose__field">
               <span className="wl-exercise-compose__label">{isEs ? 'Variación' : 'Variation'}</span>
               <select
@@ -272,36 +239,6 @@ export function WlExerciseFormModal({
                 onChange={(event) => setStartPosition(event.target.value as StartPositionCode)}
               >
                 {taxonomy.startPositions.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {isEs ? item.labelEs : item.labelEn}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="wl-exercise-compose__field">
-              <span className="wl-exercise-compose__label">
-                {isEs ? 'Referencia de intensidad' : 'Intensity reference'}
-              </span>
-              <select
-                className="wl-exercise-compose__input"
-                value={loadAnchor}
-                onChange={(event) => setLoadAnchor(event.target.value as ExerciseLoadAnchorCode)}
-              >
-                {LOAD_ANCHOR_OPTIONS.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {isEs ? item.labelEs : item.labelEn}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="wl-exercise-compose__field">
-              <span className="wl-exercise-compose__label">{isEs ? 'Objetivo' : 'Objective'}</span>
-              <select
-                className="wl-exercise-compose__input"
-                value={objective}
-                onChange={(event) => setObjective(event.target.value as TrainingObjectiveCode)}
-              >
-                {taxonomy.objectives.map((item) => (
                   <option key={item.code} value={item.code}>
                     {isEs ? item.labelEs : item.labelEn}
                   </option>
@@ -342,6 +279,36 @@ export function WlExerciseFormModal({
                 })}
               </div>
             </div>
+            <label className="wl-exercise-compose__field">
+              <span className="wl-exercise-compose__label">
+                {isEs ? 'Referencia de intensidad' : 'Intensity reference'}
+              </span>
+              <select
+                className="wl-exercise-compose__input"
+                value={loadAnchor}
+                onChange={(event) => setLoadAnchor(event.target.value as ExerciseLoadAnchorCode)}
+              >
+                {LOAD_ANCHOR_OPTIONS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {isEs ? item.labelEs : item.labelEn}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="wl-exercise-compose__field">
+              <span className="wl-exercise-compose__label">{isEs ? 'Objetivo' : 'Objective'}</span>
+              <select
+                className="wl-exercise-compose__input"
+                value={objective}
+                onChange={(event) => setObjective(event.target.value as TrainingObjectiveCode)}
+              >
+                {taxonomy.objectives.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {isEs ? item.labelEs : item.labelEn}
+                  </option>
+                ))}
+              </select>
+            </label>
           </>
         ) : (
           <>
@@ -378,6 +345,14 @@ export function WlExerciseFormModal({
           </>
         )}
       </div>
+
+      <ExerciseFormFolderChips
+        isEs={isEs}
+        customFamilyId={customFamilyId}
+        customFamilies={customFamilies}
+        onCustomChange={setCustomFamilyId}
+        onManageFamilies={onManageFamilies}
+      />
     </div>
   );
 
@@ -441,15 +416,6 @@ export function WlExerciseFormModal({
                   autoComplete="off"
                 />
               </label>
-              <p className="wl-exercise-form-hero__note">
-                {displayName.trim()
-                  ? isEs
-                    ? `Nombre personalizado · automático: ${previewName}`
-                    : `Custom name · auto: ${previewName}`
-                  : isEs
-                    ? `Se usará el nombre automático: ${previewName}`
-                    : `Auto name will be used: ${previewName}`}
-              </p>
             </div>
           ) : null}
 
@@ -457,11 +423,6 @@ export function WlExerciseFormModal({
 
           <div className="wl-exercise-detail__meta-block wl-exercise-detail__meta-block--cues">
             <h3 className="wl-exercise-detail__intel-title">{isEs ? 'Indicaciones' : 'Cues'}</h3>
-            <p className="wl-exercise-form-cues__lead">
-              {isEs
-                ? 'Opcional. Aparecerán en la ficha como bullets para tus atletas.'
-                : 'Optional. They appear as bullets on the exercise detail.'}
-            </p>
             <div className="wl-exercise-detail__cues-edit">
               {cues.map((cue, index) => (
                 <div className="wl-exercise-cues__row" key={`form-cue-${index}`}>
@@ -502,22 +463,6 @@ export function WlExerciseFormModal({
               </button>
             </div>
           </div>
-
-          <details className="wl-exercise-form-advanced">
-            <summary>{isEs ? 'Carpeta y organización' : 'Folder & organization'}</summary>
-            <div className="wl-exercise-form-advanced__body">
-              <ExerciseFamilyPicker
-                isEs={isEs}
-                officialFamily={family}
-                customFamilyId={customFamilyId}
-                customFamilies={customFamilies}
-                sections="folder"
-                onOfficialChange={setFamily}
-                onCustomChange={setCustomFamilyId}
-                onManageFamilies={onManageFamilies}
-              />
-            </div>
-          </details>
         </div>
       </div>
     </WlCenteredModal>

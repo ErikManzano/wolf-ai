@@ -5,7 +5,7 @@ import { FamilyAvatar } from './FamilyAvatar';
 import { FAMILY_CHIP_ORDER, FAMILY_DISPLAY_LABEL } from './exerciseListUtils';
 import type { ExerciseFamilyId } from './types';
 
-const WEIGHTLIFTING_FAMILIES = FAMILY_CHIP_ORDER.filter((code) => code !== 'accessory');
+const FAMILY_OPTIONS = FAMILY_CHIP_ORDER;
 
 export function ExerciseTechnicalFamilySelect({
   isEs,
@@ -45,7 +45,7 @@ export function ExerciseTechnicalFamilySelect({
         className="wl-exercise-family-select__trigger"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={isEs ? `Familia técnica: ${label}` : `Technical family: ${label}`}
+        aria-label={isEs ? `Familia: ${label}` : `Family: ${label}`}
         onClick={() => setOpen((current) => !current)}
       >
         <FamilyAvatar family={value as ExerciseFamilyId} size={28} />
@@ -59,9 +59,9 @@ export function ExerciseTechnicalFamilySelect({
         <ul
           className="wl-exercise-family-select__menu"
           role="listbox"
-          aria-label={isEs ? 'Familia técnica' : 'Technical family'}
+          aria-label={isEs ? 'Familia' : 'Family'}
         >
-          {WEIGHTLIFTING_FAMILIES.map((code) => {
+          {FAMILY_OPTIONS.map((code) => {
             const optionLabel = FAMILY_DISPLAY_LABEL[code as ExerciseFamilyId] ?? code;
             const active = value === code;
             return (

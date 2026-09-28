@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   ExerciseDefinitionInput,
   MergedDefinitionView,
-  OverridePatch,
 } from '../../models/exercise';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
@@ -136,7 +135,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [libraryFocus, setLibraryFocus] = useState<LibraryModalFocus>('families');
   const [libraryStartFamilyForm, setLibraryStartFamilyForm] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
-  const [detailInitialTab, setDetailInitialTab] = useState<'intel' | 'personalize'>('intel');
 
   const openLibrary = useCallback(
     (focus: LibraryModalFocus = 'families', opts?: { startFamilyForm?: boolean }) => {
@@ -378,10 +376,9 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     lastSelectedIdRef.current = visibleRowIds[visibleRowIds.length - 1] ?? null;
   };
 
-  const openDetail = useCallback((def: MergedDefinitionView, opts?: { initialTab?: 'intel' | 'personalize' }) => {
+  const openDetail = useCallback((def: MergedDefinitionView) => {
     setSelectedId(def.id);
     setView('detail');
-    setDetailInitialTab(opts?.initialTab ?? 'intel');
     setRecentIds((current) => recordExerciseRecent(def.id, current));
     const url = new URL(window.location.href);
     url.searchParams.set('definitionId', def.legacyExerciseId ?? def.id);
@@ -391,7 +388,6 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const closeDetail = useCallback(() => {
     setView('library');
     setSelectedId(null);
-    setDetailInitialTab('intel');
     const url = new URL(window.location.href);
     url.searchParams.delete('definitionId');
     window.history.replaceState({}, '', url.toString());
@@ -440,12 +436,20 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     setFormSeed(null);
   };
 
-  const applyFormExtras = async (defId: string, opts: ExerciseFormSaveOpts) => {
+  const applyFormExtras = async (
+    defId: string,
+    opts: ExerciseFormSaveOpts,
+    input?: ExerciseDefinitionInput,
+  ) => {
     const patch: Parameters<typeof upsertCoachOverride>[1] = {
-      customFamilyId: opts.folderId,
+      customFamilyId: opts.folderId ?? null,
+      loadAnchor: input?.loadAnchor,
+      objective: input?.objective,
     };
-    if (opts.videoUrl) patch.videoUrl = opts.videoUrl;
-    if (opts.cues?.length) patch.cues = opts.cues;
+    const customName = input?.displayName?.trim();
+    if (customName) patch.displayName = customName;
+    if (opts.videoUrl !== undefined) patch.videoUrl = opts.videoUrl || null;
+    if (opts.cues !== undefined) patch.cues = opts.cues;
     return upsertCoachOverride(defId, patch);
   };
 
@@ -469,18 +473,44 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       if (hasExerciseDefinitionChanged(formSeed, defInput)) {
         err = await updateExerciseDefinition(formSeed.id, defInput);
       }
-      if (!err) err = await applyFormExtras(formSeed.id, opts);
+      if (!err) err = await applyFormExtras(formSeed.id, opts, defInput);
     } else if (formMode === 'fork' && formSeed) {
       if (!formSeed.coachId) {
         if (hasExerciseDefinitionChanged(formSeed, defInput)) {
           err = await forkExerciseDefinition(formSeed.id, withFolderTags(defInput));
+          if (!err) {
+            await refreshExerciseCatalog();
+            const forked =
+              registryBrowse({ includeDeprecated: true }).definitions.find(
+                (def) =>
+                  def.coachId &&
+                  def.parentDefinitionId === formSeed.id &&
+                  buildSignature(def.composition) === signature,
+              ) ?? null;
+            savedId = forked?.id ?? formSeed.id;
+            if (forked) err = await applyFormExtras(forked.id, opts, defInput);
+          }
         } else {
-          err = await applyFormExtras(formSeed.id, opts);
+          err = await applyFormExtras(formSeed.id, opts, defInput);
+          savedId = formSeed.id;
         }
       } else if (hasExerciseDefinitionChanged(formSeed, defInput)) {
         err = await forkExerciseDefinition(formSeed.id, withFolderTags(defInput));
+        if (!err) {
+          await refreshExerciseCatalog();
+          const forked =
+            registryBrowse({ includeDeprecated: true }).definitions.find(
+              (def) =>
+                def.coachId &&
+                def.parentDefinitionId === formSeed.id &&
+                buildSignature(def.composition) === signature,
+            ) ?? null;
+          savedId = forked?.id ?? formSeed.id;
+          if (forked) err = await applyFormExtras(forked.id, opts, defInput);
+        }
       } else {
-        err = await applyFormExtras(formSeed.id, opts);
+        err = await applyFormExtras(formSeed.id, opts, defInput);
+        savedId = formSeed.id;
       }
     } else {
       err = await createExerciseDefinition(withFolderTags(defInput));
@@ -503,26 +533,12 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       tone: 'success',
       message: isEs ? 'Ejercicio guardado' : 'Exercise saved',
     });
+    await refreshExerciseCatalog();
     closeForm();
-    if (formMode === 'create' && savedId) {
+    if (savedId && (formMode === 'create' || formMode === 'fork' || formMode === 'edit')) {
       setSelectedId(savedId);
       setView('detail');
     }
-  };
-
-  const handleSaveOverride = async (baseId: string, patch: OverridePatch) => {
-    const err = await upsertCoachOverride(baseId, patch);
-    if (err) {
-      pushAlert({ tone: 'error', message: err });
-      return err;
-    }
-    pushAlert({
-      tone: 'success',
-      message: isEs ? 'Personalización guardada' : 'Personalization saved',
-    });
-    await refreshExerciseCatalog();
-    if (patch.hidden) closeDetail();
-    return null;
   };
 
   const handleConfirm = async () => {
@@ -713,7 +729,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     isEs,
     onOpen: () => openDetail(def),
     onEdit: () => openForm('edit', def),
-    onPersonalize: () => openDetail(def, { initialTab: 'personalize' }),
+    onPersonalize: () => openForm('fork', def),
     onDuplicate: () => openForm('duplicate', def),
     onArchive: () => setConfirm({ action: 'archive' as const, def }),
     onDelete: () => {
@@ -865,16 +881,15 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
           isEs={isEs}
           taxonomy={exerciseTaxonomy}
           usageCount={usageCount}
-          initialTab={detailInitialTab}
           onBack={closeDetail}
           onEdit={selected.coachId ? () => openForm('edit', selected) : undefined}
+          onPersonalize={selected.isOfficial ? () => openForm('fork', selected) : undefined}
           onDuplicate={() => openForm('duplicate', selected)}
           onArchive={() => setConfirm({ action: 'archive', def: selected })}
           onDelete={() => {
             const used = usageById.get(selected.id) ?? 0;
             setConfirm({ action: used > 0 ? 'archive' : 'delete', def: selected });
           }}
-          onSaveOverride={handleSaveOverride}
         />
         {formModal}
         {libraryModal}
