@@ -1763,6 +1763,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                                 className={`wl-program-editor-sheet-sidebar__analysis-btn${mobileContextOpen ? ' is-active' : ''}`}
                                 onClick={() => setMobileContextOpen(!mobileContextOpen)}
                               >
+                                <BarChart3 size={14} strokeWidth={2.25} aria-hidden />
                                 {isEs ? 'Análisis' : 'Analysis'}
                               </button>
                             </div>
