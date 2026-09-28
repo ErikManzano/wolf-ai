@@ -87,7 +87,7 @@
   color: #fdba74;
   font-size: 0.78rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wa-athlete-ex-card--complex .wa-athlete-ex-card__index {
@@ -209,11 +209,11 @@
   flex-wrap: wrap;
   gap: 0.3rem 0.45rem;
   margin: 0;
-  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.35;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   min-width: 0;
   color: var(--color-text-secondary, #57534e);
 }
@@ -299,7 +299,7 @@
   display: inline-flex;
   align-items: baseline;
   gap: 1px;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wa-athlete-ex-card__sets-count strong {
@@ -359,7 +359,7 @@
   font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wa-athlete-ex-card__volume--on {

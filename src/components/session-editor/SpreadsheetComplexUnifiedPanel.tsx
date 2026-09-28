@@ -60,6 +60,8 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
   const { setRows, handleReorder, canReorder } = useSpreadsheetSetRows(block.sets, onReorderSets);
   const setsSuffix = isEs ? SETS_SUFFIX.ES : SETS_SUFFIX.EN;
   const restPresetOptions = spreadsheetRestPresetOptions(isEs);
+  /** Fixed cols + 2 cols per segment (reps/load); keeps horizontal scroll predictable in narrow editor split. */
+  const complexTableMinWidth = 760 + segments.length * 220;
 
   const renderSetRow = (row: (typeof block.sets)[number], setIndex: number, dragGrip: React.ReactNode) => {
     const purpose = purposeForScheme(row);
@@ -186,15 +188,17 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             <span className="wolf-se-spreadsheet-complex-unified__movements-title">
               {isEs ? 'Movimientos del complejo' : 'Complex movements'}
             </span>
-            <button
-              type="button"
-              className="wolf-se-spreadsheet-blocks__add wolf-se-spreadsheet-complex-unified__add-movement"
-              disabled={segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
-              onClick={onAddMovement}
-            >
-              <Plus size={14} aria-hidden />
-              {isEs ? 'Agregar movimiento' : 'Add movement'}
-            </button>
+            {WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS > WL_SESSION_LIMITS.MIN_COMPLEX_SEGMENTS ? (
+              <button
+                type="button"
+                className="wolf-se-spreadsheet-blocks__add wolf-se-spreadsheet-complex-unified__add-movement"
+                disabled={segments.length >= WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS}
+                onClick={onAddMovement}
+              >
+                <Plus size={14} aria-hidden />
+                {isEs ? 'Agregar movimiento' : 'Add movement'}
+              </button>
+            ) : null}
           </div>
           <div className="wolf-se-spreadsheet-complex-unified__movements-grid">
             {segments.map((seg, segIndex) => {
@@ -233,7 +237,7 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
                       className="wolf-se-spreadsheet-complex-unified__movement-remove"
                       title={isEs ? 'Quitar movimiento' : 'Remove movement'}
                       aria-label={isEs ? `Quitar movimiento ${segIndex + 1}` : `Remove movement ${segIndex + 1}`}
-                      disabled={segments.length <= 2}
+                      disabled={segments.length <= WL_SESSION_LIMITS.MIN_COMPLEX_SEGMENTS}
                       onClick={() => onRemoveMovement(segIndex)}
                     >
                       <Trash2 size={14} aria-hidden />
@@ -244,7 +248,10 @@ export const SpreadsheetComplexUnifiedPanel: React.FC<SpreadsheetComplexUnifiedP
             })}
           </div>
         </div>
-        <div className="wolf-se-spreadsheet-complex-unified__table-scroll">
+        <div
+          className="wolf-se-spreadsheet-complex-unified__table-scroll"
+          style={{ '--complex-table-min-width': `${complexTableMinWidth}px` } as React.CSSProperties}
+        >
         <table className="wolf-se-spreadsheet-blocks__table wolf-se-spreadsheet-complex-unified__table">
           <colgroup>
             <col className="wolf-se-spreadsheet-blocks__col-idx" />

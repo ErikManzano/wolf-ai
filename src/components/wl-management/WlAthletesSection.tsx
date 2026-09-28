@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { parseHashDeepLink } from '../../navigation/deepLinks';
 import { CalendarRange } from 'lucide-react';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
@@ -106,6 +107,18 @@ const WlAthletesSection: React.FC<WlAthletesSectionProps> = ({ isEs, onOpenCalen
     setSelectedAthleteId(profileId);
     setSectionView('detail');
   };
+
+  useEffect(() => {
+    const applyAthleteFromHash = () => {
+      const link = parseHashDeepLink();
+      if (link?.view === 'athletes' && link.athleteProfileId) {
+        openAthleteDetail(link.athleteProfileId);
+      }
+    };
+    applyAthleteFromHash();
+    window.addEventListener('hashchange', applyAthleteFromHash);
+    return () => window.removeEventListener('hashchange', applyAthleteFromHash);
+  }, []);
 
   const closeAthleteDetail = () => {
     setSectionView('list');

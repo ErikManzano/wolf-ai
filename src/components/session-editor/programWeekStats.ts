@@ -30,14 +30,24 @@ export interface WeekAggregateMetrics {
   purpose: ReturnType<typeof sessionPurposeBreakdown>;
   dayRows: WeekDayMetricRow[];
   exerciseVolumes: ReturnType<typeof statsExerciseVolumes>;
+  exerciseVolumeRemainder: ExerciseVolumeRemainder | null;
 }
 
-function mergeExerciseVolumes(
+export interface ExerciseVolumeRemainder {
+  exerciseCount: number;
+  tonnage: number;
+  pct: number;
+}
+
+export function mergeExerciseVolumesWithRemainder(
   blocks: Session['exercises'][],
   athlete: Athlete,
   exercises: Exercise[],
   maxSlices: number,
-) {
+): {
+  slices: ReturnType<typeof statsExerciseVolumes>;
+  remainder: ExerciseVolumeRemainder | null;
+} {
   const tonnageByLabel = new Map<string, number>();
   for (const blockList of blocks) {
     for (const slice of statsExerciseVolumes(blockList, athlete, exercises, 999)) {
@@ -45,16 +55,28 @@ function mergeExerciseVolumes(
     }
   }
   const total = [...tonnageByLabel.values()].reduce((sum, n) => sum + n, 0);
-  if (total <= 0) return [];
+  if (total <= 0) return { slices: [], remainder: null };
 
-  return [...tonnageByLabel.entries()]
+  const ranked = [...tonnageByLabel.entries()]
     .map(([label, tonnage]) => ({
       label,
       tonnage,
       pct: Math.round((tonnage / total) * 100),
     }))
-    .sort((a, b) => b.tonnage - a.tonnage)
-    .slice(0, maxSlices);
+    .sort((a, b) => b.tonnage - a.tonnage);
+
+  const slices = ranked.slice(0, maxSlices);
+  const rest = ranked.slice(maxSlices);
+  const remainder =
+    rest.length > 0
+      ? {
+          exerciseCount: rest.length,
+          tonnage: rest.reduce((s, r) => s + r.tonnage, 0),
+          pct: Math.max(0, 100 - slices.reduce((s, r) => s + r.pct, 0)),
+        }
+      : null;
+
+  return { slices, remainder };
 }
 
 export function computeWeekAggregateMetrics(
@@ -122,6 +144,17 @@ export function computeWeekAggregateMetrics(
     dayCount: days.length,
     purpose,
     dayRows,
-    exerciseVolumes: mergeExerciseVolumes(allBlocks, athlete, exercises, maxExerciseSlices),
+    ...(() => {
+      const ranked = mergeExerciseVolumesWithRemainder(
+        allBlocks,
+        athlete,
+        exercises,
+        maxExerciseSlices,
+      );
+      return {
+        exerciseVolumes: ranked.slices,
+        exerciseVolumeRemainder: ranked.remainder,
+      };
+    })(),
   };
 }

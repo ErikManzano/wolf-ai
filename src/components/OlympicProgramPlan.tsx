@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 import {
   CalendarRange,
-  ChevronDown,
   Copy,
   Download,
   Dumbbell,
@@ -36,7 +35,6 @@ import {
   type ProgramDaySlot,
 } from '../services/programStructureMutations';
 import { replaceProgramSession, refreshSession } from '../services/sessionMutations';
-import { calcularCargaTotal } from '../services/trainingEngine';
 import { exportProgramAsJson } from '../services/programExport';
 import {
   saveProgramEditDraft,
@@ -48,15 +46,18 @@ import OlympicSessionEditor, { type SessionEditorView } from './OlympicSessionEd
 import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramMatrixTable } from './session-editor/ProgramMatrixTable';
 import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
-import {
-  ProgramStatsScopeControls,
-  type ProgramStatsScope,
-} from './session-editor/ProgramDayBoardTabs';
-import { SessionDayStatsPanel } from './session-editor/SessionDayStatsPanel';
-import { SessionWeekStatsPanel } from './session-editor/SessionWeekStatsPanel';
+import type { ProgramStatsScope } from './session-editor/ProgramDayBoardTabs';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
-import { EditorProgrammingRail } from './session-editor/EditorProgrammingRail';
-import { programDayDate } from './session-editor/programScienceStats';
+import { ProgramAthleteSelector } from './session-editor/program-context/ProgramAthleteSelector';
+import { ProgramEditorContextLayout } from './session-editor/program-context/ProgramEditorContextLayout';
+import { ProgramEditorSheetSidebar } from './session-editor/program-context/ProgramEditorSheetSidebar';
+import type { ProgramEditorMode } from './session-editor/program-context/constants';
+import { ProgramContextPanel } from './session-editor/program-context/ProgramContextPanel';
+import { statsSessionTonnage } from './session-editor/statsTonnage';
+import { useProgramContextPanelState } from './session-editor/program-context/hooks/useProgramContextPanelState';
+import './session-editor/program-context/program-context.css';
+import { useAppContext } from '../context/AppContext';
+import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../utils/wlStatsBridge';
 import { useWolfAssign } from '../context/WolfAssignContext';
 import { useWolfAlert } from '../context/WolfAlertContext';
 
@@ -113,6 +114,10 @@ interface OlympicProgramPlanProps {
   onMobilePinnedChrome?: (node: React.ReactNode) => void;
   /** Exercise editor open on mobile — hide tabs and wire header back to day sheet. */
   onMobileExerciseFocusChange?: (focus: { onBackToDay: () => void; exerciseTitle: string } | null) => void;
+  /** Template (hub program) vs instance (single assignment). */
+  editorMode?: ProgramEditorMode;
+  /** Open athlete-specific plan from template context panel. */
+  onOpenAssignmentEditor?: (assignmentId: string) => void;
 }
 
 const PLAN_NAME_MAX_LEN = 48;
@@ -211,6 +216,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   onActiveDayContext,
   onMobilePinnedChrome,
   onMobileExerciseFocusChange,
+  editorMode: editorModeProp,
+  onOpenAssignmentEditor,
 }) => {
   const isEs = language === 'ES';
   const isMobileLayout = useMediaQuery('(max-width: 1024px)');
@@ -238,8 +245,17 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedDay, setSelectedDay] = useState(1);
   const [sessionEditorView, setSessionEditorView] = useState<SessionEditorView>('sheet');
-  const [statsScope, setStatsScope] = useState<ProgramStatsScope>('day');
+  const statsScope: ProgramStatsScope = 'program';
   const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table' | 'stats'>('editor');
+  const [selectedContextBlockIndex, setSelectedContextBlockIndex] = useState<number | null>(null);
+  const {
+    contextOpen,
+    toggleContext,
+    mobileContextOpen,
+    setMobileContextOpen,
+    activeTab: contextTab,
+    setActiveTab: setContextTab,
+  } = useProgramContextPanelState();
   const [toolbarPortalNode, setToolbarPortalNode] = useState<HTMLElement | null>(null);
   const [chromePortalNode, setChromePortalNode] = useState<HTMLElement | null>(null);
   const navFlushEpochRef = useRef(0);
@@ -333,32 +349,86 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   }, [enrolledAthletes, coachProgramId, assignments, wlAthletes]);
 
-  const [statsAthleteId, setStatsAthleteId] = useState('');
+  const resolvedEditorMode: ProgramEditorMode | 'legacy' =
+    editorModeProp ??
+    (editingAssignmentId ? 'instance' : coachProgramId ? 'template' : 'legacy');
+  const isTemplateEditor = resolvedEditorMode === 'template';
+  const isInstanceEditor = resolvedEditorMode === 'instance';
+
+  /** Legacy engine panel: optional preview athlete dropdown. */
+  const [previewAthleteId, setPreviewAthleteId] = useState('');
+
+  const { intakes } = useAppContext();
 
   useEffect(() => {
+    if (resolvedEditorMode !== 'legacy') return;
     if (statsAthleteOptions.length === 0) {
-      if (statsAthleteId) setStatsAthleteId('');
+      if (previewAthleteId) setPreviewAthleteId('');
       return;
     }
-    const stillValid = statsAthleteOptions.some((o) => o.athleteProfileId === statsAthleteId);
+    const stillValid =
+      previewAthleteId === '' ||
+      statsAthleteOptions.some((o) => o.athleteProfileId === previewAthleteId);
     if (stillValid) return;
     const preferred =
       statsAthleteOptions.find((o) => o.athleteProfileId === athleteId)?.athleteProfileId ??
       statsAthleteOptions[0]!.athleteProfileId;
-    setStatsAthleteId(preferred);
-  }, [statsAthleteOptions, athleteId, statsAthleteId]);
+    setPreviewAthleteId(preferred);
+  }, [statsAthleteOptions, athleteId, previewAthleteId, resolvedEditorMode]);
+
+  const instanceAthleteForEngine = useMemo(() => {
+    if (!isInstanceEditor) return null;
+    const base = wlAthletes.find((a) => a.id === athleteId);
+    if (!base) return null;
+    const intake = latestIntakeForWlProfile(athleteId, intakes);
+    return mergeAthleteWithLatestIntake(base, intake);
+  }, [isInstanceEditor, athleteId, wlAthletes, intakes]);
+
+  const legacyPreviewAthleteForEngine = useMemo(() => {
+    if (resolvedEditorMode !== 'legacy' || !previewAthleteId) return null;
+    const base = wlAthletes.find((a) => a.id === previewAthleteId);
+    if (!base) return null;
+    const intake = latestIntakeForWlProfile(previewAthleteId, intakes);
+    return mergeAthleteWithLatestIntake(base, intake);
+  }, [resolvedEditorMode, previewAthleteId, wlAthletes, intakes]);
+
+  const previewAthleteForEngine = isTemplateEditor
+    ? null
+    : isInstanceEditor
+      ? instanceAthleteForEngine
+      : legacyPreviewAthleteForEngine;
+
+  const sessionAthleteForEngine = previewAthleteForEngine ?? athleteForEngine;
+  const showLoadKg = isInstanceEditor || Boolean(legacyPreviewAthleteForEngine);
 
   const statsAssignmentId = useMemo(() => {
     if (editingAssignmentId) return editingAssignmentId;
+    if (isInstanceEditor) {
+      return (
+        statsAthleteOptions.find((o) => o.athleteProfileId === athleteId)?.assignmentId ??
+        editingAssignmentId
+      );
+    }
+    if (resolvedEditorMode !== 'legacy') return null;
     return (
-      statsAthleteOptions.find((o) => o.athleteProfileId === statsAthleteId)?.assignmentId ?? null
+      statsAthleteOptions.find((o) => o.athleteProfileId === previewAthleteId)?.assignmentId ?? null
     );
-  }, [editingAssignmentId, statsAthleteOptions, statsAthleteId]);
+  }, [
+    editingAssignmentId,
+    statsAthleteOptions,
+    previewAthleteId,
+    isInstanceEditor,
+    athleteId,
+    resolvedEditorMode,
+  ]);
 
-  const statsAthleteForEngine = useMemo(() => {
-    if (!statsAthleteId) return athleteForEngine;
-    return wlAthletes.find((a) => a.id === statsAthleteId) ?? athleteForEngine;
-  }, [statsAthleteId, wlAthletes, athleteForEngine]);
+  const statsAthleteForEngine = sessionAthleteForEngine;
+
+  useEffect(() => {
+    if (!isTemplateEditor) return;
+    if (contextTab === 'athlete') setContextTab('week');
+    if (contextTab === 'exercise') setContextTab('day');
+  }, [isTemplateEditor, contextTab, setContextTab]);
 
   const statsExecutionContext = useMemo(
     () => ({
@@ -466,15 +536,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     setSelectedDay(dayNumber);
   }, [selectedDay]);
 
-  const handleWeekStatsDaySelect = useCallback((dayNumber: number) => {
-    navigateToDay(dayNumber);
-    setStatsScope('day');
-  }, [navigateToDay]);
-
-  const handleProgramStatsWeekSelect = useCallback((weekNumber: number) => {
-    navigateToWeek(weekNumber, 1);
-    setStatsScope('week');
-  }, [navigateToWeek]);
+  const handleProgramStatsWeekSelect = useCallback(
+    (weekNumber: number) => {
+      navigateToWeek(weekNumber, 1);
+    },
+    [navigateToWeek],
+  );
 
   const switchCustomizeSubview = useCallback((view: 'editor' | 'table' | 'stats') => {
     if (view === customizeSubview) return;
@@ -491,6 +558,19 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const showCreate = mode === 'full' || mode === 'create';
   const showCustomize = mode === 'full' || mode === 'customize';
   const showAssign = mode === 'full' || mode === 'assign';
+  const assignedPlanToastRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!editingAssignmentId || !(showCustomize || showAssign)) return;
+    const key = `${editingAssignmentId}:${program?.id ?? 'none'}`;
+    if (assignedPlanToastRef.current === key) return;
+    assignedPlanToastRef.current = key;
+    pushAlert({
+      tone: 'info',
+      title: isEs ? 'Plan asignado' : 'Assigned plan',
+      message: isEs ? 'Editando plan ya asignado.' : 'Editing assigned plan.',
+    });
+  }, [editingAssignmentId, showCustomize, showAssign, program?.id, isEs, pushAlert]);
 
   const t = useMemo(
     () => ({
@@ -856,7 +936,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         replaceProgramSession(current, selectedWeekRef.current, selectedDayRef.current, refreshed),
       );
     },
-    [applyProgramUpdate, athleteForEngine, motorExercises],
+    [applyProgramUpdate, sessionAthleteForEngine, motorExercises],
   );
 
   const sessionSaveState = skipLocalDraftPersistence && programSyncState ? programSyncState : null;
@@ -888,25 +968,12 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const map: Record<number, number> = {};
     for (const w of program.weeks) {
       map[w.weekNumber] = w.days.reduce(
-        (sum, day) => sum + calcularCargaTotal(day.session, athleteForEngine, motorExercises),
+        (sum, day) => sum + statsSessionTonnage(day.session, athleteForEngine, motorExercises),
         0,
       );
     }
     return map;
   }, [program, athleteForEngine, motorExercises]);
-
-  const statsWeekTonnages = useMemo(() => {
-    if (!program?.weeks.length) return {};
-    if (statsAthleteForEngine === athleteForEngine) return weekTonnages;
-    const map: Record<number, number> = {};
-    for (const w of program.weeks) {
-      map[w.weekNumber] = w.days.reduce(
-        (sum, day) => sum + calcularCargaTotal(day.session, statsAthleteForEngine, motorExercises),
-        0,
-      );
-    }
-    return map;
-  }, [program, statsAthleteForEngine, athleteForEngine, motorExercises, weekTonnages]);
 
   const canAddWeek = (program?.weeks.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS;
   const canAddDay = (selectedWeekData?.days.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK;
@@ -1187,17 +1254,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     return w?.days.find((x) => x.dayNumber === selectedDay)?.label;
   }, [program, selectedWeek, selectedDay]);
 
-  const selectedDayCoachNote = useMemo(() => {
-    if (!program) return '';
-    const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
-    return w?.days.find((x) => x.dayNumber === selectedDay)?.coachNote ?? '';
-  }, [program, selectedWeek, selectedDay]);
-
-  const selectedDayDateIso = useMemo(() => {
-    if (!program) return null;
-    return programDayDate(program, selectedWeek, selectedDay);
-  }, [program, selectedWeek, selectedDay]);
-
   const rosterAthletes = useMemo(
     () =>
       statsAthleteOptions.map((o) => ({
@@ -1207,7 +1263,29 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [statsAthleteOptions],
   );
 
-  const showProgrammingRail = Boolean(program) && sessionEditorView === 'sheet';
+  const programAthleteSelector =
+    resolvedEditorMode === 'legacy' ? (
+      <ProgramAthleteSelector
+        isEs={isEs}
+        value={previewAthleteId}
+        options={statsAthleteOptions.map((o) => ({
+          athleteProfileId: o.athleteProfileId,
+          name: o.name,
+        }))}
+        onChange={setPreviewAthleteId}
+        disabled={statsAthleteOptions.length === 0}
+      />
+    ) : null;
+
+  const selectedContextBlock = useMemo(() => {
+    if (!daySession?.exercises.length || selectedContextBlockIndex == null) return null;
+    const idx = Math.min(selectedContextBlockIndex, daySession.exercises.length - 1);
+    return daySession.exercises[idx] ?? null;
+  }, [daySession, selectedContextBlockIndex]);
+
+  useEffect(() => {
+    setSelectedContextBlockIndex(null);
+  }, [selectedWeek, selectedDay]);
 
   const copyJson = useCallback(async () => {
     if (!program) return;
@@ -1357,6 +1435,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         {showToolbarEnd ? (
           <div className="wolf-program-customize-toolbar-end">
             {!toolbarPortalNode ? customizeHistoryActions : null}
+            {programAthleteSelector}
             {customizeToolbarEnd}
           </div>
         ) : null}
@@ -1376,11 +1455,15 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       </div>
     ) : null;
 
-  const renderProgramNavigation = (sections: 'all' | 'weeks' | 'days') => {
+  const renderProgramNavigation = (
+    sections: 'all' | 'weeks' | 'days',
+    opts?: { compactSurface?: 'sheet-sidebar' },
+  ) => {
     if (!program) return null;
     const navigation = (
       <ProgramWeekDayNav
         density="editor"
+        compactSurface={opts?.compactSurface}
         sections={sections}
         program={program}
         selectedWeek={selectedWeek}
@@ -1417,17 +1500,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   };
 
   const programWeekNavigation = renderProgramNavigation('weeks');
-  const programDayNavigation = renderProgramNavigation('days');
-  const programFullNavigation = renderProgramNavigation('all');
+  const programFullNavigation = renderProgramNavigation('all', { compactSurface: 'sheet-sidebar' });
 
   const unifiedChromePortaled =
     chromePortalNode && program && showCustomize && customizeSubview !== 'table'
       ? createPortal(
           <>
             {planViewChrome}
-            {customizeSubview !== 'editor' || sessionEditorView === 'sheet'
-              ? programWeekNavigation
-              : null}
+            {customizeSubview !== 'editor' ? programWeekNavigation : null}
           </>,
           chromePortalNode,
         )
@@ -1455,46 +1535,16 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const statsToolbar =
     showCustomize && customizeSubview === 'stats' ? (
       <div className="wolf-program-day-board__stats-scope-bar">
-        <div className="wolf-program-day-board__stats-scope-bar__start">
-          <ProgramStatsScopeControls
-            statsScope={statsScope}
-            isEs={isEs}
-            onStatsScopeChange={setStatsScope}
-          />
-        </div>
-        <div className="wolf-program-day-board__stats-scope-bar__center">
-          {statsScope === 'day' ? programDayNavigation : null}
-        </div>
-        <div className="wolf-program-day-board__stats-scope-bar__end">
-          <label className="wolf-program-day-board__stats-athlete">
-            <span className="wolf-program-day-board__stats-athlete-label">
-              {isEs ? 'Atleta' : 'Athlete'}
-            </span>
-            <div className="wolf-select-wrap wolf-select-wrap--app">
-              <select
-                value={statsAthleteId}
-                onChange={(e) => setStatsAthleteId(e.target.value)}
-                disabled={statsAthleteOptions.length === 0}
-                aria-label={
-                  isEs
-                    ? 'Seleccionar atleta para estadísticas'
-                    : 'Select athlete for statistics'
-                }
-              >
-                {statsAthleteOptions.length === 0 ? (
-                  <option value="">{isEs ? 'Sin atletas inscritos' : 'No enrolled athletes'}</option>
-                ) : (
-                  statsAthleteOptions.map((opt) => (
-                    <option key={opt.athleteProfileId} value={opt.athleteProfileId}>
-                      {opt.name}
-                    </option>
-                  ))
-                )}
-              </select>
-              <ChevronDown className="wolf-select-chevron" size={16} strokeWidth={2} aria-hidden />
-            </div>
-          </label>
-        </div>
+        <p className="wl-program-context-empty">
+          {isTemplateEditor
+            ? isEs
+              ? 'Mesociclo de la plantilla (%1RM). Tonelaje en kg en cada plan individual.'
+              : 'Template mesocycle (%1RM). Kg tonnage on each individual plan.'
+            : isEs
+              ? 'Día y semana: pestaña Editor + panel Contexto. Aquí: resumen del mesociclo.'
+              : 'Day/week: use Editor tab + Context panel. Here: mesocycle summary.'}
+        </p>
+        {programAthleteSelector}
       </div>
     ) : null;
 
@@ -1504,12 +1554,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         <header className="wolf-program-meso-head">
           <h2 className="wolf-program-meso-title">{t.title}</h2>
         </header>
-      )}
-
-      {editingAssignmentId && (showCustomize || showAssign) && (
-        <div className="wolf-program-edit-banner" role="status">
-          {isEs ? 'Editando plan ya asignado.' : 'Editing assigned plan.'}
-        </div>
       )}
 
       {showCreate && (
@@ -1683,58 +1727,24 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
             >
               <div className="wolf-program-day-board wolf-program-day-board--stats-only">
                 {chromePortalNode ? null : programWeekNavigation}
-                {daySession && statsScope === 'day' ? (
-                  <SessionDayStatsPanel
-                    key={`stats-day-${selectedWeek}-${selectedDay}-${statsAthleteId || 'none'}`}
-                    session={daySession}
-                    athlete={statsAthleteForEngine}
-                    exercises={motorExercises}
-                    isEs={isEs}
-                    weekNumber={selectedWeek}
-                    dayNumber={selectedDay}
-                    dayLabel={selectedDayLabel}
-                    dayDateIso={selectedDayDateIso}
-                    coachNote={selectedDayCoachNote}
-                    weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
-                    weekData={selectedWeekData}
-                    executionContext={statsExecutionContext}
-                    toolbar={statsToolbar}
-                  />
-                ) : null}
-                {statsScope === 'week' ? (
-                  <SessionWeekStatsPanel
-                    key={`stats-week-${selectedWeek}-${statsAthleteId || 'none'}`}
-                    athlete={statsAthleteForEngine}
-                    exercises={motorExercises}
-                    isEs={isEs}
-                    weekNumber={selectedWeek}
-                    weekTonnage={statsWeekTonnages[selectedWeek] ?? 0}
-                    weekData={selectedWeekData}
-                    program={program}
-                    previousWeekData={program?.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
-                    selectedDay={selectedDay}
-                    onSelectDay={handleWeekStatsDaySelect}
-                    onSelectWeek={handleProgramStatsWeekSelect}
-                    executionContext={statsExecutionContext}
-                    toolbar={statsToolbar}
-                  />
-                ) : null}
-                {statsScope === 'program' ? (
-                  <SessionProgramStatsPanel
-                    key={`stats-program-${statsAthleteId || 'none'}`}
-                    program={program}
-                    athlete={statsAthleteForEngine}
-                    exercises={motorExercises}
-                    isEs={isEs}
-                    selectedWeek={selectedWeek}
-                    onSelectWeek={handleProgramStatsWeekSelect}
-                    executionContext={statsExecutionContext}
-                    toolbar={statsToolbar}
-                    rosterAthletes={rosterAthletes}
-                    selectedAthleteId={statsAthleteId || undefined}
-                    onSelectAthlete={setStatsAthleteId}
-                  />
-                ) : null}
+                <SessionProgramStatsPanel
+                  key={`stats-program-${isInstanceEditor ? athleteId : previewAthleteId || 'none'}`}
+                  program={program}
+                  athlete={statsAthleteForEngine}
+                  exercises={motorExercises}
+                  isEs={isEs}
+                  selectedWeek={selectedWeek}
+                  onSelectWeek={handleProgramStatsWeekSelect}
+                  executionContext={statsExecutionContext}
+                  toolbar={statsToolbar}
+                  rosterAthletes={isTemplateEditor ? [] : rosterAthletes}
+                  selectedAthleteId={
+                    resolvedEditorMode === 'legacy' ? previewAthleteId || undefined : athleteId
+                  }
+                  onSelectAthlete={
+                    resolvedEditorMode === 'legacy' ? setPreviewAthleteId : undefined
+                  }
+                />
               </div>
             </div>
           ) : (
@@ -1747,56 +1757,84 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
               <div
                 className={`wolf-program-day-board${sessionEditorView !== 'sheet' ? ' wolf-program-day-board--exercise-focus' : ''}`}
               >
-                {sessionEditorView === 'sheet'
-                  ? chromePortalNode
-                    ? programDayNavigation
-                    : programFullNavigation
-                  : null}
-                {daySession ? (
-                  <div
-                    key={`${selectedWeek}-${selectedDay}`}
-                    id="wolf-program-day-panel-session"
-                    className="wolf-program-session-pane wolf-program-day-board__pane"
-                  >
-                    {showProgrammingRail && program ? (
-                      <EditorProgrammingRail
-                        key={`prog-bar-${selectedWeek}-${statsAthleteId || 'none'}`}
-                        athlete={statsAthleteForEngine}
-                        exercises={motorExercises}
+                {daySession && program ? (
+                  <ProgramEditorContextLayout
+                    isEs={isEs}
+                    contextOpen={contextOpen}
+                    onToggleContext={toggleContext}
+                    mobileContextOpen={mobileContextOpen}
+                    onMobileContextOpenChange={setMobileContextOpen}
+                    isMobile={isMobileLayout}
+                    sidebar={
+                      <ProgramEditorSheetSidebar
+                        navigation={
+                          sessionEditorView === 'sheet' ? programFullNavigation : null
+                        }
+                      >
+                        <div
+                          key={`${selectedWeek}-${selectedDay}`}
+                          id="wolf-program-day-panel-session"
+                          className="wolf-program-session-pane wolf-program-day-board__pane"
+                        >
+                          <OlympicSessionEditor
+                            session={daySession}
+                            athlete={sessionAthleteForEngine}
+                            exercises={motorExercises}
+                            catalog={sessionCatalog}
+                            isEs={isEs}
+                            onChange={handleSessionEdit}
+                            draftSavedAt={sessionSavedAt}
+                            syncPending={sessionSyncPending}
+                            saveState={sessionSaveState ?? undefined}
+                            onRetrySave={onRetryProgramSave}
+                            onFlushAutosave={onFlushAutosave}
+                            dayLabel={selectedDayLabel}
+                            weekNumber={selectedWeek}
+                            dayNumber={selectedDay}
+                            embedded
+                            program={program}
+                            showLoadKg={showLoadKg}
+                            onContextBlockChange={(index) => {
+                              setSelectedContextBlockIndex(index);
+                            }}
+                            onViewChange={setSessionEditorView}
+                            onMobileExerciseFocusChange={
+                              pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
+                            }
+                            onDuplicateDay={handleDuplicateDay}
+                            canDuplicateDay={canAddDay}
+                            onRemoveDay={() => handleRemoveDay(selectedDay)}
+                            canRemoveDay={canRemoveDay}
+                          />
+                        </div>
+                      </ProgramEditorSheetSidebar>
+                    }
+                    context={
+                      <ProgramContextPanel
                         isEs={isEs}
-                        weekNumber={selectedWeek}
-                        selectedDay={selectedDay}
-                        weekData={selectedWeekData}
+                        editorMode={
+                          isTemplateEditor ? 'template' : isInstanceEditor ? 'instance' : undefined
+                        }
+                        activeTab={contextTab}
+                        onTabChange={setContextTab}
                         program={program}
-                        dayDateIso={selectedDayDateIso}
+                        weekNumber={selectedWeek}
+                        dayNumber={selectedDay}
+                        weekData={selectedWeekData}
+                        previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
+                        previewAthlete={previewAthleteForEngine}
+                        exercises={motorExercises}
+                        selectedBlock={selectedContextBlock}
+                        enrolledAthletes={enrolledAthletes}
+                        onOpenAssignment={onOpenAssignmentEditor}
+                        dayMetricsAthlete={statsAthleteForEngine}
+                        templateMetrics={isTemplateEditor}
+                        selectedDayLabel={selectedDayLabel}
+                        onClearExerciseSelection={() => setSelectedContextBlockIndex(null)}
+                        onOpenMesocycleStats={() => switchCustomizeSubview('stats')}
                       />
-                    ) : null}
-                    <OlympicSessionEditor
-                      session={daySession}
-                      athlete={athleteForEngine}
-                      exercises={motorExercises}
-                      catalog={sessionCatalog}
-                      isEs={isEs}
-                      onChange={handleSessionEdit}
-                      draftSavedAt={sessionSavedAt}
-                      syncPending={sessionSyncPending}
-                      saveState={sessionSaveState ?? undefined}
-                      onRetrySave={onRetryProgramSave}
-                      onFlushAutosave={onFlushAutosave}
-                      dayLabel={selectedDayLabel}
-                      weekNumber={selectedWeek}
-                      dayNumber={selectedDay}
-                      embedded
-                      onViewChange={setSessionEditorView}
-                      onMobileExerciseFocusChange={
-                        pinTabsInTopBar ? onMobileExerciseFocusChange : undefined
-                      }
-                      onDuplicateDay={handleDuplicateDay}
-                      canDuplicateDay={canAddDay}
-                      onRemoveDay={() => handleRemoveDay(selectedDay)}
-                      canRemoveDay={canRemoveDay}
-                    />
-                  </div>
+                    }
+                  />
                 ) : null}
               </div>
             </div>

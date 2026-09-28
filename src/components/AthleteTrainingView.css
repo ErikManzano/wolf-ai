@@ -703,7 +703,7 @@
   flex-shrink: 0;
   font-size: 1.35rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: -0.03em;
   color: var(--color-accent);
   line-height: 1;
@@ -718,7 +718,7 @@
 
 .wolf-athlete-discipline-count {
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
 }
 
@@ -803,7 +803,7 @@
   color: var(--color-text-secondary);
   font-size: 0.82rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
@@ -924,7 +924,7 @@
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
@@ -963,7 +963,7 @@
 
 .wolf-athlete-metric strong {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
 }
 
@@ -1127,7 +1127,7 @@
 
 .wolf-athlete-set-load {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
   min-width: 3.1rem;
   white-space: nowrap;
@@ -1135,7 +1135,7 @@
 
 .wolf-athlete-set-pct {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
   min-width: 2.75rem;
 }
@@ -1161,7 +1161,7 @@
 
 .wolf-athlete-set-move-reps {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
@@ -1172,13 +1172,13 @@
 }
 
 .wolf-athlete-set-simple-reps {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   white-space: nowrap;
 }
 
 .wolf-athlete-set-mult {
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-muted);
   font-size: 0.8rem;
   white-space: nowrap;

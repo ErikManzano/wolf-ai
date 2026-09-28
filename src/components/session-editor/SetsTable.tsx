@@ -87,6 +87,7 @@ interface SetsTableProps {
   onReorderSets?: (fromIndex: number, toIndex: number) => void;
   /** Editor mobile coach — tabs y campos según mockup */
   coachMobile?: boolean;
+  showLoadKg?: boolean;
 }
 
 function PremiumSetsSummary({
@@ -507,6 +508,7 @@ interface PremiumComplexSetCardProps {
   onSegmentRepChange: (segIndex: number, value: string) => void;
   onDuplicate: () => void;
   onRemove: () => void;
+  showLoadKg?: boolean;
 }
 
 function PremiumComplexSetCard({
@@ -525,6 +527,7 @@ function PremiumComplexSetCard({
   onSegmentRepChange,
   onDuplicate,
   onRemove,
+  showLoadKg = true,
 }: PremiumComplexSetCardProps) {
   const si = setIndex;
   const [expanded, setExpanded] = useState(true);
@@ -640,7 +643,8 @@ function PremiumComplexSetCard({
       <div className="wolf-se-complex-set-card__body">
         {segments.map((seg, segIdx) => {
           const exSeg = exercises.find((e) => e.id === seg.exerciseId);
-          const kg = exSeg ? kgForExercise(athlete, exSeg, row.percentage) : '—';
+          const kg =
+            exSeg && showLoadKg ? kgForExercise(athlete, exSeg, row.percentage) : null;
           const name = exerciseName(exercises, seg.exerciseId);
 
           return (
@@ -691,8 +695,13 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onRemoveSet,
   onReorderSets,
   coachMobile = false,
+  showLoadKg = true,
 }) => {
   const canReorderSets = Boolean(onReorderSets) && block.sets.length > 1;
+  const kgLabel = (ex: Exercise | undefined, pct: number): string | number | null => {
+    if (!showLoadKg || !ex) return null;
+    return kgForExercise(athlete, ex, pct);
+  };
   const [setRows, setSetRows] = useState<SortableSetRow[]>(() => rowsFromSchemes(block.sets));
   const [activeBlockTab, setActiveBlockTab] = useState(0);
   const prevSetCountRef = useRef(block.sets.length);
@@ -838,13 +847,13 @@ export const SetsTable: React.FC<SetsTableProps> = ({
         ? setRows.filter((_, si) => si === activeBlockTab)
         : setRows;
       const renderPremiumCard = (sortableRow: SortableSetRow, si: number, canReorder: boolean) => {
-        const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
+        const kg = kgLabel(ex, sortableRow.scheme.percentage);
         return (
           <PremiumSetMobileCard
             key={sortableRow.id}
             sortableRow={sortableRow}
             setIndex={si}
-            kg={kg}
+            kg={kg ?? '—'}
             isEs={isEs}
             canRemove={block.sets.length > 1}
             canDuplicate={canDuplicate}
@@ -939,13 +948,13 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                   className="wolf-se-sets-premium__tbody--sortable"
                 >
                   {setRows.map((sortableRow, si) => {
-                    const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
+                    const kg = kgLabel(ex, sortableRow.scheme.percentage);
                     return (
                       <SortableSetTableRow
                         key={sortableRow.id}
                         sortableRow={sortableRow}
                         setIndex={si}
-                        kg={kg}
+                        kg={kg ?? '—'}
                         isEs={isEs}
                         canReorder
                         canDuplicate={canDuplicate}
@@ -963,13 +972,13 @@ export const SetsTable: React.FC<SetsTableProps> = ({
               ) : (
               <tbody>
                 {setRows.map((sortableRow, si) => {
-                  const kg = ex ? kgForExercise(athlete, ex, sortableRow.scheme.percentage) : '—';
+                  const kg = kgLabel(ex, sortableRow.scheme.percentage);
                   return (
                     <SortableSetTableRow
                       key={sortableRow.id}
                       sortableRow={sortableRow}
                       setIndex={si}
-                      kg={kg}
+                      kg={kg ?? '—'}
                       isEs={isEs}
                       canReorder={false}
                       canDuplicate={canDuplicate}
@@ -1029,7 +1038,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
           <SectionHeader icon={ListOrdered} title={isEs ? 'Esquema de series' : 'Set scheme'} action={addBtn} />
           <div className="wolf-se-sets-mobile wolf-se-sets-mobile--visible">
             {block.sets.map((row, si) => {
-              const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
+              const kg = kgLabel(ex, row.percentage);
               return (
                 <article key={si} className="wolf-se-set-card">
                   <div className="wolf-se-set-card-top">
@@ -1104,7 +1113,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             </thead>
             <tbody>
               {block.sets.map((row, si) => {
-                const kg = ex ? kgForExercise(athlete, ex, row.percentage) : '—';
+                const kg = kgLabel(ex, row.percentage);
                 return (
                   <tr key={si} className="wolf-se-table-row">
                     <td>
@@ -1191,6 +1200,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
               onSegmentRepChange={(segIdx, val) => onSegmentRepChange(si, segIdx, val)}
               onDuplicate={() => onDuplicateSet(si)}
               onRemove={() => onRemoveSet(si)}
+              showLoadKg={showLoadKg}
             />
           ))}
 
@@ -1253,7 +1263,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             <div className="wolf-se-movement-grid">
               {segments.map((seg, segIdx) => {
                 const exSeg = exercises.find((e) => e.id === seg.exerciseId);
-                const kg = exSeg ? kgForExercise(athlete, exSeg, row.percentage) : '—';
+                const kg = kgLabel(exSeg, row.percentage);
                 return (
                   <div key={segIdx} className="wolf-se-movement-cell">
                     <span className="wolf-se-movement-name">{exerciseName(exercises, seg.exerciseId)}</span>

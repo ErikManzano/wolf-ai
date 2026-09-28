@@ -468,7 +468,7 @@
   flex-shrink: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-program-card__adherence--low {
@@ -1841,7 +1841,7 @@
   font-family: var(--font-family);
   font-size: var(--wl-type-data-lg-size, 1.125rem);
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--wl-text-accent, #ff6b1a);
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -1867,7 +1867,7 @@
   border: 1px solid var(--wl-border-subtle, #27272a);
   font-size: var(--wl-type-data-sm-size, 0.6875rem);
   font-family: var(--font-family);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--wl-text-muted, #71717a);
 }
 
@@ -2361,6 +2361,30 @@
     0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
+.wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__body .wolf-session-editor--embedded .wolf-se-spreadsheet__table-wrap {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__table col.wolf-se-spreadsheet__col-exercise {
+  width: 46%;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__col-exercise {
+  min-width: 300px;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__row--block td.wolf-se-spreadsheet__col-exercise {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__exercise-rx {
+  gap: 6px 8px;
+}
+
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__table thead th {
   background: var(--se-sheet-header-bg);
   color: color-mix(in srgb, var(--wl-text-muted, #a1a1aa) 35%, #f4f4f5);
@@ -2435,7 +2459,7 @@
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet__metric--vol,
 .wl-programs-embedded-plan .wolf-session-editor--embedded .wolf-se-spreadsheet-blocks__vol {
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: color-mix(in srgb, var(--se-sheet-vol-accent) 85%, #f4f4f5);
 }
 
@@ -3031,7 +3055,7 @@
   font-family: var(--font-family);
   font-size: 0.68rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
@@ -3045,7 +3069,7 @@
 .wl-programs-embedded-plan .wolf-program-matrix-week-load {
   font-family: var(--font-family);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: -0.01em;
 }
 
@@ -3065,7 +3089,7 @@
 .wl-programs-embedded-plan .wolf-program-matrix-exercise-rx {
   font-family: var(--font-family);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-programs-embedded-plan .wolf-program-nav--compact .wolf-week-tabs-pill--add {
@@ -6527,5 +6551,283 @@
   font-size: 0.58rem;
   font-weight: 600;
   opacity: 0.72;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
+}
+
+.wl-program-assign-note {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--v2-text-secondary, #57534e);
+}
+
+.wl-programs-hub-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 8%, #fff);
+  border: 1px solid color-mix(in srgb, var(--color-accent, #e85d4c) 22%, transparent);
+  color: var(--v2-text-secondary, #57534e);
+}
+
+.wl-programs-hub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wl-programs-hub-tabs__btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border-subtle, #e7e5e4);
+  background: var(--color-bg-panel, #fafaf9);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wl-programs-hub-tabs__btn.is-active {
+  border-color: var(--color-accent, #e85d4c);
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 12%, #fff);
+}
+
+.wl-programs-hub-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 14px;
+}
+
+.wl-programs-hub-chips__btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border-subtle, #e7e5e4);
+  background: var(--color-bg-panel, #fafaf9);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--v2-text-secondary, #57534e);
+}
+
+.wl-programs-hub-chips__btn.is-active {
+  border-color: var(--color-accent, #e85d4c);
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 10%, #fff);
+  color: var(--v2-text, #1c1917);
+}
+
+.wl-programs-hub-chips__athlete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 0.78rem;
+}
+
+.wl-programs-hub-chips__athlete select {
+  border-radius: 8px;
+  border: 1px solid var(--v2-border-subtle, #e7e5e4);
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  max-width: 160px;
+}
+
+.wl-programs-hub-chips__clear {
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--color-accent, #e85d4c);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.wl-programs-empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.wl-programs-empty-link {
+  border: none;
+  background: transparent;
+  color: var(--color-accent, #e85d4c);
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.82rem;
+}
+
+.wl-programs-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.wl-programs-badge--template {
+  background: color-mix(in srgb, #2563eb 12%, #fff);
+  color: #1d4ed8;
+  border: 1px solid color-mix(in srgb, #2563eb 25%, transparent);
+}
+
+.wl-programs-unified-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent, #e85d4c);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.wl-programs-table-row__origin {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--v2-text-muted, #78716c);
+}
+
+.wl-programs-unified-athlete {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wl-programs-unified-athlete__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  font-weight: 750;
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 14%, #fff);
+  color: var(--color-accent, #e85d4c);
+}
+
+.wl-programs-unified-athlete__name {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--v2-text, #1c1917);
+}
+
+.wl-programs-unified-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wl-programs-unified-actions__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-accent, #e85d4c) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 8%, #fff);
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.wl-programs-table--unified .wl-programs-unified-col-weeks,
+.wl-programs-table--unified .wl-programs-unified-col-adherence {
+  white-space: nowrap;
+}
+
+.wl-program-instance-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #2563eb 18%, transparent);
+  background: color-mix(in srgb, #2563eb 6%, #fff);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.wl-program-instance-banner__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #2563eb;
+}
+
+.wl-program-instance-banner__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wl-program-instance-banner__lead {
+  margin: 0;
+  font-weight: 650;
+  color: var(--v2-text, #1c1917);
+}
+
+.wl-program-instance-banner__sub {
+  margin: 4px 0 0;
+  color: var(--v2-text-secondary, #57534e);
+}
+
+.wl-program-instance-banner__link {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.wl-program-create-intent {
+  border: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wl-program-create-intent__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.wl-program-create-intent__nested {
+  margin-left: 24px;
+}
+
+.wl-program-create-from-template {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wl-program-card--unified .wl-program-card__footer-actions {
+  margin-top: 10px;
+}
+
+.wl-program-card__origin {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--v2-text-muted, #78716c);
 }

@@ -104,7 +104,7 @@
   justify-content: center;
   font-size: 1.35rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wf-meta {
@@ -150,7 +150,7 @@
   flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: #71717a;
 }
 
@@ -223,7 +223,7 @@
 .wf-target-stat strong {
   font-size: 1rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wf-panel-label {

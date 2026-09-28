@@ -30,7 +30,6 @@ import {
   getEnrollmentsForCoachProgram,
   MAX_ACTIVE_PROGRAMS_PER_ATHLETE,
 } from '../utils/wlAssignmentRules';
-import type { ProgramSyncPayload } from './programSyncQueue';
 import { incrementSaveMetric } from './saveMetrics';
 import { buildStarterProgramDraft } from '../utils/programSchedule';
 
@@ -46,7 +45,6 @@ type CoachServiceDeps = {
   onTemplatesChanged?: (coachId: string) => void;
   onProgramsChanged?: (coachId: string) => void;
   onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
-  enqueueProgramSync?: (payload: ProgramSyncPayload) => void;
 };
 
 function newId(prefix: string): string {
@@ -83,15 +81,12 @@ export class CoachService {
   private readonly onTemplatesChanged?: (coachId: string) => void;
   private readonly onProgramsChanged?: (coachId: string) => void;
   private readonly onPlanChangeCreated?: (notification: PlanChangeNotification) => void;
-  private readonly enqueueProgramSync?: (payload: ProgramSyncPayload) => void;
-
   constructor(deps: CoachServiceDeps) {
     this.store = deps.store;
     this.onAssignmentsChanged = deps.onAssignmentsChanged;
     this.onTemplatesChanged = deps.onTemplatesChanged;
     this.onProgramsChanged = deps.onProgramsChanged;
     this.onPlanChangeCreated = deps.onPlanChangeCreated;
-    this.enqueueProgramSync = deps.enqueueProgramSync;
   }
 
   private notifyAssignmentsChanged(
@@ -266,29 +261,6 @@ export class CoachService {
       throw new CoachServiceError('UPDATE_FAILED', 'Could not update coach program.');
     }
     incrementSaveMetric('coach_program_saves');
-    if (patch.program) {
-      const linked = await this.store.getAssignmentsByCoachProgramId(programId);
-      if (linked.length > 0) {
-        const syncPayload: ProgramSyncPayload = {
-          coachId,
-          programId,
-          program: patch.program,
-          programName: updated.name,
-          editContext: input.editContext,
-        };
-        if (this.enqueueProgramSync) {
-          this.enqueueProgramSync(syncPayload);
-        } else {
-          await this.propagateProgramToAssignments(
-            coachId,
-            programId,
-            patch.program,
-            input.editContext,
-            updated.name,
-          );
-        }
-      }
-    }
     this.onProgramsChanged?.(coachId);
     return updated;
   }

@@ -5,6 +5,9 @@ export { ScienceDistributionBar, type ScienceDistributionBarProps } from './Scie
 export { ExerciseRanking, type ExerciseRankingProps } from './ExerciseRanking';
 export { TimelineChart, type TimelineChartProps, type TimelinePoint } from './TimelineChart';
 export { LineTrendChart, type LineTrendChartProps, type TrendSeries } from './LineTrendChart';
+export { VolumeIntensityScatter, type VolumeIntensityScatterProps } from './VolumeIntensityScatter';
+export { DailyTrendChart, type DailyTrendChartProps } from './DailyTrendChart';
+export { IntensityHistogram, type IntensityHistogramProps } from './IntensityHistogram';
 export { InsightCard, type InsightCardProps } from './InsightCard';
 export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './StatusBadge';
 export { StatRow, type StatRowProps, type StatRowItem } from './StatRow';

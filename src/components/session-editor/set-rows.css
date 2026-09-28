@@ -87,7 +87,7 @@
   text-align: center;
   font-size: 1.125rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   -moz-appearance: textfield;
   appearance: textfield;
   touch-action: manipulation;
@@ -139,7 +139,7 @@
   text-align: center;
   font-size: 0.95rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 /* Compact stepper — table cells and narrow panels */
@@ -397,7 +397,7 @@
   flex: 1;
   font-size: 0.85rem;
   color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-set-card-kg strong {
@@ -453,7 +453,7 @@
   color: var(--color-text-primary);
   font-size: 1.125rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-rep-input:focus {
@@ -1330,13 +1330,13 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   color: var(--wolf-sets-accent);
   font-size: 0.82rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-sets-premium__load {
   font-size: 0.88rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
   white-space: nowrap;
 }
@@ -1358,7 +1358,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   color: var(--color-text-primary);
   font-size: 0.85rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-sets-premium__select:focus {
@@ -1428,7 +1428,7 @@ article.wolf-se-block-card .wolf-se-block-layout__sets .wolf-se-num-compact-inpu
   color: var(--color-text-primary);
   font-size: 0.875rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   text-align: center;
 }
 
@@ -1729,7 +1729,7 @@ button.wolf-se-combo-preset__trigger {
   color: var(--color-text-primary);
   font-size: 0.85rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   text-align: left;
   cursor: pointer;
   transition:
@@ -1817,7 +1817,7 @@ button.wolf-se-combo-preset__trigger {
 .wolf-se-sets-premium__stat-value {
   font-size: 1rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
   line-height: 1.1;
 }
@@ -1859,7 +1859,7 @@ button.wolf-se-combo-preset__trigger {
   min-width: 0;
   font-size: 0.88rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
 }
 

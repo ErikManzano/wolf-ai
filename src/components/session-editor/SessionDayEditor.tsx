@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Athlete, Exercise, Session } from '../../models/training';
+import type { Athlete, Exercise, GeneratedProgram, Session } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { SessionCoachDayCards } from './SessionCoachDayCards';
@@ -37,6 +37,10 @@ export interface SessionDayEditorProps {
   canRemoveDay?: boolean;
   onChangeExercise?: (index: number) => void;
   onDuplicateBlock?: (index: number) => void;
+  program?: GeneratedProgram | null;
+  weekNumber?: number;
+  showLoadKg?: boolean;
+  onContextBlockChange?: (blockIndex: number) => void;
 }
 
 export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
@@ -62,6 +66,11 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
   onMoveBlockDown,
   onChangeExercise,
   onDuplicateBlock,
+  program = null,
+  weekNumber,
+  showLoadKg = true,
+  onContextBlockChange,
+  dayNumber,
 }) => {
   const isMobile = useMediaQuery('(max-width: 1024px)');
 
@@ -126,6 +135,11 @@ export const SessionDayEditor: React.FC<SessionDayEditorProps> = ({
       onAddExercise={onAddExercise}
       onReorderBlocks={onReorderBlocks}
       compactHeaders={dense}
+      program={program}
+      weekNumber={weekNumber}
+      dayNumber={dayNumber}
+      showLoadKg={showLoadKg}
+      onContextBlockChange={onContextBlockChange}
     />
   );
 };

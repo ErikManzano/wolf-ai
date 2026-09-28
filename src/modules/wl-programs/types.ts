@@ -2,16 +2,19 @@ import type { CoachProgram, CoachProgramRow, CoachProgramStatus } from '../../mo
 import type { GeneratedProgram, Session, WolfUser } from '../../models/training';
 import type { ProgramEditContext } from '../../models/notifications';
 
-export type WlProgramsView = 'hub' | 'editor';
+export type WlProgramsView = 'hub' | 'editor' | 'assignment-editor';
 
 export interface WlProgramsContextValue {
   coachPrograms: CoachProgramRow[];
   programsLoading: boolean;
   programsView: WlProgramsView;
   editingProgramId: string | null;
+  editingAssignmentId: string | null;
   setProgramsView: (view: WlProgramsView) => void;
   openProgramEditor: (programId: string | null) => void;
   closeProgramEditor: () => void;
+  openAssignmentEditor: (assignmentId: string) => void;
+  closeAssignmentEditor: () => void;
   reloadProgramsFromApi: () => Promise<void>;
   createProgram: (name: string, program?: GeneratedProgram) => Promise<CoachProgram | null>;
   updateProgram: (

@@ -112,6 +112,7 @@ export interface ExerciseBlockCardProps {
   defaultExtraSegmentId: string;
   layout?: 'default' | 'embedded';
   mode?: 'full' | 'setsOnly';
+  showLoadKg?: boolean;
 }
 
 function blockTitle(
@@ -143,6 +144,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
   defaultExtraSegmentId,
   layout = 'default',
   mode = 'full',
+  showLoadKg = true,
 }) => {
   const { pushAlert } = useWolfAlert();
   const apply = onApply;
@@ -559,6 +561,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
                 exercises={exercises}
                 isEs={isEs}
                 layout={layout}
+                showLoadKg={showLoadKg}
                 onPctChange={(si, v) =>
                   apply(() => updateSetSchemeField(session, bi, si, 'percentage', v, athlete, exercises))
                 }

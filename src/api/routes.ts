@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from 'express';
-import type { Athlete, Exercise, ProgramAssignment, ProgramAssignmentVersion, RepOutcome, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
+import type { Athlete, Exercise, ProgramAssignment, RepOutcome, Session, SessionCompletion, SessionGoal, SetCompletionLog, WolfUser, CoachWlProgramTemplate, GeneratedProgram } from '../models/training';
 import type { AthleteLiftLog, CreateAthleteLiftLogInput } from '../models/liftLogs';
 import { isPrLiftId, PR_LIFTS } from '../components/wl-prs/PrLiftCatalog';
 import { epleyE1rm } from '../components/wl-prs/e1rm';
@@ -43,7 +43,6 @@ import type { PlanChangeNotification, ProgramEditContext } from '../models/notif
 import { buildPlanChangeMessages } from './planChangeNotificationMessages';
 import { diffProgramDay, mergePlanChangeSummaryLines } from '../utils/planChangeDiff';
 import { randomUUID } from 'node:crypto';
-import { createProgramSyncQueue, type ProgramSyncQueue, type ProgramSyncPayload } from './programSyncQueue';
 import { incrementSaveMetric } from './saveMetrics';
 import { replaceProgramSession } from '../services/sessionMutations';
 import { buildStarterProgramDraft } from '../utils/programSchedule';
@@ -384,84 +383,15 @@ async function userFromBearer(req: Request, state: MockApiState, store?: Postgre
 export function createTrainingRouter(state: MockApiState, store?: PostgresStore, notify?: RealtimeNotifier): IRouter {
   const router = Router();
 
-  let programSyncQueue: ProgramSyncQueue | null = null;
-
-  const notifyAssignmentsPropagated = (
-    payload: ProgramSyncPayload,
-    assignmentIds: string[],
-  ) => {
-    if (assignmentIds.length === 0) return;
-    incrementSaveMetric('assignment_propagations', assignmentIds.length);
-    notify?.('assignments:changed', {
-      coachId: payload.coachId,
-      assignmentIds,
-      coachProgramId: payload.programId,
-    });
-  };
-
-  const mockPropagateProgram = async (payload: ProgramSyncPayload): Promise<string[]> => {
-    const program = state.coachPrograms.find((p) => p.id === payload.programId);
-    if (!program) return [];
-    const updatedIds: string[] = [];
-    for (const asg of state.assignments.filter((a) => a.coachProgramId === payload.programId)) {
-      const previousProgram = asg.program;
-      const cloned = cloneProgramForAthlete(payload.program, asg.athleteProfileId, {
-        name: payload.programName,
-      });
-      const hist: ProgramAssignmentVersion = {
-        version: asg.version,
-        editedAt: new Date().toISOString(),
-        program: asg.program,
-      };
-      asg.version += 1;
-      asg.program = cloned;
-      asg.versionHistory = [...(asg.versionHistory ?? []), hist];
-      updatedIds.push(asg.id);
-      if (payload.editContext && asg.athleteUserId) {
-        const notification = createMockPlanChangeNotification(state, {
-          coachId: payload.coachId,
-          recipientUserId: asg.athleteUserId,
-          athleteProfileId: asg.athleteProfileId,
-          assignmentId: asg.id,
-          coachProgramId: payload.programId,
-          programName: payload.programName,
-          editContext: payload.editContext,
-          previousProgram,
-          newProgram: cloned,
-        });
-        if (notification) notify?.('plan-change:created', notification);
-      }
-    }
-    return updatedIds;
-  };
-
   const coachService = store
     ? new CoachService({
         store,
-        enqueueProgramSync: (payload) => programSyncQueue?.enqueue(payload),
         onAssignmentsChanged: (payload) => notify?.('assignments:changed', payload),
         onTemplatesChanged: (coachId) => notify?.('wl-templates:changed', { coachId }),
         onProgramsChanged: (coachId) => notify?.('coach-programs:changed', { coachId }),
         onPlanChangeCreated: (notification) => notify?.('plan-change:created', notification),
       })
     : null;
-
-  programSyncQueue = createProgramSyncQueue({
-    coalesceMs: 2500,
-    flush: async (payload) => {
-      const assignmentIds = coachService
-        ? await coachService.propagateProgramToAssignments(
-            payload.coachId,
-            payload.programId,
-            payload.program,
-            payload.editContext,
-            payload.programName,
-          )
-        : await mockPropagateProgram(payload);
-      return { assignmentIds };
-    },
-    onAfterFlush: (payload, { assignmentIds }) => notifyAssignmentsPropagated(payload, assignmentIds),
-  });
 
   router.get('/users', async (_req, res) => {
     const users = store ? await store.getUsers() : state.users;
@@ -3009,9 +2939,6 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     if (coachService) {
       try {
         const updated = await coachService.updateProgram(coachId, id, patch);
-        if (patch.status === 'published') {
-          await programSyncQueue.flush(id);
-        }
         res.json(updated);
         return;
       } catch (err) {
@@ -3037,21 +2964,6 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     state.coachPrograms[idx] = updated;
     incrementSaveMetric('coach_program_saves');
-    if (patch.program) {
-      const linked = state.assignments.filter((a) => a.coachProgramId === id);
-      if (linked.length > 0) {
-        programSyncQueue.enqueue({
-          coachId,
-          programId: id,
-          program: patch.program,
-          programName: updated.name,
-          editContext: patch.editContext,
-        });
-      }
-    }
-    if (patch.status === 'published') {
-      await programSyncQueue.flush(id);
-    }
     notify?.('coach-programs:changed', { coachId });
     res.json(updated);
   });
@@ -3117,16 +3029,6 @@ export function createTrainingRouter(state: MockApiState, store?: PostgresStore,
     };
     state.coachPrograms[idx] = updated;
     incrementSaveMetric('coach_program_saves');
-    const linked = state.assignments.filter((a) => a.coachProgramId === id);
-    if (linked.length > 0) {
-      programSyncQueue.enqueue({
-        coachId,
-        programId: id,
-        program: mergedProgram,
-        programName: updated.name,
-        editContext: body.editContext,
-      });
-    }
     notify?.('coach-programs:changed', { coachId });
     res.json(updated);
   });

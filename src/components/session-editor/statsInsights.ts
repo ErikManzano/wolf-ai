@@ -73,7 +73,7 @@ export function buildDayInsights(params: {
   avgPct: number;
   verdict?: DayVerdict;
 }): StatsInsight[] {
-  const { isEs, purpose, exerciseVolumes, avgPct } = params;
+  const { isEs, purpose, avgPct } = params;
   const insights: StatsInsight[] = [];
   const verdict = params.verdict ?? evaluateDayVerdict(params.session, params.athlete, params.exercises, isEs);
 
@@ -118,44 +118,6 @@ export function buildDayInsights(params: {
           ? 'Añade una serie de trabajo o sube ligeramente la intensidad en el bloque principal.'
           : 'Add a work set or nudge intensity up on the main block.',
         priority: 7,
-      }),
-    );
-  }
-
-  const top2 = exerciseVolumes.slice(0, 2);
-  const top2Pct = top2.reduce((sum, row) => sum + row.pct, 0);
-  if (top2.length >= 2 && top2Pct >= 55) {
-    insights.push(
-      insight({
-        id: 'concentration',
-        tone: top2Pct >= 70 ? 'caution' : 'info',
-        title: isEs
-          ? `${top2Pct}% del volumen en los dos primeros ejercicios`
-          : `${top2Pct}% of volume in the top two exercises`,
-        body: isEs
-          ? 'La sesión está muy concentrada: el resto de movimientos aportan poco al estímulo total.'
-          : 'The session is highly concentrated: remaining lifts add little to total stimulus.',
-        action: isEs
-          ? 'Reparte volumen a un accesorio o reduce series del ejercicio dominante si buscas equilibrio.'
-          : 'Shift volume to an accessory or trim sets on the dominant lift if you want balance.',
-        priority: top2Pct >= 70 ? 6 : 4,
-      }),
-    );
-  } else if (top2[0] && top2[0].pct >= 40) {
-    insights.push(
-      insight({
-        id: 'dominant-lift',
-        tone: 'info',
-        title: isEs
-          ? `${top2[0].label} concentra el ${top2[0].pct}% del volumen`
-          : `${top2[0].label} holds ${top2[0].pct}% of volume`,
-        body: isEs
-          ? 'Ese ejercicio define el carácter de la sesión para el coach y el atleta.'
-          : 'That lift defines the character of the session for coach and athlete.',
-        action: isEs
-          ? 'Protege la calidad de ese patrón; evita fatiga previa innecesaria.'
-          : 'Protect quality on that pattern; avoid unnecessary prior fatigue.',
-        priority: 3,
       }),
     );
   }

@@ -168,14 +168,15 @@ export function getNavLabel(id: string, isEs: boolean): string {
 export function isMobileBottomNavItemActive(
   navId: AppViewId,
   activeView: string,
-  ctx?: { programsView?: 'hub' | 'editor' },
+  ctx?: { programsView?: import('../modules/wl-programs').WlProgramsView },
 ): boolean {
   switch (navId) {
     case 'programs':
       return (
         activeView === 'programs' ||
         activeView === 'wolf-engine' ||
-        ctx?.programsView === 'editor'
+        ctx?.programsView === 'editor' ||
+        ctx?.programsView === 'assignment-editor'
       );
     case 'praxiogram':
       return activeView === 'praxiogram';

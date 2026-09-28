@@ -1,9 +1,9 @@
 /**
- * Wolf AI — typography & surface tokens (Inter + JetBrains Mono).
+ * Wolf AI — typography & surface tokens (Inter + Satoshi).
+ * Numbers stay in Inter; column alignment comes from .numeric.
  */
 :root {
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    monospace;
+  --font-mono: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   --wl-surface-main: #09090b;
   --wl-surface-board: #111318;
@@ -60,9 +60,15 @@
   --wl-space-editor-y: 1.5rem;
 }
 
+.numeric,
+.tabular-nums,
 .wl-font-mono {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
+}
+
+.wl-font-mono {
+  font-family: var(--font-sans, 'Inter', -apple-system, sans-serif);
 }
 
 .wl-type-overline {
@@ -83,19 +89,21 @@
 }
 
 .wl-type-data-lg {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', -apple-system, sans-serif);
   font-size: var(--wl-type-data-lg-size);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   line-height: 1.2;
   color: var(--wl-text-primary);
 }
 
 .wl-type-data-sm {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', -apple-system, sans-serif);
   font-size: var(--wl-type-data-sm-size);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   line-height: 1.25;
   color: var(--wl-text-muted);
 }

@@ -1,17 +1,17 @@
-/** Homilos Builder — typography tokens (Manrope). */
+/** Homilos Builder — typography tokens (Inter UI, Satoshi display). */
 export const typography = {
   fontFamily: {
-    brand: '"Manrope", system-ui, -apple-system, sans-serif',
-    sans: '"Manrope", system-ui, -apple-system, sans-serif',
+    brand: '"Satoshi", "Inter", system-ui, sans-serif',
+    sans: '"Inter", system-ui, -apple-system, sans-serif',
   },
   wordmark: {
     homilos: {
-      weight: 800,
+      weight: 700,
       tracking: '0.14em',
       transform: 'uppercase' as const,
     },
     builder: {
-      weight: 600,
+      weight: 500,
       tracking: '0.28em',
       transform: 'uppercase' as const,
     },

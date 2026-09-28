@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Reorder } from 'framer-motion';
-import type { Athlete, Exercise, Session, SessionExerciseBlock } from '../../models/training';
+import type { Athlete, Exercise, GeneratedProgram, Session, SessionExerciseBlock } from '../../models/training';
 import type { SessionPickerOption } from '../../services/exercise';
+import { clampSessionComplexSegments, WL_SESSION_LIMITS } from '../../services/sessionMutations';
 import { ExerciseSheetRow, SortableExerciseSheetGroup } from './ExerciseSheetRow';
 import { rowsFromExerciseBlocks, type SortableExerciseRow } from './spreadsheetSortable';
 import { SessionSheetSummary } from './SessionSheetSummary';
@@ -28,6 +29,11 @@ export interface SessionSheetSpreadsheetProps {
   onApply: (fn: () => Session) => void;
   onAddExercise: () => void;
   onReorderBlocks?: (blocks: SessionExerciseBlock[]) => void;
+  program?: GeneratedProgram | null;
+  weekNumber?: number;
+  dayNumber?: number;
+  showLoadKg?: boolean;
+  onContextBlockChange?: (blockIndex: number) => void;
 }
 
 export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = ({
@@ -46,9 +52,14 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
   onApply,
   onAddExercise,
   onReorderBlocks,
+  program = null,
+  weekNumber,
+  dayNumber,
+  showLoadKg = true,
+  onContextBlockChange,
 }) => {
   const tableRef = useRef<HTMLTableElement>(null);
-  const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(() => new Set());
+  const [expandedBlockIndex, setExpandedBlockIndex] = useState<number | null>(null);
   const canSort = sortable && Boolean(onReorderBlocks) && session.exercises.length > 1;
   const [rows, setRows] = useState<SortableExerciseRow[]>(() => rowsFromExerciseBlocks(session.exercises));
 
@@ -62,8 +73,16 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
   }, [session.exercises]);
 
   useEffect(() => {
+    const needsClamp = session.exercises.some(
+      (b) => (b.segments?.length ?? 0) > WL_SESSION_LIMITS.MAX_COMPLEX_SEGMENTS,
+    );
+    if (!needsClamp) return;
+    onApply(() => clampSessionComplexSegments(session, athlete, exercises));
+  }, [session.exercises, athlete, exercises, onApply, session]);
+
+  useEffect(() => {
     if (focusBlockIndex == null) return;
-    setExpandedBlocks((prev) => new Set(prev).add(focusBlockIndex));
+    setExpandedBlockIndex(focusBlockIndex);
     const cell = tableRef.current?.querySelector<HTMLElement>(
       `[data-block-index="${focusBlockIndex}"]`,
     );
@@ -75,18 +94,24 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
     onFocusBlockHandled?.();
   }, [focusBlockIndex, session.exercises.length, onFocusBlockHandled]);
 
-  const toggleExpanded = useCallback((blockIndex: number) => {
-    setExpandedBlocks((prev) => {
-      const next = new Set(prev);
-      if (next.has(blockIndex)) next.delete(blockIndex);
-      else next.add(blockIndex);
-      return next;
-    });
-  }, []);
+  const toggleExpanded = useCallback(
+    (blockIndex: number) => {
+      onContextBlockChange?.(blockIndex);
+      setExpandedBlockIndex((prev) => (prev === blockIndex ? null : blockIndex));
+    },
+    [onContextBlockChange],
+  );
 
   const expandBlock = useCallback((blockIndex: number) => {
-    setExpandedBlocks((prev) => new Set(prev).add(blockIndex));
+    setExpandedBlockIndex(blockIndex);
   }, []);
+
+  useEffect(() => {
+    if (expandedBlockIndex == null) return;
+    if (expandedBlockIndex >= session.exercises.length) {
+      setExpandedBlockIndex(null);
+    }
+  }, [session.exercises.length, expandedBlockIndex]);
 
   const handleReorder = useCallback(
     (nextRows: SortableExerciseRow[]) => {
@@ -199,12 +224,16 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
                   exercises={exercises}
                   pickerOptions={pickerOptions}
                   isEs={isEs}
-                  expanded={expandedBlocks.has(blockIndex)}
+                  expanded={expandedBlockIndex === blockIndex}
                   colCount={colCount}
                   focusBlockIndex={focusBlockIndex}
                   onToggleExpanded={toggleExpanded}
                   onExpandBlock={expandBlock}
                   onApply={onApply}
+                  program={program}
+                  weekNumber={weekNumber}
+                  dayNumber={dayNumber}
+                  showLoadKg={showLoadKg}
                 />
               ))}
             </Reorder.Group>
@@ -220,12 +249,16 @@ export const SessionSheetSpreadsheet: React.FC<SessionSheetSpreadsheetProps> = (
                   exercises={exercises}
                   pickerOptions={pickerOptions}
                   isEs={isEs}
-                  expanded={expandedBlocks.has(blockIndex)}
+                  expanded={expandedBlockIndex === blockIndex}
                   colCount={colCount}
                   focusBlockIndex={focusBlockIndex}
                   onToggleExpanded={toggleExpanded}
                   onExpandBlock={expandBlock}
                   onApply={onApply}
+                  program={program}
+                  weekNumber={weekNumber}
+                  dayNumber={dayNumber}
+                  showLoadKg={showLoadKg}
                 />
               ))}
             </tbody>

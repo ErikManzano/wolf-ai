@@ -17,7 +17,7 @@ export type LogoWordmarkProps = {
 };
 
 /**
- * HOMILOS / BUILDER wordmark — Manrope, all caps, wide tracking.
+ * HOMILOS / BUILDER wordmark — Satoshi Bold, all caps, wide tracking.
  * Renders as accessible HTML (not an image) so typography stays crisp.
  */
 export function LogoWordmark({
@@ -150,8 +150,8 @@ export function LogoWordmarkSvg({
           x="160"
           y="168"
           textAnchor="middle"
-          fontFamily="Manrope, system-ui, sans-serif"
-          fontWeight={800}
+          fontFamily={typography.fontFamily.brand}
+          fontWeight={typography.wordmark.homilos.weight}
           fontSize={36}
           letterSpacing="0.14em"
           fill={name}
@@ -163,8 +163,8 @@ export function LogoWordmarkSvg({
           x="160"
           y="202"
           textAnchor="middle"
-          fontFamily="Manrope, system-ui, sans-serif"
-          fontWeight={600}
+          fontFamily={typography.fontFamily.brand}
+          fontWeight={typography.wordmark.builder.weight}
           fontSize={14}
           letterSpacing="0.32em"
           fill={builder}
@@ -194,8 +194,8 @@ export function LogoWordmarkSvg({
       <text
         x="112"
         y="52"
-        fontFamily="Manrope, system-ui, sans-serif"
-        fontWeight={800}
+        fontFamily={typography.fontFamily.brand}
+        fontWeight={typography.wordmark.homilos.weight}
         fontSize={28}
         letterSpacing="0.12em"
         fill={name}
@@ -205,8 +205,8 @@ export function LogoWordmarkSvg({
       <text
         x="112"
         y="78"
-        fontFamily="Manrope, system-ui, sans-serif"
-        fontWeight={600}
+        fontFamily={typography.fontFamily.brand}
+        fontWeight={typography.wordmark.builder.weight}
         fontSize={12}
         letterSpacing="0.3em"
         fill={builder}

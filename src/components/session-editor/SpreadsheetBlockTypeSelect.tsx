@@ -25,6 +25,20 @@ function typeTriggerLabel(kind: ExerciseBlockKind, isEs: boolean): string {
   return opt?.label ?? (isEs ? 'Simple' : 'Single');
 }
 
+function typeTriggerAbbrev(kind: ExerciseBlockKind): string {
+  if (kind === 'complex') return 'C';
+  if (kind === 'warmup') return 'W';
+  return 'S';
+}
+
+function typeTriggerHint(kind: ExerciseBlockKind, isEs: boolean): string {
+  if (kind === 'warmup') {
+    return isEs ? 'Bloque de activación / movilidad' : 'Activation / mobility block';
+  }
+  const opt = TYPE_OPTIONS(isEs).find((o) => o.value === kind);
+  return opt?.hint ?? (isEs ? 'Un ejercicio por bloque' : 'One exercise per block');
+}
+
 function TypeDot({ kind }: { kind: ExerciseBlockKind }) {
   return <span className={`wolf-se-block-type__dot wolf-se-block-type__dot--${kind}`} aria-hidden />;
 }
@@ -55,12 +69,15 @@ export interface SpreadsheetBlockTypeSelectProps {
   kind: ExerciseBlockKind;
   isEs: boolean;
   onChange: (kind: ExerciseBlockKind) => void;
+  /** S/C (+ chevron), icon-btn size — for spreadsheet row actions */
+  compact?: boolean;
 }
 
 export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProps> = ({
   kind,
   isEs,
   onChange,
+  compact = false,
 }) => {
   const options = TYPE_OPTIONS(isEs);
   const listId = useId();
@@ -71,6 +88,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
 
   const selectedIndex = options.findIndex((opt) => opt.value === kind);
   const triggerLabel = typeTriggerLabel(kind, isEs);
+  const triggerHint = typeTriggerHint(kind, isEs);
 
   useEffect(() => {
     if (!open) return;
@@ -126,13 +144,16 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
   );
 
   const ariaLabel = isEs ? 'Tipo de ejercicio' : 'Exercise type';
-  const triggerTitle = isEs
-    ? 'Tipo de ejercicio — define cómo se prescribe el bloque'
-    : 'Exercise type — defines how this block is prescribed';
+  const triggerTitle = compact
+    ? `${triggerLabel} — ${triggerHint}${isEs ? ' · clic para cambiar' : ' · click to change'}`
+    : isEs
+      ? 'Tipo de ejercicio — define cómo se prescribe el bloque'
+      : 'Exercise type — defines how this block is prescribed';
 
   const rootClass = [
     'wolf-se-spreadsheet__type-combo',
     `wolf-se-spreadsheet__type-combo--${kind}`,
+    compact ? 'wolf-se-spreadsheet__type-combo--compact' : '',
     open ? 'is-open' : '',
   ]
     .filter(Boolean)
@@ -161,9 +182,30 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
         onClick={toggleOpen}
         onKeyDown={onTriggerKeyDown}
       >
-        <TypeDot kind={kind} />
-        <span className="wolf-se-spreadsheet__type-label">{triggerLabel}</span>
-        <ChevronDown size={13} strokeWidth={2.25} className="wolf-se-spreadsheet__type-chevron" aria-hidden />
+        {compact ? (
+          <>
+            <span className="wolf-se-spreadsheet__type-abbr" aria-hidden>
+              {typeTriggerAbbrev(kind)}
+            </span>
+            <ChevronDown
+              size={12}
+              strokeWidth={2.5}
+              className="wolf-se-spreadsheet__type-chevron"
+              aria-hidden
+            />
+          </>
+        ) : (
+          <>
+            <TypeDot kind={kind} />
+            <span className="wolf-se-spreadsheet__type-label">{triggerLabel}</span>
+            <ChevronDown
+              size={13}
+              strokeWidth={2.25}
+              className="wolf-se-spreadsheet__type-chevron"
+              aria-hidden
+            />
+          </>
+        )}
       </button>
       <PortaledComboList
         open={open}

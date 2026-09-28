@@ -516,7 +516,7 @@
   background: color-mix(in srgb, var(--prx-surface) 90%, #000);
   font-size: 0.68rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: #a1a1aa;
   flex-shrink: 0;
 }

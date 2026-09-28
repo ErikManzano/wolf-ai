@@ -197,7 +197,7 @@
   .mwl-wizard-bar-step {
     font-size: 0.75rem;
     color: var(--color-text-muted);
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   }
 
   .mwl-wizard-dots {
@@ -409,7 +409,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.15;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
   text-align: right;
   white-space: nowrap;
@@ -467,7 +467,7 @@
 .mwl-set-editor-kg-value {
   font-size: 2rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
 }
 

@@ -112,6 +112,13 @@ export function scienceZoneLabel(zone: ScienceZoneId, isEs: boolean): string {
   return isEs ? 'Potencia / Neural' : 'Max power / Neural';
 }
 
+/** Etiqueta breve para leyenda / donut en paneles estrechos. */
+export function scienceZoneLabelShort(zone: ScienceZoneId, isEs: boolean): string {
+  if (zone === 'Tecnica_Velocidad') return isEs ? 'Técnica' : 'Technique';
+  if (zone === 'Acumulacion_Tension') return isEs ? 'Tensión' : 'Tension';
+  return isEs ? 'Potencia' : 'Power';
+}
+
 export function scienceZoneRange(zone: ScienceZoneId): string {
   if (zone === 'Tecnica_Velocidad') return '<70%';
   if (zone === 'Acumulacion_Tension') return '70–85%';
@@ -147,6 +154,22 @@ export function sessionTrainingLoad(session: Session): number {
  * IMP = Σ (V_i × %_i) / Σ V_i  (volume-weighted mean %1RM).
  * V_i = scheme tonnage (kg).
  */
+/** IMP from % only (rep volume weights; no athlete PRs). For program templates. */
+export function sessionIntensityWeightedByRepVolume(session: Session): number {
+  let volSum = 0;
+  let weighted = 0;
+  for (const block of workBlocks(session)) {
+    for (const row of block.sets) {
+      const v = schemeReps(block, row) * row.sets;
+      if (v <= 0 || !Number.isFinite(row.percentage) || row.percentage <= 0) continue;
+      volSum += v;
+      weighted += v * row.percentage;
+    }
+  }
+  if (volSum <= 0) return 0;
+  return Math.round((weighted / volSum) * 10) / 10;
+}
+
 export function sessionIntensityWeighted(
   session: Session,
   athlete: Athlete,
@@ -255,6 +278,17 @@ export function computeStimulusDistribution(
     reps: Math.round(reps[zone]),
     repsPct: repsTotal > 0 ? Math.round((reps[zone] / repsTotal) * 100) : 0,
   }));
+}
+
+/** Zonas de estímulo agregadas de todos los días de la semana. */
+export function computeWeekStimulusDistribution(
+  week: ProgramWeek | undefined,
+  athlete: Athlete,
+  exercises: Exercise[],
+): ScienceZoneSlice[] {
+  if (!week?.days.length) return [];
+  const parts = week.days.map((day) => computeStimulusDistribution(day.session, athlete, exercises));
+  return mergeDistributions(parts);
 }
 
 function mergeDistributions(parts: ScienceZoneSlice[][]): ScienceZoneSlice[] {

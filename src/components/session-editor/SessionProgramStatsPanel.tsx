@@ -5,6 +5,7 @@ import {
   computeProgramExecution,
   type SessionExecutionContext,
 } from './programExecutionStats';
+import { buildProgramIntensityBins, buildProgramScatterSeries } from './programChartSeries';
 import { formatStatsKg } from './statsTonnage';
 import { computeWeekScience } from './programScienceStats';
 import { buildProgramInsights, pickHeroInsight } from './statsInsights';
@@ -15,12 +16,14 @@ import {
 import {
   ExerciseRanking,
   InsightCard,
+  IntensityHistogram,
   LineTrendChart,
   MetricCard,
   ScienceDistributionBar,
   SectionCard,
   StatusBadge,
   TimelineChart,
+  VolumeIntensityScatter,
 } from './stats-ds';
 
 export interface SessionProgramStatsPanelProps {
@@ -129,6 +132,27 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
     const idx = science.trend.labels.findIndex((l) => l === `Sem ${selectedWeek}`);
     return idx >= 0 ? idx : undefined;
   }, [science, selectedWeek]);
+
+  const programScatter = useMemo(
+    () =>
+      buildProgramScatterSeries({
+        program,
+        athlete,
+        exercises,
+        isEs,
+      }),
+    [program, athlete, exercises, isEs],
+  );
+
+  const programIntensityBins = useMemo(
+    () =>
+      buildProgramIntensityBins({
+        program,
+        athlete,
+        exercises,
+      }),
+    [program, athlete, exercises],
+  );
 
   return (
     <section
@@ -239,11 +263,14 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
           />
         </div>
 
-        <SectionCard title={isEs ? 'Estímulo — Zonas científicas' : 'Stimulus — Science zones'}>
-          {science ? (
-            <ScienceDistributionBar slices={science.stimulusDistribution} isEs={isEs} />
-          ) : null}
-        </SectionCard>
+        {programScatter.length > 0 ? (
+          <SectionCard
+            title={isEs ? 'Volumen × intensidad (programa)' : 'Volume × intensity (program)'}
+            subtitle={isEs ? 'Cada punto = un día prescrito' : 'Each point = one prescribed day'}
+          >
+            <VolumeIntensityScatter points={programScatter} isEs={isEs} variant="full" />
+          </SectionCard>
+        ) : null}
 
         {science && science.trend.labels.length > 1 ? (
           <SectionCard
@@ -282,6 +309,16 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
             />
           </SectionCard>
         ) : null}
+
+        <SectionCard title={isEs ? 'Distribución de intensidad (%1RM)' : 'Intensity distribution (%1RM)'}>
+          <IntensityHistogram bins={programIntensityBins} isEs={isEs} variant="full" />
+        </SectionCard>
+
+        <SectionCard title={isEs ? 'Estímulo — Zonas científicas' : 'Stimulus — Science zones'}>
+          {science ? (
+            <ScienceDistributionBar slices={science.stimulusDistribution} isEs={isEs} />
+          ) : null}
+        </SectionCard>
 
         <div className="wl-stats-ds__grid wl-stats-ds__grid--split">
           <SectionCard

@@ -121,8 +121,9 @@ export function WlProgramsProvider({
     return loadCoachProgramsLocal(scopedCoachId);
   });
   const [programsLoading, setProgramsLoading] = useState(() => apiMode && Boolean(apiToken));
-  const [programsView, setProgramsView] = useState<'hub' | 'editor'>('hub');
+  const [programsView, setProgramsView] = useState<import('./types').WlProgramsView>('hub');
   const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
 
   const coachPrograms = useMemo(
     () => enrichProgramsWithAssignments(rawPrograms, assignments, completions, athleteNameByProfileId),
@@ -167,12 +168,25 @@ export function WlProgramsProvider({
   }, [apiMode, apiToken, loadProgramsFromApi]);
 
   const openProgramEditor = useCallback((programId: string | null) => {
+    setEditingAssignmentId(null);
     setEditingProgramId(programId);
     setProgramsView('editor');
   }, []);
 
   const closeProgramEditor = useCallback(() => {
     setEditingProgramId(null);
+    setEditingAssignmentId(null);
+    setProgramsView('hub');
+  }, []);
+
+  const openAssignmentEditor = useCallback((assignmentId: string) => {
+    setEditingProgramId(null);
+    setEditingAssignmentId(assignmentId);
+    setProgramsView('assignment-editor');
+  }, []);
+
+  const closeAssignmentEditor = useCallback(() => {
+    setEditingAssignmentId(null);
     setProgramsView('hub');
   }, []);
 
@@ -451,9 +465,12 @@ export function WlProgramsProvider({
       programsLoading,
       programsView,
       editingProgramId,
+      editingAssignmentId,
       setProgramsView,
       openProgramEditor,
       closeProgramEditor,
+      openAssignmentEditor,
+      closeAssignmentEditor,
       reloadProgramsFromApi: loadProgramsFromApi,
       createProgram,
       updateProgram,
@@ -468,8 +485,11 @@ export function WlProgramsProvider({
       programsLoading,
       programsView,
       editingProgramId,
+      editingAssignmentId,
       openProgramEditor,
       closeProgramEditor,
+      openAssignmentEditor,
+      closeAssignmentEditor,
       loadProgramsFromApi,
       createProgram,
       updateProgram,

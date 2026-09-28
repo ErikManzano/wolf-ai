@@ -872,7 +872,7 @@
 .wolf-program-preset-tag-meta {
   font-size: 0.72rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-muted);
   line-height: 1.2;
 }
@@ -1017,7 +1017,7 @@
   background: var(--wolf-motor-surface, #222222);
   font-size: 0.75rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
@@ -1148,10 +1148,10 @@
 }
 
 .wolf-program-nav-row-head__meta {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: 0.68rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: #71717a;
   white-space: nowrap;
 }
@@ -1497,10 +1497,10 @@
 }
 
 .wolf-week-tabs-pill__load {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: var(--wl-type-data-sm-size, 0.6875rem);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: #71717a;
   white-space: nowrap;
 }
@@ -1751,10 +1751,10 @@
 }
 
 .wolf-week-tab-card__load {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: 0.65rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: #71717a;
   white-space: nowrap;
   line-height: 1.15;
@@ -2705,7 +2705,7 @@ tr.is-active-week .wolf-program-matrix-week-title {
 .wolf-program-matrix-week-load {
   font-size: 0.62rem;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--matrix-text-dim, var(--v2-text-muted, #78716c));
   white-space: nowrap;
 }
@@ -2787,7 +2787,9 @@ tr.is-active-week .wolf-program-matrix-week-load {
 .wolf-program-matrix-exercise-rx {
   font-size: 0.6rem;
   font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   color: var(--matrix-rx, var(--matrix-text-muted, #57534e));
   white-space: nowrap;
   overflow: hidden;
@@ -3232,7 +3234,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 .wolf-program-nav-stat-val {
   font-size: 0.88rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
   line-height: 1.1;
 }
@@ -3250,7 +3252,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
   min-width: 0;
   font-size: 0.82rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: 0.04em;
   color: var(--color-text-secondary);
   text-align: center;
@@ -3836,7 +3838,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 .wolf-se-kg-one strong,
 .wolf-se-kg-list strong {
   color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-kg-list {
@@ -4662,7 +4664,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 .wolf-pr-stat-value {
   font-size: 1.35rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
   line-height: 1.1;
@@ -4684,7 +4686,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 .wolf-pr-last-updated time {
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-engine-band--chip {
@@ -4710,7 +4712,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 .wolf-engine-band-value {
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
 }
 
@@ -5392,7 +5394,7 @@ tr.is-active-week .wolf-program-matrix-week-load {
 
 .wolf-se-sticky-inner strong {
   display: block;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-sticky-sub {
@@ -5517,5 +5519,5 @@ tr.is-active-week .wolf-program-matrix-week-load {
   font-size: 0.58rem;
   font-weight: 600;
   opacity: 0.72;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }

@@ -60,7 +60,7 @@
 .wolf-se-metric-pill-value {
   font-size: 0.92rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
 }
 
@@ -130,7 +130,7 @@
   color: var(--color-accent);
   font-size: 0.95rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-block-head-body {
@@ -186,7 +186,7 @@
 
 .wolf-se-block-meta strong {
   color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-ex-picker--compact {
@@ -308,7 +308,7 @@
   font-size: 1rem;
   font-weight: 800;
   color: var(--color-accent);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-add-row {
@@ -597,7 +597,7 @@
 .wolf-se-hero-stat-val {
   font-size: 0.78rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-secondary);
   line-height: 1.2;
 }
@@ -733,7 +733,7 @@
   border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
@@ -991,10 +991,10 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: var(--wl-type-exercise-num-size, 0.8125rem);
   font-weight: var(--wl-type-exercise-num-weight, 700);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--wl-text-accent, #ff6b1a);
   background: rgba(255, 107, 26, 0.1);
   border: 1px solid color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 22%, transparent);
@@ -1016,7 +1016,9 @@
 }
 
 .wolf-se-sheet-row-rx {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   font-size: var(--wl-type-exercise-rx-size, 0.8125rem);
   font-weight: var(--wl-type-exercise-rx-weight, 600);
   color: var(--wl-text-accent, #ff6b1a);
@@ -1030,10 +1032,10 @@
   min-width: 2.5rem;
   padding: 2px 6px;
   border-radius: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: 0.8125rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   line-height: 1.2;
   text-align: right;
   color: var(--color-text-primary);
@@ -1131,10 +1133,10 @@
   min-width: 2.75rem;
   padding: 4px 10px;
   border-radius: 9px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans, 'Inter', sans-serif);
   font-size: 0.95rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   text-align: right;
   color: var(--wl-text-accent, #ff6b1a);
   background: color-mix(in srgb, var(--wl-text-accent, #ff6b1a) 12%, transparent);
@@ -1169,7 +1171,9 @@
   margin-top: 6px;
   padding: 6px 10px;
   border-radius: 8px;
-  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.35;

@@ -5,7 +5,6 @@ import {
   sessionTotalReps,
   sessionTotalSets,
 } from './blockMetrics';
-import { sessionPurposeBreakdown } from './sessionSummaryMetrics';
 import {
   computeSessionExecution,
   type SessionExecutionContext,
@@ -19,10 +18,8 @@ import {
   computeStimulusDistribution,
   formatShortDate,
 } from './programScienceStats';
-import { buildDayInsights, pickHeroInsight } from './statsInsights';
 import {
   ExerciseRanking,
-  InsightCard,
   MetricCard,
   ScienceDistributionBar,
   SectionCard,
@@ -120,7 +117,6 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     );
   }, [dayTonnage, weekAvgTonnage, volumeDelta, isEs]);
 
-  const purpose = useMemo(() => sessionPurposeBreakdown(blocks), [blocks]);
   const sets = useMemo(() => sessionTotalSets(blocks), [blocks]);
   const reps = useMemo(() => sessionTotalReps(blocks), [blocks]);
   const minutes = science.durationMinutes || estimateSessionMinutes(session);
@@ -155,26 +151,18 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
     [blocks, athlete, exercises],
   );
 
-  const insights = useMemo(
-    () =>
-      buildDayInsights({
-        session,
-        athlete,
-        exercises,
-        isEs,
-        purpose,
-        exerciseVolumes: exerciseRows,
-        avgPct: science.intensityWeighted,
-        verdict,
-      }),
-    [session, athlete, exercises, isEs, purpose, exerciseRows, science.intensityWeighted, verdict],
-  );
-
-  const heroInsight = useMemo(() => pickHeroInsight(insights), [insights]);
-
   const showBlockTimeline = timelinePoints.length >= 3;
   const note = coachNote?.trim() || null;
   const dateLabel = dayDateIso ? formatShortDate(dayDateIso, isEs) : null;
+
+  const impSub =
+    science.intensityRange.max > 0 && science.intensityRange.min !== science.intensityRange.max
+      ? isEs
+        ? `${science.intensityRange.min}–${science.intensityRange.max}%`
+        : `${science.intensityRange.min}–${science.intensityRange.max}%`
+      : undefined;
+
+  const densitySub = science.density > 0 ? formatStatsDuration(minutes) : undefined;
 
   const seriesRepsSub = execution
     ? isEs
@@ -201,8 +189,6 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
           </p>
         )}
 
-        {heroInsight ? <InsightCard insights={[heroInsight]} isEs={isEs} hero /> : null}
-
         {note ? (
           <div className="wl-stats-day-note" role="note">
             <span className="wl-stats-day-note__title">
@@ -212,44 +198,40 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
           </div>
         ) : null}
 
-        <div className="wl-stats-ds__metrics" aria-label={isEs ? 'Resumen' : 'Summary'}>
+        <div
+          className="wl-stats-ds__metrics wl-stats-ds__metrics--condensed"
+          aria-label={isEs ? 'Resumen' : 'Summary'}
+        >
           <MetricCard
+            compact
             label={isEs ? 'Volumen' : 'Volume'}
             value={formatStatsKg(dayTonnage)}
-            sub={daySharePct > 0 ? (isEs ? `${daySharePct}% de la semana` : `${daySharePct}% of week`) : undefined}
+            sub={daySharePct > 0 ? (isEs ? `${daySharePct}% sem.` : `${daySharePct}% wk`) : undefined}
             delta={volumeDelta ?? vsWeekAvgDelta}
             accent
           />
           <MetricCard
+            compact
             label="IMP"
             value={science.intensityWeighted > 0 ? `${science.intensityWeighted}%` : '—'}
-            sub={
-              science.intensityRange.max > 0
-                ? isEs
-                  ? `Rango ${science.intensityRange.min}–${science.intensityRange.max}%`
-                  : `Range ${science.intensityRange.min}–${science.intensityRange.max}%`
-                : isEs
-                  ? 'Ponderada por volumen'
-                  : 'Volume-weighted'
-            }
+            sub={impSub}
           />
           <MetricCard
-            label={isEs ? 'Carga relativa (AU)' : 'Training Load (AU)'}
-            value={science.trainingLoad > 0 ? science.trainingLoad : '—'}
-            sub={isEs ? 'Carga prescrita' : 'Prescribed load'}
+            compact
+            label="AU"
+            value={science.trainingLoad > 0 ? `${science.trainingLoad}` : '—'}
+            sub={isEs ? 'Carga' : 'Load'}
           />
           <MetricCard
+            compact
             label={isEs ? 'Densidad' : 'Density'}
             value={science.density > 0 ? `${science.density}` : '—'}
-            sub={
-              science.densityEstimated
-                ? `${formatStatsDuration(minutes)} · ${isEs ? 'estimada' : 'estimated'}`
-                : formatStatsDuration(minutes)
-            }
+            sub={densitySub}
           />
           <MetricCard
+            compact
             label={isEs ? 'Estado' : 'Status'}
-            value={<StatusBadge label={verdict.title} tone={verdict.tone} />}
+            value={<StatusBadge label={verdict.title} tone={verdict.tone} compact />}
             sub={seriesRepsSub}
             subTone={execution ? 'success' : 'muted'}
           />
@@ -271,11 +253,6 @@ export const SessionDayStatsPanel: React.FC<SessionDayStatsPanelProps> = ({
           </SectionCard>
         ) : null}
 
-        {insights.length > 1 ? (
-          <SectionCard title={isEs ? 'Insights' : 'Insights'}>
-            <InsightCard insights={insights.slice(0, 4)} isEs={isEs} />
-          </SectionCard>
-        ) : null}
       </div>
     </section>
   );

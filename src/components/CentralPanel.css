@@ -1050,7 +1050,9 @@
 .ss-input.ss-load {
   flex: 2;
   min-width: 60px;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   color: var(--color-accent);
   font-weight: 600;
 }

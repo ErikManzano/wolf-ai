@@ -258,7 +258,7 @@
     flex-shrink: 0;
     font-size: 0.62rem;
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
     color: var(--color-text-muted);
     line-height: 1;
   }

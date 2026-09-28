@@ -112,13 +112,13 @@
   gap: 3px;
   margin: 0;
   min-width: 0;
-  font-family: Manrope, system-ui, sans-serif;
+  font-family: var(--font-display, 'Satoshi', 'Inter', sans-serif);
   line-height: 1;
 }
 
 .logo-wordmark__name {
   font-size: 0.9375rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--brand-wordmark, var(--color-text-primary));
@@ -126,7 +126,7 @@
 
 .logo-wordmark__builder {
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--brand-builder, var(--color-accent, #ff7a00));

@@ -201,8 +201,11 @@ interface WolfAssignContextValue {
   programsLoading: boolean;
   programsView: import('../modules/wl-programs').WlProgramsView;
   editingProgramId: string | null;
+  editingAssignmentId: string | null;
   openProgramEditor: (programId: string | null) => void;
   closeProgramEditor: () => void;
+  openAssignmentEditor: (assignmentId: string) => void;
+  closeAssignmentEditor: () => void;
   reloadProgramsFromApi: () => Promise<void>;
   createCoachProgram: (name: string, program?: GeneratedProgram) => Promise<import('../models/coach-architecture').CoachProgram | null>;
   updateCoachProgram: (
@@ -1598,8 +1601,11 @@ function WlTemplatesBridge({
     | 'programsLoading'
     | 'programsView'
     | 'editingProgramId'
+    | 'editingAssignmentId'
     | 'openProgramEditor'
     | 'closeProgramEditor'
+    | 'openAssignmentEditor'
+    | 'closeAssignmentEditor'
     | 'reloadProgramsFromApi'
     | 'createCoachProgram'
     | 'updateCoachProgram'
@@ -1715,8 +1721,11 @@ function WolfAssignMergedProvider({
     | 'programsLoading'
     | 'programsView'
     | 'editingProgramId'
+    | 'editingAssignmentId'
     | 'openProgramEditor'
     | 'closeProgramEditor'
+    | 'openAssignmentEditor'
+    | 'closeAssignmentEditor'
     | 'reloadProgramsFromApi'
     | 'createCoachProgram'
     | 'updateCoachProgram'
@@ -1780,8 +1789,11 @@ function WolfAssignMergedProvider({
     programsLoading: programsCtx.programsLoading,
     programsView: programsCtx.programsView,
     editingProgramId: programsCtx.editingProgramId,
+    editingAssignmentId: programsCtx.editingAssignmentId,
     openProgramEditor: programsCtx.openProgramEditor,
     closeProgramEditor: programsCtx.closeProgramEditor,
+    openAssignmentEditor: programsCtx.openAssignmentEditor,
+    closeAssignmentEditor: programsCtx.closeAssignmentEditor,
     reloadProgramsFromApi: programsCtx.reloadProgramsFromApi,
     createCoachProgram: programsCtx.createProgram,
     updateCoachProgram: programsCtx.updateProgram,

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { ChevronDown, Copy, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../../models/training';
@@ -12,6 +12,9 @@ import {
   setExerciseBlockKind,
 } from '../../services/sessionMutations';
 import type { SessionPickerOption } from '../../services/exercise';
+import type { GeneratedProgram } from '../../models/training';
+import { collectExerciseHistory } from './programExerciseHistory';
+import { InlineReferenceChip } from './program-context/InlineReferenceChip';
 import { blockTonnage, blockTotalSets } from './blockMetrics';
 import { editorActionToast } from './editorActionToasts';
 import { blockDisplayName } from './sessionSheetUtils';
@@ -19,6 +22,7 @@ import { formatBlockRepsSummary } from './spreadsheetBlockFormat';
 import { BlockPrescriptionRx } from './BlockPrescriptionRx';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { SpreadsheetBlockTypeSelect } from './SpreadsheetBlockTypeSelect';
+import { SpreadsheetBlockMetrics } from './SpreadsheetBlockMetrics';
 import { ExerciseSheetExpandPanel } from './ExerciseSheetExpandPanel';
 import { SpreadsheetDragGrip, SPREADSHEET_DRAG_SPRING } from './spreadsheetSortable';
 import type { SortableExerciseRow } from './spreadsheetSortable';
@@ -50,6 +54,10 @@ export interface ExerciseSheetRowProps {
   onToggleExpanded: (blockIndex: number) => void;
   onExpandBlock: (blockIndex: number) => void;
   onApply: (fn: () => Session) => void;
+  program?: GeneratedProgram | null;
+  weekNumber?: number;
+  dayNumber?: number;
+  showLoadKg?: boolean;
 }
 
 export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
@@ -68,6 +76,10 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   onToggleExpanded,
   onExpandBlock,
   onApply,
+  program = null,
+  weekNumber = 1,
+  dayNumber = 1,
+  showLoadKg = true,
 }) => {
   const { pushAlert } = useWolfAlert();
   const isComplex =
@@ -81,8 +93,18 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
     ? block.segments
     : [{ exerciseId: block.exerciseId }];
   const summaryLine = isEs
-    ? `${workSets} series · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`
-    : `${workSets} sets · ${repsSummary} reps · ${tonnage > 0 ? `${tonnage.toLocaleString()} kg` : '—'}`;
+    ? `${workSets} series · ${repsSummary} reps${showLoadKg && tonnage > 0 ? ` · ${tonnage.toLocaleString()} kg` : ''}`
+    : `${workSets} sets · ${repsSummary} reps${showLoadKg && tonnage > 0 ? ` · ${tonnage.toLocaleString()} kg` : ''}`;
+
+  const historySnapshots = useMemo(() => {
+    if (!program) return [];
+    return collectExerciseHistory(program, block, athlete, exercises, weekNumber, dayNumber, 4);
+  }, [program, block, athlete, exercises, weekNumber, dayNumber]);
+
+  const priorHistorySnapshots = useMemo(
+    () => historySnapshots.filter((row) => !row.isCurrent),
+    [historySnapshots],
+  );
 
   return (
     <>
@@ -143,30 +165,36 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
                   }
                 />
               )}
-              <SpreadsheetBlockTypeSelect
-                kind={blockKind}
-                isEs={isEs}
-                onChange={(kind) => {
-                  onApply(() =>
-                    setExerciseBlockKind(
-                      session,
-                      blockIndex,
-                      kind,
-                      athlete,
-                      exercises,
-                      DEFAULT_COMPLEX_SECOND_ID,
-                    ),
-                  );
-                  if (kind === 'complex') onExpandBlock(blockIndex);
-                }}
-              />
             </div>
             <BlockPrescriptionRx block={block} />
-            <span className="wolf-se-spreadsheet__exercise-summary">{summaryLine}</span>
+            <div className="wolf-se-spreadsheet__exercise-meta">
+              <span className="wolf-se-spreadsheet__exercise-summary">{summaryLine}</span>
+              {program && priorHistorySnapshots.length > 0 ? (
+                <InlineReferenceChip snapshots={historySnapshots} isEs={isEs} />
+              ) : null}
+            </div>
           </div>
         </td>
         <td className="wolf-se-spreadsheet__col-actions">
           <div className="wolf-se-spreadsheet__row-actions">
+            <SpreadsheetBlockTypeSelect
+              compact
+              kind={blockKind}
+              isEs={isEs}
+              onChange={(kind) => {
+                onApply(() =>
+                  setExerciseBlockKind(
+                    session,
+                    blockIndex,
+                    kind,
+                    athlete,
+                    exercises,
+                    DEFAULT_COMPLEX_SECOND_ID,
+                  ),
+                );
+                if (kind === 'complex') onExpandBlock(blockIndex);
+              }}
+            />
             <button
               type="button"
               className="wolf-se-spreadsheet__icon-btn"
@@ -195,24 +223,13 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
             </button>
           </div>
         </td>
-        <td
-          className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--zone-start"
-          data-metric-label={isEs ? 'series' : 'sets'}
-        >
-          {workSets}
-        </td>
-        <td
-          className="wolf-se-spreadsheet__metric"
-          data-metric-label={isEs ? 'repeticiones' : 'reps'}
-        >
-          {repsSummary}
-        </td>
-        <td
-          className="wolf-se-spreadsheet__metric wolf-se-spreadsheet__metric--vol"
-          data-metric-label={isEs ? 'vol. total' : 'total vol.'}
-        >
-          {tonnage > 0 ? `${tonnage.toLocaleString()}\u00A0kg` : '—'}
-        </td>
+        <SpreadsheetBlockMetrics
+          block={block}
+          athlete={athlete}
+          exercises={exercises}
+          isEs={isEs}
+          showLoadKg={showLoadKg}
+        />
         <td className="wolf-se-spreadsheet__col-blocks">
           <button
             type="button"
@@ -233,7 +250,10 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
         </td>
       </tr>
       {expanded ? (
-        <tr className="wolf-se-spreadsheet__row wolf-se-spreadsheet__row--detail">
+        <tr
+          className="wolf-se-spreadsheet__row wolf-se-spreadsheet__row--detail"
+          onClick={(e) => e.stopPropagation()}
+        >
           <td colSpan={colCount}>
             <div className="wolf-se-spreadsheet__detail-panel">
               <ExerciseSheetExpandPanel

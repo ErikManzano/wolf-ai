@@ -20,5 +20,5 @@
   --ei-radius-md: 10px;
   --ei-radius-lg: 12px;
   --ei-shadow-panel: var(--v2-shadow-panel);
-  --ei-font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
+  --ei-font-mono: var(--font-sans, 'Inter', sans-serif);
 }

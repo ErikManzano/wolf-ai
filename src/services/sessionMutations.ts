@@ -8,7 +8,7 @@ const MAX_SETS_PER_SCHEME = 10;
 const MAX_ROWS_PER_BLOCK = 8;
 const MAX_BLOCKS_PER_SESSION = 8;
 const MIN_COMPLEX_SEGMENTS = 2;
-const MAX_COMPLEX_SEGMENTS = 4;
+const MAX_COMPLEX_SEGMENTS = 2;
 
 function cloneSession(session: Session): Session {
   return JSON.parse(JSON.stringify(session)) as Session;
@@ -22,6 +22,9 @@ function syncDerivedReps(s: Session): void {
         b.segments = b.segments.slice(0, MAX_COMPLEX_SEGMENTS);
       }
       for (const scheme of b.sets) {
+        if (scheme.segmentReps && scheme.segmentReps.length > b.segments.length) {
+          scheme.segmentReps = scheme.segmentReps.slice(0, b.segments.length);
+        }
         if (!scheme.segmentReps || scheme.segmentReps.length < b.segments.length) {
           scheme.segmentReps = b.segments.map((_, i) => scheme.segmentReps?.[i] ?? '1');
         }
@@ -172,7 +175,7 @@ export function reorderComplexSegments(
 export function removeComplexSegment(session: Session, blockIndex: number, segmentIndex: number, athlete: Athlete, catalog: Exercise[]): Session {
   const s = cloneSession(session);
   const block = s.exercises[blockIndex];
-  if (!block?.segments || block.segments.length <= 2) return session;
+  if (!block?.segments || block.segments.length <= MIN_COMPLEX_SEGMENTS) return session;
   block.segments = block.segments.filter((_, i) => i !== segmentIndex);
   for (const scheme of block.sets) {
     if (scheme.segmentReps) {
@@ -603,6 +606,21 @@ export function repairBuggySpreadsheetRows(
 
   const s = cloneSession(session);
   s.exercises = newExercises;
+  return finalize(s, athlete, catalog);
+}
+
+/** Recorta complejos a MAX_COMPLEX_SEGMENTS y sincroniza reps derivadas. */
+export function clampSessionComplexSegments(
+  session: Session,
+  athlete: Athlete,
+  catalog: Exercise[],
+): Session {
+  const needsClamp = session.exercises.some(
+    (b) => normalizeBlockType(b) === 'complex' && (b.segments?.length ?? 0) > MAX_COMPLEX_SEGMENTS,
+  );
+  if (!needsClamp) return session;
+  const s = cloneSession(session);
+  syncDerivedReps(s);
   return finalize(s, athlete, catalog);
 }
 

@@ -57,9 +57,9 @@ export function statsExerciseVolumes(
   }));
 }
 
-export function formatStatsKg(kg: number): string {
+export function formatStatsKg(kg: number, options?: { alwaysKg?: boolean }): string {
   if (!Number.isFinite(kg) || kg <= 0) return '—';
-  if (kg >= 1000) {
+  if (!options?.alwaysKg && kg >= 1000) {
     const tonnes = Math.round((kg / 1000) * 10) / 10;
     return `${tonnes} t`;
   }

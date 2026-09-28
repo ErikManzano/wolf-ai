@@ -57,6 +57,7 @@ export interface ProgramEnrollmentsPanelProps {
   preselectedAthleteId?: string;
   onAssigned?: () => void;
   onSheetFooterChange?: (state: EnrollmentSheetFooterState) => void;
+  onOpenAssignment?: (assignmentId: string) => void;
 }
 
 const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
@@ -67,6 +68,7 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
   preselectedAthleteId,
   onAssigned,
   onSheetFooterChange,
+  onOpenAssignment,
 }) => {
   const {
     rosterForCoach,
@@ -329,6 +331,11 @@ const ProgramEnrollmentsPanel: React.FC<ProgramEnrollmentsPanelProps> = ({
                       })
                   : undefined
               }
+              onOpenAssignment={
+                enrollment && onOpenAssignment
+                  ? () => onOpenAssignment(enrollment.assignmentId)
+                  : undefined
+              }
             />
           ))
         )}
@@ -414,6 +421,7 @@ function EnrollmentRow({
   removing,
   onToggle,
   onRemove,
+  onOpenAssignment,
 }: {
   athlete: { id: string; name: string; level: AthleteLevel };
   isEs: boolean;
@@ -424,6 +432,7 @@ function EnrollmentRow({
   removing: boolean;
   onToggle: () => void;
   onRemove?: () => void;
+  onOpenAssignment?: () => void;
 }) {
   const statusBadge = enrollment ? (
     <span className="wl-program-enrollments-chip wl-program-enrollments-chip--enrolled wl-program-enrollments-chip--sheet-status">
@@ -455,6 +464,15 @@ function EnrollmentRow({
           <span className="wl-program-enrollments-row__level">{levelLabel(athlete.level, isEs)}</span>
         </div>
         <div className="wl-program-enrollments-row__status">{statusBadge}</div>
+        {enrollment && onOpenAssignment ? (
+          <button
+            type="button"
+            className="btn-outline wl-program-enrollments-row__edit-plan"
+            onClick={onOpenAssignment}
+          >
+            {isEs ? 'Editar plan' : 'Edit plan'}
+          </button>
+        ) : null}
         {enrollment && onRemove ? (
           <button
             type="button"
@@ -466,7 +484,7 @@ function EnrollmentRow({
             <UserMinus size={14} aria-hidden />
           </button>
         ) : (
-          <span className="wl-program-enrollments-row__remove-spacer" aria-hidden />
+          !enrollment ? <span className="wl-program-enrollments-row__remove-spacer" aria-hidden /> : null
         )}
       </div>
     );
@@ -505,6 +523,11 @@ function EnrollmentRow({
           </span>
         </span>
       </label>
+      {enrollment && onOpenAssignment ? (
+        <button type="button" className="btn-outline wl-program-enrollments-row__edit-plan" onClick={onOpenAssignment}>
+          {isEs ? 'Editar plan' : 'Edit plan'}
+        </button>
+      ) : null}
       {enrollment && onRemove ? (
         <button
           type="button"

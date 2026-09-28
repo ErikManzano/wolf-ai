@@ -10,6 +10,7 @@ interface WlProgramAssignSheetProps {
   preselectedAthleteId?: string;
   onClose: () => void;
   onAssigned?: () => void;
+  onOpenAssignment?: (assignmentId: string) => void;
 }
 
 const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
@@ -18,6 +19,7 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
   preselectedAthleteId,
   onClose,
   onAssigned,
+  onOpenAssignment,
 }) => {
   const [footer, setFooter] = useState<EnrollmentSheetFooterState | null>(null);
 
@@ -94,6 +96,11 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
               </span>
               {program.enrolledAthletes.length} {isEs ? 'inscritos' : 'enrolled'}
             </p>
+            <p className="wl-program-assign-note">
+              {isEs
+                ? 'Se creará una copia editable por atleta. Los cambios en la plantilla no modifican planes ya asignados.'
+                : 'Each athlete gets an editable copy. Template edits do not change existing athlete plans.'}
+            </p>
           </div>
           <button
             type="button"
@@ -115,6 +122,10 @@ const WlProgramAssignSheet: React.FC<WlProgramAssignSheetProps> = ({
             onAssigned={() => {
               onAssigned?.();
               onClose();
+            }}
+            onOpenAssignment={(assignmentId) => {
+              onClose();
+              onOpenAssignment?.(assignmentId);
             }}
           />
         </div>

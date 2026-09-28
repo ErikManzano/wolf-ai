@@ -438,7 +438,9 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.35rem 0.45rem;
-  font-family: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.35;
@@ -641,7 +643,7 @@
   margin: 0;
   font-size: 0.84rem;
   line-height: 1.3;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wolf-se-coach-day-card__rx-kg {

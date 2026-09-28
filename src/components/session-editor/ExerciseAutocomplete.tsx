@@ -393,15 +393,15 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             setHoverPreview(null);
           }}
         >
-          <button
-            type="button"
+      <button
+        type="button"
             className="wolf-se-picker-row__select"
-            onPointerDown={(e) => {
-              if (e.button !== 0) return;
-              e.preventDefault();
-              e.stopPropagation();
-              pick(opt.id);
-            }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          pick(opt.id);
+        }}
           >
             <span
               className={`wolf-se-picker-row__avatar${opt.isOfficial ? '' : ' wolf-se-picker-row__avatar--custom'}`}
@@ -421,7 +421,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
                 )}
               </span>
               <span className="wolf-se-picker-row__meta">{meta}</span>
-            </span>
+        </span>
           </button>
           <button
             type="button"
@@ -456,8 +456,8 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           ) : null}
         </p>
         <ul role="group">{rows}</ul>
-      </li>
-    );
+    </li>
+  );
   });
 
   const moreRow = navigable.find((n) => n.kind === 'more');
@@ -494,7 +494,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       {navigable.some((n) => n.kind === 'option') ? (
         <ul id={listId} role="listbox" className="wolf-se-picker-menu">
           {sectionBlocks}
-        </ul>
+          </ul>
       ) : (
         <p className="wolf-se-autocomplete-empty">
           {dropdown.showCreate
@@ -544,62 +544,62 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
 
   return (
     <>
+    <div
+      ref={rootRef}
+      className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
+    >
       <div
-        ref={rootRef}
-        className={`wolf-se-autocomplete${compact ? ' wolf-se-autocomplete--compact' : ''}${panelMatchCard ? ' wolf-se-autocomplete--match-card' : ''}${prominent ? ' wolf-se-autocomplete--prominent' : ''}`}
+        className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
       >
-        <div
-          className={`wolf-se-autocomplete-input-wrap${compact ? ' wolf-se-autocomplete-input-wrap--compact' : ''}${prominent ? ' wolf-se-autocomplete-input-wrap--prominent' : ''}${hasSettledValue ? ' wolf-se-autocomplete-input-wrap--settled' : ''}${open ? ' wolf-se-autocomplete-input-wrap--open' : ''}`}
-        >
-          <Search size={prominent ? 20 : compact ? 14 : 16} aria-hidden />
-          <input
-            ref={inputRef}
-            type="text"
-            role="combobox"
-            aria-expanded={open}
-            aria-controls={listId}
+        <Search size={prominent ? 20 : compact ? 14 : 16} aria-hidden />
+        <input
+          ref={inputRef}
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
             aria-activedescendant={
               open && navigable[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined
             }
-            className="wolf-se-autocomplete-input"
+          className="wolf-se-autocomplete-input"
             placeholder={placeholder ?? (isEs ? 'Buscar ejercicio…' : 'Search exercise…')}
-            value={inputValue}
-            onFocus={() => {
+          value={inputValue}
+          onFocus={() => {
               if (browseOpen) return;
-              setOpen(true);
-              setQuery('');
-            }}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setOpen(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setOpen(false);
-                setQuery(selected?.name ?? '');
-              }
+            setOpen(true);
+            setQuery('');
+          }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setOpen(false);
+              setQuery(selected?.name ?? '');
+            }
               if (e.key === 'Tab') {
                 setOpen(false);
               }
-              if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (!open) setOpen(true);
-                else moveActive(1);
-              }
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                moveActive(-1);
-              }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              if (!open) setOpen(true);
+              else moveActive(1);
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              moveActive(-1);
+            }
               if (e.key === 'Enter' && open && navigable[activeIndex]) {
-                e.preventDefault();
+              e.preventDefault();
                 activateNavRow(navigable[activeIndex]!);
-              }
-            }}
-          />
-        </div>
+            }
+          }}
+        />
+      </div>
 
         {panelMounted && typeof document !== 'undefined' ? createPortal(panelContent, document.body) : null}
-      </div>
+    </div>
 
       <ExercisePickerBrowseModal
         isEs={isEs}

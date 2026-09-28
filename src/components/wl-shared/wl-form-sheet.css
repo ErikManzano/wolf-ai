@@ -250,7 +250,7 @@
 .wl-form-sheet-input[type='date'] {
   color-scheme: inherit;
   padding-inline: 10px 8px;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-form-sheet-input[type='date']::-webkit-calendar-picker-indicator {
@@ -401,7 +401,7 @@
   font-weight: 800;
   line-height: 1.1;
   color: var(--wl-sheet-text);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-form-sheet-stat__label {

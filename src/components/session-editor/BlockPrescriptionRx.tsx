@@ -28,9 +28,17 @@ export function BlockPrescriptionRx({ block, className }: BlockPrescriptionRxPro
     );
   }
 
+  const manySets = block.sets.length >= 4;
+
   return (
     <div
-      className={['wolf-se-spreadsheet__exercise-rx', className].filter(Boolean).join(' ')}
+      className={[
+        'wolf-se-spreadsheet__exercise-rx',
+        manySets ? 'wolf-se-spreadsheet__exercise-rx--many' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       title={fullLabel}
       aria-label={fullLabel}
     >

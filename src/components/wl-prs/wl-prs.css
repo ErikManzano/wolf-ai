@@ -101,7 +101,7 @@
   margin-top: 6px;
   font-size: 1.35rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   line-height: 1;
 }
 
@@ -146,7 +146,7 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-prs-detail__max span {
@@ -228,7 +228,7 @@
   display: block;
   margin: 6px 0 4px;
   font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-prs-stat small {
@@ -294,7 +294,7 @@
 .wl-prs-table-cell strong {
   display: block;
   margin-top: 4px;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-prs-history {
@@ -366,7 +366,7 @@
   font-size: clamp(2.4rem, 10vw, 3.4rem);
   font-weight: 800;
   letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   line-height: 1;
 }
 

@@ -51,7 +51,7 @@
 }
 
 .wl-prog-bar__date {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-prog-bar__kpis {
@@ -85,14 +85,14 @@
 .wl-prog-bar__kpi strong {
   font-size: 0.82rem;
   font-weight: 780;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: -0.02em;
 }
 
 .wl-prog-bar__kpi small {
   font-size: 0.62rem;
   color: var(--rail-muted);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
 }
 
 .wl-prog-bar__kpi small.is-up {

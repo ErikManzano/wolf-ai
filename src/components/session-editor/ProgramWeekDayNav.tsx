@@ -59,6 +59,8 @@ export interface ProgramWeekDayNavProps {
   statsContext?: ProgramStatsScope;
   /** Allows the unified desktop header to keep weeks while days stay above the exercise sheet. */
   sections?: 'all' | 'weeks' | 'days';
+  /** Nav stacked above the sheet in the left editor column — ultra-compact day/week chips. */
+  compactSurface?: 'sheet-sidebar';
 }
 
 function scrollActiveIntoView(
@@ -271,6 +273,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   density = 'default',
   statsContext,
   sections = 'all',
+  compactSurface,
 }) => {
   const reduceMotion = useReducedMotion();
   const isEditorDensity = density === 'editor';
@@ -443,7 +446,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
 
   return (
     <div
-      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}${sections === 'weeks' ? ' wolf-program-nav--weeks-only' : sections === 'days' ? ' wolf-program-nav--days-only' : ''}`}
+      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${compactSurface === 'sheet-sidebar' ? ' wolf-program-nav--sheet-sidebar' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}${sections === 'weeks' ? ' wolf-program-nav--weeks-only' : sections === 'days' ? ' wolf-program-nav--days-only' : ''}`}
     >
       <ConfirmationModal
         open={pendingConfirm != null}

@@ -8,14 +8,13 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+import { TEMPLATE_PROGRAM_ATHLETE_ID } from '../../models/coach-architecture';
 import type { Athlete, GeneratedProgram, SessionGoal } from '../../models/training';
-import { useAppContext } from '../../context/AppContext';
 import { useMobileTopBar } from '../../context/MobileTopBarContext';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { useDebouncedCallback, useDebouncedCallbackWithControls } from '../../hooks/useDebouncedCallback';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { latestIntakeForWlProfile, mergeAthleteWithLatestIntake } from '../../utils/wlStatsBridge';
 import OlympicProgramPlan, { type OlympicProgramPlanCreateActions } from '../OlympicProgramPlan';
 import WlProgramAssignSheet from './WlProgramAssignSheet';
 import WlProgramScheduleSheet from './WlProgramScheduleSheet';
@@ -57,24 +56,17 @@ const WL_PROGRAM_EDITOR_CHROME_PORTAL_ID = 'wl-program-editor-chrome-anchor';
 const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, onBack }) => {
   const isEs = language === 'ES';
   const isMobileLayout = useMediaQuery('(max-width: 1024px)');
-  const { intakes } = useAppContext();
   const { pushAlert } = useWolfAlert();
   const {
     getCoachProgramById,
     updateCoachProgram,
     updateCoachProgramSession,
-    rosterForCoach,
-    currentUser,
-    wlAthletes,
+    openAssignmentEditor,
     motorExercises,
   } = useWolfAssign();
 
   const coachProgram = getCoachProgramById(programId);
-  const coachAthletes = useMemo(() => rosterForCoach(currentUser), [rosterForCoach, currentUser]);
-
-  const [athleteId, setAthleteId] = useState(
-    () => coachAthletes.find((a) => a.id === 'ath-erik')?.id ?? coachAthletes[0]?.id ?? '',
-  );
+  const athleteId = TEMPLATE_PROGRAM_ATHLETE_ID;
   const [program, setProgram] = useState<GeneratedProgram | null>(coachProgram?.program ?? null);
   const [syncState, setSyncState] = useState<ProgramSyncState>('saved');
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -196,18 +188,7 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
   );
   useMobileTopBar(mobileTopBar);
 
-  useEffect(() => {
-    if (coachAthletes.length === 0) return;
-    setAthleteId((prev) => (coachAthletes.some((a) => a.id === prev) ? prev : coachAthletes[0]!.id));
-  }, [coachAthletes]);
-
-  const baseWlAthlete = useMemo(() => wlAthletes.find((a) => a.id === athleteId), [wlAthletes, athleteId]);
-  const latestStatsIntake = useMemo(() => latestIntakeForWlProfile(athleteId, intakes), [athleteId, intakes]);
-  const athlete = useMemo(
-    () => (baseWlAthlete ? mergeAthleteWithLatestIntake(baseWlAthlete, latestStatsIntake) : null),
-    [baseWlAthlete, latestStatsIntake],
-  );
-  const athleteForEngine = athlete ?? REFERENCE_ATHLETE;
+  const athleteForEngine = REFERENCE_ATHLETE;
 
   const persistProgram = useCallback(
     async (p: GeneratedProgram, seq: number, structural = false) => {
@@ -494,6 +475,9 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
 
   const editorProgramMeta = (
     <div className="wl-programs-editor-hero-meta wl-programs-editor-hero-meta--toolbar">
+      <span className="wl-programs-status-pill wl-programs-status-pill--draft">
+        {isEs ? 'Plantilla' : 'Template'}
+      </span>
       <span className={`wl-programs-status-pill wl-programs-status-pill--${coachProgram.status}`}>
         {coachProgram.status === 'published' ? (isEs ? 'Publicado' : 'Published') : isEs ? 'Borrador' : 'Draft'}
       </span>
@@ -637,6 +621,8 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
                 onFlushAutosave={flushAutosave}
                 skipLocalDraftPersistence
                 mode="customize"
+                editorMode="template"
+                onOpenAssignmentEditor={openAssignmentEditor}
                 programName={programTitle}
                 onProgramNameChange={handleProgramTitleChange}
                 customizeToolbarPortalId={portalToolbarToHead ? WL_PROGRAM_EDITOR_TOOLBAR_PORTAL_ID : null}
@@ -708,6 +694,10 @@ const WlProgramEditor: React.FC<WlProgramEditorProps> = ({ language, programId, 
           isEs={isEs}
           program={coachProgram}
           onClose={() => setShowEnrollmentsSheet(false)}
+          onOpenAssignment={(assignmentId) => {
+            setShowEnrollmentsSheet(false);
+            openAssignmentEditor(assignmentId);
+          }}
         />
       ) : null}
 

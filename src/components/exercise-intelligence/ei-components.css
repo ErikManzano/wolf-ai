@@ -184,7 +184,7 @@
 }
 
 .wolf-ei-tree-node__count {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   font-size: 0.68rem;
   font-weight: 500;
   color: var(--ei-text-muted);
@@ -366,6 +366,8 @@
   margin: 0.35rem 0 0;
   font-family: var(--ei-font-mono);
   font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   color: var(--ei-text-muted);
 }
 

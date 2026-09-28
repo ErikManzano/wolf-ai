@@ -111,7 +111,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-num {
   color: var(--block-accent);
   font-size: 0.95rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   box-shadow: 0 4px 14px color-mix(in srgb, var(--block-accent) 18%, transparent);
 }
 
@@ -202,7 +202,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-value {
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-stat-value strong {
   font-size: 1.05rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--color-text-primary);
 }
 
@@ -247,7 +247,9 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-rx {
   margin: 0;
   padding: 8px 12px;
   border-radius: 10px;
-  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.35;
@@ -543,7 +545,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-chain-count {
   border-radius: 999px;
   font-size: 0.62rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   letter-spacing: 0;
   text-transform: none;
   color: #7dd3fc;
@@ -626,7 +628,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-pct-chip {
   color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -706,7 +708,7 @@ article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer-label svg {
 article.wolf-se-block.wolf-se-block-card .wolf-se-block-footer strong {
   font-size: 1.2rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--wolf-stat-load);
   text-transform: none;
   letter-spacing: -0.02em;
@@ -995,7 +997,7 @@ article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-zone-header--inline 
 article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-zone-header-index {
   font-size: 0.82rem;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv11", "ss03";
   color: var(--wolf-zone-movement);
   line-height: 1;
 }
@@ -1042,7 +1044,9 @@ article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-compact-meta--
 }
 
 article.wolf-se-block.wolf-se-block-card--embedded .wolf-se-block-compact-meta--footer .wolf-se-block-compact-rx {
-  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11", "ss03";
   font-size: 0.65rem;
   font-weight: 500;
   color: color-mix(in srgb, var(--wolf-block-rx) 70%, var(--color-text-muted));

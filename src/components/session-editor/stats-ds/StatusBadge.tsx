@@ -6,10 +6,11 @@ export type StatusBadgeTone = DayVerdictTone | 'none' | 'pending' | 'in_progress
 export interface StatusBadgeProps {
   label: string;
   tone?: StatusBadgeTone;
+  compact?: boolean;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ label, tone = 'none' }) => (
-  <span className={`wl-stats-status wl-stats-status--${tone}`}>
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ label, tone = 'none', compact = false }) => (
+  <span className={`wl-stats-status${compact ? ' wl-stats-status--compact' : ''} wl-stats-status--${tone}`}>
     <span className="wl-stats-status__dot" aria-hidden />
     {label}
   </span>

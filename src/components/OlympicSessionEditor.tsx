@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Trash2 } from 'lucide-react';
-import type { Athlete, Exercise, Session } from '../models/training';
+import type { Athlete, Exercise, GeneratedProgram, Session } from '../models/training';
 import type { SessionApplyFn, SessionCatalogProps } from './session-editor/types';
 import {
   addComplexSegment,
@@ -76,6 +76,9 @@ interface OlympicSessionEditorProps {
   canDuplicateDay?: boolean;
   onRemoveDay?: () => void;
   canRemoveDay?: boolean;
+  program?: GeneratedProgram | null;
+  showLoadKg?: boolean;
+  onContextBlockChange?: (blockIndex: number) => void;
 }
 
 const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
@@ -102,6 +105,9 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   canDuplicateDay,
   onRemoveDay,
   canRemoveDay,
+  program = null,
+  showLoadKg = true,
+  onContextBlockChange,
 }) => {
   const [view, setView] = useState<SessionEditorView>('sheet');
   const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
@@ -169,12 +175,13 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
   const openExerciseOverview = useCallback(
     (index: number, expandSetIndex: number | null = null) => {
       if (index < 0 || index >= session.exercises.length) return;
+      onContextBlockChange?.(index);
       setCoachNavDirection('forward');
       setEditingBlockIndex(index);
       setOverviewExpandSetIndex(expandSetIndex);
       setEditorView(useMobileCoachFlow ? 'exerciseOverview' : 'exerciseSets');
     },
-    [session.exercises.length, setEditorView, useMobileCoachFlow],
+    [session.exercises.length, setEditorView, useMobileCoachFlow, onContextBlockChange],
   );
 
   const handleAddExercise = useCallback(() => {
@@ -457,6 +464,10 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             canRemoveDay={canRemoveDay}
             onChangeExercise={openChangeExercisePickerForIndex}
             onDuplicateBlock={handleDuplicateBlockAt}
+            program={program}
+            weekNumber={weekNumber}
+            showLoadKg={showLoadKg}
+            onContextBlockChange={onContextBlockChange}
           />
           {embedded ? null : <SessionDayHero session={session} isEs={isEs} />}
         </>
@@ -582,6 +593,7 @@ const OlympicSessionEditor: React.FC<OlympicSessionEditorProps> = ({
             catalog={catalog}
             layout={embedded ? 'embedded' : 'default'}
             mode={useMobileCoachFlow ? 'setsOnly' : 'full'}
+            showLoadKg={showLoadKg}
           />
         </div>
       ) : null}

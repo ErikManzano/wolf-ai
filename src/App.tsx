@@ -51,7 +51,20 @@ function AppShell() {
   /** Vista inicial por usuario; no resetear al refrescar catálogo API (nuevo ref de `currentUser`). */
   const initialViewUserIdRef = useRef<string | null>(null);
 
-  const { currentUser, loginUser, loginWithGoogle, registerUser, forgotPassword, resetPassword, clearApiSession, programsView, editingProgramId, openProgramEditor } = useWolfAssign();
+  const {
+    currentUser,
+    loginUser,
+    loginWithGoogle,
+    registerUser,
+    forgotPassword,
+    resetPassword,
+    clearApiSession,
+    programsView,
+    editingProgramId,
+    editingAssignmentId,
+    openProgramEditor,
+    openAssignmentEditor,
+  } = useWolfAssign();
   const { config: mobileTopBarConfig } = useMobileTopBarContext();
   const { setUserRole } = useAppContext();
 
@@ -101,14 +114,21 @@ function AppShell() {
       writeHashDeepLink({ view: 'legal-privacy' }, true);
       return;
     }
+    if (activeView === 'programs' && editingAssignmentId) {
+      writeHashDeepLink({ view: 'programs', assignmentId: editingAssignmentId }, true);
+      return;
+    }
     if (activeView === 'programs' && editingProgramId) {
       writeHashDeepLink({ view: 'programs', programId: editingProgramId }, true);
+      return;
+    }
+    if (activeView === 'programs' && !editingProgramId && !editingAssignmentId) {
       return;
     }
     if (isAppViewId(activeView as AppViewId) || activeView === 'programs') {
       writeHashDeepLink({ view: activeView as AppViewId }, true);
     }
-  }, [activeView, editingProgramId, isAuthenticated]);
+  }, [activeView, editingProgramId, editingAssignmentId, isAuthenticated]);
 
   useEffect(() => {
     const onHash = () => {
@@ -120,11 +140,22 @@ function AppShell() {
       }
       if (!isAppViewId(link.view)) return;
       setActiveView(link.view);
-      if (link.programId) openProgramEditor(link.programId);
+      if (link.assignmentId) openAssignmentEditor(link.assignmentId);
+      else if (link.programId) openProgramEditor(link.programId);
+    };
+    const onNavigateView = (event: Event) => {
+      const detail = (event as CustomEvent<{ view?: string }>).detail;
+      if (detail?.view && isAppViewId(detail.view as AppViewId)) {
+        setActiveView(detail.view);
+      }
     };
     window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, [openProgramEditor]);
+    window.addEventListener('wolf:navigate-view', onNavigateView);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener('wolf:navigate-view', onNavigateView);
+    };
+  }, [openProgramEditor, openAssignmentEditor]);
 
   useEffect(() => {
     const onSessionExpired = () => {
@@ -154,7 +185,9 @@ function AppShell() {
   }, []);
 
   const isProgramEditorActive =
-    activeView === 'programs' && programsView === 'editor' && Boolean(editingProgramId);
+    activeView === 'programs' &&
+    ((programsView === 'editor' && Boolean(editingProgramId)) ||
+      (programsView === 'assignment-editor' && Boolean(editingAssignmentId)));
   const isExercisesHubActive =
     activeView === 'exercise-intelligence' || activeView === 'wl-exercises';
   /** Desktop always uses the compact icon rail; mobile uses the expanded drawer. */
