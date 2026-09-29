@@ -3477,6 +3477,28 @@
   font-weight: 800 !important;
 }
 
+.wl-programs-editor
+  .wl-programs-embedded-plan
+  .wolf-program-nav--sheet-sidebar
+  .wolf-week-tab-card.active {
+  background: var(--color-accent, #f97316) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.wl-programs-editor
+  .wl-programs-embedded-plan
+  .wolf-program-nav--sheet-sidebar
+  .wolf-week-tab-card.active
+  .wolf-week-tab-card__title,
+.wl-programs-editor
+  .wl-programs-embedded-plan
+  .wolf-program-nav--sheet-sidebar
+  .wolf-week-tab-card.active
+  .wolf-week-tab-card__title--full {
+  color: #fff !important;
+}
+
 .wl-programs-editor .wl-programs-embedded-plan .wolf-week-tab-add--pinned,
 .wl-programs-editor .wl-programs-embedded-plan .wolf-program-nav-week-remove--carousel,
 .wl-programs-editor .wl-programs-embedded-plan .wolf-day-tab-add,

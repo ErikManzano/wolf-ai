@@ -278,7 +278,8 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   const reduceMotion = useReducedMotion();
   const isEditorDensity = density === 'editor';
   const isMobileLayout = useMediaQuery('(max-width: 1024px)');
-  const useAthleteMobileNav = isEditorDensity && isMobileLayout;
+  const useAthleteMobileNav =
+    isEditorDensity && isMobileLayout && compactSurface !== 'sheet-sidebar';
   const isStatsNav = statsContext != null;
   const showDayNav = !isStatsNav || statsContext === 'day';
   const showWeeks = sections !== 'days';

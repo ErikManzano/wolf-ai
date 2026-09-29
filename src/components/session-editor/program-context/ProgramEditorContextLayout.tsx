@@ -9,7 +9,6 @@ export function ProgramEditorContextLayout({
   context,
   contextOpen,
   onToggleContext,
-  mobileContextOpen,
   isMobile,
 }: {
   isEs: boolean;
@@ -18,7 +17,6 @@ export function ProgramEditorContextLayout({
   context: React.ReactNode;
   contextOpen: boolean;
   onToggleContext: () => void;
-  mobileContextOpen: boolean;
   isMobile: boolean;
 }) {
   const panelTitle = programContextPanelTitle(isEs);
@@ -75,16 +73,6 @@ export function ProgramEditorContextLayout({
             </span>
           </button>
         </aside>
-      ) : null}
-
-      {isMobile && mobileContextOpen ? (
-        <div
-          className="wl-program-editor-split__mobile-context"
-          role="tabpanel"
-          aria-label={isEs ? 'Panel de análisis del programa' : 'Program analysis panel'}
-        >
-          {context}
-        </div>
       ) : null}
     </div>
   );

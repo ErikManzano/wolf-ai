@@ -4,8 +4,9 @@ export interface ProgramEditorSheetSidebarProps {
   navigation: React.ReactNode;
   /** Mobile-only tab rendered under week/day navigation. */
   analysisTab?: React.ReactNode;
-  /** Keep the sheet mounted but hidden while the analysis tab is active. */
-  hideBody?: boolean;
+  /** Mobile: analysis panel rendered below nav (same slot as the exercise sheet). */
+  mobileAnalysisPanel?: React.ReactNode;
+  showMobileAnalysis?: boolean;
   children: React.ReactNode;
 }
 
@@ -13,16 +14,40 @@ export interface ProgramEditorSheetSidebarProps {
 export function ProgramEditorSheetSidebar({
   navigation,
   analysisTab,
-  hideBody = false,
+  mobileAnalysisPanel,
+  showMobileAnalysis = false,
   children,
 }: ProgramEditorSheetSidebarProps) {
+  const mobileStacked = mobileAnalysisPanel != null;
+
   return (
     <div className="wl-program-editor-sheet-sidebar">
       <div className="wl-program-editor-sheet-sidebar__nav">
         {navigation}
         {analysisTab}
       </div>
-      <div className={`wl-program-editor-sheet-sidebar__body${hideBody ? ' is-hidden' : ''}`}>{children}</div>
+      <div className="wl-program-editor-sheet-sidebar__body">
+        {mobileStacked ? (
+          <>
+            <div
+              id="wl-program-editor-mobile-context"
+              className={`wl-program-editor-sheet-sidebar__analysis-panel${showMobileAnalysis ? ' is-active' : ''}`}
+              role="tabpanel"
+              aria-hidden={!showMobileAnalysis}
+            >
+              {mobileAnalysisPanel}
+            </div>
+            <div
+              className={`wl-program-editor-sheet-sidebar__sheet${showMobileAnalysis ? ' is-hidden' : ''}`}
+              aria-hidden={showMobileAnalysis}
+            >
+              {children}
+            </div>
+          </>
+        ) : (
+          children
+        )}
+      </div>
     </div>
   );
 }

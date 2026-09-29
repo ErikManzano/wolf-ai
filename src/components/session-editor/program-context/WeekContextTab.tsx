@@ -15,10 +15,11 @@ import {
 import { ProgramContextSection } from './ProgramContextSection';
 import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
-import { ProgramContextChartDetail } from './ProgramContextChartDetail';
+import {
+  ProgramContextChartGallery,
+  type ProgramContextChartItem,
+} from './ProgramContextChartGallery';
 import { ProgramContextChartExpandButton } from './ProgramContextChartExpandButton';
-
-type WeekExpandedChart = 'dailyTrend' | 'scatter' | null;
 
 export function WeekContextTab({
   program,
@@ -94,8 +95,62 @@ export function WeekContextTab({
 
   const dailyTrendTitle = isEs ? 'Tendencia diaria' : 'Daily trend';
   const scatterTitle = isEs ? 'Volumen × intensidad (semana)' : 'Volume × intensity (week)';
+  const zonesTitle = isEs ? 'Zonas (semana)' : 'Zones (week)';
 
-  const [expandedChart, setExpandedChart] = useState<WeekExpandedChart>(null);
+  const scopeLabel = isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`;
+
+  const chartItems = useMemo((): ProgramContextChartItem[] => {
+    const items: ProgramContextChartItem[] = [
+      {
+        id: 'dailyTrend',
+        title: dailyTrendTitle,
+        render: (variant) => (
+          <DailyTrendChart
+            data={dailyTrend}
+            isEs={isEs}
+            variant={variant}
+            prevWeekLabel={prevLabel}
+          />
+        ),
+      },
+      {
+        id: 'scatter',
+        title: scatterTitle,
+        render: (variant) => (
+          <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant={variant} />
+        ),
+      },
+    ];
+    if (comparison.weekStimulus.length > 0) {
+      items.push({
+        id: 'zones',
+        title: zonesTitle,
+        render: () => (
+          <ScienceDistributionBar
+            slices={comparison.weekStimulus}
+            isEs={isEs}
+            compact={false}
+            showRepsInLegend
+            singleZoneVolumeHint
+            animateOnMount={false}
+            showTooltips
+          />
+        ),
+      });
+    }
+    return items;
+  }, [
+    dailyTrend,
+    dailyTrendTitle,
+    scatterPoints,
+    scatterTitle,
+    isEs,
+    prevLabel,
+    comparison.weekStimulus,
+    zonesTitle,
+  ]);
+
+  const [galleryChartId, setGalleryChartId] = useState<string | null>(null);
 
   return (
     <div className="wl-program-context-tab">
@@ -118,7 +173,7 @@ export function WeekContextTab({
             <ProgramContextChartExpandButton
               isEs={isEs}
               chartTitle={dailyTrendTitle}
-              onClick={() => setExpandedChart('dailyTrend')}
+              onClick={() => setGalleryChartId('dailyTrend')}
             />
           }
         >
@@ -136,7 +191,7 @@ export function WeekContextTab({
             <ProgramContextChartExpandButton
               isEs={isEs}
               chartTitle={scatterTitle}
-              onClick={() => setExpandedChart('scatter')}
+              onClick={() => setGalleryChartId('scatter')}
             />
           }
         >
@@ -144,32 +199,29 @@ export function WeekContextTab({
         </ProgramContextSection>
       </ProgramContextGroup>
 
-      <ProgramContextChartDetail
-        open={expandedChart === 'dailyTrend'}
-        title={dailyTrendTitle}
+      <ProgramContextChartGallery
+        open={galleryChartId != null}
+        items={chartItems}
+        activeId={galleryChartId}
+        onActiveIdChange={setGalleryChartId}
+        onClose={() => setGalleryChartId(null)}
         isEs={isEs}
-        onClose={() => setExpandedChart(null)}
-      >
-        <DailyTrendChart
-          data={dailyTrend}
-          isEs={isEs}
-          variant="context"
-          prevWeekLabel={prevLabel}
-        />
-      </ProgramContextChartDetail>
-
-      <ProgramContextChartDetail
-        open={expandedChart === 'scatter'}
-        title={scatterTitle}
-        isEs={isEs}
-        onClose={() => setExpandedChart(null)}
-      >
-        <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="context" />
-      </ProgramContextChartDetail>
+        scopeLabel={scopeLabel}
+        programName={program.name}
+      />
 
       {comparison.weekStimulus.length > 0 ? (
         <ProgramContextGroup title={distributionTitle}>
-          <ProgramContextSection title={isEs ? 'Zonas (semana)' : 'Zones (week)'}>
+          <ProgramContextSection
+            title={zonesTitle}
+            action={
+              <ProgramContextChartExpandButton
+                isEs={isEs}
+                chartTitle={zonesTitle}
+                onClick={() => setGalleryChartId('zones')}
+              />
+            }
+          >
             <ScienceDistributionBar
               slices={comparison.weekStimulus}
               isEs={isEs}

@@ -1,21 +1,17 @@
 import { useMemo, useState } from 'react';
 import type { Athlete, Exercise, GeneratedProgram } from '../../../models/training';
 import { buildDayComparisonRows } from '../programMetricsService';
-import { buildDayScatterSeries, buildSessionIntensityBins } from '../programChartSeries';
+import { buildDayScatterSeries } from '../programChartSeries';
 import { PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT } from './constants';
-import {
-  IntensityHistogram,
-  ScienceDistributionBar,
-  ExerciseRanking,
-  VolumeIntensityScatter,
-} from '../stats-ds';
+import { ExerciseRanking, VolumeIntensityScatter } from '../stats-ds';
 import { ProgramContextSection } from './ProgramContextSection';
 import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
-import { ProgramContextChartDetail } from './ProgramContextChartDetail';
+import {
+  ProgramContextChartGallery,
+  type ProgramContextChartItem,
+} from './ProgramContextChartGallery';
 import { ProgramContextChartExpandButton } from './ProgramContextChartExpandButton';
-
-type DayExpandedChart = 'scatter' | 'histogram' | null;
 
 export function DayContextTab({
   program,
@@ -75,18 +71,6 @@ export function DayContextTab({
         : 'Only this week has data. Add another week with the same weekday, or open Week to compare all days.'
       : undefined;
 
-  const intensityBins = useMemo(() => {
-    const session =
-      program.weeks.find((w) => w.weekNumber === weekNumber)?.days.find((d) => d.dayNumber === dayNumber)
-        ?.session ?? null;
-    return buildSessionIntensityBins({
-      session,
-      athlete,
-      exercises,
-      templateMetrics,
-    });
-  }, [program, weekNumber, dayNumber, athlete, exercises, templateMetrics]);
-
   const compareSubtitle = hasComparison
     ? isEs
       ? `vs ${prevLabel} (mismo día)`
@@ -98,13 +82,30 @@ export function DayContextTab({
       : undefined;
 
   const loadGroupTitle = isEs ? 'Carga' : 'Load';
-  const distributionTitle = isEs ? 'Distribución' : 'Distribution';
   const detailTitle = isEs ? 'Detalle' : 'Detail';
 
   const dayLoadTitle = isEs ? 'Carga del día' : 'Day load';
-  const histogramTitle = isEs ? 'Distribución %1RM (día)' : 'Intensity % (day)';
 
-  const [expandedChart, setExpandedChart] = useState<DayExpandedChart>(null);
+  const scopeLabel = isEs ? `Semana ${weekNumber} · ${head}` : `Week ${weekNumber} · ${head}`;
+
+  const chartItems = useMemo((): ProgramContextChartItem[] => {
+    return [
+      {
+        id: 'scatter',
+        title: dayLoadTitle,
+        render: (variant) => (
+          <VolumeIntensityScatter
+            points={scatterPoints}
+            isEs={isEs}
+            variant={variant}
+            emptyMessage={dayScatterEmptyMessage}
+          />
+        ),
+      },
+    ];
+  }, [dayLoadTitle, scatterPoints, isEs, dayScatterEmptyMessage]);
+
+  const [galleryChartId, setGalleryChartId] = useState<string | null>(null);
 
   if (comparison.empty) {
     return (
@@ -136,7 +137,7 @@ export function DayContextTab({
             <ProgramContextChartExpandButton
               isEs={isEs}
               chartTitle={dayLoadTitle}
-              onClick={() => setExpandedChart('scatter')}
+              onClick={() => setGalleryChartId('scatter')}
             />
           }
         >
@@ -149,57 +150,16 @@ export function DayContextTab({
         </ProgramContextSection>
       </ProgramContextGroup>
 
-      <ProgramContextChartDetail
-        open={expandedChart === 'scatter'}
-        title={dayLoadTitle}
+      <ProgramContextChartGallery
+        open={galleryChartId != null}
+        items={chartItems}
+        activeId={galleryChartId}
+        onActiveIdChange={setGalleryChartId}
+        onClose={() => setGalleryChartId(null)}
         isEs={isEs}
-        onClose={() => setExpandedChart(null)}
-      >
-        <VolumeIntensityScatter
-          points={scatterPoints}
-          isEs={isEs}
-          variant="context"
-          emptyMessage={dayScatterEmptyMessage}
-        />
-      </ProgramContextChartDetail>
-
-      <ProgramContextGroup title={distributionTitle}>
-        <ProgramContextSection
-          title={histogramTitle}
-          action={
-            <ProgramContextChartExpandButton
-              isEs={isEs}
-              chartTitle={histogramTitle}
-              onClick={() => setExpandedChart('histogram')}
-            />
-          }
-        >
-          <IntensityHistogram bins={intensityBins} isEs={isEs} variant="compact" metric="tonnage" />
-        </ProgramContextSection>
-
-        {comparison.stimulus.some((s) => s.repsPct > 0 || s.volumePct > 0) ? (
-          <ProgramContextSection title={isEs ? 'Zonas (día)' : 'Zones (day)'}>
-            <ScienceDistributionBar
-              slices={comparison.stimulus}
-              isEs={isEs}
-              compact
-              showRepsInLegend
-              singleZoneVolumeHint
-              animateOnMount
-              showTooltips
-            />
-          </ProgramContextSection>
-        ) : null}
-      </ProgramContextGroup>
-
-      <ProgramContextChartDetail
-        open={expandedChart === 'histogram'}
-        title={histogramTitle}
-        isEs={isEs}
-        onClose={() => setExpandedChart(null)}
-      >
-        <IntensityHistogram bins={intensityBins} isEs={isEs} variant="full" metric="tonnage" />
-      </ProgramContextChartDetail>
+        scopeLabel={scopeLabel}
+        programName={program.name}
+      />
 
       {comparison.exerciseVolumes.length > 0 || comparison.exerciseVolumeRemainder ? (
         <ProgramContextGroup title={detailTitle}>

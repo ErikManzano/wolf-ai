@@ -38,6 +38,19 @@ export function DayHistoryContextTab({
     return [...metrics.weeklySeries].sort((a, b) => a.weekNumber - b.weekNumber);
   }, [program, weekNumber, dayNumber, athlete, exercises, templateMetrics]);
 
+  const historyTotals = useMemo(
+    () =>
+      rows.reduce(
+        (acc, row) => ({
+          tonnage: acc.tonnage + row.tonnage,
+          sets: acc.sets + row.sets,
+          reps: acc.reps + row.reps,
+        }),
+        { tonnage: 0, sets: 0, reps: 0 },
+      ),
+    [rows],
+  );
+
   const dayDetail = useMemo(
     () =>
       buildDayComparisonRows({
@@ -114,6 +127,19 @@ export function DayHistoryContextTab({
               );
             })}
           </tbody>
+          <tfoot>
+            <tr className="wl-day-history-table__totals">
+              <th scope="row">{isEs ? 'Total' : 'Total'}</th>
+              <td>
+                {historyTotals.tonnage > 0
+                  ? formatStatsKg(historyTotals.tonnage, { alwaysKg: true })
+                  : '—'}
+              </td>
+              <td>—</td>
+              <td>{historyTotals.sets}</td>
+              <td>{historyTotals.reps}</td>
+            </tr>
+          </tfoot>
         </table>
       </ProgramContextSection>
 

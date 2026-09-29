@@ -53,7 +53,7 @@ import { ProgramEditorContextLayout } from './session-editor/program-context/Pro
 import { ProgramEditorSheetSidebar } from './session-editor/program-context/ProgramEditorSheetSidebar';
 import type { ProgramEditorMode } from './session-editor/program-context/constants';
 import { ProgramContextPanel } from './session-editor/program-context/ProgramContextPanel';
-import { statsSessionTonnage } from './session-editor/statsTonnage';
+import { computeWeekAggregateMetrics } from './session-editor/programWeekStats';
 import { useProgramContextPanelState } from './session-editor/program-context/hooks/useProgramContextPanelState';
 import './session-editor/program-context/program-context.css';
 import { useAppContext } from '../context/AppContext';
@@ -963,17 +963,27 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     [program, selectedWeek],
   );
 
-  const weekTonnages = useMemo(() => {
+  const weekAggregateByNumber = useMemo(() => {
     if (!program?.weeks.length) return {};
-    const map: Record<number, number> = {};
+    const map: Record<number, { tonnage: number; sets: number; reps: number }> = {};
     for (const w of program.weeks) {
-      map[w.weekNumber] = w.days.reduce(
-        (sum, day) => sum + statsSessionTonnage(day.session, athleteForEngine, motorExercises),
-        0,
-      );
+      const metrics = computeWeekAggregateMetrics(w, athleteForEngine, motorExercises, isEs);
+      map[w.weekNumber] = {
+        tonnage: metrics.tonnage,
+        sets: metrics.sets,
+        reps: metrics.reps,
+      };
     }
     return map;
-  }, [program, athleteForEngine, motorExercises]);
+  }, [program, athleteForEngine, motorExercises, isEs]);
+
+  const weekTonnages = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const [weekNumber, stats] of Object.entries(weekAggregateByNumber)) {
+      map[Number(weekNumber)] = stats.tonnage;
+    }
+    return map;
+  }, [weekAggregateByNumber]);
 
   const canAddWeek = (program?.weeks.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS;
   const canAddDay = (selectedWeekData?.days.length ?? 0) < PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK;
@@ -1282,6 +1292,49 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const idx = Math.min(selectedContextBlockIndex, daySession.exercises.length - 1);
     return daySession.exercises[idx] ?? null;
   }, [daySession, selectedContextBlockIndex]);
+
+  const programContextPanel = useMemo(() => {
+    if (!program) return null;
+    return (
+      <ProgramContextPanel
+        isEs={isEs}
+        editorMode={isTemplateEditor ? 'template' : isInstanceEditor ? 'instance' : undefined}
+        activeTab={contextTab}
+        onTabChange={setContextTab}
+        program={program}
+        weekNumber={selectedWeek}
+        dayNumber={selectedDay}
+        weekData={selectedWeekData}
+        previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
+        previewAthlete={previewAthleteForEngine}
+        exercises={motorExercises}
+        selectedBlock={selectedContextBlock}
+        enrolledAthletes={enrolledAthletes}
+        onOpenAssignment={onOpenAssignmentEditor}
+        dayMetricsAthlete={statsAthleteForEngine}
+        templateMetrics={isTemplateEditor}
+        selectedDayLabel={selectedDayLabel}
+        onClearExerciseSelection={() => setSelectedContextBlockIndex(null)}
+      />
+    );
+  }, [
+    program,
+    isEs,
+    isTemplateEditor,
+    isInstanceEditor,
+    contextTab,
+    setContextTab,
+    selectedWeek,
+    selectedDay,
+    selectedWeekData,
+    previewAthleteForEngine,
+    motorExercises,
+    selectedContextBlock,
+    enrolledAthletes,
+    onOpenAssignmentEditor,
+    statsAthleteForEngine,
+    selectedDayLabel,
+  ]);
 
   useEffect(() => {
     setSelectedContextBlockIndex(null);
@@ -1745,14 +1798,14 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     isEs={isEs}
                     contextOpen={contextOpen}
                     onToggleContext={toggleContext}
-                    mobileContextOpen={mobileContextOpen}
                     isMobile={isMobileLayout}
                     sidebar={
                       <ProgramEditorSheetSidebar
                         navigation={
                           sessionEditorView === 'sheet' ? programFullNavigation : null
                         }
-                        hideBody={isMobileLayout && mobileContextOpen}
+                        showMobileAnalysis={isMobileLayout && mobileContextOpen}
+                        mobileAnalysisPanel={isMobileLayout ? programContextPanel : undefined}
                         analysisTab={
                           isMobileLayout && sessionEditorView === 'sheet' ? (
                             <div className="wl-program-editor-sheet-sidebar__analysis" role="tablist">
@@ -1761,7 +1814,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                                 role="tab"
                                 aria-selected={mobileContextOpen}
                                 className={`wl-program-editor-sheet-sidebar__analysis-btn${mobileContextOpen ? ' is-active' : ''}`}
-                                onClick={() => setMobileContextOpen(!mobileContextOpen)}
+                                onClick={() => setMobileContextOpen((open) => !open)}
                               >
                                 <BarChart3 size={14} strokeWidth={2.25} aria-hidden />
                                 {isEs ? 'Análisis' : 'Analysis'}
@@ -1808,30 +1861,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                         </div>
                       </ProgramEditorSheetSidebar>
                     }
-                    context={
-                      <ProgramContextPanel
-                        isEs={isEs}
-                        editorMode={
-                          isTemplateEditor ? 'template' : isInstanceEditor ? 'instance' : undefined
-                        }
-                        activeTab={contextTab}
-                        onTabChange={setContextTab}
-                        program={program}
-                        weekNumber={selectedWeek}
-                        dayNumber={selectedDay}
-                        weekData={selectedWeekData}
-                        previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
-                        previewAthlete={previewAthleteForEngine}
-                        exercises={motorExercises}
-                        selectedBlock={selectedContextBlock}
-                        enrolledAthletes={enrolledAthletes}
-                        onOpenAssignment={onOpenAssignmentEditor}
-                        dayMetricsAthlete={statsAthleteForEngine}
-                        templateMetrics={isTemplateEditor}
-                        selectedDayLabel={selectedDayLabel}
-                        onClearExerciseSelection={() => setSelectedContextBlockIndex(null)}
-                      />
-                    }
+                    context={programContextPanel}
                   />
                 ) : null}
               </div>

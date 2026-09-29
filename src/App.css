@@ -431,8 +431,7 @@
   }
 
   .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--table),
-  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--stats),
-  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--editor) {
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--stats) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -441,14 +440,54 @@
     scroll-padding-bottom: 0;
   }
 
+  /* Editor: scroll the workspace (nav + sheet + análisis) — evita recorte sin scroll */
+  .app-container--program-editor .workspace-area:has(.wolf-program-customize-layout--editor) {
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    min-height: 0;
+    padding-bottom: var(
+      --mobile-nav-float-clearance,
+      calc(112px + env(safe-area-inset-bottom, 0px))
+    ) !important;
+    scroll-padding-bottom: var(
+      --mobile-nav-float-clearance,
+      calc(112px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+
   .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--table),
-  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--stats),
-  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--editor) {
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--stats) {
     flex: 1 1 0;
     height: 100%;
     max-height: 100%;
     min-height: 0;
     overflow: hidden;
+  }
+
+  .app-container--program-editor .central-panel:has(.wolf-program-customize-layout--editor) {
+    flex: none;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .app-container--program-editor
+    .central-panel:has(.wolf-program-customize-layout--editor)
+    > .wl-programs-panel.wl-programs-editor.wl-programs-editor--mobile-plan {
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .app-container--program-editor
+    .wl-programs-editor--mobile-plan:has(.wolf-program-customize-layout--editor)
+    .wl-programs-editor-hero:not(.wl-programs-editor-sticky-head) {
+    display: none;
   }
 }
 
