@@ -48,7 +48,10 @@ export function resolveLegacyBaseOneRm(exercise: Exercise, athlete: Athlete): nu
       if (n.includes('jerk') || n.includes('press') || n.includes('overhead')) {
         return athlete.oneRM.cleanJerk * 0.55;
       }
-      if (n.includes('deadlift') || n.includes('good morning') || n.includes('romanian')) {
+      if (n.includes('good morning')) {
+        return athlete.oneRM.backSquat;
+      }
+      if (n.includes('deadlift') || n.includes('romanian')) {
         return athlete.oneRM.backSquat * 1.15;
       }
       return athlete.oneRM.snatch * 0.45;
@@ -106,7 +109,7 @@ export function normalizeBlockType(block: SessionExerciseBlock): 'single' | 'com
 }
 
 /** %1RM enteros — rango habitual halterofilia 40–120 (pulls/overloads). */
-export const WL_PCT_MIN = 40;
+export const WL_PCT_MIN = 20;
 export const WL_PCT_MAX = 120;
 
 export function roundPercentagePrilepin(pct: number): number {

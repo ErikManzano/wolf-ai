@@ -305,7 +305,9 @@ export const bulgarianCatalogEntries: CatalogEntry[] = [
 
   // Grupo 11 — Good mornings / pulley
   e('ex-wl-g11-01', 'Snatch Grip Pulley Pull', 'grupo_11', 'accessory', 'pull', 'floor', 'strength', [50, 70], { loadAnchor: 'snatch' }),
-  e('ex-wl-g11-02', 'Good Morning with Knee Flexed', 'grupo_11', 'accessory', 'classic', 'floor', 'strength', [40, 60]),
+  e('ex-wl-g11-02', 'Good Morning with Knee Flexed', 'grupo_11', 'accessory', 'classic', 'floor', 'strength', [20, 60], {
+    loadAnchor: 'back_squat',
+  }),
   e('ex-wl-g11-03', 'Good Morning Knees Flexed + Vertical Jump', 'grupo_11', 'accessory', 'complex', 'floor', 'power', [40, 55], {
     complexity: 'complex',
   }),
@@ -347,11 +349,18 @@ export const bulgarianCatalogEntries: CatalogEntry[] = [
 
   // Grupo 14 — Back
   e('ex-wl-g14-01', 'Hyperextension', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [40, 60], { tags: ['back'] }),
-  e('ex-wl-g14-02', 'Good Morning, Legs Straight', 'grupo_14', 'accessory', 'classic', 'straight_legs', 'strength', [40, 60], {
+  e('ex-wl-g14-02', 'Good Morning, Legs Straight', 'grupo_14', 'accessory', 'classic', 'straight_legs', 'strength', [20, 60], {
     tags: ['back'],
+    loadAnchor: 'back_squat',
   }),
-  e('ex-wl-g14-03', 'Good Morning Seated on Floor', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [35, 55], { tags: ['back'] }),
-  e('ex-wl-g14-04', 'Good Morning Seated on Bench', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [35, 55], { tags: ['back'] }),
+  e('ex-wl-g14-03', 'Good Morning Seated on Floor', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [20, 55], {
+    tags: ['back'],
+    loadAnchor: 'back_squat',
+  }),
+  e('ex-wl-g14-04', 'Good Morning Seated on Bench', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [20, 55], {
+    tags: ['back'],
+    loadAnchor: 'back_squat',
+  }),
 
   // Grupo 15 in plan = arms/shoulders (catalogGroup grupo_14 extension as grupo_15)
   e('ex-wl-g15-01', 'Snatch Grip Behind the Neck Press', 'grupo_15', 'accessory', 'classic', 'floor', 'strength', [50, 72], {
