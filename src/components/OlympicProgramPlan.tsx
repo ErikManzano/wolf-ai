@@ -1808,7 +1808,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                                 isEditorDensity: true,
                                 compactSurface: 'sheet-sidebar',
                                 useAthleteMobileNav: false,
-                                isStatsNav: customizeSubview === 'stats',
+                                isStatsNav: false,
                                 sections: 'all',
                               })
                             : undefined
