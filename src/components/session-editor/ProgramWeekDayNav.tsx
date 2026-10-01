@@ -63,6 +63,38 @@ export interface ProgramWeekDayNavProps {
   compactSurface?: 'sheet-sidebar';
 }
 
+/** Classes for the week/day nav. In the sheet sidebar they live on the single nav host. */
+export function programWeekDayNavClassName({
+  isEditorDensity,
+  compactSurface,
+  useAthleteMobileNav,
+  weekHeadLeading,
+  isStatsNav,
+  sections,
+}: {
+  isEditorDensity: boolean;
+  compactSurface?: 'sheet-sidebar';
+  useAthleteMobileNav: boolean;
+  weekHeadLeading?: boolean;
+  isStatsNav: boolean;
+  sections: 'all' | 'weeks' | 'days';
+}): string {
+  return [
+    'wolf-program-nav',
+    'wolf-program-nav--editable',
+    'wolf-program-nav--compact',
+    isEditorDensity ? 'wolf-program-nav--editor-density' : '',
+    compactSurface === 'sheet-sidebar' ? 'wolf-program-nav--sheet-sidebar' : '',
+    useAthleteMobileNav ? 'wolf-program-nav--athlete-mobile' : '',
+    weekHeadLeading ? 'wolf-program-nav--has-leading' : '',
+    isStatsNav ? 'wolf-program-nav--stats' : '',
+    sections === 'weeks' ? 'wolf-program-nav--weeks-only' : '',
+    sections === 'days' ? 'wolf-program-nav--days-only' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 function scrollActiveIntoView(
   container: HTMLElement | null,
   selector: string,
@@ -444,11 +476,18 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   const selectedWeekTitle = isEs ? `Semana ${selectedWeek}` : `Week ${selectedWeek}`;
   const selectedWeekVolume = formatWeekTonnageLabel(weekTonnages[selectedWeek] ?? 0, isEs);
   const hideMobileWeekHead = isEditorDensity;
+  const sheetSidebarNav = compactSurface === 'sheet-sidebar';
+  const navClassName = programWeekDayNavClassName({
+    isEditorDensity,
+    compactSurface,
+    useAthleteMobileNav,
+    weekHeadLeading: Boolean(weekHeadLeading),
+    isStatsNav,
+    sections,
+  });
 
-  return (
-    <div
-      className={`wolf-program-nav wolf-program-nav--editable wolf-program-nav--compact${isEditorDensity ? ' wolf-program-nav--editor-density' : ''}${compactSurface === 'sheet-sidebar' ? ' wolf-program-nav--sheet-sidebar' : ''}${useAthleteMobileNav ? ' wolf-program-nav--athlete-mobile' : ''}${weekHeadLeading ? ' wolf-program-nav--has-leading' : ''}${isStatsNav ? ' wolf-program-nav--stats' : ''}${sections === 'weeks' ? ' wolf-program-nav--weeks-only' : sections === 'days' ? ' wolf-program-nav--days-only' : ''}`}
-    >
+  const navTree = (
+    <>
       <ConfirmationModal
         open={pendingConfirm != null}
         title={confirmModal?.title ?? ''}
@@ -731,6 +770,9 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         </section>
         ) : null}
       </div>
-    </div>
+    </>
   );
+
+  if (sheetSidebarNav) return navTree;
+  return <div className={navClassName}>{navTree}</div>;
 };

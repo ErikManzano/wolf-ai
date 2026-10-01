@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { ChevronDown, Copy, Plus, Trash2 } from 'lucide-react';
 import type { Athlete, Exercise, Session } from '../../models/training';
@@ -13,8 +13,6 @@ import {
 } from '../../services/sessionMutations';
 import type { SessionPickerOption } from '../../services/exercise';
 import type { GeneratedProgram } from '../../models/training';
-import { collectExerciseHistory } from './programExerciseHistory';
-import { InlineReferenceChip } from './program-context/InlineReferenceChip';
 import { blockTonnage, blockTotalSets } from './blockMetrics';
 import { editorActionToast } from './editorActionToasts';
 import { blockDisplayName } from './sessionSheetUtils';
@@ -76,9 +74,6 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   onToggleExpanded,
   onExpandBlock,
   onApply,
-  program = null,
-  weekNumber = 1,
-  dayNumber = 1,
   showLoadKg = true,
 }) => {
   const { pushAlert } = useWolfAlert();
@@ -95,16 +90,6 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
   const summaryLine = isEs
     ? `${workSets} series · ${repsSummary} reps${showLoadKg && tonnage > 0 ? ` · ${tonnage.toLocaleString()} kg` : ''}`
     : `${workSets} sets · ${repsSummary} reps${showLoadKg && tonnage > 0 ? ` · ${tonnage.toLocaleString()} kg` : ''}`;
-
-  const historySnapshots = useMemo(() => {
-    if (!program) return [];
-    return collectExerciseHistory(program, block, athlete, exercises, weekNumber, dayNumber, 4);
-  }, [program, block, athlete, exercises, weekNumber, dayNumber]);
-
-  const priorHistorySnapshots = useMemo(
-    () => historySnapshots.filter((row) => !row.isCurrent),
-    [historySnapshots],
-  );
 
   return (
     <>
@@ -169,9 +154,6 @@ export const ExerciseSheetRow: React.FC<ExerciseSheetRowProps> = ({
             <BlockPrescriptionRx block={block} />
             <div className="wolf-se-spreadsheet__exercise-meta">
               <span className="wolf-se-spreadsheet__exercise-summary">{summaryLine}</span>
-              {program && priorHistorySnapshots.length > 0 ? (
-                <InlineReferenceChip snapshots={historySnapshots} isEs={isEs} />
-              ) : null}
             </div>
           </div>
         </td>

@@ -42,6 +42,9 @@ export interface ScienceDistributionBarProps {
   /** Leyenda y centro del donut con nombres cortos (panel contexto). */
   compact?: boolean;
 
+  /** Dock: porcentaje en el centro y una línea por zona, sin aviso ni reps. */
+  dense?: boolean;
+
 }
 
 
@@ -88,6 +91,8 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
   showTooltips = false,
 
   compact = false,
+
+  dense = false,
 
 }) => {
 
@@ -193,7 +198,9 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
     'wl-stats-dist--science',
 
-    compact ? 'wl-stats-dist--compact' : '',
+    compact || dense ? 'wl-stats-dist--compact' : '',
+
+    dense ? 'wl-stats-dist--dense' : '',
 
     animateOnMount ? 'wl-stats-dist--animate' : '',
 
@@ -209,7 +216,7 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
     <div className={rootClass} data-anim={animGen}>
 
-      {singleZoneVolumeHint && dominant && !empty && dominant.volumePct >= 99 ? (
+      {singleZoneVolumeHint && !dense && dominant && !empty && dominant.volumePct >= 99 ? (
 
         <p className="wl-stats-dist__single-zone-hint">
 
@@ -267,7 +274,7 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
                 <span className="wl-stats-dist__pie-label">
 
-                  {compact ? `${dominant.labelShort} ${dominant.range}` : dominant.label}
+                  {dense ? dominant.range : compact ? dominant.labelShort : dominant.label}
 
                 </span>
 
@@ -301,7 +308,9 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
                 key={slice.zone}
 
-                className="wl-stats-dist__legend-item"
+                className={`wl-stats-dist__legend-item${slice.pct <= 0 ? ' is-zero' : ''}`}
+
+                title={`${slice.label} · ${slice.range}`}
 
                 style={
 
@@ -329,7 +338,11 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
                 <span className="wl-stats-dist__legend-name">
 
-                  {compact ? (
+                  {dense ? (
+
+                    slice.range
+
+                  ) : compact ? (
 
                     <>
 
@@ -359,15 +372,19 @@ export const ScienceDistributionBar: React.FC<ScienceDistributionBarProps> = ({
 
                     ? '—'
 
-                    : showRepsInLegend
+                    : dense
 
-                      ? compact
+                      ? `${slice.pct}%`
 
-                        ? `${slice.reps} · ${slice.volumePct}%`
+                      : showRepsInLegend
 
-                        : `${slice.reps} ${isEs ? 'reps' : 'reps'} · ${slice.volumePct}%`
+                        ? compact
 
-                      : `${slice.pct}%`}
+                          ? `${slice.reps} · ${slice.volumePct}%`
+
+                          : `${slice.reps} ${isEs ? 'reps' : 'reps'} · ${slice.volumePct}%`
+
+                        : `${slice.pct}%`}
 
                 </span>
 

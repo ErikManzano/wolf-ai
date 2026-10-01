@@ -1,4 +1,4 @@
-import { Filter } from 'lucide-react';
+import { Filter, LayoutTemplate } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import type { GeneratedProgram } from '../../models/training';
@@ -103,7 +103,7 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [search, setSearch] = useState('');
-  const [kindFilter, setKindFilter] = useState<UnifiedKindFilter>('all');
+  const [kindFilter, setKindFilter] = useState<UnifiedKindFilter>('individuals');
   const [statusFilter, setStatusFilter] = useState<ProgramStatusFilterId>('all');
   const [athleteFilterId, setAthleteFilterId] = useState('');
   const [coachProgramFilterId, setCoachProgramFilterId] = useState('');
@@ -611,12 +611,13 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
         <button
           key={chip.id}
           type="button"
-          className={`wl-programs-hub-chips__btn${kindFilter === chip.id ? ' is-active' : ''}`}
+          className={`wl-programs-hub-chips__btn${chip.id === 'templates' ? ' wl-programs-hub-chips__btn--templates' : ''}${kindFilter === chip.id ? ' is-active' : ''}`}
           onClick={() => {
             setKindFilter(chip.id);
             syncHubHash({ kindFilter: chip.id });
           }}
         >
+          {chip.id === 'templates' ? <LayoutTemplate size={14} strokeWidth={2.25} aria-hidden /> : null}
           {isEs ? chip.labelEs : chip.labelEn}
         </button>
       ))}

@@ -45,7 +45,7 @@ import { useProgramHistory } from '../hooks/useProgramHistory';
 import OlympicSessionEditor, { type SessionEditorView } from './OlympicSessionEditor';
 import type { SessionCatalogProps } from './session-editor/types';
 import { ProgramMatrixTable } from './session-editor/ProgramMatrixTable';
-import { ProgramWeekDayNav } from './session-editor/ProgramWeekDayNav';
+import { ProgramWeekDayNav, programWeekDayNavClassName } from './session-editor/ProgramWeekDayNav';
 import type { ProgramStatsScope } from './session-editor/ProgramDayBoardTabs';
 import { SessionProgramStatsPanel } from './session-editor/SessionProgramStatsPanel';
 import { ProgramAthleteSelector } from './session-editor/program-context/ProgramAthleteSelector';
@@ -53,6 +53,7 @@ import { ProgramEditorContextLayout } from './session-editor/program-context/Pro
 import { ProgramEditorSheetSidebar } from './session-editor/program-context/ProgramEditorSheetSidebar';
 import type { ProgramEditorMode } from './session-editor/program-context/constants';
 import { ProgramContextPanel } from './session-editor/program-context/ProgramContextPanel';
+import { ProgramContextTabBar } from './session-editor/program-context/ProgramContextTabBar';
 import { computeWeekAggregateMetrics } from './session-editor/programWeekStats';
 import { useProgramContextPanelState } from './session-editor/program-context/hooks/useProgramContextPanelState';
 import './session-editor/program-context/program-context.css';
@@ -247,7 +248,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const [sessionEditorView, setSessionEditorView] = useState<SessionEditorView>('sheet');
   const statsScope: ProgramStatsScope = 'program';
   const [customizeSubview, setCustomizeSubview] = useState<'editor' | 'table' | 'stats'>('editor');
-  const [selectedContextBlockIndex, setSelectedContextBlockIndex] = useState<number | null>(null);
   const {
     contextOpen,
     toggleContext,
@@ -1287,12 +1287,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
       />
     ) : null;
 
-  const selectedContextBlock = useMemo(() => {
-    if (!daySession?.exercises.length || selectedContextBlockIndex == null) return null;
-    const idx = Math.min(selectedContextBlockIndex, daySession.exercises.length - 1);
-    return daySession.exercises[idx] ?? null;
-  }, [daySession, selectedContextBlockIndex]);
-
   const programContextPanel = useMemo(() => {
     if (!program) return null;
     return (
@@ -1308,13 +1302,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         previousWeekData={program.weeks.find((w) => w.weekNumber === selectedWeek - 1)}
         previewAthlete={previewAthleteForEngine}
         exercises={motorExercises}
-        selectedBlock={selectedContextBlock}
         enrolledAthletes={enrolledAthletes}
         onOpenAssignment={onOpenAssignmentEditor}
         dayMetricsAthlete={statsAthleteForEngine}
         templateMetrics={isTemplateEditor}
         selectedDayLabel={selectedDayLabel}
-        onClearExerciseSelection={() => setSelectedContextBlockIndex(null)}
       />
     );
   }, [
@@ -1329,16 +1321,11 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     selectedWeekData,
     previewAthleteForEngine,
     motorExercises,
-    selectedContextBlock,
     enrolledAthletes,
     onOpenAssignmentEditor,
     statsAthleteForEngine,
     selectedDayLabel,
   ]);
-
-  useEffect(() => {
-    setSelectedContextBlockIndex(null);
-  }, [selectedWeek, selectedDay]);
 
   const copyJson = useCallback(async () => {
     if (!program) return;
@@ -1549,7 +1536,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         statsContext={customizeSubview === 'stats' ? statsScope : undefined}
       />
     );
-    return sections === 'days' ? navigation : <div className="wolf-program-day-board__head">{navigation}</div>;
+    if (opts?.compactSurface === 'sheet-sidebar' || sections === 'days') return navigation;
+    return <div className="wolf-program-day-board__head">{navigation}</div>;
   };
 
   const programWeekNavigation = renderProgramNavigation('weeks');
@@ -1799,10 +1787,31 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                     contextOpen={contextOpen}
                     onToggleContext={toggleContext}
                     isMobile={isMobileLayout}
+                    dockTabs={
+                      <ProgramContextTabBar
+                        isEs={isEs}
+                        editorMode={isTemplateEditor ? 'template' : 'instance'}
+                        activeTab={contextTab}
+                        onTabChange={setContextTab}
+                        instanceCount={enrolledAthletes.length}
+                        variant="dock"
+                      />
+                    }
                     sidebar={
                       <ProgramEditorSheetSidebar
                         navigation={
                           sessionEditorView === 'sheet' ? programFullNavigation : null
+                        }
+                        navClassName={
+                          sessionEditorView === 'sheet'
+                            ? programWeekDayNavClassName({
+                                isEditorDensity: true,
+                                compactSurface: 'sheet-sidebar',
+                                useAthleteMobileNav: false,
+                                isStatsNav: customizeSubview === 'stats',
+                                sections: 'all',
+                              })
+                            : undefined
                         }
                         showMobileAnalysis={isMobileLayout && mobileContextOpen}
                         mobileAnalysisPanel={isMobileLayout ? programContextPanel : undefined}
@@ -1846,9 +1855,6 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                             embedded
                             program={program}
                             showLoadKg={showLoadKg}
-                            onContextBlockChange={(index) => {
-                              setSelectedContextBlockIndex(index);
-                            }}
                             onViewChange={setSessionEditorView}
                             onMobileExerciseFocusChange={
                               pinTabsInTopBar ? onMobileExerciseFocusChange : undefined

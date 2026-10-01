@@ -7,7 +7,7 @@
  * Opcional:
  *   COACH_USERNAME=coach-wl COACH_PASSWORD='CoachWL2026!'
  *   ATHLETE_USERNAME=erik ATHLETE_PASSWORD='ErikWL2026!'
- *   HENDRYCK_USERNAME=hendryck HENDRYCK_PASSWORD='HendryckWL2026!'
+ *   HENDRYCK_USERNAME=hendryck HENDRYCK_PASSWORD='123456'
  *   COACH_EMAIL=chiron.traine@gmail.com
  *   ATHLETE_EMAIL=erikjonathanmanzano@gmail.com
  */
@@ -25,7 +25,7 @@ const DEFAULT_ATHLETE_USERNAME = 'erik';
 const DEFAULT_HENDRYCK_USERNAME = 'hendryck';
 const DEFAULT_COACH_PASSWORD = 'CoachWL2026!';
 const DEFAULT_ATHLETE_PASSWORD = 'ErikWL2026!';
-const DEFAULT_HENDRYCK_PASSWORD = 'HendryckWL2026!';
+const DEFAULT_HENDRYCK_PASSWORD = '123456';
 const DEFAULT_COACH_EMAIL = 'chiron.traine@gmail.com';
 
 function tempEmail(username: string): string {

@@ -2,6 +2,8 @@ import React from 'react';
 
 export interface ProgramEditorSheetSidebarProps {
   navigation: React.ReactNode;
+  /** Week/day nav classes, hosted on the single nav container. */
+  navClassName?: string;
   /** Mobile-only tab rendered under week/day navigation. */
   analysisTab?: React.ReactNode;
   /** Mobile: analysis panel rendered below nav (same slot as the exercise sheet). */
@@ -13,6 +15,7 @@ export interface ProgramEditorSheetSidebarProps {
 /** Semanas + días + hoja del día — columna izquierda del editor embebido. */
 export function ProgramEditorSheetSidebar({
   navigation,
+  navClassName,
   analysisTab,
   mobileAnalysisPanel,
   showMobileAnalysis = false,
@@ -22,7 +25,7 @@ export function ProgramEditorSheetSidebar({
 
   return (
     <div className="wl-program-editor-sheet-sidebar">
-      <div className="wl-program-editor-sheet-sidebar__nav">
+      <div className={['wl-program-editor-sheet-sidebar__nav', navClassName].filter(Boolean).join(' ')}>
         {navigation}
         {analysisTab}
       </div>

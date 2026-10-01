@@ -120,7 +120,7 @@ export function DayContextTab({
   }
 
   return (
-    <div className="wl-program-context-tab">
+    <div className="wl-program-context-tab wl-program-context-tab--columns">
       <ProgramContextSection title={head.toUpperCase()} subtitle={compareSubtitle}>
         <ContextComparisonTable
           rows={comparison.rows}

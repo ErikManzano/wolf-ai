@@ -1,17 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { Athlete, Exercise, GeneratedProgram, ProgramWeek } from '../../../models/training';
 import { buildWeekComparisonRows } from '../programMetricsService';
-import {
-  buildWeekDailyTrendChartData,
-  buildWeekScatterSeries,
-} from '../programChartSeries';
-import { PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT } from './constants';
-import {
-  ExerciseRanking,
-  DailyTrendChart,
-  ScienceDistributionBar,
-  VolumeIntensityScatter,
-} from '../stats-ds';
+import { buildWeekDailyTrendChartData } from '../programChartSeries';
+import { DailyTrendChart, ScienceDistributionBar } from '../stats-ds';
 import { ProgramContextSection } from './ProgramContextSection';
 import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
@@ -55,18 +46,6 @@ export function WeekContextTab({
   const hasComparison = comparison.hasWeekComparison;
   const prevLabel = weekNumber > 1 ? `Sem ${weekNumber - 1}` : '—';
 
-  const scatterPoints = useMemo(
-    () =>
-      buildWeekScatterSeries({
-        week: weekData,
-        previousWeek: previousWeekData,
-        athlete,
-        exercises,
-        isEs,
-      }),
-    [weekData, previousWeekData, athlete, exercises, isEs],
-  );
-
   const dailyTrend = useMemo(
     () =>
       buildWeekDailyTrendChartData({
@@ -91,10 +70,7 @@ export function WeekContextTab({
 
   const loadGroupTitle = isEs ? 'Carga' : 'Load';
   const distributionTitle = isEs ? 'Distribución' : 'Distribution';
-  const detailTitle = isEs ? 'Detalle' : 'Detail';
-
   const dailyTrendTitle = isEs ? 'Tendencia diaria' : 'Daily trend';
-  const scatterTitle = isEs ? 'Volumen × intensidad (semana)' : 'Volume × intensity (week)';
   const zonesTitle = isEs ? 'Zonas (semana)' : 'Zones (week)';
 
   const scopeLabel = isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`;
@@ -111,13 +87,6 @@ export function WeekContextTab({
             variant={variant}
             prevWeekLabel={prevLabel}
           />
-        ),
-      },
-      {
-        id: 'scatter',
-        title: scatterTitle,
-        render: (variant) => (
-          <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant={variant} />
         ),
       },
     ];
@@ -142,8 +111,6 @@ export function WeekContextTab({
   }, [
     dailyTrend,
     dailyTrendTitle,
-    scatterPoints,
-    scatterTitle,
     isEs,
     prevLabel,
     comparison.weekStimulus,
@@ -153,7 +120,7 @@ export function WeekContextTab({
   const [galleryChartId, setGalleryChartId] = useState<string | null>(null);
 
   return (
-    <div className="wl-program-context-tab">
+    <div className="wl-program-context-tab wl-program-context-tab--columns">
       <ProgramContextSection
         title={isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`}
         subtitle={compareSubtitle}
@@ -184,19 +151,6 @@ export function WeekContextTab({
             prevWeekLabel={prevLabel}
           />
         </ProgramContextSection>
-
-        <ProgramContextSection
-          title={scatterTitle}
-          action={
-            <ProgramContextChartExpandButton
-              isEs={isEs}
-              chartTitle={scatterTitle}
-              onClick={() => setGalleryChartId('scatter')}
-            />
-          }
-        >
-          <VolumeIntensityScatter points={scatterPoints} isEs={isEs} variant="context" />
-        </ProgramContextSection>
       </ProgramContextGroup>
 
       <ProgramContextChartGallery
@@ -225,27 +179,9 @@ export function WeekContextTab({
             <ScienceDistributionBar
               slices={comparison.weekStimulus}
               isEs={isEs}
-              compact
-              showRepsInLegend
-              singleZoneVolumeHint
+              dense
               animateOnMount
               showTooltips
-            />
-          </ProgramContextSection>
-        </ProgramContextGroup>
-      ) : null}
-
-      {comparison.exerciseVolumes.length > 0 || comparison.exerciseVolumeRemainder ? (
-        <ProgramContextGroup title={detailTitle}>
-          <ProgramContextSection
-            title={isEs ? 'Top 5 ejercicios (tonnage semana)' : 'Top 5 exercises (week tonnage)'}
-          >
-            <ExerciseRanking
-              slices={comparison.exerciseVolumes}
-              isEs={isEs}
-              maxSlices={PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT}
-              remainder={comparison.exerciseVolumeRemainder}
-              animateOnMount
             />
           </ProgramContextSection>
         </ProgramContextGroup>

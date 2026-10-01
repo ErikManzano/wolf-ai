@@ -6651,6 +6651,9 @@
 }
 
 .wl-programs-hub-chips__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px 12px;
   border-radius: 999px;
   border: 1px solid var(--v2-border-subtle, #e7e5e4);
@@ -6659,6 +6662,18 @@
   font-weight: 650;
   cursor: pointer;
   color: var(--v2-text-secondary, #57534e);
+}
+
+.wl-programs-hub-chips__btn--templates:not(.is-active) {
+  border-color: var(--color-accent, #e85d4c);
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 14%, #fff);
+  color: color-mix(in srgb, var(--color-accent, #e85d4c) 72%, #1c1917);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent, #e85d4c) 28%, transparent);
+  font-weight: 750;
+}
+
+.wl-programs-hub-chips__btn--templates:not(.is-active):hover {
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 22%, #fff);
 }
 
 .wl-programs-hub-chips__btn.is-active {

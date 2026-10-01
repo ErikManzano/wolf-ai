@@ -1,13 +1,13 @@
 import type { ProgramEnrollment } from '../../../models/coach-architecture';
-import type { Athlete, Exercise, GeneratedProgram, ProgramWeek, SessionExerciseBlock } from '../../../models/training';
+import type { Athlete, Exercise, GeneratedProgram, ProgramWeek } from '../../../models/training';
 import type { ProgramContextTabId, ProgramEditorMode } from './constants';
 import { AthleteContextTab } from './AthleteContextTab';
 import { DayContextTab } from './DayContextTab';
 import { DayHistoryContextTab } from './DayHistoryContextTab';
 import { WeekContextTab } from './WeekContextTab';
-import { ExerciseContextCard } from './ExerciseContextCard';
 import { TemplateInstancesPanel } from './TemplateInstancesPanel';
 import { ProgramContextSection } from './ProgramContextSection';
+import { ProgramContextTabBar } from './ProgramContextTabBar';
 
 export function ProgramContextPanel({
   isEs,
@@ -21,14 +21,12 @@ export function ProgramContextPanel({
   previousWeekData,
   previewAthlete,
   exercises,
-  selectedBlock,
   onEditPrs,
   enrolledAthletes = [],
   onOpenAssignment,
   dayMetricsAthlete = null,
   templateMetrics = false,
   selectedDayLabel,
-  onClearExerciseSelection,
 }: {
   isEs: boolean;
   editorMode?: ProgramEditorMode;
@@ -41,7 +39,6 @@ export function ProgramContextPanel({
   previousWeekData?: ProgramWeek;
   previewAthlete: Athlete | null;
   exercises: Exercise[];
-  selectedBlock: SessionExerciseBlock | null;
   onEditPrs?: () => void;
   enrolledAthletes?: ProgramEnrollment[];
   onOpenAssignment?: (assignmentId: string) => void;
@@ -49,57 +46,19 @@ export function ProgramContextPanel({
   dayMetricsAthlete?: Athlete | null;
   templateMetrics?: boolean;
   selectedDayLabel?: string;
-  onClearExerciseSelection?: () => void;
 }) {
   const isTemplate = editorMode === 'template';
   const athleteForMetrics = previewAthlete;
 
-  const tabs: { id: ProgramContextTabId; label: string }[] = isTemplate
-    ? [
-        { id: 'day', label: isEs ? 'Día' : 'Day' },
-        { id: 'week', label: isEs ? 'Semana' : 'Week' },
-        { id: 'history', label: isEs ? 'Histórico' : 'History' },
-        {
-          id: 'instances',
-          label: isEs ? `Inst. (${enrolledAthletes.length})` : `Inst. (${enrolledAthletes.length})`,
-        },
-      ]
-    : [
-        { id: 'day', label: isEs ? 'Día' : 'Day' },
-        { id: 'week', label: isEs ? 'Semana' : 'Week' },
-        { id: 'history', label: isEs ? 'Histórico' : 'History' },
-        { id: 'athlete', label: isEs ? 'Atleta' : 'Athlete' },
-      ];
-
   return (
     <div className="wl-program-context-panel">
-      {selectedBlock ? (
-        <ExerciseContextCard
-          program={program}
-          block={selectedBlock}
-          athlete={previewAthlete}
-          exercises={exercises}
-          weekNumber={weekNumber}
-          dayNumber={dayNumber}
-          isEs={isEs}
-          isTemplate={isTemplate}
-          onDismiss={onClearExerciseSelection}
-        />
-      ) : null}
-      <div className="wl-program-context-tabs" role="tablist">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`wl-program-context-tabs__btn${activeTab === tab.id ? ' is-active' : ''}`}
-            onClick={() => onTabChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <ProgramContextTabBar
+        isEs={isEs}
+        editorMode={editorMode}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        instanceCount={enrolledAthletes.length}
+      />
 
       <div className="wl-program-context-panel__body">
         {activeTab === 'instances' ? (

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { DailyTrendChartData } from '../programChartSeries';
 import { formatStatsKg } from '../statsTonnage';
 import { ChartEmptyState } from './ChartEmptyState';
@@ -12,6 +12,15 @@ export interface DailyTrendChartProps {
   variant?: 'full' | 'compact' | 'context' | 'detail';
   /** Etiqueta corta de la semana de referencia (p. ej. Sem 3). */
   prevWeekLabel?: string;
+  /** Índice de la barra activa (semana o día que se está editando). */
+  activeIndex?: number;
+  messages?: {
+    empty: string;
+    sparse: string;
+    aria: string;
+  };
+  /** El viewBox sigue el ancho real del contenedor. */
+  fluid?: boolean;
 }
 
 function pctDelta(curr: number | null, prev: number | null): { text: string; tone: 'up' | 'down' | 'flat' } | null {
@@ -54,17 +63,39 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   isEs,
   variant = 'compact',
   prevWeekLabel,
+  activeIndex,
+  messages,
+  fluid = false,
 }) => {
   const isDetail = variant === 'detail';
   const isContext = variant === 'context';
   const compact = variant === 'compact';
-  const width = isDetail ? 920 : isContext ? 320 : compact ? 280 : 360;
-  const height = isDetail ? 460 : isContext ? 228 : compact ? 188 : 240;
-  const padL = isDetail ? 72 : isContext ? 46 : compact ? 42 : 52;
-  const padR = isDetail ? 64 : isContext ? 44 : compact ? 40 : 48;
-  const padT = isDetail ? 28 : isContext ? 18 : compact ? 16 : 20;
-  const padB = isDetail ? 44 : isContext ? 32 : compact ? 28 : 36;
-  const labelSize = isDetail ? 14 : isContext ? 10 : compact ? 9 : 11;
+  const [plotNode, setPlotNode] = useState<HTMLDivElement | null>(null);
+  const [plotSize, setPlotSize] = useState<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    if (!fluid || !plotNode) return;
+    const update = () => {
+      const next = {
+        w: Math.max(280, Math.round(plotNode.clientWidth)),
+        h: Math.max(110, Math.round(plotNode.clientHeight)),
+      };
+      setPlotSize((prev) => (prev && prev.w === next.w && prev.h === next.h ? prev : next));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(plotNode);
+    return () => observer.disconnect();
+  }, [fluid, plotNode]);
+
+  const measured = fluid && plotSize ? plotSize : null;
+  const width = measured ? measured.w : isDetail ? 920 : isContext ? 300 : compact ? 280 : 360;
+  const height = measured ? measured.h : isDetail ? 460 : isContext ? 156 : compact ? 188 : 240;
+  const padL = fluid ? 52 : isDetail ? 72 : isContext ? 36 : compact ? 42 : 52;
+  const padR = fluid ? 48 : isDetail ? 64 : isContext ? 34 : compact ? 40 : 48;
+  const padT = fluid ? 18 : isDetail ? 28 : isContext ? 12 : compact ? 16 : 20;
+  const padB = fluid ? 30 : isDetail ? 44 : isContext ? 26 : compact ? 28 : 36;
+  const labelSize = isDetail ? 14 : fluid && width > 560 ? 12 : isContext ? 10 : compact ? 9 : 11;
   const plotW = width - padL - padR;
   const plotH = height - padT - padB;
 
@@ -83,7 +114,7 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   if (!hasData || data.labels.length === 0) {
     return (
       <ChartEmptyState
-        message={isEs ? 'Sin datos de tendencia diaria.' : 'No daily trend data.'}
+        message={messages?.empty ?? (isEs ? 'Sin datos de tendencia diaria.' : 'No daily trend data.')}
       />
     );
   }
@@ -92,9 +123,10 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
     return (
       <ChartEmptyState
         message={
-          isEs
-            ? 'Necesitas al menos 2 días con sesión para ver la tendencia.'
-            : 'You need at least 2 session days to see the trend.'
+          messages?.sparse ??
+            (isEs
+              ? 'Necesitas al menos 2 días con sesión para ver la tendencia.'
+              : 'You need at least 2 session days to see the trend.')
         }
       />
     );
@@ -102,18 +134,24 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
 
   const volVals = data.tonnage.filter((v): v is number => v != null && v > 0);
   const impVals = data.imp.filter((v): v is number => v != null && v > 0);
-  const volDom = padDomain(
-    Math.min(...volVals, data.volumeBaseline ?? volVals[0] ?? 0),
-    Math.max(...volVals, data.volumeBaseline ?? volVals[0] ?? 1),
-    0.1,
-  );
+  const volPeak = Math.max(...volVals, data.volumeBaseline ?? 0, 1);
+  const volDom = { min: 0, max: volPeak * 1.12 };
   const impDom = padDomain(Math.min(...impVals, 65), Math.max(...impVals, 90), 0.1);
 
   const n = data.labels.length;
-  const xAt = (i: number) => {
-    if (n <= 1) return padL + plotW / 2;
-    return padL + (i / (n - 1)) * plotW;
-  };
+  const labelBudget = Math.max(2, Math.floor(plotW / (fluid ? 36 : 28)));
+  const labelStep = fluid
+    ? n > labelBudget
+      ? Math.ceil(n / labelBudget)
+      : 1
+    : !isDetail && n > 8
+      ? Math.ceil(n / 8)
+      : 1;
+  const slot = plotW / Math.max(n, 1);
+  const barCap = fluid ? 42 : isContext ? 18 : isDetail ? 36 : 22;
+  const barW = Math.min(barCap, slot * (fluid ? 0.5 : 0.62));
+  const xAt = (i: number) => padL + slot * i + slot / 2;
+  const yBase = padT + plotH;
   const yVol = (v: number) => padT + plotH - ((v - volDom.min) / (volDom.max - volDom.min)) * plotH;
   const yImp = (v: number) => padT + plotH - ((v - impDom.min) / (impDom.max - impDom.min)) * plotH;
 
@@ -121,18 +159,17 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
   const impTicks = niceLinearTicks(impDom.min, impDom.max, 4);
   const volTickLabels = formatVolumeTicks(volTicks, true);
 
-  const volSegments = buildSegments(data.tonnage);
   const impSegments = buildSegments(data.imp);
-  const prevVolSegments = buildSegments(data.prevTonnage);
 
   const prevRef = prevWeekLabel && prevWeekLabel !== '—' ? prevWeekLabel : isEs ? 'sem. ant.' : 'prev wk';
+  const hasPrevWeek = data.prevTonnage.some((vol) => vol != null && vol > 0);
 
   const intensityLabel = intensityMetricLabel(isEs);
   const intensityTitle = intensityMetricTooltip(isEs);
 
   return (
     <div
-      className={`wl-stats-daily${compact ? ' wl-stats-daily--compact' : ''}${isContext ? ' wl-stats-daily--context' : ''}${isDetail ? ' wl-stats-daily--detail' : ''}`}
+      className={`wl-stats-daily wl-stats-daily--animate${compact ? ' wl-stats-daily--compact' : ''}${isContext ? ' wl-stats-daily--context' : ''}${isDetail ? ' wl-stats-daily--detail' : ''}`}
     >
       <ul className="wl-stats-daily__legend" aria-hidden>
         <li className="wl-stats-daily__legend-item">
@@ -143,26 +180,37 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
           <span className="wl-stats-daily__swatch wl-stats-daily__swatch--imp" />
           {intensityLabel}
         </li>
-        <li className="wl-stats-daily__legend-item">
-          <span className="wl-stats-daily__swatch wl-stats-daily__swatch--baseline" />
-          {isEs ? 'Baseline 28d' : 'Baseline 28d'}
-        </li>
-        <li className="wl-stats-daily__legend-item">
-          <span className="wl-stats-daily__swatch wl-stats-daily__swatch--prev" />
-          {isEs ? 'Semana anterior' : 'Previous week'}
-        </li>
+        {isContext ? null : (
+          <li className="wl-stats-daily__legend-item">
+            <span className="wl-stats-daily__swatch wl-stats-daily__swatch--baseline" />
+            {isEs ? 'Baseline 28d' : 'Baseline 28d'}
+          </li>
+        )}
+        {hasPrevWeek || !isContext ? (
+          <li className="wl-stats-daily__legend-item wl-stats-daily__legend-item--ref">
+            <span className="wl-stats-daily__swatch wl-stats-daily__swatch--prev" />
+            {isEs ? 'Sem. ant.' : 'Prev. week'}
+          </li>
+        ) : null}
       </ul>
 
-      <div className="wl-stats-daily__plot-wrap">
+      <div className="wl-stats-daily__plot-wrap" ref={setPlotNode}>
         <svg
           className="wl-stats-daily__svg"
           viewBox={`0 0 ${width} ${height}`}
-          width={width}
-          height={height}
-          preserveAspectRatio="xMidYMid meet"
+          width={fluid ? '100%' : width}
+          height={fluid ? '100%' : height}
+          preserveAspectRatio={fluid ? 'none' : 'xMidYMid meet'}
           role="img"
-          aria-label={isEs ? 'Tendencia diaria volumen e intensidad' : 'Daily volume and intensity trend'}
-          style={{ width: '100%', height: 'auto', aspectRatio: `${width} / ${height}` }}
+          aria-label={
+            messages?.aria ??
+            (isEs ? 'Tendencia diaria volumen e intensidad' : 'Daily volume and intensity trend')
+          }
+          style={
+            fluid
+              ? { width: '100%', height: '100%' }
+              : { width: '100%', height: 'auto', aspectRatio: `${width} / ${height}` }
+          }
         >
           {volTicks.map((tick) => (
             <line
@@ -185,26 +233,40 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             />
           ) : null}
 
-          {prevVolSegments.map((seg, si) => {
-            const pts = seg.map(({ i, v }) => `${xAt(i).toFixed(1)},${yVol(v).toFixed(1)}`).join(' ');
+          <g key={`${data.labels.join('|')}:${data.tonnage.join(',')}:${data.imp.join(',')}`}>
+          {data.prevTonnage.map((vol, i) => {
+            if (vol == null || vol <= 0) return null;
+            const y = yVol(vol);
+            const h = Math.max(1, yBase - y);
+            const prevW = Math.max(5, barW * 0.58);
             return (
-              <polyline
-                key={`prev-vol-${si}`}
-                fill="none"
-                points={pts}
-                className="wl-stats-daily__line-prev"
+              <rect
+                key={`bar-prev-${i}`}
+                x={xAt(i) - barW / 2 - prevW * 0.48}
+                y={y}
+                width={prevW}
+                height={h}
+                rx={2}
+                className="wl-stats-daily__bar wl-stats-daily__bar--prev"
+                style={{ '--wl-i': i } as React.CSSProperties}
               />
             );
           })}
 
-          {volSegments.map((seg, si) => {
-            const pts = seg.map(({ i, v }) => `${xAt(i).toFixed(1)},${yVol(v).toFixed(1)}`).join(' ');
+          {data.tonnage.map((vol, i) => {
+            if (vol == null || vol <= 0) return null;
+            const y = yVol(vol);
+            const h = Math.max(1, yBase - y);
             return (
-              <polyline
-                key={`vol-${si}`}
-                fill="none"
-                points={pts}
-                className="wl-stats-daily__line-vol"
+              <rect
+                key={`bar-${i}`}
+                x={xAt(i) - barW / 2}
+                y={y}
+                width={barW}
+                height={h}
+                rx={3}
+                className={`wl-stats-daily__bar${hoverIndex === i ? ' is-hover' : ''}${activeIndex === i ? ' is-current' : ''}`}
+                style={{ '--wl-i': i } as React.CSSProperties}
               />
             );
           })}
@@ -222,29 +284,22 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
           })}
 
           {data.labels.map((_, i) => {
-            const vol = data.tonnage[i];
             const imp = data.imp[i];
             return (
               <g key={`pts-${i}`}>
-                {vol != null ? (
-                  <circle
-                    cx={xAt(i)}
-                    cy={yVol(vol)}
-                    r={hoverIndex === i ? 5 : 4}
-                    className="wl-stats-daily__dot wl-stats-daily__dot--vol"
-                  />
-                ) : null}
                 {imp != null ? (
                   <circle
                     cx={xAt(i)}
                     cy={yImp(imp)}
                     r={hoverIndex === i ? 5 : 4}
                     className="wl-stats-daily__dot wl-stats-daily__dot--imp"
+                    style={{ '--wl-i': i } as React.CSSProperties}
                   />
                 ) : null}
               </g>
             );
           })}
+          </g>
 
           {volTicks.map((tick, index) => (
             <text
@@ -271,18 +326,20 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
             </text>
           ))}
 
-          {data.labels.map((label, i) => (
-            <text
-              key={`xl-${label}`}
-              x={xAt(i)}
-              y={height - 10}
-              className="wl-stats-daily__x-label"
-              textAnchor="middle"
-              fontSize={labelSize}
-            >
-              {label}
-            </text>
-          ))}
+          {data.labels.map((label, i) =>
+            labelStep > 1 && i % labelStep !== 0 && i !== n - 1 ? null : (
+              <text
+                key={`xl-${label}`}
+                x={xAt(i)}
+                y={height - 10}
+                className="wl-stats-daily__x-label"
+                textAnchor="middle"
+                fontSize={labelSize}
+              >
+                {label}
+              </text>
+            ),
+          )}
 
           <text
             x={padL - 2}
@@ -340,11 +397,6 @@ export const DailyTrendChart: React.FC<DailyTrendChartProps> = ({
                       : '—',
                   delta: absDeltaPct(data.imp[hoverIndex], data.prevImp[hoverIndex])?.text,
                   deltaTone: absDeltaPct(data.imp[hoverIndex], data.prevImp[hoverIndex])?.tone,
-                },
-                {
-                  label: 'AU',
-                  value:
-                    data.au[hoverIndex] != null ? String(data.au[hoverIndex]) : '—',
                 },
               ]}
               footer={

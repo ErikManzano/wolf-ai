@@ -28,7 +28,7 @@ export const ExerciseRanking: React.FC<ExerciseRankingProps> = ({
     );
   }
 
-  const maxPct = Math.max(...rows.map((r) => r.pct), remainder?.pct ?? 0, 1);
+  const shareWidth = (pct: number) => `${Math.min(100, Math.max(0, pct))}%`;
 
   return (
     <ol className={`wl-stats-rank${animateOnMount ? ' wl-stats-rank--animate' : ''}`}>
@@ -47,11 +47,12 @@ export const ExerciseRanking: React.FC<ExerciseRankingProps> = ({
             <span className="wl-stats-rank__label wl-stats-rank__label--clamp" title={row.label}>
               {row.label}
             </span>
-            <span className="wl-stats-rank__track" aria-hidden>
-              <span
-                className="wl-stats-rank__fill"
-                style={{ width: `${Math.max(4, (row.pct / maxPct) * 100)}%` }}
-              />
+            <span
+              className="wl-stats-rank__track"
+              aria-hidden
+              title={isEs ? `${row.pct}% del día` : `${row.pct}% of the day`}
+            >
+              <span className="wl-stats-rank__fill" style={{ width: shareWidth(row.pct) }} />
             </span>
             <span className="wl-stats-rank__meta">
               <strong>{formatStatsKg(row.tonnage, { alwaysKg: true })}</strong>
@@ -70,10 +71,14 @@ export const ExerciseRanking: React.FC<ExerciseRankingProps> = ({
               ? `Resto (${remainder.exerciseCount} ejercicios)`
               : `Rest (${remainder.exerciseCount} exercises)`}
           </span>
-          <span className="wl-stats-rank__track" aria-hidden>
+          <span
+            className="wl-stats-rank__track"
+            aria-hidden
+            title={isEs ? `${remainder.pct}% del día` : `${remainder.pct}% of the day`}
+          >
             <span
               className="wl-stats-rank__fill wl-stats-rank__fill--remainder"
-              style={{ width: `${Math.max(4, (remainder.pct / maxPct) * 100)}%` }}
+              style={{ width: shareWidth(remainder.pct) }}
             />
           </span>
           <span className="wl-stats-rank__meta">

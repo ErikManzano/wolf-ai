@@ -2257,8 +2257,8 @@
 
   .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-day-tabs-section,
   .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-day-tabs-strip,
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--compact .wolf-day-tabs-strip,
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--editor-density .wolf-day-tabs-strip {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--compact .wolf-day-tabs-strip,
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--editor-density .wolf-day-tabs-strip {
     padding: 0 !important;
     min-height: 0 !important;
     height: auto !important;
@@ -2279,7 +2279,7 @@
     border-bottom: none !important;
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--sheet-sidebar .wolf-week-carousel {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-carousel {
     height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
@@ -2290,7 +2290,7 @@
     box-sizing: border-box;
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--sheet-sidebar .wolf-week-carousel__viewport {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-carousel__viewport {
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
@@ -2298,7 +2298,7 @@
     overflow: hidden;
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--sheet-sidebar .wolf-week-carousel__track {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-carousel__track {
     gap: 2px;
     justify-content: center;
     flex: 0 1 auto;
@@ -2312,7 +2312,7 @@
     box-shadow: var(--v2-shadow-xs, 0 1px 2px rgb(0 0 0 / 6%));
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--sheet-sidebar .wolf-week-tab-card-wrap {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-tab-card-wrap {
     flex: 0 0 auto !important;
     min-width: 0 !important;
     width: auto !important;
@@ -2340,7 +2340,11 @@
     background: color-mix(in srgb, var(--v2-accent) 8%, var(--v2-surface));
   }
 
-  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav .wolf-program-nav--sheet-sidebar .wolf-week-tab-card-wrap .wolf-week-tab-card {
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-tab-card-wrap .wolf-week-tab-card:not(.active) {
+    background: transparent !important;
+  }
+
+  .wl-programs-editor .wl-programs-embedded-plan .wl-program-editor-sheet-sidebar__nav.wolf-program-nav--sheet-sidebar .wolf-week-tab-card-wrap .wolf-week-tab-card {
     position: relative;
     width: auto;
     height: 30px !important;
@@ -2349,7 +2353,6 @@
     padding: 0 9px !important;
     border-radius: 7px !important;
     border: none !important;
-    background: transparent !important;
     box-shadow: none !important;
     transition:
       background 0.15s ease,

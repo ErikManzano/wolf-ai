@@ -69,19 +69,19 @@ export function parseHashDeepLink(hash: string = window.location.hash): DeepLink
   if (parts.length === 0) return null;
 
   if (parts[0] === 'programs' && parts[1] === 'list') {
-    const filterRaw = parts[2] ?? query.filter ?? 'all';
-    const programsKindFilter = isProgramsKindFilter(filterRaw) ? filterRaw : 'all';
+    const filterRaw = parts[2] ?? query.filter;
+    const programsKindFilter = filterRaw && isProgramsKindFilter(filterRaw) ? filterRaw : undefined;
     return {
       view: 'programs',
-      programsKindFilter,
+      ...(programsKindFilter ? { programsKindFilter } : {}),
       athleteProfileId: query.athlete || undefined,
       coachProgramFilterId: query.fromTemplate || undefined,
     };
   }
 
   if (parts[0] === 'programs' && !parts[1]) {
-    const filterRaw = query.filter ?? 'all';
-    const programsKindFilter = isProgramsKindFilter(filterRaw) ? filterRaw : undefined;
+    const filterRaw = query.filter;
+    const programsKindFilter = filterRaw && isProgramsKindFilter(filterRaw) ? filterRaw : undefined;
     return {
       view: 'programs',
       ...(programsKindFilter ? { programsKindFilter } : {}),
