@@ -991,16 +991,17 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
   const canRemoveDay =
     (selectedWeekData?.days.length ?? 0) > PROGRAM_STRUCTURE_LIMITS.MIN_DAYS_PER_WEEK;
 
-  const handleAddWeek = useCallback(() => {
+  const handleAddWeek = useCallback((atIndex?: number) => {
     const current = programRef.current;
     if (!current) return;
     if (!canAddWeek) {
       pushAlert({ tone: 'warning', title: t.addWeek, message: t.maxWeeks });
       return;
     }
-    const next = addWeekToGeneratedProgram(current, athleteForEngine, motorExercises);
+    const insertAt = Math.max(0, Math.min(atIndex ?? current.weeks.length, current.weeks.length));
+    const next = addWeekToGeneratedProgram(current, athleteForEngine, motorExercises, insertAt);
     if (next === current) return;
-    const newWeek = next.weeks[next.weeks.length - 1]!.weekNumber;
+    const newWeek = insertAt + 1;
     applyProgramUpdate(next, { week: newWeek, day: 1 }, { immediateHistory: true });
     pushAlert({
       tone: 'success',
@@ -1019,7 +1020,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     historyScopeLabel,
   ]);
 
-  const handleAddDay = useCallback(() => {
+  const handleAddDay = useCallback((atIndex?: number) => {
     const current = programRef.current;
     if (!current) return;
     if (!canAddDay) {
@@ -1028,10 +1029,10 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     }
     const week = current.weeks.find((w) => w.weekNumber === selectedWeek);
     if (!week) return;
-    const next = addDayToGeneratedWeek(current, selectedWeek, athleteForEngine, motorExercises);
+    const insertAt = Math.max(0, Math.min(atIndex ?? week.days.length, week.days.length));
+    const next = addDayToGeneratedWeek(current, selectedWeek, athleteForEngine, motorExercises, insertAt);
     if (next === current) return;
-    const updatedWeek = next.weeks.find((w) => w.weekNumber === selectedWeek);
-    const newDay = updatedWeek?.days[updatedWeek.days.length - 1]?.dayNumber ?? 1;
+    const newDay = insertAt + 1;
     applyProgramUpdate(next, { day: newDay }, { immediateHistory: true });
     pushAlert({
       tone: 'success',

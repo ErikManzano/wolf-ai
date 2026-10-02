@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Folder, Plus, Trash2 } from 'lucide-react';
+import { Calendar, CalendarDays, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import ConfirmationModal from '../ConfirmationModal';
 import { AthleteDayNavigator } from '../athlete-tracking/AthleteDayNavigator';
@@ -45,8 +45,8 @@ export interface ProgramWeekDayNavProps {
   canRemoveDay?: boolean;
   onSelectWeek: (weekNumber: number) => void;
   onSelectDay: (dayNumber: number) => void;
-  onAddWeek: () => void;
-  onAddDay: () => void;
+  onAddWeek: (atIndex?: number) => void;
+  onAddDay: (atIndex?: number) => void;
   onRemoveWeek?: (weekNumber: number) => void;
   onRemoveDay?: (dayNumber: number) => void;
   onReorderWeek?: (fromWeekNumber: number, toWeekNumber: number) => void;
@@ -103,6 +103,36 @@ function scrollActiveIntoView(
   if (!container) return;
   const el = container.querySelector<HTMLElement>(selector);
   el?.scrollIntoView({ behavior, block: 'nearest', inline: 'nearest' });
+}
+
+function FolderInsertSeam({
+  disabled,
+  title,
+  label,
+  onInsert,
+}: {
+  disabled: boolean;
+  title: string;
+  label: string;
+  onInsert: () => void;
+}) {
+  return (
+    <div className="wl-week-folder__seam">
+      <button
+        type="button"
+        className="wl-week-folder__seam-btn"
+        disabled={disabled}
+        title={title}
+        aria-label={label}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (!disabled) onInsert();
+        }}
+      >
+        <Plus size={11} strokeWidth={2.5} aria-hidden />
+      </button>
+    </div>
+  );
 }
 
 function dayTabLabel(row: { label?: string; dayNumber: number }): string {
@@ -321,6 +351,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   const dayStripRef = useRef<HTMLDivElement>(null);
   const dayWeekRef = useRef(selectedWeek);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(selectedWeek);
 
   const canReorderWeeks = !isStatsNav && Boolean(onReorderWeek) && program.weeks.length > 1;
   const canReorderDays = !isStatsNav && Boolean(onReorderDay) && (selectedWeekData?.days.length ?? 0) > 1;
@@ -333,6 +364,10 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   useEffect(() => {
     setWeekRows((prev) => syncWeekRows(program.weeks, prev));
   }, [program.weeks]);
+
+  useEffect(() => {
+    setExpandedWeek(selectedWeek);
+  }, [selectedWeek]);
 
   useEffect(() => {
     if (!selectedWeekData) {
@@ -503,33 +538,37 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
         <div className="wl-week-folders">
           <p className="wl-week-folders__label">{labels.weeksRow}</p>
           <ul className="wl-week-folders__list">
-            {program.weeks.map((week) => {
-              const open = week.weekNumber === selectedWeek;
-              const days = open ? (openWeek?.days ?? week.days) : [];
+            {program.weeks.map((week, weekIndex) => {
+              const open = expandedWeek === week.weekNumber;
+              const days = open ? (week.weekNumber === selectedWeek ? openWeek?.days ?? week.days : week.days) : [];
+              const weekInsertTitle = canAddWeek ? labels.addWeek : labels.maxWeeks;
               return (
-                <li key={week.weekNumber} className={`wl-week-folder${open ? ' is-open' : ''}`}>
+                <li key={week.weekNumber} className={`wl-week-folder${open ? ' is-open' : ''}${week.weekNumber === selectedWeek ? ' is-current' : ''}`}>
+                  <FolderInsertSeam
+                    disabled={!canAddWeek}
+                    title={weekInsertTitle}
+                    label={labels.addWeek}
+                    onInsert={() => onAddWeek(weekIndex)}
+                  />
                   <div className="wl-week-folder__row">
                     <button
                       type="button"
                       className="wl-week-folder__select"
                       aria-expanded={open}
-                      onClick={() => onSelectWeek(week.weekNumber)}
+                      onClick={() => {
+                        if (open) {
+                          setExpandedWeek(null);
+                          return;
+                        }
+                        setExpandedWeek(week.weekNumber);
+                        if (week.weekNumber !== selectedWeek) onSelectWeek(week.weekNumber);
+                      }}
                     >
                       <ChevronRight className="wl-week-folder__chev" size={14} strokeWidth={2.25} aria-hidden />
-                      <Folder size={14} strokeWidth={2} aria-hidden />
+                      <CalendarRange className="wl-week-folder__week-icon" size={14} strokeWidth={2} aria-hidden />
                       <span className="wl-week-folder__name">{weekOptionLabel(week.weekNumber)}</span>
                     </button>
                     <span className="wl-week-folder__actions">
-                      <button
-                        type="button"
-                        className="wl-week-folder__action"
-                        onClick={onAddWeek}
-                        disabled={!canAddWeek}
-                        title={canAddWeek ? labels.addWeek : labels.maxWeeks}
-                        aria-label={labels.addWeek}
-                      >
-                        <Plus size={13} strokeWidth={2.25} aria-hidden />
-                      </button>
                       {canRemoveWeek && onRemoveWeek ? (
                         <button
                           type="button"
@@ -545,29 +584,27 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                   </div>
                   {open ? (
                     <ul className="wl-week-folder__days" aria-label={labels.daysRow}>
-                      {days.map((day) => {
+                      {days.map((day, dayIndex) => {
                         const active = selectedDay === day.dayNumber;
+                        const dayInsertTitle = canAddDay ? labels.addDay : labels.maxDays;
                         return (
                           <li key={day.dayNumber} className={`wl-week-folder__day${active ? ' is-active' : ''}`}>
+                            <FolderInsertSeam
+                              disabled={!canAddDay}
+                              title={dayInsertTitle}
+                              label={labels.addDay}
+                              onInsert={() => onAddDay(dayIndex)}
+                            />
                             <button
                               type="button"
                               className="wl-week-folder__day-select"
                               aria-current={active ? 'true' : undefined}
                               onClick={() => onSelectDay(day.dayNumber)}
                             >
+                              <Calendar className="wl-week-folder__day-icon" size={13} strokeWidth={2} aria-hidden />
                               {dayTabLabel(day)}
                             </button>
                             <span className="wl-week-folder__actions">
-                              <button
-                                type="button"
-                                className="wl-week-folder__action"
-                                onClick={onAddDay}
-                                disabled={!canAddDay}
-                                title={canAddDay ? labels.addDay : labels.maxDays}
-                                aria-label={labels.addDay}
-                              >
-                                <Plus size={13} strokeWidth={2.25} aria-hidden />
-                              </button>
                               {canRemoveDay && onRemoveDay ? (
                                 <button
                                   type="button"
@@ -583,11 +620,27 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                           </li>
                         );
                       })}
+                      <li className="wl-week-folder__day wl-week-folder__day--end">
+                        <FolderInsertSeam
+                          disabled={!canAddDay}
+                          title={canAddDay ? labels.addDay : labels.maxDays}
+                          label={labels.addDay}
+                          onInsert={() => onAddDay(days.length)}
+                        />
+                      </li>
                     </ul>
                   ) : null}
                 </li>
               );
             })}
+            <li className="wl-week-folder wl-week-folder--end">
+              <FolderInsertSeam
+                disabled={!canAddWeek}
+                title={canAddWeek ? labels.addWeek : labels.maxWeeks}
+                label={labels.addWeek}
+                onInsert={() => onAddWeek(program.weeks.length)}
+              />
+            </li>
           </ul>
         </div>
       </>
@@ -650,7 +703,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             <button
               type="button"
               className="wolf-week-tab-add wolf-week-tab-add--mobile"
-              onClick={onAddWeek}
+              onClick={() => onAddWeek()}
               disabled={!canAddWeek}
               title={canAddWeek ? labels.addWeek : labels.maxWeeks}
               aria-label={labels.addWeek}
@@ -742,7 +795,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
             <button
               type="button"
               className="wolf-week-tab-add wolf-week-tab-add--pinned"
-              onClick={onAddWeek}
+              onClick={() => onAddWeek()}
               disabled={!canAddWeek}
               title={canAddWeek ? labels.addWeek : labels.maxWeeks}
               aria-label={labels.addWeek}
@@ -802,7 +855,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                     <button
                       type="button"
                       className="wolf-coach-day-nav__tool"
-                      onClick={onAddDay}
+                      onClick={() => onAddDay()}
                       disabled={!canAddDay}
                       title={canAddDay ? labels.addDay : labels.maxDays}
                       aria-label={labels.addDay}
@@ -853,7 +906,7 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               <button
                 type="button"
                 className="wolf-day-tab-add"
-                onClick={onAddDay}
+                onClick={() => onAddDay()}
                 disabled={!canAddDay}
                 title={canAddDay ? labels.addDay : labels.maxDays}
                 aria-label={labels.addDay}

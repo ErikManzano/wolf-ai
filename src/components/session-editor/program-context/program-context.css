@@ -893,9 +893,98 @@ button.wl-program-editor-split__dock-chevron:active {
   white-space: nowrap;
 }
 
-.wl-week-folder__chev {
+.wl-week-folder__chev,
+.wl-week-folder__week-icon,
+.wl-week-folder__day-icon {
   flex: 0 0 auto;
   color: var(--v2-text-muted, #78716c);
+}
+
+.wl-week-folder__week-icon {
+  color: color-mix(in srgb, var(--v2-accent, #f97316) 72%, #78716c);
+}
+
+.wl-week-folder__day {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.wl-week-folder__day .wl-week-folder__actions {
+  top: auto;
+  height: 28px;
+}
+
+.wl-week-folder__seam {
+  position: relative;
+  z-index: 2;
+  height: 9px;
+  margin: -4px 0;
+}
+
+.wl-week-folder__seam::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 8px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--v2-accent, #f97316);
+  opacity: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.wl-week-folder__seam-btn {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--v2-accent, #f97316);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--v2-accent, #f97316);
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transform: translateY(-50%);
+  box-shadow: 0 1px 2px rgb(28 25 23 / 12%);
+}
+
+.wl-week-folder__seam:hover::before,
+.wl-week-folder__seam:focus-within::before {
+  opacity: 1;
+}
+
+.wl-week-folder__seam:hover .wl-week-folder__seam-btn,
+.wl-week-folder__seam:focus-within .wl-week-folder__seam-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wl-week-folder__seam-btn:hover:not(:disabled) {
+  background: var(--v2-accent, #f97316);
+  color: #fff;
+}
+
+.wl-week-folder__seam-btn:disabled {
+  border-color: var(--v2-border, #e7e5e4);
+  color: var(--v2-text-muted, #78716c);
+  cursor: not-allowed;
+}
+
+.wl-week-folder__day.is-active .wl-week-folder__day-icon,
+.wl-week-folder.is-current > .wl-week-folder__row .wl-week-folder__week-icon {
+  color: var(--v2-accent, #f97316);
+}
+
+.wl-week-folder__chev {
   transition: transform 0.18s ease;
 }
 

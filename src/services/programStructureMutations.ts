@@ -118,23 +118,26 @@ export function addWeekToGeneratedProgram(
   program: GeneratedProgram,
   athlete: Athlete,
   exercises: Exercise[],
+  insertIndex?: number,
 ): GeneratedProgram {
   if (program.weeks.length >= PROGRAM_STRUCTURE_LIMITS.MAX_WEEKS) return program;
 
   const next = cloneProgram(program);
-  const refWeek = next.weeks[next.weeks.length - 1];
+  const at = Math.max(0, Math.min(insertIndex ?? next.weeks.length, next.weeks.length));
+  const refWeek = next.weeks[Math.max(0, at - 1)] ?? next.weeks[at];
   const dayCount = Math.min(
     PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK,
     Math.max(refWeek?.days.length ?? next.daysPerWeek, 1),
   );
-  const newWeekNumber = next.weeks.length + 1;
+  const newWeekNumber = at + 1;
   const days: ProgramDay[] = [];
 
   for (let d = 1; d <= dayCount; d++) {
     days.push(buildDayForSlot(next, newWeekNumber, d, dayCount, athlete, exercises));
   }
 
-  next.weeks.push({ weekNumber: newWeekNumber, days });
+  next.weeks.splice(at, 0, { weekNumber: newWeekNumber, days });
+  next.weeks = renumberWeeks(next.weeks);
   return syncProgramMeta(next);
 }
 
@@ -151,13 +154,16 @@ export function addDayToGeneratedWeek(
   weekNumber: number,
   athlete: Athlete,
   exercises: Exercise[],
+  insertIndex?: number,
 ): GeneratedProgram {
   const next = cloneProgram(program);
   const week = next.weeks.find((w) => w.weekNumber === weekNumber);
   if (!week || week.days.length >= PROGRAM_STRUCTURE_LIMITS.MAX_DAYS_PER_WEEK) return program;
 
-  const newDayNumber = week.days.length + 1;
-  week.days.push(buildDayForSlot(next, weekNumber, newDayNumber, newDayNumber, athlete, exercises));
+  const at = Math.max(0, Math.min(insertIndex ?? week.days.length, week.days.length));
+  const newDayNumber = at + 1;
+  week.days.splice(at, 0, buildDayForSlot(next, weekNumber, newDayNumber, newDayNumber, athlete, exercises));
+  week.days = renumberDays(week.days);
   return syncProgramMeta(next);
 }
 
