@@ -505,7 +505,7 @@ export function buildDayAcrossWeeksTrend(params: {
   isEs: boolean;
   templateMetrics?: boolean;
 }): DailyTrendChartData {
-  const { program, weekNumber, dayNumber, athlete, exercises, isEs, templateMetrics = false } = params;
+  const { program, dayNumber, athlete, exercises, isEs, templateMetrics = false } = params;
   const weeks = [...program.weeks].sort((a, b) => a.weekNumber - b.weekNumber);
   const metrics = weeks.map((week) => {
     const day = week.days.find((d) => d.dayNumber === dayNumber);
