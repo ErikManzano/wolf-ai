@@ -35,6 +35,7 @@ import {
   type ProgramDaySlot,
 } from '../services/programStructureMutations';
 import { replaceProgramSession, refreshSession } from '../services/sessionMutations';
+import { programDayDate } from './session-editor/programScienceStats';
 import { exportProgramAsJson } from '../services/programExport';
 import {
   saveProgramEditDraft,
@@ -1052,14 +1053,15 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     historyScopeLabel,
   ]);
 
-  const handleDuplicateDay = useCallback(() => {
+  const handleDuplicateDay = useCallback((dayNumber?: number) => {
     const current = programRef.current;
     if (!current) return;
+    const sourceDay = typeof dayNumber === 'number' ? dayNumber : selectedDay;
     if (!canAddDay) {
       pushAlert({ tone: 'warning', title: t.duplicateDay, message: t.duplicateDayBlocked });
       return;
     }
-    const next = duplicateDayInGeneratedWeek(current, selectedWeek, selectedDay);
+    const next = duplicateDayInGeneratedWeek(current, selectedWeek, sourceDay);
     if (next === current) return;
     const weekAfter = next.weeks.find((w) => w.weekNumber === selectedWeek);
     const newDay = weekAfter?.days[weekAfter.days.length - 1]?.dayNumber ?? selectedDay;
@@ -1081,17 +1083,18 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     historyScopeLabel,
   ]);
 
-  const handleDuplicateWeek = useCallback(() => {
+  const handleDuplicateWeek = useCallback((weekNumber?: number) => {
     const current = programRef.current;
     if (!current) return;
+    const sourceWeek = typeof weekNumber === 'number' ? weekNumber : selectedWeek;
     if (!canAddWeek) {
       pushAlert({ tone: 'warning', title: t.duplicateWeek, message: t.maxWeeks });
       return;
     }
     if (!window.confirm(t.duplicateWeekConfirm)) return;
-    const next = duplicateWeekInGeneratedProgram(current, selectedWeek);
+    const next = duplicateWeekInGeneratedProgram(current, sourceWeek);
     if (next === current) return;
-    const newWeek = selectedWeek + 1;
+    const newWeek = sourceWeek + 1;
     applyProgramUpdate(next, { week: newWeek, day: 1 }, { immediateHistory: true });
     pushAlert({
       tone: 'success',
@@ -1264,6 +1267,25 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
     const w = program.weeks.find((x) => x.weekNumber === selectedWeek);
     return w?.days.find((x) => x.dayNumber === selectedDay)?.label;
   }, [program, selectedWeek, selectedDay]);
+
+  const dayEditorHeading = useMemo(() => {
+    const title = isEs ? `Día ${selectedDay}` : `Day ${selectedDay}`;
+    if (!program) return title;
+    const iso = programDayDate(program, selectedWeek, selectedDay);
+    if (!iso) return title;
+    const date = new Date(`${iso}T12:00:00`);
+    const formatted = date
+      .toLocaleDateString(isEs ? 'es' : 'en', { weekday: 'long', day: 'numeric', month: 'short' })
+      .replace(/\./g, '');
+    const pretty = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    return `${title} · ${pretty}`;
+  }, [isEs, program, selectedDay, selectedWeek]);
+
+  const dayEditorStatus = programSyncState === 'saving'
+    ? (isEs ? 'Guardando' : 'Saving')
+    : programSyncState === 'saved'
+      ? (isEs ? 'Guardado' : 'Saved')
+      : (isEs ? 'En edición' : 'Editing');
 
   const rosterAthletes = useMemo(
     () =>
@@ -1523,6 +1545,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
           maxDays: t.maxDays,
           removeWeek: t.removeWeek,
           removeDay: t.removeDay,
+          duplicateWeek: t.duplicateWeek,
+          duplicateDay: t.duplicateDay,
         }}
         canRemoveWeek={canRemoveWeek}
         canRemoveDay={canRemoveDay}
@@ -1532,6 +1556,8 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         onAddDay={handleAddDay}
         onRemoveWeek={handleRemoveWeek}
         onRemoveDay={handleRemoveDay}
+        onDuplicateWeek={handleDuplicateWeek}
+        onDuplicateDay={handleDuplicateDay}
         onReorderWeek={handleReorderWeek}
         onReorderDay={handleReorderDay}
         statsContext={customizeSubview === 'stats' ? statsScope : undefined}
@@ -1838,6 +1864,48 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
                           id="wolf-program-day-panel-session"
                           className="wolf-program-session-pane wolf-program-day-board__pane"
                         >
+                          {!isMobileLayout && sessionEditorView === 'sheet' ? (
+                            <header className="wl-day-editor-bar">
+                              <h2 className="wl-day-editor-bar__title">{dayEditorHeading}</h2>
+                              <span
+                                className={`wl-day-editor-bar__badge${programSyncState === 'saved' ? ' is-saved' : ''}`}
+                              >
+                                {dayEditorStatus}
+                              </span>
+                              <div className="wl-day-editor-bar__actions">
+                                <button
+                                  type="button"
+                                  className="wl-day-editor-bar__icon"
+                                  disabled={!canUndo && !hasPendingHistory}
+                                  aria-label={t.undoShortcut}
+                                  title={t.undoShortcut}
+                                  onClick={handleUndo}
+                                >
+                                  <Undo2 size={16} aria-hidden />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="wl-day-editor-bar__icon"
+                                  disabled={!canRedo}
+                                  aria-label={t.redoShortcut}
+                                  title={t.redoShortcut}
+                                  onClick={handleRedo}
+                                >
+                                  <Redo2 size={16} aria-hidden />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="wl-day-editor-bar__icon wl-day-editor-bar__icon--danger"
+                                  disabled={!canRemoveDay}
+                                  aria-label={isEs ? 'Eliminar día' : 'Delete day'}
+                                  title={isEs ? 'Eliminar día' : 'Delete day'}
+                                  onClick={() => handleRemoveDay(selectedDay)}
+                                >
+                                  <Trash2 size={16} aria-hidden />
+                                </button>
+                              </div>
+                            </header>
+                          ) : null}
                           <OlympicSessionEditor
                             session={daySession}
                             athlete={sessionAthleteForEngine}

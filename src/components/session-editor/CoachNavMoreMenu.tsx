@@ -1,12 +1,15 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { Copy, MoreVertical, Trash2 } from 'lucide-react';
 
 export interface CoachNavMoreMenuProps {
   ariaLabel: string;
   removeLabel: string;
   canRemove: boolean;
   onRemove: () => void;
+  duplicateLabel?: string;
+  canDuplicate?: boolean;
+  onDuplicate?: () => void;
   className?: string;
   triggerClassName?: string;
 }
@@ -18,6 +21,9 @@ export const CoachNavMoreMenu: React.FC<CoachNavMoreMenuProps> = ({
   removeLabel,
   canRemove,
   onRemove,
+  duplicateLabel,
+  canDuplicate = true,
+  onDuplicate,
   className,
   triggerClassName,
 }) => {
@@ -74,7 +80,7 @@ export const CoachNavMoreMenu: React.FC<CoachNavMoreMenuProps> = ({
     };
   }, [open]);
 
-  if (!canRemove) return null;
+  if (!canRemove && !onDuplicate) return null;
 
   const menu =
     open && coords && typeof document !== 'undefined'
@@ -90,10 +96,26 @@ export const CoachNavMoreMenu: React.FC<CoachNavMoreMenuProps> = ({
               minWidth: coords.minWidth,
             }}
           >
+            {onDuplicate && duplicateLabel ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="wolf-coach-nav-more__item"
+                disabled={!canDuplicate}
+                onClick={() => {
+                  setOpen(false);
+                  onDuplicate();
+                }}
+              >
+                <Copy size={16} strokeWidth={2} aria-hidden />
+                <span>{duplicateLabel}</span>
+              </button>
+            ) : null}
             <button
               type="button"
               role="menuitem"
               className="wolf-coach-nav-more__item wolf-coach-nav-more__item--danger"
+              disabled={!canRemove}
               onClick={() => {
                 setOpen(false);
                 onRemove();

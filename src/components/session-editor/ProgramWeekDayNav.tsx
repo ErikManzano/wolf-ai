@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
-import { Calendar, CalendarDays, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import ConfirmationModal from '../ConfirmationModal';
 import { AthleteDayNavigator } from '../athlete-tracking/AthleteDayNavigator';
@@ -40,6 +40,8 @@ export interface ProgramWeekDayNavProps {
     maxDays: string;
     removeDay: string;
     removeWeek: string;
+    duplicateDay?: string;
+    duplicateWeek?: string;
   };
   canRemoveWeek?: boolean;
   canRemoveDay?: boolean;
@@ -49,6 +51,8 @@ export interface ProgramWeekDayNavProps {
   onAddDay: (atIndex?: number) => void;
   onRemoveWeek?: (weekNumber: number) => void;
   onRemoveDay?: (dayNumber: number) => void;
+  onDuplicateWeek?: (weekNumber: number) => void;
+  onDuplicateDay?: (dayNumber: number) => void;
   onReorderWeek?: (fromWeekNumber: number, toWeekNumber: number) => void;
   onReorderDay?: (fromDayNumber: number, toDayNumber: number) => void;
   /** Rendered at the start of the week row head (e.g. session/stats tabs). */
@@ -103,36 +107,6 @@ function scrollActiveIntoView(
   if (!container) return;
   const el = container.querySelector<HTMLElement>(selector);
   el?.scrollIntoView({ behavior, block: 'nearest', inline: 'nearest' });
-}
-
-function FolderInsertSeam({
-  disabled,
-  title,
-  label,
-  onInsert,
-}: {
-  disabled: boolean;
-  title: string;
-  label: string;
-  onInsert: () => void;
-}) {
-  return (
-    <div className="wl-week-folder__seam">
-      <button
-        type="button"
-        className="wl-week-folder__seam-btn"
-        disabled={disabled}
-        title={title}
-        aria-label={label}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!disabled) onInsert();
-        }}
-      >
-        <Plus size={11} strokeWidth={2.5} aria-hidden />
-      </button>
-    </div>
-  );
 }
 
 function dayTabLabel(row: { label?: string; dayNumber: number }): string {
@@ -331,6 +305,8 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   onAddDay,
   onRemoveWeek,
   onRemoveDay,
+  onDuplicateWeek,
+  onDuplicateDay,
   onReorderWeek,
   onReorderDay,
   weekHeadLeading,
@@ -351,6 +327,8 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
   const hideWeekContext = isEditorDensity && Boolean(weekHeadLeading);
   const weekStripRef = useRef<HTMLDivElement>(null);
   const dayStripRef = useRef<HTMLDivElement>(null);
+  const folderListRef = useRef<HTMLUListElement>(null);
+  const folderDragRef = useRef<{ kind: 'week' | 'day'; from: number } | null>(null);
   const dayWeekRef = useRef(selectedWeek);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [expandedWeek, setExpandedWeek] = useState<number | null>(selectedWeek);
@@ -503,6 +481,54 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
     : null;
 
   const weekOptionLabel = (n: number) => (isEs ? `Semana ${n}` : `Week ${n}`);
+  const duplicateWeekLabel = labels.duplicateWeek ?? (isEs ? 'Duplicar semana' : 'Duplicate week');
+  const duplicateDayLabel = labels.duplicateDay ?? (isEs ? 'Duplicar día' : 'Duplicate day');
+  const reorderWeekLabel = isEs ? 'Arrastra para reordenar la semana' : 'Drag to reorder the week';
+  const reorderDayLabel = isEs ? 'Arrastra para reordenar el día' : 'Drag to reorder the day';
+
+  const clearFolderDropTargets = () => {
+    folderListRef.current?.querySelectorAll('.is-drop-target').forEach((el) => {
+      el.classList.remove('is-drop-target');
+    });
+  };
+
+  const startFolderDrag = (event: React.DragEvent, kind: 'week' | 'day', from: number) => {
+    event.stopPropagation();
+    folderDragRef.current = { kind, from };
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', `${kind}:${from}`);
+    (event.currentTarget as HTMLElement).closest('li')?.classList.add('is-dragging');
+  };
+
+  const overFolderRow = (event: React.DragEvent<HTMLElement>, kind: 'week' | 'day') => {
+    if (folderDragRef.current?.kind !== kind) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+    const row = event.currentTarget;
+    if (row.classList.contains('is-drop-target')) return;
+    clearFolderDropTargets();
+    row.classList.add('is-drop-target');
+  };
+
+  const endFolderDrag = (event: React.DragEvent) => {
+    (event.currentTarget as HTMLElement).closest('li')?.classList.remove('is-dragging');
+    clearFolderDropTargets();
+    folderDragRef.current = null;
+  };
+
+  const dropFolderRow = (event: React.DragEvent, kind: 'week' | 'day', to: number) => {
+    if (folderDragRef.current?.kind !== kind) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const from = folderDragRef.current.from;
+    folderDragRef.current = null;
+    clearFolderDropTargets();
+    (event.currentTarget as HTMLElement).classList.remove('is-dragging');
+    if (from === to) return;
+    if (kind === 'week') onReorderWeek?.(from, to);
+    else onReorderDay?.(from, to);
+  };
 
   const selectedDayRow = dayRows.find((row) => row.dayNumber === selectedDay);
   const selectedDayTitle = selectedDayRow
@@ -538,25 +564,40 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
           onCancel={() => setPendingConfirm(null)}
         />
         <div className="wl-week-folders">
-          <p className="wl-week-folders__label">{labels.weeksRow}</p>
-          <ul className="wl-week-folders__list">
-            {program.weeks.map((week, weekIndex) => {
+          <header className="wl-week-folders__head">
+            <p className="wl-week-folders__title">{program.name.trim() || (isEs ? 'Programa' : 'Program')}</p>
+            <p className="wl-week-folders__sub">
+              {isEs
+                ? `${program.weeks.length} ${program.weeks.length === 1 ? 'semana' : 'semanas'}`
+                : `${program.weeks.length} ${program.weeks.length === 1 ? 'week' : 'weeks'}`}
+            </p>
+          </header>
+          <ul className="wl-week-folders__list" ref={folderListRef}>
+            {program.weeks.map((week) => {
               const open = expandedWeek === week.weekNumber;
               const days = open ? (week.weekNumber === selectedWeek ? openWeek?.days ?? week.days : week.days) : [];
-              const weekInsertTitle = canAddWeek ? labels.addWeek : labels.maxWeeks;
+              const dayCount = week.days.length;
+              const sessionCount = week.days.reduce((sum, day) => sum + (day.session?.exercises.length ?? 0), 0);
+              const weekMeta = isEs
+                ? `${dayCount} ${dayCount === 1 ? 'día' : 'días'} · ${sessionCount} ${sessionCount === 1 ? 'sesión' : 'sesiones'}`
+                : `${dayCount} ${dayCount === 1 ? 'day' : 'days'} · ${sessionCount} ${sessionCount === 1 ? 'session' : 'sessions'}`;
+              const weekDraggable = canReorderWeeks;
               return (
-                <li key={week.weekNumber} className={`wl-week-folder${open ? ' is-open' : ''}${week.weekNumber === selectedWeek ? ' is-current' : ''}`}>
-                  <FolderInsertSeam
-                    disabled={!canAddWeek}
-                    title={weekInsertTitle}
-                    label={labels.addWeek}
-                    onInsert={() => onAddWeek(weekIndex)}
-                  />
+                <li
+                  key={week.weekNumber}
+                  className={`wl-week-folder${open ? ' is-open' : ''}${week.weekNumber === selectedWeek ? ' is-current' : ''}`}
+                  onDragOver={(event) => overFolderRow(event, 'week')}
+                  onDrop={(event) => dropFolderRow(event, 'week', week.weekNumber)}
+                >
                   <div className="wl-week-folder__row">
                     <button
                       type="button"
                       className="wl-week-folder__select"
                       aria-expanded={open}
+                      draggable={weekDraggable}
+                      title={weekDraggable ? reorderWeekLabel : undefined}
+                      onDragStart={(event) => startFolderDrag(event, 'week', week.weekNumber)}
+                      onDragEnd={endFolderDrag}
                       onClick={() => {
                         if (open) {
                           setExpandedWeek(null);
@@ -566,77 +607,110 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                         if (week.weekNumber !== selectedWeek) onSelectWeek(week.weekNumber);
                       }}
                     >
-                      <ChevronRight className="wl-week-folder__chev" size={14} strokeWidth={2.25} aria-hidden />
-                      <CalendarRange className="wl-week-folder__week-icon" size={14} strokeWidth={2} aria-hidden />
-                      <span className="wl-week-folder__name">{weekOptionLabel(week.weekNumber)}</span>
-                    </button>
-                    <span className="wl-week-folder__actions">
-                      {canRemoveWeek && onRemoveWeek ? (
-                        <button
-                          type="button"
-                          className="wl-week-folder__action wl-week-folder__action--danger"
-                          onClick={() => requestRemoveWeek(week.weekNumber)}
-                          title={labels.removeWeek}
-                          aria-label={labels.removeWeek}
-                        >
-                          <Trash2 size={13} strokeWidth={2} aria-hidden />
-                        </button>
+                      {weekDraggable ? (
+                        <GripVertical className="wl-week-folder__grip" size={14} strokeWidth={2} aria-hidden />
                       ) : null}
-                    </span>
+                      <span className="wl-week-folder__mark" aria-hidden>
+                        <CalendarRange size={15} strokeWidth={2} />
+                      </span>
+                      <span className="wl-week-folder__copy">
+                        <span className="wl-week-folder__name">{weekOptionLabel(week.weekNumber)}</span>
+                        <span className="wl-week-folder__meta">{weekMeta}</span>
+                      </span>
+                      <ChevronRight className="wl-week-folder__chev" size={16} strokeWidth={2.25} aria-hidden />
+                    </button>
+                    {onRemoveWeek || onDuplicateWeek ? (
+                      <span className="wl-week-folder__actions">
+                        <CoachNavMoreMenu
+                          ariaLabel={isEs ? `Acciones de ${weekOptionLabel(week.weekNumber)}` : `Actions for ${weekOptionLabel(week.weekNumber)}`}
+                          removeLabel={isEs ? 'Eliminar semana' : 'Delete week'}
+                          canRemove={Boolean(canRemoveWeek && onRemoveWeek)}
+                          onRemove={() => requestRemoveWeek(week.weekNumber)}
+                          duplicateLabel={onDuplicateWeek ? duplicateWeekLabel : undefined}
+                          canDuplicate={canAddWeek}
+                          onDuplicate={onDuplicateWeek ? () => onDuplicateWeek(week.weekNumber) : undefined}
+                          triggerClassName="wl-week-folder__action"
+                        />
+                      </span>
+                    ) : null}
                   </div>
                   {open ? (
                     <ul className="wl-week-folder__days" aria-label={labels.daysRow}>
-                      {days.map((day, dayIndex) => {
-                        const active = selectedDay === day.dayNumber;
-                        const dayInsertTitle = canAddDay ? labels.addDay : labels.maxDays;
+                      {days.map((day) => {
+                        const active = selectedDay === day.dayNumber && week.weekNumber === selectedWeek;
+                        const dayDraggable = canReorderDays && week.weekNumber === selectedWeek;
                         return (
-                          <li key={day.dayNumber} className={`wl-week-folder__day${active ? ' is-active' : ''}`}>
-                            <FolderInsertSeam
-                              disabled={!canAddDay}
-                              title={dayInsertTitle}
-                              label={labels.addDay}
-                              onInsert={() => onAddDay(dayIndex)}
-                            />
+                          <li
+                            key={day.dayNumber}
+                            className={`wl-week-folder__day${active ? ' is-active' : ''}`}
+                            onDragOver={(event) => overFolderRow(event, 'day')}
+                            onDrop={(event) => dropFolderRow(event, 'day', day.dayNumber)}
+                          >
                             <button
                               type="button"
                               className="wl-week-folder__day-select"
                               aria-current={active ? 'true' : undefined}
-                              title={dayTabLabel(day)}
-                              onClick={() => onSelectDay(day.dayNumber)}
+                              title={dayDraggable ? `${dayTabLabel(day)}. ${reorderDayLabel}` : dayTabLabel(day)}
+                              draggable={dayDraggable}
+                              onDragStart={(event) => startFolderDrag(event, 'day', day.dayNumber)}
+                              onDragEnd={endFolderDrag}
+                              onClick={() => {
+                                if (week.weekNumber !== selectedWeek) onSelectWeek(week.weekNumber);
+                                onSelectDay(day.dayNumber);
+                              }}
                             >
-                              <Calendar className="wl-week-folder__day-icon" size={13} strokeWidth={2} aria-hidden />
-                              <span className="wl-week-folder__name">{`D${day.dayNumber}`}</span>
-                            </button>
-                            <span className="wl-week-folder__actions">
-                              {canRemoveDay && onRemoveDay ? (
-                                <button
-                                  type="button"
-                                  className="wl-week-folder__action wl-week-folder__action--danger"
-                                  onClick={() => requestRemoveDay(day.dayNumber)}
-                                  title={labels.removeDay}
-                                  aria-label={labels.removeDay}
-                                >
-                                  <Trash2 size={13} strokeWidth={2} aria-hidden />
-                                </button>
+                              {dayDraggable ? (
+                                <GripVertical className="wl-week-folder__grip" size={14} strokeWidth={2} aria-hidden />
                               ) : null}
-                            </span>
+                              <span className="wl-week-folder__dot" aria-hidden />
+                              <span className="wl-week-folder__name">{`D${day.dayNumber}`}</span>
+                              {active ? <ChevronRight className="wl-week-folder__chev" size={14} strokeWidth={2.25} aria-hidden /> : null}
+                            </button>
+                            {onRemoveDay || onDuplicateDay ? (
+                              <span className="wl-week-folder__actions">
+                                <CoachNavMoreMenu
+                                  ariaLabel={isEs ? `Acciones del día ${day.dayNumber}` : `Actions for day ${day.dayNumber}`}
+                                  removeLabel={isEs ? 'Eliminar día' : 'Delete day'}
+                                  canRemove={Boolean(canRemoveDay && onRemoveDay)}
+                                  onRemove={() => requestRemoveDay(day.dayNumber)}
+                                  duplicateLabel={onDuplicateDay ? duplicateDayLabel : undefined}
+                                  canDuplicate={canAddDay}
+                                  onDuplicate={onDuplicateDay ? () => onDuplicateDay(day.dayNumber) : undefined}
+                                  triggerClassName="wl-week-folder__action"
+                                />
+                              </span>
+                            ) : null}
                           </li>
                         );
                       })}
+                      <li className="wl-week-folder__day wl-week-folder__day--add">
+                        <button
+                          type="button"
+                          className="wl-week-folders__add wl-week-folders__add--day"
+                          disabled={!canAddDay}
+                          title={canAddDay ? labels.addDay : labels.maxDays}
+                          onClick={() => onAddDay()}
+                        >
+                          <Plus size={14} strokeWidth={2.25} aria-hidden />
+                          {labels.addDay}
+                        </button>
+                      </li>
                     </ul>
                   ) : null}
                 </li>
               );
             })}
-            <li className="wl-week-folder wl-week-folder--end">
-              <FolderInsertSeam
-                disabled={!canAddWeek}
-                title={canAddWeek ? labels.addWeek : labels.maxWeeks}
-                label={labels.addWeek}
-                onInsert={() => onAddWeek(program.weeks.length)}
-              />
-            </li>
           </ul>
+          <button
+            type="button"
+            className="wl-week-folders__add"
+            disabled={!canAddWeek}
+            title={canAddWeek ? labels.addWeek : labels.maxWeeks}
+            onClick={() => onAddWeek()}
+          >
+            <Plus size={16} strokeWidth={2.25} aria-hidden />
+            {labels.addWeek}
+          </button>
         </div>
       </>
     );

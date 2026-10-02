@@ -437,9 +437,14 @@
   touch-action: manipulation;
 }
 
-.wolf-coach-nav-more__item:hover,
-.wolf-coach-nav-more__item:active {
+.wolf-coach-nav-more__item:hover:not(:disabled),
+.wolf-coach-nav-more__item:active:not(:disabled) {
   background: var(--color-bg-hover, #f5f5f4);
+}
+
+.wolf-coach-nav-more__item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .wolf-coach-nav-more__item--danger {
@@ -447,8 +452,8 @@
   background: color-mix(in srgb, #ef4444 6%, var(--color-bg-panel, #fff));
 }
 
-.wolf-coach-nav-more__item--danger:hover,
-.wolf-coach-nav-more__item--danger:active {
+.wolf-coach-nav-more__item--danger:hover:not(:disabled),
+.wolf-coach-nav-more__item--danger:active:not(:disabled) {
   background: color-mix(in srgb, #ef4444 12%, var(--color-bg-panel, #fff));
   color: #b91c1c;
 }

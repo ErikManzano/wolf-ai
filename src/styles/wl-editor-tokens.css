@@ -2727,7 +2727,7 @@
     height: auto !important;
     min-height: 0 !important;
     min-width: 860px;
-    border-spacing: 0;
+    border-spacing: 0 12px;
     font-size: 0.8rem;
   }
 

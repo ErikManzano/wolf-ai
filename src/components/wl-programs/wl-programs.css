@@ -312,7 +312,15 @@
 }
 
 .wl-programs-actions-menu__list--portal {
+  right: auto;
+  bottom: auto;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(280px, calc(100vw - 16px));
   z-index: 5000;
+  background: var(--v2-surface, #fff);
+  color: var(--v2-text, #1c1917);
+  border-color: var(--v2-border, #e7e5e4);
   box-shadow:
     0 4px 6px rgb(15 23 42 / 8%),
     0 12px 28px rgb(15 23 42 / 14%);
@@ -339,8 +347,21 @@
   background: color-mix(in srgb, var(--wl-prog-accent) 12%, transparent);
 }
 
+.wl-programs-actions-menu__list--portal button {
+  color: var(--v2-text, #1c1917);
+  white-space: nowrap;
+}
+
+.wl-programs-actions-menu__list--portal button:hover {
+  background: color-mix(in srgb, var(--v2-accent, #f97316) 12%, #fff);
+}
+
 .wl-programs-actions-menu__list .is-danger {
   color: #f87171;
+}
+
+.wl-programs-actions-menu__list--portal .is-danger {
+  color: #dc2626;
 }
 
 .wl-programs-mobile-list {
@@ -6664,38 +6685,79 @@
   color: var(--v2-text-secondary, #57534e);
 }
 
-.wl-programs-hub-chips__btn--templates:not(.is-active) {
-  border-color: var(--color-accent, #e85d4c);
-  background: color-mix(in srgb, var(--color-accent, #e85d4c) 14%, #fff);
-  color: color-mix(in srgb, var(--color-accent, #e85d4c) 72%, #1c1917);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent, #e85d4c) 28%, transparent);
-  font-weight: 750;
-}
-
-.wl-programs-hub-chips__btn--templates:not(.is-active):hover {
-  background: color-mix(in srgb, var(--color-accent, #e85d4c) 22%, #fff);
+.wl-programs-hub-chips__btn:hover:not(.is-active) {
+  background: #fff;
+  border-color: color-mix(in srgb, var(--v2-text, #1c1917) 16%, var(--v2-border-subtle, #e7e5e4));
 }
 
 .wl-programs-hub-chips__btn.is-active {
   border-color: var(--color-accent, #e85d4c);
-  background: color-mix(in srgb, var(--color-accent, #e85d4c) 10%, #fff);
-  color: var(--v2-text, #1c1917);
+  background: var(--color-accent, #e85d4c);
+  color: #fff;
+  font-weight: 750;
 }
 
 .wl-programs-hub-chips__athlete {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-left: auto;
+  min-height: 32px;
+  padding: 0 8px 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border-subtle, #e7e5e4);
+  background: #fff;
+  color: var(--v2-text-secondary, #57534e);
   font-size: 0.78rem;
 }
 
-.wl-programs-hub-chips__athlete select {
-  border-radius: 8px;
-  border: 1px solid var(--v2-border-subtle, #e7e5e4);
-  padding: 4px 8px;
-  font-size: 0.78rem;
-  max-width: 160px;
+.wl-programs-hub-chips__athlete.is-active {
+  border-color: color-mix(in srgb, var(--color-accent, #e85d4c) 55%, var(--v2-border-subtle, #e7e5e4));
+  background: color-mix(in srgb, var(--color-accent, #e85d4c) 10%, #fff);
+}
+
+.wl-programs-hub-chips__athlete:focus-within {
+  border-color: color-mix(in srgb, var(--color-accent, #e85d4c) 70%, var(--v2-border-subtle, #e7e5e4));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent, #e85d4c) 16%, transparent);
+}
+
+.wl-programs-hub-chips__athlete-label {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--v2-text-muted, #a8a29e);
+  white-space: nowrap;
+}
+
+.wl-programs-hub-chips__athlete-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: auto;
+  min-width: 92px;
+  max-width: 168px;
+  height: 30px;
+  margin: 0;
+  padding: 0 22px 0 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378756c' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+  background-size: 14px;
+  color: var(--v2-text, #1c1917);
+  font: inherit;
+  font-weight: 700;
+  line-height: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.wl-programs-hub-chips__athlete-select:focus {
+  outline: none;
 }
 
 .wl-programs-hub-chips__clear {

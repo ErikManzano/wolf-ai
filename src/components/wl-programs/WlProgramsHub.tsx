@@ -611,7 +611,8 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
         <button
           key={chip.id}
           type="button"
-          className={`wl-programs-hub-chips__btn${chip.id === 'templates' ? ' wl-programs-hub-chips__btn--templates' : ''}${kindFilter === chip.id ? ' is-active' : ''}`}
+          className={`wl-programs-hub-chips__btn${kindFilter === chip.id ? ' is-active' : ''}`}
+          aria-pressed={kindFilter === chip.id}
           onClick={() => {
             setKindFilter(chip.id);
             syncHubHash({ kindFilter: chip.id });
@@ -621,9 +622,11 @@ const WlProgramsHub: React.FC<WlProgramsHubProps> = ({ isEs }) => {
           {isEs ? chip.labelEs : chip.labelEn}
         </button>
       ))}
-      <label className="wl-programs-hub-chips__athlete">
+      <label className={`wl-programs-hub-chips__athlete${athleteFilterId ? ' is-active' : ''}`}>
         <span className="wl-programs-hub-chips__athlete-label">{isEs ? 'Atleta' : 'Athlete'}</span>
         <select
+          className="wl-programs-hub-chips__athlete-select"
+          aria-label={isEs ? 'Filtrar por atleta' : 'Filter by athlete'}
           value={athleteFilterId}
           onChange={(e) => {
             setAthleteFilterId(e.target.value);
