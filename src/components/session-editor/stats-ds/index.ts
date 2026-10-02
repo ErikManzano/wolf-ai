@@ -8,6 +8,7 @@ export { LineTrendChart, type LineTrendChartProps, type TrendSeries } from './Li
 export { VolumeIntensityScatter, type VolumeIntensityScatterProps } from './VolumeIntensityScatter';
 export { DailyTrendChart, type DailyTrendChartProps } from './DailyTrendChart';
 export { IntensityHistogram, type IntensityHistogramProps } from './IntensityHistogram';
+export { IntensityDistributionDonut, type IntensityDistributionDonutProps } from './IntensityDistributionDonut';
 export { InsightCard, type InsightCardProps } from './InsightCard';
 export { StatusBadge, type StatusBadgeProps, type StatusBadgeTone } from './StatusBadge';
 export { StatRow, type StatRowProps, type StatRowItem } from './StatRow';

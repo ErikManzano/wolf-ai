@@ -1062,6 +1062,10 @@
   color: inherit;
 }
 
+.wolf-se-spreadsheet__type-combo--compact .wolf-se-spreadsheet__type-label {
+  display: none;
+}
+
 .wolf-se-spreadsheet__type-combo--compact .wolf-se-spreadsheet__type-chevron {
   flex-shrink: 0;
   opacity: 0.88;
@@ -4121,6 +4125,11 @@
 .wolf-se-mobile-card__meta .wolf-se-spreadsheet__type-combo {
   min-width: 156px;
   max-width: none;
+}
+
+.wolf-se-mobile-card__meta .wolf-se-spreadsheet__type-combo--compact {
+  min-width: 0;
+  width: auto;
 }
 
 .wolf-se-mobile-card__blocks-pill {

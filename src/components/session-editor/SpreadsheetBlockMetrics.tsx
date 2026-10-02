@@ -44,8 +44,8 @@ export const SpreadsheetBlockMetrics: React.FC<SpreadsheetBlockMetricsProps> = (
   const tonnage = blockTonnage(block, athlete, exercises);
 
   const setsLabel = isEs ? 'series' : 'sets';
-  const repsLabel = isEs ? 'repeticiones' : 'reps';
-  const volLabel = isEs ? 'vol. total' : 'total vol.';
+  const repsLabel = 'reps';
+  const volLabel = isEs ? 'volumen' : 'volume';
 
   const repsTitle = repsMetric.complexNotation
     ? isEs

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { Athlete, Exercise, GeneratedProgram, ProgramWeek } from '../../../models/training';
 import { buildWeekComparisonRows } from '../programMetricsService';
-import { buildWeekDailyTrendChartData } from '../programChartSeries';
-import { DailyTrendChart, ScienceDistributionBar } from '../stats-ds';
+import { buildWeekDailyTrendChartData, buildWeekIntensityBins } from '../programChartSeries';
+import { DailyTrendChart, IntensityDistributionDonut } from '../stats-ds';
 import { ProgramContextSection } from './ProgramContextSection';
 import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
@@ -68,10 +68,20 @@ export function WeekContextTab({
       ? 'Primera semana del programa'
       : 'First week of the program';
 
+  const intensityBins = useMemo(
+    () =>
+      buildWeekIntensityBins({
+        week: weekData,
+        athlete,
+        exercises,
+      }),
+    [weekData, athlete, exercises],
+  );
+
   const loadGroupTitle = isEs ? 'Carga' : 'Load';
   const distributionTitle = isEs ? 'Distribución' : 'Distribution';
   const dailyTrendTitle = isEs ? 'Tendencia diaria' : 'Daily trend';
-  const zonesTitle = isEs ? 'Zonas (semana)' : 'Zones (week)';
+  const intensityTitle = isEs ? 'Distribución de intensidad' : 'Intensity distribution';
 
   const scopeLabel = isEs ? `Semana ${weekNumber}` : `Week ${weekNumber}`;
 
@@ -90,32 +100,15 @@ export function WeekContextTab({
         ),
       },
     ];
-    if (comparison.weekStimulus.length > 0) {
-      items.push({
-        id: 'zones',
-        title: zonesTitle,
-        render: () => (
-          <ScienceDistributionBar
-            slices={comparison.weekStimulus}
-            isEs={isEs}
-            compact={false}
-            showRepsInLegend
-            singleZoneVolumeHint
-            animateOnMount={false}
-            showTooltips
-          />
-        ),
-      });
-    }
+    items.push({
+      id: 'intensity',
+      title: intensityTitle,
+      render: (variant) => (
+        <IntensityDistributionDonut bins={intensityBins} isEs={isEs} dense={variant === 'context'} />
+      ),
+    });
     return items;
-  }, [
-    dailyTrend,
-    dailyTrendTitle,
-    isEs,
-    prevLabel,
-    comparison.weekStimulus,
-    zonesTitle,
-  ]);
+  }, [dailyTrend, dailyTrendTitle, isEs, prevLabel, intensityBins, intensityTitle]);
 
   const [galleryChartId, setGalleryChartId] = useState<string | null>(null);
 
@@ -164,28 +157,20 @@ export function WeekContextTab({
         programName={program.name}
       />
 
-      {comparison.weekStimulus.length > 0 ? (
-        <ProgramContextGroup title={distributionTitle}>
-          <ProgramContextSection
-            title={zonesTitle}
-            action={
-              <ProgramContextChartExpandButton
-                isEs={isEs}
-                chartTitle={zonesTitle}
-                onClick={() => setGalleryChartId('zones')}
-              />
-            }
-          >
-            <ScienceDistributionBar
-              slices={comparison.weekStimulus}
+      <ProgramContextGroup title={distributionTitle}>
+        <ProgramContextSection
+          title={intensityTitle}
+          action={
+            <ProgramContextChartExpandButton
               isEs={isEs}
-              dense
-              animateOnMount
-              showTooltips
+              chartTitle={intensityTitle}
+              onClick={() => setGalleryChartId('intensity')}
             />
-          </ProgramContextSection>
-        </ProgramContextGroup>
-      ) : null}
+          }
+        >
+          <IntensityDistributionDonut bins={intensityBins} isEs={isEs} dense />
+        </ProgramContextSection>
+      </ProgramContextGroup>
     </div>
   );
 }

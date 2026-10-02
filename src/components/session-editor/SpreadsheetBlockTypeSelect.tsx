@@ -171,7 +171,7 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
         type="button"
         role="combobox"
         className="wolf-se-spreadsheet__type-trigger"
-        aria-label={ariaLabel}
+        aria-label={`${ariaLabel}: ${triggerLabel}`}
         title={triggerTitle}
         aria-expanded={open}
         aria-haspopup="listbox"
@@ -184,9 +184,10 @@ export const SpreadsheetBlockTypeSelect: React.FC<SpreadsheetBlockTypeSelectProp
       >
         {compact ? (
           <>
-            <span className="wolf-se-spreadsheet__type-abbr" aria-hidden>
+            <span className="wolf-se-spreadsheet__type-abbr">
               {typeTriggerAbbrev(kind)}
             </span>
+            <span className="wolf-se-spreadsheet__type-label">{triggerLabel}</span>
             <ChevronDown
               size={12}
               strokeWidth={2.5}

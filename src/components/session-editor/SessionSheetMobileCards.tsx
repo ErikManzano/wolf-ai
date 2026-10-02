@@ -158,6 +158,7 @@ const MobileExerciseCard: React.FC<MobileCardProps> = ({
         onKeyDown={(e) => e.stopPropagation()}
       >
         <SpreadsheetBlockTypeSelect
+          compact
           kind={blockKind}
           isEs={isEs}
           onChange={(kind) => {

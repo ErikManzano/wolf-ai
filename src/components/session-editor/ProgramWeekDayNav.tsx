@@ -302,9 +302,11 @@ const SortableDayTab: React.FC<SortableDayTabProps> = ({
         type="button"
         className={`wolf-day-tab${isActive ? ' active' : ''}${dateLabel ? ' wolf-day-tab--dated' : ''}`}
         aria-current={isActive ? 'true' : undefined}
+        title={label}
+        aria-label={label}
         onClick={() => onSelect(row.dayNumber)}
       >
-        <span className="wolf-day-tab__label">{label}</span>
+        <span className="wolf-day-tab__label">{`D${row.dayNumber}`}</span>
         {dateLabel ? <span className="wolf-day-tab__date">{dateLabel}</span> : null}
       </button>
     </Reorder.Item>

@@ -8,8 +8,8 @@ import type { ProgramDaySlot } from '../../services/programStructureMutations';
 import { useWolfAlert } from '../../context/WolfAlertContext';
 import { exportElementAsPdf, exportElementAsPng, slugExportFilename } from '../../utils/matrixExport';
 import { dayToneIndex, weekToneIndex } from '../../utils/matrixDayTones';
-import { formatBlockPrescription } from './schemeFormat';
 import { blockDisplayName, formatWeekTonnageLabel } from './sessionSheetUtils';
+import { BlockPrescriptionRx } from './BlockPrescriptionRx';
 import { matrixGridTemplate, matrixGridTemplateCompact } from './programTabReorderUtils';
 import './program-matrix.css';
 
@@ -134,12 +134,11 @@ const MatrixCell: React.FC<MatrixCellProps> = ({
           <ol className="wolf-program-matrix-exercises">
             {session.exercises.map((block, i) => {
               const name = blockDisplayName(block, exercises);
-              const rx = formatBlockPrescription(block);
               return (
                 <li key={`${block.exerciseId}-${i}`}>
                   <span className="wolf-program-matrix-exercise">
                     <span className="wolf-program-matrix-exercise-name">{name}</span>
-                    <code className="wolf-program-matrix-exercise-rx">{rx}</code>
+                    <BlockPrescriptionRx block={block} className="wolf-program-matrix-exercise-rx" />
                   </span>
                 </li>
               );
