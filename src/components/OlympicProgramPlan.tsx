@@ -1436,7 +1436,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         className="wolf-program-history-btn"
         disabled={!canAddWeek}
         aria-label={t.duplicateWeek}
-        onClick={handleDuplicateWeek}
+        onClick={() => handleDuplicateWeek()}
       >
         <CalendarRange size={15} aria-hidden />
       </button>
@@ -1457,7 +1457,7 @@ const OlympicProgramPlan: React.FC<OlympicProgramPlanProps> = ({
         className="wolf-program-history-btn"
         disabled={!canAddDay}
         aria-label={t.duplicateDay}
-        onClick={handleDuplicateDay}
+        onClick={() => handleDuplicateDay()}
       >
         <Copy size={15} aria-hidden />
       </button>
