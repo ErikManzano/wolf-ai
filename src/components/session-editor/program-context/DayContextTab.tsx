@@ -173,7 +173,7 @@ export function DayContextTab({
       {comparison.exerciseVolumes.length > 0 || comparison.exerciseVolumeRemainder ? (
         <ProgramContextGroup title={detailTitle}>
           <ProgramContextSection
-            title={isEs ? 'Top 5 ejercicios (tonnage día)' : 'Top 5 exercises (day tonnage)'}
+            title={isEs ? 'Top 5 ejercicios (tonelaje día)' : 'Top 5 exercises (day tonelaje)'}
           >
             <ExerciseRanking
               slices={comparison.exerciseVolumes}

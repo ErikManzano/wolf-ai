@@ -158,7 +158,7 @@ const WlAthleteEditPrSheet: React.FC<WlAthleteEditPrSheetProps> = ({ isEs, athle
         <p className="wl-form-sheet-summary__lead">
           {isEs
             ? 'Los PRs se usan para calcular porcentajes y tonelaje en los programas asignados.'
-            : 'PRs are used to calculate percentages and tonnage in assigned programs.'}
+            : 'PRs are used to calculate percentages and tonelaje in assigned programs.'}
         </p>
       </section>
     </WlFormSheet>

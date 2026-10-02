@@ -314,14 +314,14 @@ export const SessionWeekStatsPanel: React.FC<SessionWeekStatsPanelProps> = ({
         {science && science.trend.labels.length > 1 && !compact ? (
           <SectionCard
             title={isEs ? 'Tendencia del mesociclo' : 'Mesocycle trend'}
-            subtitle={isEs ? 'Tonelaje e IMP por semana' : 'Tonnage and IMP by week'}
+            subtitle={isEs ? 'Tonelaje e IMP por semana' : 'Tonelaje and IMP by week'}
           >
             <LineTrendChart
               labels={science.trend.labels}
               series={[
                 {
                   id: 'tonnage',
-                  label: isEs ? 'Tonelaje' : 'Tonnage',
+                  label: 'Tonelaje',
                   values: science.trend.tonnageData,
                   unit: 'kg',
                   color: 'var(--stats-orange)',

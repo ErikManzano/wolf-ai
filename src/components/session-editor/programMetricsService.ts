@@ -390,7 +390,7 @@ export function buildDayComparisonRows(params: {
       ? []
       : [
           {
-            label: 'Tonnage',
+            label: 'Tonelaje',
             current: formatStatsKg(current.tonnage, { alwaysKg: true }),
             prev: prev ? formatStatsKg(prev.tonnage, { alwaysKg: true }) : '—',
             ...fromCompactDelta(
@@ -494,7 +494,7 @@ export function buildWeekComparisonRows(params: {
 
   const rows: ContextComparisonRow[] = [
     {
-      label: isEs ? 'Tonnage' : 'Tonnage',
+      label: 'Tonelaje',
       current: formatStatsKg(metrics.tonnage, { alwaysKg: true }),
       prev: prev ? formatStatsKg(prev.tonnage, { alwaysKg: true }) : '—',
       ...fromCompactDelta(

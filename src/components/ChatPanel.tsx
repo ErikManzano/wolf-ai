@@ -34,13 +34,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ? [
             'Duplica una semana desde el editor (icono calendario) para clonar microciclos sin regenerar contenido.',
             'Copia un día a otra semana con el atajo «Copiar día a…» (formato semana.día, p. ej. 4.2).',
-            'Las estadísticas del día muestran tonnage y K-value — úsalas antes de subir intensidad.',
+            'Las estadísticas del día muestran tonelaje y K-value — úsalas antes de subir intensidad.',
             'Invita atletas desde Atletas → Añadir; en Free el límite es 3 atletas.',
           ]
         : [
             'Duplicate a week from the editor (calendar icon) to clone microcycles without regenerating content.',
             'Copy a day to another week with “Copy day to…” (week.day format, e.g. 4.2).',
-            'Day stats show tonnage and K-value — check them before raising intensity.',
+            'Day stats show tonelaje and K-value — check them before raising intensity.',
             'Invite athletes from Athletes → Add; Free plan is capped at 3 athletes.',
           ],
     [isEs],
@@ -78,7 +78,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     if (lower.includes('copiar') || lower.includes('copy') || lower.includes('día') || lower.includes('day')) {
       return tips[1]!;
     }
-    if (lower.includes('k-value') || lower.includes('k value') || lower.includes('tonnage') || lower.includes('stat')) {
+    if (lower.includes('k-value') || lower.includes('k value') || lower.includes('tonnage') || lower.includes('tonelaje') || lower.includes('stat')) {
       return tips[2]!;
     }
     if (lower.includes('free') || lower.includes('límite') || lower.includes('limit') || lower.includes('pro') || lower.includes('atleta')) {

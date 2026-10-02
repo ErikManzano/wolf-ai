@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Athlete, Exercise, GeneratedProgram } from '../../../models/training';
 import type { DailyTrendChartData } from '../programChartSeries';
-import { computeDaySessionMetrics } from '../programMetricsService';
+import { computeWeekAggregateMetrics } from '../programWeekStats';
 import { formatStatsKg } from '../statsTonnage';
 import { DailyTrendChart } from '../stats-ds/DailyTrendChart';
 import { ProgramContextSection } from './ProgramContextSection';
@@ -17,12 +17,9 @@ const HISTORY_PAGE_SIZE = 6;
 export function DayHistoryContextTab({
   program,
   weekNumber,
-  dayNumber,
-  dayLabel,
   athlete,
   exercises,
   isEs,
-  templateMetrics = false,
 }: {
   program: GeneratedProgram;
   weekNumber: number;
@@ -34,18 +31,21 @@ export function DayHistoryContextTab({
   templateMetrics?: boolean;
 }) {
   const rows = useMemo(() => {
-    const metrics = computeDaySessionMetrics({
-      program,
-      weekNumber,
-      dayNumber,
-      athlete,
-      exercises,
-      templateMetrics,
-    });
-    return [...metrics.weeklySeries].sort((a, b) => a.weekNumber - b.weekNumber);
-  }, [program, weekNumber, dayNumber, athlete, exercises, templateMetrics]);
+    return [...program.weeks]
+      .sort((a, b) => a.weekNumber - b.weekNumber)
+      .map((week) => {
+        const metrics = computeWeekAggregateMetrics(week, athlete, exercises, isEs);
+        return {
+          weekNumber: week.weekNumber,
+          tonnage: metrics.tonnage,
+          imp: metrics.avgPct,
+          sets: metrics.sets,
+          reps: metrics.reps,
+        };
+      });
+  }, [program, athlete, exercises, isEs]);
 
-  const head = dayLabel?.trim() || (isEs ? `Día ${dayNumber}` : `Day ${dayNumber}`);
+  const head = isEs ? 'Todas las semanas' : 'All weeks';
 
   const evolution = useMemo((): DailyTrendChartData => {
     return {
@@ -63,10 +63,10 @@ export function DayHistoryContextTab({
   const activeWeekIndex = rows.findIndex((row) => row.weekNumber === weekNumber);
   const evolutionTitle = isEs ? 'Evolución' : 'Trend';
   const evolutionMessages = {
-    empty: isEs ? 'Sin carga en las semanas de este día.' : 'No load across weeks for this day.',
+    empty: isEs ? 'Sin carga en las semanas del plan.' : 'No load across the program weeks.',
     sparse: isEs
-      ? 'Hacen falta al menos 2 semanas con este día para ver la evolución.'
-      : 'At least 2 weeks with this day are needed to see the trend.',
+      ? 'Hacen falta al menos 2 semanas con carga para ver la evolución.'
+      : 'At least 2 weeks with load are needed to see the trend.',
     aria: isEs
       ? 'Evolución del volumen y la intensidad por semana'
       : 'Weekly volume and intensity trend',
@@ -74,10 +74,10 @@ export function DayHistoryContextTab({
 
   const chartItems = useMemo((): ProgramContextChartItem[] => {
     const messages = {
-      empty: isEs ? 'Sin carga en las semanas de este día.' : 'No load across weeks for this day.',
+      empty: isEs ? 'Sin carga en las semanas del plan.' : 'No load across the program weeks.',
       sparse: isEs
-        ? 'Hacen falta al menos 2 semanas con este día para ver la evolución.'
-        : 'At least 2 weeks with this day are needed to see the trend.',
+        ? 'Hacen falta al menos 2 semanas con carga para ver la evolución.'
+        : 'At least 2 weeks with load are needed to see the trend.',
       aria: isEs
         ? 'Evolución del volumen y la intensidad por semana'
         : 'Weekly volume and intensity trend',
@@ -110,11 +110,19 @@ export function DayHistoryContextTab({
     const numbers = weekSignature ? weekSignature.split(',').map(Number) : [];
     const index = numbers.indexOf(weekNumber);
     setPage(index >= 0 ? Math.floor(index / HISTORY_PAGE_SIZE) : 0);
-  }, [weekNumber, dayNumber, weekSignature]);
+  }, [weekNumber, weekSignature]);
 
   const safePage = Math.min(page, totalPages - 1);
   const pageStart = safePage * HISTORY_PAGE_SIZE;
   const pageRows = rows.slice(pageStart, pageStart + HISTORY_PAGE_SIZE);
+  const isLastPage = safePage >= totalPages - 1;
+  const totalTonnage = rows.reduce((sum, row) => sum + row.tonnage, 0);
+  const totalSets = rows.reduce((sum, row) => sum + row.sets, 0);
+  const totalReps = rows.reduce((sum, row) => sum + row.reps, 0);
+  const totalImp =
+    totalTonnage > 0
+      ? Math.round(rows.reduce((sum, row) => sum + row.imp * row.tonnage, 0) / totalTonnage)
+      : 0;
   const rangeStart = pageRows[0]?.weekNumber ?? 0;
   const rangeEnd = pageRows[pageRows.length - 1]?.weekNumber ?? rangeStart;
   const rangeLabel =
@@ -125,9 +133,7 @@ export function DayHistoryContextTab({
       <div className="wl-program-context-tab wl-program-context-tab--history">
         <ProgramContextSection title={isEs ? 'Histórico' : 'History'} subtitle={head.toUpperCase()}>
           <p className="wl-program-context-empty">
-            {isEs
-              ? `Sin sesiones previas para ${head} en el plan.`
-              : `No sessions for ${head} in this program yet.`}
+            {isEs ? 'Sin semanas en el plan.' : 'No weeks in this program yet.'}
           </p>
         </ProgramContextSection>
       </div>
@@ -178,7 +184,7 @@ export function DayHistoryContextTab({
           <thead>
             <tr>
               <th>{isEs ? 'Sem' : 'Wk'}</th>
-              <th>{isEs ? 'Tonnage' : 'Tonnage'}</th>
+              <th>Tonelaje</th>
               <th>IMP</th>
               <th>Sets</th>
               <th>Reps</th>
@@ -207,13 +213,24 @@ export function DayHistoryContextTab({
               );
             })}
           </tbody>
+          {isLastPage ? (
+            <tfoot>
+              <tr className="wl-day-history-table__totals">
+                <th scope="row">{isEs ? 'Total' : 'Total'}</th>
+                <td>{totalTonnage > 0 ? formatStatsKg(totalTonnage, { alwaysKg: true }) : '—'}</td>
+                <td>{totalImp > 0 ? `${totalImp}%` : '—'}</td>
+                <td>{totalSets}</td>
+                <td>{totalReps}</td>
+              </tr>
+            </tfoot>
+          ) : null}
         </table>
       </ProgramContextSection>
 
       <ProgramContextSection
         className="wl-stats-section--span"
         title={evolutionTitle}
-        subtitle={isEs ? `${head} · todas las semanas` : `${head} · all weeks`}
+        subtitle={head}
         action={
           <ProgramContextChartExpandButton
             isEs={isEs}
@@ -239,7 +256,7 @@ export function DayHistoryContextTab({
         onActiveIdChange={setGalleryChartId}
         onClose={() => setGalleryChartId(null)}
         isEs={isEs}
-        scopeLabel={isEs ? `${head} · todas las semanas` : `${head} · all weeks`}
+        scopeLabel={head}
         programName={program.name}
       />
     </div>

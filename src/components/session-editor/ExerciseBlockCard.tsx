@@ -603,7 +603,7 @@ export const ExerciseBlockCard: React.FC<ExerciseBlockCardProps> = ({
             <footer className="wolf-se-block-footer">
               <span className="wolf-se-block-footer-label">
                 <Gauge size={15} aria-hidden />
-                {isEs ? 'Tonelaje del bloque' : 'Block tonnage'}
+                {isEs ? 'Tonelaje del bloque' : 'Block tonelaje'}
               </span>
               <strong>{tonnage} kg</strong>
             </footer>

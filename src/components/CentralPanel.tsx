@@ -363,7 +363,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                 </div>
                 <div style={{ marginTop: '20px', display: 'flex', gap: '20px' }}>
                   <div className="mobile-stat">
-                    <span className="label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.6 }}>{isEs ? 'Tonelaje' : 'Tonnage'}</span>
+                    <span className="label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.6 }}>Tonelaje</span>
                     <span className="value" style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'block' }}>
                       {(currentWeekData?.days[0]?.exercises.reduce((acc, ex) => acc + (ex.tonnage || 0), 0) || 0).toLocaleString()} kg
                     </span>
@@ -606,7 +606,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                           <th>{isEs ? 'Reps' : 'Reps'}</th>
                           <th>{isEs ? 'Carga Plan' : 'Planned'}</th>
                           <th>{isEs ? 'Carga Real (kg / reps)' : 'Actual (kg / reps)'}</th>
-                          <th>{isEs ? 'Tonelaje' : 'Tonnage'}</th>
+                          <th>Tonelaje</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -665,7 +665,7 @@ const CentralPanel: React.FC<CentralPanelProps> = ({
                       {isEs ? 'AÃ±adir Ejercicio' : 'Add Exercise'}
                     </button>
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: '500' }}>
-                      {isEs ? 'Tonelaje Total SesiÃ³n:' : 'Total Session Tonnage:'} <strong style={{ color: 'var(--color-success)' }}>{(day.exercises.reduce((acc, ex) => acc + (ex.tonnage || 0), 0) || 0).toLocaleString()} kg</strong>
+                      {isEs ? 'Tonelaje Total SesiÃ³n:' : 'Total Session Tonelaje:'} <strong style={{ color: 'var(--color-success)' }}>{(day.exercises.reduce((acc, ex) => acc + (ex.tonnage || 0), 0) || 0).toLocaleString()} kg</strong>
                     </span>
                   </div>
                 </div>

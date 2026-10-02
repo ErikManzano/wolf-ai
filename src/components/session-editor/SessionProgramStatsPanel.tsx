@@ -226,7 +226,7 @@ export const SessionProgramStatsPanel: React.FC<SessionProgramStatsPanelProps> =
                   series={[
                     {
                       id: 'tonnage',
-                      label: isEs ? 'Tonelaje' : 'Tonnage',
+                      label: 'Tonelaje',
                       values: science!.trend.tonnageData,
                       unit: 'kg',
                     },

@@ -38,7 +38,7 @@ export const IntensityHistogram: React.FC<IntensityHistogramProps> = ({
 
   const metricLabels: Record<IntensityHistogramMetric, string> = isEs
     ? { series: 'Series', reps: 'Reps', tonnage: 'Tonelaje' }
-    : { series: 'Sets', reps: 'Reps', tonnage: 'Tonnage' };
+    : { series: 'Sets', reps: 'Reps', tonnage: 'Tonelaje' };
 
   const formatVal = (v: number) => {
     if (metric === 'tonnage') return formatStatsKg(v);
