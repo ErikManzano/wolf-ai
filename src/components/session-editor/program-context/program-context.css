@@ -875,6 +875,7 @@ button.wl-program-editor-split__dock-chevron:active {
   width: 100%;
   min-width: 0;
   height: 28px;
+  max-height: 28px;
   padding: 0 8px;
   border: none;
   border-radius: 7px;
@@ -884,6 +885,8 @@ button.wl-program-editor-split__dock-chevron:active {
   font-weight: 650;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .wl-week-folder__name {
@@ -1772,6 +1775,15 @@ button.wl-program-editor-split__dock-chevron:active {
   height: auto !important;
   max-height: none !important;
   min-height: 160px;
+}
+
+.wl-program-editor-split__dock .wl-stats-section--context .wl-stats-daily__svg,
+.wl-program-editor-split__dock .wl-stats-section--context .wl-stats-scatter__svg {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  aspect-ratio: auto !important;
 }
 
 .wl-program-editor-split__dock .wl-stats-section--span .wl-stats-section__body {

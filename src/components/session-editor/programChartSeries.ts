@@ -495,6 +495,44 @@ export function buildWeekDailyTrendChartData(params: {
   };
 }
 
+/** Día abierto: el mismo día en cada semana del mesociclo. */
+export function buildDayAcrossWeeksTrend(params: {
+  program: GeneratedProgram;
+  weekNumber: number;
+  dayNumber: number;
+  athlete: Athlete;
+  exercises: Exercise[];
+  isEs: boolean;
+  templateMetrics?: boolean;
+}): DailyTrendChartData {
+  const { program, weekNumber, dayNumber, athlete, exercises, isEs, templateMetrics = false } = params;
+  const weeks = [...program.weeks].sort((a, b) => a.weekNumber - b.weekNumber);
+  const metrics = weeks.map((week) => {
+    const day = week.days.find((d) => d.dayNumber === dayNumber);
+    if (!day?.session.exercises.length) return null;
+    return sessionScatterMetrics(day.session, athlete, exercises, templateMetrics);
+  });
+
+  return {
+    labels: weeks.map((week) => (isEs ? `S${week.weekNumber}` : `W${week.weekNumber}`)),
+    dayNumbers: weeks.map(() => dayNumber),
+    tonnage: metrics.map((m) => (m && !templateMetrics && m.tonnage > 0 ? m.tonnage : null)),
+    imp: metrics.map((m) => (m && m.avgPct > 0 ? m.avgPct : null)),
+    au: metrics.map((m) => (m && m.au > 0 ? m.au : null)),
+    prevTonnage: metrics.map((m, i) => {
+      const prev = i > 0 ? metrics[i - 1] : null;
+      if (!m || !prev || templateMetrics || prev.tonnage <= 0) return null;
+      return prev.tonnage;
+    }),
+    prevImp: metrics.map((m, i) => {
+      const prev = i > 0 ? metrics[i - 1] : null;
+      if (!m || !prev || prev.avgPct <= 0) return null;
+      return prev.avgPct;
+    }),
+    volumeBaseline: null,
+  };
+}
+
 /** Day tab: same weekday across weeks (current week highlighted). */
 export function buildDayScatterSeries(params: {
   program: GeneratedProgram;

@@ -599,10 +599,11 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                               type="button"
                               className="wl-week-folder__day-select"
                               aria-current={active ? 'true' : undefined}
+                              title={dayTabLabel(day)}
                               onClick={() => onSelectDay(day.dayNumber)}
                             >
                               <Calendar className="wl-week-folder__day-icon" size={13} strokeWidth={2} aria-hidden />
-                              {dayTabLabel(day)}
+                              <span className="wl-week-folder__name">{`D${day.dayNumber}`}</span>
                             </button>
                             <span className="wl-week-folder__actions">
                               {canRemoveDay && onRemoveDay ? (
@@ -620,14 +621,6 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
                           </li>
                         );
                       })}
-                      <li className="wl-week-folder__day wl-week-folder__day--end">
-                        <FolderInsertSeam
-                          disabled={!canAddDay}
-                          title={canAddDay ? labels.addDay : labels.maxDays}
-                          label={labels.addDay}
-                          onInsert={() => onAddDay(days.length)}
-                        />
-                      </li>
                     </ul>
                   ) : null}
                 </li>

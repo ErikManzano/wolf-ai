@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import type { Athlete, Exercise, GeneratedProgram } from '../../../models/training';
 import { buildDayComparisonRows } from '../programMetricsService';
-import { buildDayScatterSeries } from '../programChartSeries';
+import { buildDayAcrossWeeksTrend } from '../programChartSeries';
 import { PROGRAM_CONTEXT_EXERCISE_RANK_LIMIT } from './constants';
-import { ExerciseRanking, VolumeIntensityScatter } from '../stats-ds';
+import { DailyTrendChart, ExerciseRanking } from '../stats-ds';
 import { ProgramContextSection } from './ProgramContextSection';
 import { ProgramContextGroup } from './ProgramContextGroup';
 import { ContextComparisonTable } from './ContextComparisonTable';
@@ -50,9 +50,9 @@ export function DayContextTab({
   const hasComparison = comparison.hasDayComparison;
   const prevLabel = weekNumber > 1 ? `Sem ${weekNumber - 1}` : '—';
 
-  const scatterPoints = useMemo(
+  const dayTrend = useMemo(
     () =>
-      buildDayScatterSeries({
+      buildDayAcrossWeeksTrend({
         program,
         weekNumber,
         dayNumber,
@@ -64,12 +64,10 @@ export function DayContextTab({
     [program, weekNumber, dayNumber, athlete, exercises, isEs, templateMetrics],
   );
 
-  const dayScatterEmptyMessage =
-    scatterPoints.length === 1
-      ? isEs
-        ? 'Solo hay datos de esta semana. Programa otra semana con el mismo día para comparar, o abre Semana para ver todos los días.'
-        : 'Only this week has data. Add another week with the same weekday, or open Week to compare all days.'
-      : undefined;
+  const dayTrendIndex = Math.max(
+    0,
+    dayTrend.labels.findIndex((label) => label === (isEs ? `S${weekNumber}` : `W${weekNumber}`)),
+  );
 
   const compareSubtitle = hasComparison
     ? isEs
@@ -84,26 +82,36 @@ export function DayContextTab({
   const loadGroupTitle = isEs ? 'Carga' : 'Load';
   const detailTitle = isEs ? 'Detalle' : 'Detail';
 
-  const dayLoadTitle = isEs ? 'Carga del día' : 'Day load';
+  const dayLoadTitle = isEs ? 'Este día por semana' : 'This day by week';
 
   const scopeLabel = isEs ? `Semana ${weekNumber} · ${head}` : `Week ${weekNumber} · ${head}`;
 
   const chartItems = useMemo((): ProgramContextChartItem[] => {
     return [
       {
-        id: 'scatter',
+        id: 'dayTrend',
         title: dayLoadTitle,
         render: (variant) => (
-          <VolumeIntensityScatter
-            points={scatterPoints}
+          <DailyTrendChart
+            data={dayTrend}
             isEs={isEs}
             variant={variant}
-            emptyMessage={dayScatterEmptyMessage}
+            activeIndex={dayTrendIndex}
+            prevWeekLabel={prevLabel}
+            messages={{
+              empty: isEs ? 'Sin sesiones en este día.' : 'No sessions on this day.',
+              sparse: isEs
+                ? 'Programa el mismo día en más semanas para ver cómo evoluciona la carga.'
+                : 'Program this day on more weeks to see how the load evolves.',
+              aria: isEs
+                ? 'Volumen e intensidad de este día en cada semana'
+                : 'Volume and intensity of this day across weeks',
+            }}
           />
         ),
       },
     ];
-  }, [dayLoadTitle, scatterPoints, isEs, dayScatterEmptyMessage]);
+  }, [dayLoadTitle, dayTrend, dayTrendIndex, isEs, prevLabel]);
 
   const [galleryChartId, setGalleryChartId] = useState<string | null>(null);
 
@@ -137,15 +145,16 @@ export function DayContextTab({
             <ProgramContextChartExpandButton
               isEs={isEs}
               chartTitle={dayLoadTitle}
-              onClick={() => setGalleryChartId('scatter')}
+              onClick={() => setGalleryChartId('dayTrend')}
             />
           }
         >
-          <VolumeIntensityScatter
-            points={scatterPoints}
+          <DailyTrendChart
+            data={dayTrend}
             isEs={isEs}
             variant="context"
-            emptyMessage={dayScatterEmptyMessage}
+            activeIndex={dayTrendIndex}
+            prevWeekLabel={prevLabel}
           />
         </ProgramContextSection>
       </ProgramContextGroup>
