@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Reorder, useReducedMotion } from 'framer-motion';
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Folder, Plus, Trash2 } from 'lucide-react';
 import type { GeneratedProgram, ProgramWeek } from '../../models/training';
 import ConfirmationModal from '../ConfirmationModal';
 import { AthleteDayNavigator } from '../athlete-tracking/AthleteDayNavigator';
@@ -105,7 +105,7 @@ function scrollActiveIntoView(
   el?.scrollIntoView({ behavior, block: 'nearest', inline: 'nearest' });
 }
 
-function dayTabLabel(row: DayRow): string {
+function dayTabLabel(row: { label?: string; dayNumber: number }): string {
   const trimmed = row.label?.trim();
   if (
     trimmed &&
@@ -485,6 +485,114 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
     isStatsNav,
     sections,
   });
+
+  if (sheetSidebarNav && !isMobileLayout && !isStatsNav && showWeeks && showDays) {
+    const openWeek = program.weeks.find((week) => week.weekNumber === selectedWeek);
+    return (
+      <>
+        <ConfirmationModal
+          open={pendingConfirm != null}
+          title={confirmModal?.title ?? ''}
+          message={confirmModal?.message ?? ''}
+          confirmLabel={confirmModal?.confirmLabel ?? ''}
+          cancelLabel={isEs ? 'Cancelar' : 'Cancel'}
+          danger={confirmModal?.danger}
+          onConfirm={handleConfirmPending}
+          onCancel={() => setPendingConfirm(null)}
+        />
+        <div className="wl-week-folders">
+          <p className="wl-week-folders__label">{labels.weeksRow}</p>
+          <ul className="wl-week-folders__list">
+            {program.weeks.map((week) => {
+              const open = week.weekNumber === selectedWeek;
+              const days = open ? (openWeek?.days ?? week.days) : [];
+              return (
+                <li key={week.weekNumber} className={`wl-week-folder${open ? ' is-open' : ''}`}>
+                  <div className="wl-week-folder__row">
+                    <button
+                      type="button"
+                      className="wl-week-folder__select"
+                      aria-expanded={open}
+                      onClick={() => onSelectWeek(week.weekNumber)}
+                    >
+                      <ChevronRight className="wl-week-folder__chev" size={14} strokeWidth={2.25} aria-hidden />
+                      <Folder size={14} strokeWidth={2} aria-hidden />
+                      <span className="wl-week-folder__name">{weekOptionLabel(week.weekNumber)}</span>
+                    </button>
+                    <span className="wl-week-folder__actions">
+                      <button
+                        type="button"
+                        className="wl-week-folder__action"
+                        onClick={onAddWeek}
+                        disabled={!canAddWeek}
+                        title={canAddWeek ? labels.addWeek : labels.maxWeeks}
+                        aria-label={labels.addWeek}
+                      >
+                        <Plus size={13} strokeWidth={2.25} aria-hidden />
+                      </button>
+                      {canRemoveWeek && onRemoveWeek ? (
+                        <button
+                          type="button"
+                          className="wl-week-folder__action wl-week-folder__action--danger"
+                          onClick={() => requestRemoveWeek(week.weekNumber)}
+                          title={labels.removeWeek}
+                          aria-label={labels.removeWeek}
+                        >
+                          <Trash2 size={13} strokeWidth={2} aria-hidden />
+                        </button>
+                      ) : null}
+                    </span>
+                  </div>
+                  {open ? (
+                    <ul className="wl-week-folder__days" aria-label={labels.daysRow}>
+                      {days.map((day) => {
+                        const active = selectedDay === day.dayNumber;
+                        return (
+                          <li key={day.dayNumber} className={`wl-week-folder__day${active ? ' is-active' : ''}`}>
+                            <button
+                              type="button"
+                              className="wl-week-folder__day-select"
+                              aria-current={active ? 'true' : undefined}
+                              onClick={() => onSelectDay(day.dayNumber)}
+                            >
+                              {dayTabLabel(day)}
+                            </button>
+                            <span className="wl-week-folder__actions">
+                              <button
+                                type="button"
+                                className="wl-week-folder__action"
+                                onClick={onAddDay}
+                                disabled={!canAddDay}
+                                title={canAddDay ? labels.addDay : labels.maxDays}
+                                aria-label={labels.addDay}
+                              >
+                                <Plus size={13} strokeWidth={2.25} aria-hidden />
+                              </button>
+                              {canRemoveDay && onRemoveDay ? (
+                                <button
+                                  type="button"
+                                  className="wl-week-folder__action wl-week-folder__action--danger"
+                                  onClick={() => requestRemoveDay(day.dayNumber)}
+                                  title={labels.removeDay}
+                                  aria-label={labels.removeDay}
+                                >
+                                  <Trash2 size={13} strokeWidth={2} aria-hidden />
+                                </button>
+                              ) : null}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </>
+    );
+  }
 
   const navTree = (
     <>

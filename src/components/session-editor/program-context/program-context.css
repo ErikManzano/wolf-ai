@@ -805,6 +805,182 @@ button.wl-program-editor-split__dock-chevron:active {
   padding: 0 10px 10px;
 }
 
+@media (min-width: 1025px) {
+  .wl-program-editor-split--dock .wl-program-editor-sheet-sidebar:has(.wl-week-folders) {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .wl-program-editor-split--dock .wl-program-editor-sheet-sidebar__nav:has(.wl-week-folders) {
+    flex: 0 0 200px;
+    width: 200px;
+    max-width: 200px;
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
+    margin: 0 !important;
+    padding: 8px 6px !important;
+    border: none !important;
+    border-right: 1px solid var(--v2-border, #e7e5e4) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: color-mix(in srgb, var(--v2-canvas, #f7f7f5) 72%, #fff) !important;
+    overflow: auto;
+  }
+}
+
+.wl-week-folders {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 4px;
+}
+
+.wl-week-folders__label {
+  margin: 2px 8px 4px;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v2-text-muted, #78716c);
+}
+
+.wl-week-folders__list,
+.wl-week-folder__days {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wl-week-folder__row,
+.wl-week-folder__day {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 7px;
+}
+
+.wl-week-folder__row:hover,
+.wl-week-folder__row:focus-within,
+.wl-week-folder.is-open > .wl-week-folder__row {
+  background: color-mix(in srgb, var(--v2-text, #1c1917) 5%, transparent);
+}
+
+.wl-week-folder__select,
+.wl-week-folder__day-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--v2-text, #1c1917);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wl-week-folder__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wl-week-folder__chev {
+  flex: 0 0 auto;
+  color: var(--v2-text-muted, #78716c);
+  transition: transform 0.18s ease;
+}
+
+.wl-week-folder.is-open > .wl-week-folder__row .wl-week-folder__chev {
+  transform: rotate(90deg);
+}
+
+.wl-week-folder__days {
+  margin: 0 0 4px;
+  padding: 2px 0 2px 18px;
+}
+
+.wl-week-folder__day.is-active {
+  background: color-mix(in srgb, var(--v2-accent, #f97316) 14%, #fff);
+}
+
+.wl-week-folder__day.is-active .wl-week-folder__day-select {
+  color: var(--v2-accent, #f97316);
+}
+
+.wl-week-folder__day:hover,
+.wl-week-folder__day:focus-within {
+  background: color-mix(in srgb, var(--v2-text, #1c1917) 5%, #fff);
+}
+
+.wl-week-folder__day.is-active:hover,
+.wl-week-folder__day.is-active:focus-within {
+  background: color-mix(in srgb, var(--v2-accent, #f97316) 18%, #fff);
+}
+
+.wl-week-folder__actions {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 12px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--v2-canvas, #f7f7f5) 72%, #fff) 12px
+  );
+}
+
+.wl-week-folder__row:hover .wl-week-folder__actions,
+.wl-week-folder__row:focus-within .wl-week-folder__actions,
+.wl-week-folder__day:hover .wl-week-folder__actions,
+.wl-week-folder__day:focus-within .wl-week-folder__actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wl-week-folder__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--v2-text-secondary, #57534e);
+  cursor: pointer;
+}
+
+.wl-week-folder__action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--v2-text, #1c1917) 8%, #fff);
+  color: var(--v2-text, #1c1917);
+}
+
+.wl-week-folder__action--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, #e85d4c 14%, #fff);
+  color: #c2410c;
+}
+
+.wl-week-folder__action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .wl-program-editor-sheet-sidebar__body .wolf-session-editor--embedded .wolf-se-spreadsheet {
   gap: 10px;
 }
