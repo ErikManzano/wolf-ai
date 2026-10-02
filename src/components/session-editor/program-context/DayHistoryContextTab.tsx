@@ -53,7 +53,7 @@ export function DayHistoryContextTab({
       dayNumbers: rows.map((row) => row.weekNumber),
       tonnage: rows.map((row) => (row.tonnage > 0 ? row.tonnage : null)),
       imp: rows.map((row) => (row.imp > 0 ? row.imp : null)),
-      au: rows.map((row) => (row.au > 0 ? row.au : null)),
+      au: rows.map(() => null),
       prevTonnage: rows.map(() => null),
       prevImp: rows.map(() => null),
       volumeBaseline: null,
