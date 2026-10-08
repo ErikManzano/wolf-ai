@@ -12,6 +12,7 @@ export function WlExerciseFamilyChips({
   isEs,
   family,
   counts,
+  hiddenIds,
   onFamilyChange,
   onQuickFilterChange,
 }: {
@@ -19,6 +20,7 @@ export function WlExerciseFamilyChips({
   family: ExerciseFamilyFilter;
   quickFilter?: ExerciseQuickFilter;
   counts: Record<string, number>;
+  hiddenIds?: string[];
   customFamilies?: unknown[];
   favoriteCount?: number;
   recentCount?: number;
@@ -34,7 +36,7 @@ export function WlExerciseFamilyChips({
 
   const items: ExerciseChipItem[] = [
     { id: 'all', label: isEs ? 'Todos' : 'All', count: counts.all ?? 0 },
-    ...FAMILY_CHIP_ORDER.map((code) => ({
+    ...FAMILY_CHIP_ORDER.filter((code) => !hiddenIds?.includes(code)).map((code) => ({
       id: code,
       label: FAMILY_DISPLAY_LABEL[code],
       count: counts[code] ?? 0,

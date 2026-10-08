@@ -577,10 +577,9 @@ export const ProgramWeekDayNav: React.FC<ProgramWeekDayNavProps> = ({
               const open = expandedWeek === week.weekNumber;
               const days = open ? (week.weekNumber === selectedWeek ? openWeek?.days ?? week.days : week.days) : [];
               const dayCount = week.days.length;
-              const sessionCount = week.days.reduce((sum, day) => sum + (day.session?.exercises.length ?? 0), 0);
               const weekMeta = isEs
-                ? `${dayCount} ${dayCount === 1 ? 'día' : 'días'} · ${sessionCount} ${sessionCount === 1 ? 'sesión' : 'sesiones'}`
-                : `${dayCount} ${dayCount === 1 ? 'day' : 'days'} · ${sessionCount} ${sessionCount === 1 ? 'session' : 'sessions'}`;
+                ? `${dayCount} ${dayCount === 1 ? 'día' : 'días'}`
+                : `${dayCount} ${dayCount === 1 ? 'day' : 'days'}`;
               const weekDraggable = canReorderWeeks;
               return (
                 <li

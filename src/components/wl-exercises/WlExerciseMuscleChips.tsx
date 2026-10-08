@@ -11,6 +11,7 @@ export function WlExerciseMuscleChips({
   recentCount,
   onChange,
   onQuickFilterChange,
+  showQuickFilters = true,
 }: {
   isEs: boolean;
   muscleGroup: MuscleGroupFilter;
@@ -20,6 +21,8 @@ export function WlExerciseMuscleChips({
   recentCount: number;
   onChange: (group: MuscleGroupFilter) => void;
   onQuickFilterChange: (filter: ExerciseQuickFilter) => void;
+  /** Favoritos/recientes (p. ej. ya van en el navegador del catálogo). */
+  showQuickFilters?: boolean;
 }) {
   const activeId =
     quickFilter === 'favorites'
@@ -31,8 +34,12 @@ export function WlExerciseMuscleChips({
           : muscleGroup;
 
   const items: ExerciseChipItem[] = [
-    { id: 'favorites', label: isEs ? 'Favoritos' : 'Favorites', count: favoriteCount, icon: 'star' },
-    { id: 'recent', label: isEs ? 'Recientes' : 'Recent', count: recentCount, icon: 'clock' },
+    ...(showQuickFilters
+      ? ([
+          { id: 'favorites', label: isEs ? 'Favoritos' : 'Favorites', count: favoriteCount, icon: 'star' as const },
+          { id: 'recent', label: isEs ? 'Recientes' : 'Recent', count: recentCount, icon: 'clock' as const },
+        ] satisfies ExerciseChipItem[])
+      : []),
     { id: 'all', label: isEs ? 'Todos' : 'All', count: counts.all ?? 0 },
     ...MUSCLE_CHIP_ORDER.map((code) => ({
       id: code,

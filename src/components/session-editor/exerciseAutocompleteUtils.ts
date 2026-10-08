@@ -1,4 +1,13 @@
+import {
+  catalogGrupoFromPickerTags,
+  WL_CATALOG_GROUP_LABELS,
+  WL_CATALOG_GROUP_ORDER,
+  type CatalogGrupoFilter,
+} from '../../data/wlCatalogGroups';
+import type { ExerciseFamilyCode, ExerciseVariationCode } from '../../models/exercise';
 import type { SessionPickerOption } from '../../services/exercise';
+import { MUSCLE_CHIP_ORDER, MUSCLE_LABELS, type MuscleGroupFilter } from '../wl-exercises/exerciseListUtils';
+import { PICKER_VARIATION_ORDER, pickerMuscleGroupForOption } from './ExercisePickerFamilyFilters';
 
 /** Umbral para mostrar atajo al modal de búsqueda completa. */
 export const DROPDOWN_BROWSE_THRESHOLD = 40;
@@ -9,9 +18,54 @@ export type DropdownSectionKind = 'favorites' | 'recents' | 'all';
 
 export interface DropdownSection {
   kind: DropdownSectionKind;
+  key?: string;
   labelEs: string;
   labelEn: string;
   items: SessionPickerOption[];
+}
+
+const PICKER_GROUP_ORDER = [
+  'snatch',
+  'clean',
+  'jerk',
+  'pull',
+  'squat',
+  'press',
+  'foam',
+  'warmup',
+  'strength',
+  'bodyweight',
+  'accessory',
+] as const;
+
+const PICKER_GROUP_LABEL: Record<string, { es: string; en: string }> = {
+  snatch: { es: 'Snatch', en: 'Snatch' },
+  clean: { es: 'Clean', en: 'Clean' },
+  jerk: { es: 'Jerk', en: 'Jerk' },
+  pull: { es: 'Pull', en: 'Pull' },
+  squat: { es: 'Squat', en: 'Squat' },
+  press: { es: 'Press', en: 'Press' },
+  foam: { es: 'Foam roller', en: 'Foam roller' },
+  warmup: { es: 'Calentamiento', en: 'Warm-up' },
+  strength: { es: 'Fuerza', en: 'Strength' },
+  bodyweight: { es: 'Peso corporal', en: 'Bodyweight' },
+  accessory: { es: 'Accesorios', en: 'Accessories' },
+};
+
+export function pickerCatalogGroupLabel(group: string, isEs: boolean): string {
+  const label = PICKER_GROUP_LABEL[group];
+  if (!label) return group;
+  return isEs ? label.es : label.en;
+}
+
+export function pickerCatalogGroup(opt: SessionPickerOption): string {
+  const tags = opt.tags ?? [];
+  if (tags.includes('foam')) return 'foam';
+  if (tags.includes('warmup')) return 'warmup';
+  if (tags.includes('bodyweight')) return 'bodyweight';
+  if (tags.includes('concentrado') && tags.includes('strength')) return 'strength';
+  if (opt.family && opt.family !== 'accessory') return opt.family;
+  return 'accessory';
 }
 
 export type NavigableRow =
@@ -71,12 +125,23 @@ export function buildDropdownSections(opts: {
   recentIds: string[];
   query: string;
   isEs: boolean;
+  quickFilter?: 'none' | 'favorites' | 'recent';
+  catalogNavigate?: {
+    section: BrowseModalSectionFilter;
+    familyFilter: ExerciseFamilyCode | 'all';
+    catalogGrupoFilter?: CatalogGrupoFilter;
+    variationLabel: (code: ExerciseVariationCode) => string;
+  };
 }): DropdownBuildResult {
   const favoriteSet = new Set(opts.favoriteIds);
+  const skipFavRecentSections =
+    opts.quickFilter === 'favorites' ||
+    opts.quickFilter === 'recent' ||
+    (opts.catalogNavigate != null && opts.catalogNavigate.section !== 'all');
   const { favorites, recents, rest } = partitionMatches(opts.matched, favoriteSet, opts.recentIds);
 
   const sections: DropdownSection[] = [];
-  if (favorites.length > 0) {
+  if (!skipFavRecentSections && favorites.length > 0) {
     sections.push({
       kind: 'favorites',
       labelEs: 'Favoritos',
@@ -84,7 +149,7 @@ export function buildDropdownSections(opts: {
       items: favorites,
     });
   }
-  if (recents.length > 0) {
+  if (!skipFavRecentSections && recents.length > 0) {
     sections.push({
       kind: 'recents',
       labelEs: 'Recientes',
@@ -92,13 +157,62 @@ export function buildDropdownSections(opts: {
       items: recents,
     });
   }
-  if (rest.length > 0 || sections.length === 0) {
-    sections.push({
-      kind: 'all',
-      labelEs: opts.query.trim() ? 'Todos los resultados' : 'Sugeridos',
-      labelEn: opts.query.trim() ? 'All results' : 'Suggested',
-      items: rest.length > 0 ? rest : opts.matched,
-    });
+  const restItems = rest.length > 0 ? rest : sections.length === 0 ? opts.matched : [];
+  if (opts.query.trim()) {
+    if (restItems.length > 0 || sections.length === 0) {
+      sections.push({
+        kind: 'all',
+        key: 'all',
+        labelEs: 'Todos los resultados',
+        labelEn: 'All results',
+        items: restItems,
+      });
+    }
+  } else if (restItems.length > 0) {
+    const nav = opts.catalogNavigate;
+    const useSectionGrouping = nav && nav.section !== 'all';
+    if (useSectionGrouping) {
+      const grouped = buildBrowseModalSections(restItems, '', {
+        section: nav.section,
+        familyFilter: nav.familyFilter,
+        catalogGrupoFilter: nav.catalogGrupoFilter,
+        muscleKey: pickerMuscleGroupForOption,
+        variationLabel: nav.variationLabel,
+      });
+      for (const group of grouped) {
+        sections.push({
+          kind: 'all',
+          key: group.key,
+          labelEs: group.labelEs,
+          labelEn: group.labelEn,
+          items: group.items,
+        });
+      }
+    } else {
+      const buckets = new Map<string, SessionPickerOption[]>();
+      for (const opt of restItems) {
+        const group = pickerCatalogGroup(opt);
+        const list = buckets.get(group) ?? [];
+        list.push(opt);
+        buckets.set(group, list);
+      }
+      const ordered = [
+        ...PICKER_GROUP_ORDER.filter((id) => buckets.has(id)),
+        ...[...buckets.keys()].filter((id) => !PICKER_GROUP_ORDER.includes(id as (typeof PICKER_GROUP_ORDER)[number])),
+      ];
+      for (const id of ordered) {
+        const items = buckets.get(id) ?? [];
+        if (items.length === 0) continue;
+        const label = PICKER_GROUP_LABEL[id] ?? { es: id, en: id };
+        sections.push({
+          kind: 'all',
+          key: `group:${id}`,
+          labelEs: label.es,
+          labelEn: label.en,
+          items,
+        });
+      }
+    }
   }
 
   const flatOptions = sections.flatMap((section) =>
@@ -133,6 +247,119 @@ export function buildDropdownSections(opts: {
     hiddenCount,
     showCreate,
   };
+}
+
+export type BrowseModalSectionFilter =
+  | 'all'
+  | 'weightlifting'
+  | 'foam'
+  | 'warmup'
+  | 'strength'
+  | 'bodyweight';
+
+/** Agrupa resultados del modal cuando no hay texto de búsqueda (familia, variación o músculo). */
+export function buildBrowseModalSections(
+  items: SessionPickerOption[],
+  query: string,
+  ctx: {
+    section: BrowseModalSectionFilter;
+    familyFilter: 'all' | ExerciseFamilyCode;
+    catalogGrupoFilter?: CatalogGrupoFilter;
+    muscleKey: (opt: SessionPickerOption) => MuscleGroupFilter;
+    variationLabel: (code: ExerciseVariationCode) => string;
+  },
+): DropdownSection[] {
+  if (query.trim()) {
+    return [
+      {
+        kind: 'all',
+        key: 'search',
+        labelEs: 'Resultados',
+        labelEn: 'Results',
+        items,
+      },
+    ];
+  }
+
+  if (items.length === 0) return [];
+
+  const concentradoSections = new Set<BrowseModalSectionFilter>(['foam', 'warmup', 'strength', 'bodyweight']);
+  const buckets = new Map<string, SessionPickerOption[]>();
+
+  let orderedKeys: string[] = [];
+  let labelForKey: (key: string) => { es: string; en: string };
+
+  if (concentradoSections.has(ctx.section)) {
+    for (const opt of items) {
+      const key = ctx.muscleKey(opt);
+      const list = buckets.get(key) ?? [];
+      list.push(opt);
+      buckets.set(key, list);
+    }
+    orderedKeys = MUSCLE_CHIP_ORDER.filter((k) => buckets.has(k));
+    labelForKey = (key) => MUSCLE_LABELS[key as keyof typeof MUSCLE_LABELS] ?? { es: key, en: key };
+  } else if (
+    ctx.section === 'weightlifting' &&
+    ctx.catalogGrupoFilter &&
+    ctx.catalogGrupoFilter !== 'all'
+  ) {
+    for (const opt of items) {
+      const key = opt.variation ?? 'classic';
+      const list = buckets.get(key) ?? [];
+      list.push(opt);
+      buckets.set(key, list);
+    }
+    orderedKeys = PICKER_VARIATION_ORDER.filter((k) => buckets.has(k));
+    labelForKey = (key) => ({
+      es: ctx.variationLabel(key as ExerciseVariationCode),
+      en: ctx.variationLabel(key as ExerciseVariationCode),
+    });
+  } else if (ctx.section === 'weightlifting') {
+    for (const opt of items) {
+      const key =
+        catalogGrupoFromPickerTags(opt.tags, opt.id) ?? opt.catalogGroup ?? 'unassigned';
+      const list = buckets.get(key) ?? [];
+      list.push(opt);
+      buckets.set(key, list);
+    }
+    orderedKeys = [
+      ...WL_CATALOG_GROUP_ORDER.filter((k) => buckets.has(k)),
+      ...(buckets.has('unassigned') ? (['unassigned'] as const) : []),
+    ];
+    labelForKey = (key) => {
+      if (key === 'unassigned') return { es: 'Sin grupo', en: 'Unassigned' };
+      const meta = WL_CATALOG_GROUP_LABELS[key as keyof typeof WL_CATALOG_GROUP_LABELS];
+      return meta ? { es: meta.titleEs, en: meta.titleEn } : { es: key, en: key };
+    };
+  } else {
+    for (const opt of items) {
+      const key = pickerCatalogGroup(opt);
+      const list = buckets.get(key) ?? [];
+      list.push(opt);
+      buckets.set(key, list);
+    }
+    orderedKeys = [
+      ...PICKER_GROUP_ORDER.filter((id) => buckets.has(id)),
+      ...[...buckets.keys()].filter((id) => !PICKER_GROUP_ORDER.includes(id as (typeof PICKER_GROUP_ORDER)[number])),
+    ];
+    labelForKey = (key) => PICKER_GROUP_LABEL[key] ?? { es: key, en: key };
+  }
+
+  return orderedKeys
+    .map((key) => {
+      const groupItems = (buckets.get(key) ?? []).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+      );
+      const label = labelForKey(key);
+      return {
+        kind: 'all' as const,
+        key: `group:${key}`,
+        labelEs: label.es,
+        labelEn: label.en,
+        items: groupItems,
+      };
+    })
+    .filter((section) => section.items.length > 0);
 }
 
 /** Une recientes de sesión y biblioteca conservando orden. */

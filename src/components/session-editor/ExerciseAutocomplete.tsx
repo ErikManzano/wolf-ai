@@ -3,9 +3,11 @@ import { createPortal } from 'react-dom';
 import { BookOpen, Clock, Plus, Search, Star } from 'lucide-react';
 import {
   fuzzySearchPickerOptions,
+  getExerciseTaxonomy,
   pickerOptionsFromIds,
   type SessionPickerOption,
 } from '../../services/exercise';
+import type { ExerciseVariationCode } from '../../models/exercise';
 import { customFamilyTag, stripCustomFamilyTags } from '../../models/exercise/coachFamily';
 import { useWolfAssign } from '../../context/WolfAssignContext';
 import { WlExerciseFormModal } from '../wl-exercises/WlExerciseFormModal';
@@ -18,20 +20,23 @@ import {
 import { FamilyAvatar } from '../wl-exercises/FamilyAvatar';
 import type { ExerciseFamilyId } from '../wl-exercises/types';
 import { ExercisePickerBrowseModal } from './ExercisePickerBrowseModal';
-import {
-  buildPickerFamilyCounts,
-  ExercisePickerFamilyFilters,
-  filterPickerByFamily,
-  type PickerFamilyFilter,
-} from './ExercisePickerFamilyFilters';
+import { ExercisePickerActiveFilterChip } from './ExercisePickerActiveFilterChip';
+import { ExercisePickerCatalogSidebar } from './ExercisePickerCatalogSidebar';
+import { ExercisePickerPanelSplit } from './ExercisePickerPanelSplit';
+import type { CatalogGrupoFilter } from '../../data/wlCatalogGroups';
+import type { PickerFamilyFilter, PickerVariationFilter } from './ExercisePickerFamilyFilters';
+import { computePickerOptionPool, type PickerCatalogSection } from './exercisePickerCatalogUtils';
+import type { MuscleGroupFilter } from '../wl-exercises/exerciseListUtils';
+import type { ExerciseQuickFilter } from '../wl-exercises/types';
 import {
   buildDropdownSections,
+  pickerCatalogGroup,
+  pickerCatalogGroupLabel,
   combinedRecentIds,
   formatHoverPreview,
   highlightTokens,
   HOVER_PREVIEW_MS,
   SEARCH_DEBOUNCE_MS,
-  truncateLabel,
   type DropdownSectionKind,
   type NavigableRow,
 } from './exerciseAutocompleteUtils';
@@ -88,7 +93,7 @@ function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRec
   const card = input.closest('article.wolf-se-block-card');
   const margin = 12;
 
-  let width = Math.max(inputRect.width, 400);
+  let width = Math.max(inputRect.width, 720);
   let left = inputRect.left;
 
   if (matchCard && card) {
@@ -97,13 +102,13 @@ function measurePanelRect(input: HTMLInputElement, matchCard: boolean): PanelRec
     width = Math.max(cardRect.width - margin * 2, inputRect.width);
   }
 
-  width = Math.min(Math.max(width, 400), window.innerWidth - 16);
+  width = Math.min(Math.max(width, 720), window.innerWidth - 16);
   if (left + width > window.innerWidth - 8) {
     left = Math.max(8, window.innerWidth - width - 8);
   }
 
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-  const viewportCap = Math.min(480, Math.floor(viewportHeight * 0.58));
+  const viewportCap = Math.min(560, Math.floor(viewportHeight * 0.62));
   const minComfortable = Math.min(240, viewportCap);
   const spaceBelow = viewportHeight - inputRect.bottom - gap;
   const spaceAbove = inputRect.top - gap;
@@ -154,7 +159,21 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   const [createOpen, setCreateOpen] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [hoverPreview, setHoverPreview] = useState<string | null>(null);
+  const [section, setSection] = useState<PickerCatalogSection>('all');
+  const [catalogGrupoFilter, setCatalogGrupoFilter] = useState<CatalogGrupoFilter>('all');
   const [familyFilter, setFamilyFilter] = useState<PickerFamilyFilter>('all');
+  const [muscleFilter, setMuscleFilter] = useState<MuscleGroupFilter>('all');
+  const [variationFilter, setVariationFilter] = useState<PickerVariationFilter>('all');
+  const [quickFilter, setQuickFilter] = useState<ExerciseQuickFilter>('none');
+
+  const variationLabels = useMemo(() => {
+    const taxonomy = getExerciseTaxonomy();
+    const map = {} as Record<ExerciseVariationCode, string>;
+    for (const item of taxonomy.variations) {
+      map[item.code as ExerciseVariationCode] = isEs ? item.labelEs : item.labelEn;
+    }
+    return map;
+  }, [isEs]);
 
   const openCreateFlow = useCallback(
     (name: string) => {
@@ -193,28 +212,54 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     [recentIds, libraryRecentIds],
   );
 
-  const familyCounts = useMemo(() => buildPickerFamilyCounts(options), [options]);
-
-  const optionPool = useMemo(
-    () => filterPickerByFamily(options, familyFilter),
-    [options, familyFilter],
+  const catalogPool = useMemo(
+    () =>
+      computePickerOptionPool(options, {
+        section,
+        familyFilter,
+        muscleFilter,
+        variationFilter,
+        catalogGrupoFilter,
+      }),
+    [options, section, familyFilter, muscleFilter, variationFilter, catalogGrupoFilter],
   );
+
+  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const recentIdSet = useMemo(() => new Set(mergedRecentIds), [mergedRecentIds]);
+
+  const optionPool = useMemo(() => {
+    if (quickFilter === 'favorites') {
+      return catalogPool.filter((opt) => favoriteSet.has(opt.id) || favoriteSet.has(opt.definitionId));
+    }
+    if (quickFilter === 'recent') {
+      return catalogPool.filter((opt) => recentIdSet.has(opt.id) || recentIdSet.has(opt.definitionId));
+    }
+    return catalogPool;
+  }, [catalogPool, quickFilter, favoriteSet, recentIdSet]);
 
   const searchResults = useMemo(() => {
     const limit = debouncedQuery.trim() ? 80 : 40;
     const results = fuzzySearchPickerOptions(optionPool, debouncedQuery, limit, {
       catalogGroup: catalogGroupFilter,
       exerciseIdsInGroup: pickerIdsInGroup,
-      preferIds: mergedRecentIds,
+      preferIds: quickFilter === 'none' ? mergedRecentIds : undefined,
     });
-    if (!debouncedQuery.trim()) {
+    if (!debouncedQuery.trim() && quickFilter === 'none') {
       const recentOpts = pickerOptionsFromIds(optionPool, mergedRecentIds.filter((id) => id !== value), 8);
       const recentSet = new Set(recentOpts.map((o) => o.id));
       const rest = results.filter((o) => !recentSet.has(o.id));
       return [...recentOpts, ...rest].slice(0, limit);
     }
     return results;
-  }, [optionPool, debouncedQuery, catalogGroupFilter, pickerIdsInGroup, mergedRecentIds, value]);
+  }, [
+    optionPool,
+    debouncedQuery,
+    catalogGroupFilter,
+    pickerIdsInGroup,
+    mergedRecentIds,
+    value,
+    quickFilter,
+  ]);
 
   const matched = searchResults;
 
@@ -226,8 +271,29 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
         recentIds: mergedRecentIds,
         query: debouncedQuery,
         isEs,
+        quickFilter,
+        catalogNavigate:
+          section !== 'all'
+            ? {
+                section,
+                familyFilter,
+                catalogGrupoFilter,
+                variationLabel: (code) => variationLabels[code] ?? code,
+              }
+            : undefined,
       }),
-    [matched, favoriteIds, mergedRecentIds, debouncedQuery, isEs],
+    [
+      matched,
+      favoriteIds,
+      mergedRecentIds,
+      debouncedQuery,
+      isEs,
+      quickFilter,
+      section,
+      familyFilter,
+      catalogGrupoFilter,
+      variationLabels,
+    ],
   );
 
   const navigable = dropdown.navigable;
@@ -261,12 +327,28 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
   }, [open]);
 
   useEffect(() => {
-    if (!open) setFamilyFilter('all');
+    if (!open) {
+      setSection('all');
+      setCatalogGrupoFilter('all');
+      setFamilyFilter('all');
+      setMuscleFilter('all');
+      setVariationFilter('all');
+      setQuickFilter('none');
+    }
   }, [open]);
+
+  const handleSectionChange = useCallback((next: PickerCatalogSection) => {
+    setSection(next);
+    setCatalogGrupoFilter('all');
+    setFamilyFilter('all');
+    setMuscleFilter('all');
+    setVariationFilter('all');
+    setQuickFilter('none');
+  }, []);
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [debouncedQuery, catalogGroupFilter, familyFilter]);
+  }, [debouncedQuery, catalogGroupFilter, familyFilter, muscleFilter, variationFilter, section, quickFilter, catalogGrupoFilter]);
 
   useEffect(() => {
     if (!open || !panelRef.current) return;
@@ -374,7 +456,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
     const isFavorite = favoriteIds.includes(opt.id) || favoriteIds.includes(opt.definitionId);
     const isActive = navigable[activeIndex]?.kind === 'option' && navigable[activeIndex]?.id === `opt-${opt.id}`;
     const family = opt.family as ExerciseFamilyId;
-    const meta = `${opt.familyLabel} · ${opt.typeLabel}`;
+    const meta = `${pickerCatalogGroupLabel(pickerCatalogGroup(opt), isEs)} · ${opt.typeLabel}`;
 
     return (
       <li key={`${section}-${opt.id}`} id={`${listId}-opt-${navIndex}`} role="option" aria-selected={opt.id === value}>
@@ -410,7 +492,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             </span>
             <span className="wolf-se-picker-row__main">
               <span className="wolf-se-picker-row__name">
-                {highlightTokens(truncateLabel(opt.name), debouncedQuery).map((part, index) =>
+                {highlightTokens(opt.name, debouncedQuery).map((part, index) =>
                   part.match ? (
                     <mark key={index} className="wolf-se-picker-highlight">
                       {part.text}
@@ -447,7 +529,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
       return renderOptionRow(opt, idx >= 0 ? idx : 0, section.kind);
     });
     return (
-      <li key={section.kind} className="wolf-se-picker-section" role="presentation">
+      <li key={section.key ?? section.kind} className="wolf-se-picker-section" role="presentation">
         <p className="wolf-se-picker-section-label">
           {SECTION_ICON[section.kind]}
           <span>{sectionLabel}</span>
@@ -481,64 +563,103 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
           : { position: 'fixed', visibility: 'hidden', zIndex: 10050 }
       }
     >
-      <ExercisePickerFamilyFilters
-        isEs={isEs}
-        active={familyFilter}
-        counts={familyCounts}
-        compact={compact}
-        onChange={setFamilyFilter}
-      />
+      <ExercisePickerPanelSplit
+        showSidebar={!debouncedQuery.trim()}
+        sidebar={
+          <ExercisePickerCatalogSidebar
+            isEs={isEs}
+            options={options}
+            section={section}
+            onSectionChange={handleSectionChange}
+            catalogGrupoFilter={catalogGrupoFilter}
+            onCatalogGrupoChange={(grupo) => {
+              setCatalogGrupoFilter(grupo);
+              setVariationFilter('all');
+            }}
+            muscleFilter={muscleFilter}
+            onMuscleChange={setMuscleFilter}
+            variationFilter={variationFilter}
+            onVariationChange={setVariationFilter}
+            variationLabels={variationLabels}
+            quickFilter={quickFilter}
+            onQuickFilterChange={setQuickFilter}
+          />
+        }
+        filterBar={
+          debouncedQuery.trim() ? (
+            <ExercisePickerActiveFilterChip
+              isEs={isEs}
+              section={section}
+              catalogGrupo={catalogGrupoFilter}
+              muscle={muscleFilter}
+              variation={variationFilter}
+              onClearFilters={() => {
+                setSection('all');
+                setCatalogGrupoFilter('all');
+                setMuscleFilter('all');
+                setVariationFilter('all');
+                setQuickFilter('none');
+              }}
+              onShowCatalog={() => setQuery('')}
+            />
+          ) : null
+        }
+        footer={
+          <>
+            {moreRow && moreRow.kind === 'more' ? (
+              <button
+                type="button"
+                className={`wolf-se-picker-more${activeIndex === navigable.indexOf(moreRow) ? ' is-active' : ''}`}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  openBrowseModal();
+                }}
+              >
+                {isEs
+                  ? `Ver todos los resultados (${dropdown.totalMatches})`
+                  : `View all results (${dropdown.totalMatches})`}
+              </button>
+            ) : null}
+            {createRow && createRow.kind === 'create' ? (
+              <button
+                type="button"
+                className={`wolf-se-picker-create${activeIndex === navigable.indexOf(createRow) ? ' is-active' : ''}`}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  openCreateFlow(createRow.query);
+                }}
+              >
+                <Plus size={14} aria-hidden />
+                {isEs
+                  ? `Crear "${createRow.query}" en la biblioteca`
+                  : `Create "${createRow.query}" in library`}
+              </button>
+            ) : null}
+          </>
+        }
+      >
+        {hoverPreview ? <p className="wolf-se-picker-inline-preview">{hoverPreview}</p> : null}
 
-      {hoverPreview ? <p className="wolf-se-picker-inline-preview">{hoverPreview}</p> : null}
-
-      {navigable.some((n) => n.kind === 'option') ? (
-        <ul id={listId} role="listbox" className="wolf-se-picker-menu">
-          {sectionBlocks}
+        {navigable.some((n) => n.kind === 'option') ? (
+          <ul id={listId} role="listbox" className="wolf-se-picker-menu">
+            {sectionBlocks}
           </ul>
-      ) : (
-        <p className="wolf-se-autocomplete-empty">
-          {dropdown.showCreate
-            ? isEs
-              ? `Sin resultados. Crea "${debouncedQuery.trim()}" para añadirlo a la biblioteca.`
-              : `No results. Create "${debouncedQuery.trim()}" to add it to the library.`
-            : familyFilter !== 'all'
+        ) : (
+          <p className="wolf-se-autocomplete-empty">
+            {dropdown.showCreate
               ? isEs
-                ? 'Sin ejercicios en esta familia.'
-                : 'No exercises in this family.'
-              : isEs
-                ? 'Sin resultados.'
-                : 'No results.'}
-        </p>
-      )}
-
-      {moreRow && moreRow.kind === 'more' ? (
-        <button
-          type="button"
-          className={`wolf-se-picker-more${activeIndex === navigable.indexOf(moreRow) ? ' is-active' : ''}`}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            openBrowseModal();
-          }}
-        >
-          {isEs ? `Ver todos los resultados (${dropdown.totalMatches})` : `View all results (${dropdown.totalMatches})`}
-        </button>
-      ) : null}
-
-      {createRow && createRow.kind === 'create' ? (
-        <button
-          type="button"
-          className={`wolf-se-picker-create${activeIndex === navigable.indexOf(createRow) ? ' is-active' : ''}`}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            openCreateFlow(createRow.query);
-          }}
-        >
-          <Plus size={14} aria-hidden />
-          {isEs
-            ? `Crear "${createRow.query}" en la biblioteca`
-            : `Create "${createRow.query}" in library`}
-        </button>
-      ) : null}
+                ? `Sin resultados. Crea "${debouncedQuery.trim()}" para añadirlo a la biblioteca.`
+                : `No results. Create "${debouncedQuery.trim()}" to add it to the library.`
+              : section !== 'all' || catalogGrupoFilter !== 'all' || muscleFilter !== 'all'
+                ? isEs
+                  ? 'Sin ejercicios con estos filtros.'
+                  : 'No exercises match these filters.'
+                : isEs
+                  ? 'Sin resultados.'
+                  : 'No results.'}
+          </p>
+        )}
+      </ExercisePickerPanelSplit>
     </div>
   ) : null;
 
@@ -606,7 +727,10 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
         open={browseOpen}
         options={options}
         initialQuery={debouncedQuery}
-        initialFamily={familyFilter}
+        initialSection={section}
+        initialCatalogGrupo={catalogGrupoFilter}
+        initialMuscleFilter={muscleFilter}
+        initialVariationFilter={variationFilter}
         favoriteIds={favoriteIds}
         onClose={() => setBrowseOpen(false)}
         onSelect={pick}

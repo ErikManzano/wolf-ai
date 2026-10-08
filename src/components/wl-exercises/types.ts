@@ -28,6 +28,8 @@ export interface ExerciseListSortState {
 export interface ExerciseListItem {
   id: string;
   name: string;
+  /** Grupo 1–15 del catálogo búlgaro (halterofilia). */
+  catalogGrupo?: string | null;
   family: ExerciseFamilyId;
   familyLabel: string;
   type: TrainingObjectiveCode;

@@ -1,3 +1,10 @@
+import {
+  catalogGrupoCounts,
+  catalogGrupoFromDefinition,
+  WL_CATALOG_GROUP_LABELS,
+  WL_CATALOG_GROUP_ORDER,
+  type CatalogGrupoFilter,
+} from '../../data/wlCatalogGroups';
 import type { CoachProgramRow } from '../../models/coach-architecture';
 import type {
   ExerciseDefinitionInput,
@@ -51,6 +58,37 @@ export type ExerciseDisciplineFilter =
   | 'bodybuilding'
   | 'running'
   | 'high_performance';
+
+/** Secciones de un toque: halterofilia y el documento CONCENTRADO (foam, calentamiento, fuerza, peso corporal). */
+export type CatalogSectionFilter = 'all' | 'weightlifting' | 'foam' | 'warmup' | 'strength' | 'bodyweight';
+
+export const CATALOG_SECTION_OPTIONS: {
+  id: CatalogSectionFilter;
+  labelEs: string;
+  labelEn: string;
+}[] = [
+  { id: 'all', labelEs: 'Todos', labelEn: 'All' },
+  { id: 'weightlifting', labelEs: 'Halterofilia', labelEn: 'Weightlifting' },
+  { id: 'foam', labelEs: 'Foam roller', labelEn: 'Foam roller' },
+  { id: 'warmup', labelEs: 'Calentamiento', labelEn: 'Warm-up' },
+  { id: 'strength', labelEs: 'Fuerza', labelEn: 'Strength' },
+  { id: 'bodyweight', labelEs: 'Peso corporal', labelEn: 'Bodyweight' },
+];
+
+export function catalogSectionUsesMuscles(section: CatalogSectionFilter): boolean {
+  return section === 'foam' || section === 'warmup' || section === 'strength' || section === 'bodyweight';
+}
+
+export function catalogSectionOf(def: MergedDefinitionView): Exclude<CatalogSectionFilter, 'all'> | null {
+  if (def.tags.some((t) => /^grupo_\d+$/.test(t))) return 'weightlifting';
+  if (def.tags.includes('foam')) return 'foam';
+  if (def.tags.includes('warmup')) return 'warmup';
+  if (def.tags.includes('bodyweight')) return 'bodyweight';
+  if (def.tags.includes('concentrado') && def.tags.includes('strength')) return 'strength';
+  const family = definitionFamily(def);
+  if (family && family !== 'accessory') return 'weightlifting';
+  return null;
+}
 
 export const MUSCLE_CHIP_ORDER: Exclude<MuscleGroupFilter, 'all'>[] = [
   'chest',
@@ -169,6 +207,7 @@ export const SORT_OPTIONS: {
 ];
 
 export function inferExerciseDiscipline(def: MergedDefinitionView): 'weightlifting' | 'accessory' {
+  if (def.tags.some((t) => /^grupo_\d+$/.test(t))) return 'weightlifting';
   const family =
     def.family ?? (isSingleComposition(def.composition) ? def.composition.family : null);
   return family === 'accessory' ? 'accessory' : 'weightlifting';
@@ -177,7 +216,9 @@ export function inferExerciseDiscipline(def: MergedDefinitionView): 'weightlifti
 export function muscleGroupFromTags(tags: string[]): MuscleGroupFilter | null {
   const hit = tags.find((tag) => tag.startsWith('muscle:'));
   if (!hit) return null;
-  const code = hit.slice('muscle:'.length) as MuscleGroupFilter;
+  const raw = hit.slice('muscle:'.length);
+  if (raw === 'biceps') return 'back';
+  const code = raw as MuscleGroupFilter;
   return MUSCLE_CHIP_ORDER.includes(code as Exclude<MuscleGroupFilter, 'all'>) ? code : null;
 }
 
@@ -227,6 +268,8 @@ export function filterExerciseDefinitions(
     favoriteIds?: Set<string>;
     recentIds?: Set<string>;
     accessorySubFilter?: 'all' | 'unfiled';
+    section?: CatalogSectionFilter;
+    catalogGrupo?: CatalogGrupoFilter;
   },
 ): MergedDefinitionView[] {
   const q = opts.search.trim().toLowerCase();
@@ -276,6 +319,14 @@ export function filterExerciseDefinitions(
 
     if (opts.family === 'accessory' && opts.accessorySubFilter === 'unfiled') {
       if (customFamilyIdFromTags(def.tags)) return false;
+    }
+
+    if (opts.section && opts.section !== 'all' && catalogSectionOf(def) !== opts.section) {
+      return false;
+    }
+
+    if (opts.catalogGrupo && opts.catalogGrupo !== 'all') {
+      if (catalogGrupoFromDefinition(def) !== opts.catalogGrupo) return false;
     }
 
     if (minUsage > 0) {
@@ -463,6 +514,71 @@ export function accessoryFolderCounts(definitions: MergedDefinitionView[]): {
     }
   }
   return { unfiled, folders };
+}
+
+export function catalogSectionCounts(definitions: MergedDefinitionView[]): Record<string, number> {
+  const counts: Record<string, number> = { all: definitions.length };
+  for (const def of definitions) {
+    const section = catalogSectionOf(def);
+    if (!section) continue;
+    counts[section] = (counts[section] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function catalogGrupoCountsForDefinitions(
+  definitions: MergedDefinitionView[],
+): Record<string, number> {
+  return catalogGrupoCounts(definitions);
+}
+
+export function buildExerciseListNodesByGrupo(
+  items: ExerciseListItem[],
+  catalogGrupo: CatalogGrupoFilter,
+  isEs: boolean,
+): ExerciseListNode[] {
+  if (catalogGrupo !== 'all') {
+    return items.map((item) => ({ kind: 'row' as const, id: item.id, item }));
+  }
+
+  const buckets = new Map<string, ExerciseListItem[]>();
+  for (const item of items) {
+    const grupo = item.catalogGrupo ?? 'unassigned';
+    const list = buckets.get(grupo) ?? [];
+    list.push(item);
+    buckets.set(grupo, list);
+  }
+
+  const nodes: ExerciseListNode[] = [];
+  const ordered = [
+    ...WL_CATALOG_GROUP_ORDER.filter((g) => buckets.has(g)),
+    ...(buckets.has('unassigned') ? (['unassigned'] as const) : []),
+  ];
+
+  for (const grupo of ordered) {
+    const groupItems = buckets.get(grupo) ?? [];
+    if (!groupItems.length) continue;
+    const label =
+      grupo === 'unassigned'
+        ? isEs
+          ? 'SIN GRUPO'
+          : 'UNASSIGNED'
+        : (isEs
+            ? WL_CATALOG_GROUP_LABELS[grupo as keyof typeof WL_CATALOG_GROUP_LABELS].titleEs
+            : WL_CATALOG_GROUP_LABELS[grupo as keyof typeof WL_CATALOG_GROUP_LABELS].titleEn
+          ).toUpperCase();
+    nodes.push({
+      kind: 'group',
+      id: `grupo-${grupo}`,
+      family: 'accessory',
+      label,
+      count: groupItems.length,
+    });
+    for (const item of groupItems) {
+      nodes.push({ kind: 'row', id: item.id, item });
+    }
+  }
+  return nodes;
 }
 
 export function familyCounts(definitions: MergedDefinitionView[]): Record<string, number> {
@@ -711,6 +827,7 @@ export function toExerciseListItem(
   return {
     id: def.id,
     name: def.effectiveDisplayName,
+    catalogGrupo: catalogGrupoFromDefinition(def),
     family,
     familyLabel: opts.familyLabel ?? familyDisplayLabel(family),
     type: def.objective,

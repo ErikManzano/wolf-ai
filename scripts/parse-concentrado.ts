@@ -131,6 +131,61 @@ function cleanExerciseTitle(raw: string): string {
     .trim();
 }
 
+/** Cues OCR’d as foam “exercises” (posture lines, not roller drills). */
+function isLikelyCueNotExercise(nameEn: string, nameEs: string, section: ConcentradoSection): boolean {
+  if (section !== 'foam') return false;
+  const en = nameEn.trim();
+  const es = nameEs.trim();
+  if (/^the (bak|back|head|shoulders) is\b/i.test(en)) return true;
+  if (/^the shoulders are\b/i.test(en)) return true;
+  if (/^the eyes are\b/i.test(en)) return true;
+  if (/^(la|el) (espalda|cab(e)?za|hombros)\b/i.test(es) && es.length > 28) return true;
+  if (/^(the|la|el)\s+/i.test(en) && en.length > 55) return true;
+  return false;
+}
+
+function inferMuscleGroupFromNames(
+  nameEn: string,
+  nameEs: string,
+  section: ConcentradoSection,
+  current: ConcentradoMuscleGroup,
+): ConcentradoMuscleGroup {
+  if (current !== 'full_body') return current;
+  const text = normalizeName(`${nameEn} ${nameEs}`);
+  if (!text) return current;
+
+  if (/\b(hamstring|isquio|ischi)\b/.test(text)) return 'hamstrings';
+  if (/\b(calf|calves|pantorrilla|soleus|gastrocnemius|gastroc)\b/.test(text)) return 'calves';
+  if (/\b(glute|gluteo|nalg)\b/.test(text)) return 'glutes';
+  if (/\b(quad|cuadr|leg extension|leg curl|lunge|zancada|sentadilla|squat|pierna)\b/.test(text)) {
+    return 'quads';
+  }
+  if (/\b(chest|pecho|pec\b|bench press|press de banca|fly|apertura)\b/.test(text)) return 'chest';
+  if (/\b(back|espalda|lat\b|latissimus|row|remo|pull up|pullup|dominada|deadlift|peso muerto)\b/.test(text)) {
+    return 'back';
+  }
+  if (/\b(shoulder|hombro|deltoid|overhead press|military press|press militar)\b/.test(text)) {
+    return 'shoulders';
+  }
+  if (/\b(tricep|triceps)\b/.test(text)) return 'triceps';
+  if (/\b(bicep|biceps|curl)\b/.test(text)) return 'biceps';
+  if (/\b(forearm|antebraz|wrist|muneca|muñeca)\b/.test(text)) return 'forearms';
+  if (/\b(core|abdomen|abdominal|plank|crunch|oblique|rotacion)\b/.test(text)) return 'core';
+
+  if (section === 'foam') {
+    if (/\b(it band|tensor|iliotibial|tfl)\b/.test(text)) return 'quads';
+    if (/\b(lower back|lumbar|espalda baja)\b/.test(text)) return 'back';
+    if (/\b(hip flexor|flexor de cadera)\b/.test(text)) return 'quads';
+  }
+
+  if (section === 'warmup') {
+    if (/\b(hip|cadera|rotacion de cadera)\b/.test(text)) return 'glutes';
+    if (/\b(ankle|tobillo)\b/.test(text)) return 'calves';
+  }
+
+  return current;
+}
+
 function inferEquipment(nameEn: string, cues: string, section: ConcentradoSection): ConcentradoEquipment {
   const text = `${nameEn} ${cues}`.toLowerCase();
   if (section === 'foam') return 'foam_roller';
@@ -320,10 +375,12 @@ function pairEntries(raw: RawEntry[]): ConcentradoExercise[] {
     if (!pair.en && !pair.es) continue;
     const nameEn = pair.en?.name ?? pair.es!.name;
     const nameEs = pair.es?.name ?? pair.en!.name;
+    if (isLikelyCueNotExercise(nameEn, nameEs, (pair.en ?? pair.es!).section)) continue;
     const cuesEn = pair.en?.cues ?? '';
     const cuesEs = pair.es?.cues ?? '';
     const ctx = pair.en ?? pair.es!;
-    const { section, muscleGroup } = ctx;
+    const { section } = ctx;
+    const muscleGroup = inferMuscleGroupFromNames(nameEn, nameEs, section, ctx.muscleGroup);
     const slug = slugify(nameEn || nameEs);
     if (!slug || slug.length < 2) continue;
 

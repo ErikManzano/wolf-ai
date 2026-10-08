@@ -15,12 +15,14 @@ export function WlExerciseChipBar({
   items,
   activeId,
   moreLabel,
+  rowClassName,
   onChange,
 }: {
   ariaLabel: string;
   items: ExerciseChipItem[];
   activeId: string;
   moreLabel: string;
+  rowClassName?: string;
   onChange: (id: string) => void;
 }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -80,7 +82,7 @@ export function WlExerciseChipBar({
   };
 
   return (
-    <div className="wl-exercises-chips-row">
+    <div className={`wl-exercises-chips-row${rowClassName ? ` ${rowClassName}` : ''}`}>
       <div
         ref={scrollerRef}
         className={`wl-exercises-chips${overflow ? ' is-overflowing' : ''}`}

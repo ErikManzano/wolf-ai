@@ -299,17 +299,21 @@ export const bulgarianCatalogEntries: CatalogEntry[] = [
     tags: ['tempo'],
     loadAnchor: 'back_squat',
   }),
-  e('ex-wl-g10-04', 'Bend Overs', 'grupo_10', 'accessory', 'classic', 'floor', 'strength', [40, 60], {
-    nameEs: 'Inclinaciones (bend over)',
+  // Grupo 11 — Good mornings / pulley / bend overs
+  e('ex-wl-g11-01', 'Snatch Grip Pulley Pull', 'grupo_11', 'accessory', 'pull', 'floor', 'strength', [50, 70], {
+    loadAnchor: 'snatch',
+    nameEs: 'Jalón polea agarre snatch',
   }),
-
-  // Grupo 11 — Good mornings / pulley
-  e('ex-wl-g11-01', 'Snatch Grip Pulley Pull', 'grupo_11', 'accessory', 'pull', 'floor', 'strength', [50, 70], { loadAnchor: 'snatch' }),
   e('ex-wl-g11-02', 'Good Morning with Knee Flexed', 'grupo_11', 'accessory', 'classic', 'floor', 'strength', [20, 60], {
     loadAnchor: 'back_squat',
+    nameEs: 'Good morning rodillas flexionadas',
   }),
   e('ex-wl-g11-03', 'Good Morning Knees Flexed + Vertical Jump', 'grupo_11', 'accessory', 'complex', 'floor', 'power', [40, 55], {
     complexity: 'complex',
+    nameEs: 'Good morning flexión + salto vertical',
+  }),
+  e('ex-wl-g11-04', 'Bend Overs', 'grupo_11', 'accessory', 'classic', 'floor', 'strength', [40, 60], {
+    nameEs: 'Inclinaciones (bend over)',
   }),
 
   // Grupo 12 — Pressing
@@ -348,18 +352,24 @@ export const bulgarianCatalogEntries: CatalogEntry[] = [
   e('ex-wl-g13-07', 'Depth Jump', 'grupo_13', 'accessory', 'classic', 'floor', 'power', [0, 0], { tags: ['al', 'plyometric'] }),
 
   // Grupo 14 — Back
-  e('ex-wl-g14-01', 'Hyperextension', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [40, 60], { tags: ['back'] }),
+  e('ex-wl-g14-01', 'Hyperextension', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [40, 60], {
+    tags: ['back'],
+    nameEs: 'Hiperextensión',
+  }),
   e('ex-wl-g14-02', 'Good Morning, Legs Straight', 'grupo_14', 'accessory', 'classic', 'straight_legs', 'strength', [20, 60], {
     tags: ['back'],
     loadAnchor: 'back_squat',
+    nameEs: 'Good morning piernas rectas',
   }),
   e('ex-wl-g14-03', 'Good Morning Seated on Floor', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [20, 55], {
     tags: ['back'],
     loadAnchor: 'back_squat',
+    nameEs: 'Good morning sentado en el suelo',
   }),
   e('ex-wl-g14-04', 'Good Morning Seated on Bench', 'grupo_14', 'accessory', 'classic', 'floor', 'strength', [20, 55], {
     tags: ['back'],
     loadAnchor: 'back_squat',
+    nameEs: 'Good morning sentado en banco',
   }),
 
   // Grupo 15 in plan = arms/shoulders (catalogGroup grupo_14 extension as grupo_15)

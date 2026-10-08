@@ -20,17 +20,20 @@ import { ExerciseListTable } from './ExerciseListTable';
 import { ExerciseSkeletonGrid } from './ExerciseSkeletonGrid';
 import { WlExerciseCard } from './WlExerciseCard';
 import { WlExerciseDetail } from './WlExerciseDetail';
-import { WlExerciseAccessoryFolderChips } from './WlExerciseAccessoryFolderChips';
-import { WlExerciseFamilyChips } from './WlExerciseFamilyChips';
-import { WlExerciseMuscleChips } from './WlExerciseMuscleChips';
+import { WlExerciseCatalogNavigator } from './WlExerciseCatalogNavigator';
 import { WlExerciseFormModal, type ExerciseFormMode, type ExerciseFormSaveOpts } from './WlExerciseFormModal';
 import { buildSignature } from '../../services/exercise/signature';
 import { WlExercisesToolbar } from './WlExercisesToolbar';
+import type { CatalogGrupoFilter } from '../../data/wlCatalogGroups';
 import {
   DEFAULT_EXERCISE_SORT,
   DISCIPLINE_OPTIONS,
   accessoryFolderCounts,
   buildExerciseListNodes,
+  buildExerciseListNodesByGrupo,
+  catalogGrupoCountsForDefinitions,
+  catalogSectionCounts,
+  catalogSectionUsesMuscles,
   countExerciseUsage,
   familyCounts,
   type ExercisesPageSize,
@@ -46,6 +49,7 @@ import {
   toExerciseListItem,
   usageCountsByDefinition,
   usesMuscleGroupChips,
+  type CatalogSectionFilter,
   type ExerciseDisciplineFilter,
   type ExerciseFamilyFilter,
   type ExerciseOriginFilter,
@@ -106,6 +110,8 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [view, setView] = useState<HubView>('library');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [section, setSection] = useState<CatalogSectionFilter>('all');
+  const [catalogGrupo, setCatalogGrupo] = useState<CatalogGrupoFilter>('all');
   const [family, setFamily] = useState<ExerciseFamilyFilter>('all');
   const [accessorySubFilter, setAccessorySubFilter] = useState<'all' | 'unfiled'>('all');
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroupFilter>('all');
@@ -122,6 +128,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState<ExercisesPageSize>(() => readExercisePageSize());
   const lastSelectedIdRef = useRef<string | null>(null);
+  const keepSectionRef = useRef(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readExerciseFavorites());
   const [recentIds, setRecentIds] = useState<string[]>(() => readExerciseRecents());
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -162,7 +169,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     [registryBrowse],
   );
 
-  const muscleChipMode = usesMuscleGroupChips(discipline);
+  const muscleChipMode = usesMuscleGroupChips(discipline) || catalogSectionUsesMuscles(section);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const recentSet = useMemo(() => new Set(recentIds), [recentIds]);
 
@@ -179,14 +186,15 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
         muscleGroup: muscleChipMode ? 'all' : undefined,
         origin,
         discipline,
+        section,
       }),
-    [browse.definitions, search, origin, discipline, muscleChipMode],
+    [browse.definitions, search, origin, discipline, muscleChipMode, section],
   );
 
   const visibleDefs = useMemo(() => {
     const filtered = filterExerciseDefinitions(browse.definitions, {
       search,
-      family: muscleChipMode ? 'all' : family,
+      family: section === 'weightlifting' || muscleChipMode ? 'all' : family,
       muscleGroup: muscleChipMode ? muscleGroup : undefined,
       origin,
       discipline,
@@ -196,6 +204,8 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
       favoriteIds: favoriteSet,
       recentIds: recentSet,
       accessorySubFilter: muscleChipMode ? undefined : accessorySubFilter,
+      section,
+      catalogGrupo: section === 'weightlifting' ? catalogGrupo : 'all',
     });
     const effectiveSort: ExerciseListSortState =
       quickFilter === 'recent' ? { column: 'recent', direction: 'desc' } : columnSort;
@@ -219,6 +229,8 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     recentIds,
     muscleChipMode,
     accessorySubFilter,
+    section,
+    catalogGrupo,
   ]);
 
   const accessoryFolderStats = useMemo(() => accessoryFolderCounts(scoped), [scoped]);
@@ -234,10 +246,20 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
 
   const sort = useMemo(() => sortStateToSortId(columnSort), [columnSort]);
 
-  const counts = useMemo(
-    () => (muscleChipMode ? muscleGroupCounts(scoped) : familyCounts(scoped)),
-    [scoped, muscleChipMode],
-  );
+  const counts = useMemo(() => {
+    if (section === 'weightlifting') return catalogGrupoCountsForDefinitions(scoped);
+    if (muscleChipMode) return muscleGroupCounts(scoped);
+    return familyCounts(scoped);
+  }, [scoped, muscleChipMode, section]);
+  const sectionCounts = useMemo(() => {
+    const base = filterExerciseDefinitions(browse.definitions, {
+      search,
+      family: 'all',
+      origin,
+      discipline: 'all',
+    });
+    return catalogSectionCounts(base);
+  }, [browse.definitions, search, origin]);
   const favoriteCount = useMemo(
     () => scoped.filter((def) => favoriteSet.has(def.id)).length,
     [scoped, favoriteSet],
@@ -261,11 +283,12 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     [displayedDefs, isEs, exerciseTaxonomy.objectives, usageById, favoriteSet, motorExercises, familyLabelForDef],
   );
 
-  const effectiveGroupByFamily = groupByFamily && !muscleChipMode && family === 'all';
-  const listNodes = useMemo(
-    () => buildExerciseListNodes(listItems, effectiveGroupByFamily, family),
-    [listItems, effectiveGroupByFamily, family],
-  );
+  const effectiveGroupByFamily = groupByFamily && !muscleChipMode && family === 'all' && section !== 'weightlifting';
+  const groupByGrupo = section === 'weightlifting' && catalogGrupo === 'all' && !search.trim();
+  const listNodes = useMemo(() => {
+    if (groupByGrupo) return buildExerciseListNodesByGrupo(listItems, catalogGrupo, isEs);
+    return buildExerciseListNodes(listItems, effectiveGroupByFamily, family);
+  }, [listItems, effectiveGroupByFamily, family, groupByGrupo, catalogGrupo, isEs]);
   const visibleRowIds = useMemo(
     () => listNodes.filter((node) => node.kind === 'row').map((node) => node.item.id),
     [listNodes],
@@ -281,7 +304,25 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     setMuscleGroup('all');
     setQuickFilter('none');
     setAccessorySubFilter('all');
+    if (keepSectionRef.current) {
+      keepSectionRef.current = false;
+      return;
+    }
+    setSection('all');
   }, [discipline]);
+
+  const handleSectionChange = (next: CatalogSectionFilter) => {
+    setSection(next);
+    setCatalogGrupo('all');
+    setFamily('all');
+    setMuscleGroup('all');
+    setAccessorySubFilter('all');
+    setQuickFilter('none');
+    if (next !== 'all' && discipline !== 'all') {
+      keepSectionRef.current = true;
+      setDiscipline('all');
+    }
+  };
 
   const handleFamilyChange = (nextFamily: ExerciseFamilyFilter) => {
     setFamily(nextFamily);
@@ -294,7 +335,7 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
     setSelectedIds(new Set());
     lastSelectedIdRef.current = null;
     setPageIndex(0);
-  }, [search, family, muscleGroup, origin, discipline, minUsage, quickFilter, viewMode, columnSort, accessorySubFilter]);
+  }, [search, family, muscleGroup, origin, discipline, minUsage, quickFilter, viewMode, columnSort, accessorySubFilter, section, catalogGrupo]);
 
   useEffect(() => {
     if (pageIndex >= totalPages) {
@@ -913,56 +954,52 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
           </div>
         </header>
 
-        <WlExercisesToolbar
-          isEs={isEs}
-          search={search}
-          onSearchChange={setSearch}
-          discipline={discipline}
-          onDisciplineChange={setDiscipline}
-          origin={origin}
-          onOriginChange={setOrigin}
-          sort={sort}
-          onSortChange={handleSortChange}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          filtersOpen={filtersOpen}
-          onFiltersOpenChange={setFiltersOpen}
-          onCreate={openCreate}
-        />
-
-        {muscleChipMode ? (
-          <WlExerciseMuscleChips
-            isEs={isEs}
-            muscleGroup={muscleGroup}
-            quickFilter={quickFilter}
-            counts={counts}
-            favoriteCount={favoriteCount}
-            recentCount={recentCount}
-            onChange={setMuscleGroup}
-            onQuickFilterChange={setQuickFilter}
-          />
-        ) : (
-          <>
-            <WlExerciseFamilyChips
+        <div className="wl-exercises-hub-split">
+          <aside className="wl-exercises-hub-split__sidebar">
+            <WlExerciseCatalogNavigator
               isEs={isEs}
+              section={section}
+              discipline={discipline}
+              sectionCounts={sectionCounts}
+              onSectionChange={handleSectionChange}
+              muscleChipMode={muscleChipMode}
+              muscleGroup={muscleGroup}
+              onMuscleGroupChange={setMuscleGroup}
               family={family}
-              quickFilter={quickFilter}
-              counts={counts}
               onFamilyChange={handleFamilyChange}
+              catalogGrupo={catalogGrupo}
+              onCatalogGrupoChange={setCatalogGrupo}
+              catalogGrupoCounts={counts}
+              quickFilter={quickFilter}
               onQuickFilterChange={setQuickFilter}
-            />
-            <WlExerciseAccessoryFolderChips
-              isEs={isEs}
-              family={family}
+              refineCounts={counts}
+              favoriteCount={favoriteCount}
+              recentCount={recentCount}
               accessorySubFilter={accessorySubFilter}
+              onAccessorySubFilterChange={setAccessorySubFilter}
               unfiledCount={accessoryFolderStats.unfiled}
               folderCounts={accessoryFolderStats.folders}
               customFamilies={customFamilies}
-              onFamilyChange={handleFamilyChange}
-              onAccessorySubFilterChange={setAccessorySubFilter}
             />
-          </>
-        )}
+          </aside>
+
+          <div className="wl-exercises-hub-split__main">
+            <WlExercisesToolbar
+              isEs={isEs}
+              search={search}
+              onSearchChange={setSearch}
+              discipline={discipline}
+              onDisciplineChange={setDiscipline}
+              origin={origin}
+              onOriginChange={setOrigin}
+              sort={sort}
+              onSortChange={handleSortChange}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              filtersOpen={filtersOpen}
+              onFiltersOpenChange={setFiltersOpen}
+              onCreate={openCreate}
+            />
 
         {browse.definitions.length === 0 && !catalogEmpty ? (
           <ExerciseSkeletonGrid isEs={isEs} viewMode={viewMode} />
@@ -1083,6 +1120,8 @@ const WlExercisesHub: React.FC<WlExercisesHubProps> = ({ language }) => {
             />
           </>
         )}
+          </div>
+        </div>
       </div>
       {formModal}
       {libraryModal}

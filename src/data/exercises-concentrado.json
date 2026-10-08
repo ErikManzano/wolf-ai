@@ -54,11 +54,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-arm-circle-motion-straight-out-in-front-to-overh",
+    "id": "ex-conc-warm-back-arm-circle-motion-straight-out-in-front-to-overh",
     "nameEn": "Arm circle(motion straight out in front to overhead and back)",
     "nameEs": "Circulos con los brazos ( movimiento, recto hacua adelante x encima de la cabeza y espalda)",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Stand with your feet shoulder width apart, and your arms out streched in front of you.Make circular motions the size of a 5 pounds(2kgs) plate with your arms while moving your arms up until they are directly over your head.Slowly lower your arms while moving them in a circular motion.Perform one set of 15 repetitions.",
     "cuesEs": "De pie con los pies separados a la altura de los hombros, y los brazos extendidos hacia adelante . hacer circulos del tamaño de un disco de 5 pounds(2kgs) con las manos mientas mueves lso brazos de arriba hacia abajo, directamente sobre la cabeza. Lentamente baja los brazos mientras los mueves en una manera circular. Realiza 15 repeticiciones.",
@@ -76,66 +76,66 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-arm-cross-crisscross-back-and-froth-in-front-of-",
+    "id": "ex-conc-warm-back-arm-cross-crisscross-back-and-froth-in-front-of-",
     "nameEn": "Arm cross(crisscross back and froth in front of body)",
     "nameEs": "Cruzar brazos( cruzar brazos atras y delante del cuerpo)",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Stand with your feet shoulder width apart and your arms outsterched in front of you.Cross your right arm over your left arm and return to the starting position, Cross your left arm over your rigth arm and return  to the starting position. Alternate the arms top and botton for one set of 20 repetitions.",
     "cuesEs": "De pie con los pies separados a lo ancho de los hombros,con los brazos extendidos enfrente , Cruzar el brazo derecho por encima del brazo izquierdo y regresa a la posicion inicial. Cruza el brazo izquierdo por encima del derecho y regresa a la posicion inicial. Realiza una serie de 20 repeticiones.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-leg-swing-backward",
+    "id": "ex-conc-warm-quads-leg-swing-backward",
     "nameEn": "Leg swing (backward)",
     "nameEs": "Balanceo de pierna(hacia atras)",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall and hold onto a sturdy object. Balance yourself on your left  leg.Tighten your core and keep your right leg straight as you swing it back as high as possible. Control the leg on the way down as you return to starting position . Complete repetitions on the right leg  the switch to the left leg. Perfom one set of 15 repetitions with each leg.",
     "cuesEs": "De pie y sosteniendose a un objeto fijo.Balancearse sobre una pierna, manteniendo rigido el abdomen,y  manteniendo la pierna recta mientras la columpeas hacia atras lo mas alto posible.Controla la pierna cuando venga de regreso  hasta el punto de inicio. Completa la repeticiones con la pierna derecha y luego cambia a la pierna izquierda.Realiza una serie de 15 repeticiones con cada pierna.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-stationary-lunge",
+    "id": "ex-conc-warm-quads-stationary-lunge",
     "nameEn": "Stationary lunge",
     "nameEs": "Desplante estacionario",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with your feet and sholder-width apart .Place your hands behind your head or on your waist. Step foward into a deep lunge .Keep your head up, shoulders back , posture tall, toes pointed stright , and body weight evenly distributed. Return to starting position by pushing off the front foot.Perform 10 repetitions on the right leg, then swicth legs and perform 10 repetitions on the left leg.",
     "cuesEs": "De pie con los pies separados a lo ancho de los hombros.Colocar las manos detras de la cabeza o en la cintura. Dar un paso hacia un profundo dezplante. Manten la cabeza arriba hombros hacia atras, la postura erguida , los pulgares apuntado recto, y el cuerpo bien distribuido.Regresar a la posicion incial empujando el pie que esta adelante.Realiza 10 repeticiones con la pierna derecha y luego cambia a la izquierda 10 repeticiones.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-leg-swing-foward",
+    "id": "ex-conc-warm-quads-leg-swing-foward",
     "nameEn": "Leg swing (foward)",
     "nameEs": "Balanceo de pierna (adelante)",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall and hold onto a sturdy object. Balance yourself on your left leg.Tighten your core and keep your right leg straight as your swing the right leg foward  as high as possible. Control the leg on the way down as you return to a starting position. Complete repetitions on the right leg then swith to the left leg.Perform one set of 15 repetitions on the right leg, Then swith to the left leg. Perform one set of 15 repetitions with each leg.",
     "cuesEs": "De pie recto y sostenerse de un objeto fijo.Balance sobre su pierna izquierda. Apriete el abdomen y mantenga su pierna recta mientras balancea su pierna derecha hacia adelante lo mas alto posible.Controla la pierna mientras viene de regreso a la posicion incial. Completa las repeticiones con la pierna derecha y luego cambia a la pierna izquierda.Realiza una serie de 15 repeticiones en la pierna derecha.Luego cambia a la pierna izquierda.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-body-squat",
+    "id": "ex-conc-warm-quads-body-squat",
     "nameEn": "Body Squat",
     "nameEs": "Sentadilla",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with your feet width apart and toes slightly turned out.Place your hands behind your head or on your waist.Flex at the hips and knees, evenly distributing your body weight  from the balls or your feet to the heels.Keep your head and back straight.Once your are below paralel return to starting position by straightening your legs.Perform one set of 15 repetitions.",
     "cuesEs": "De pie con los pies separados a lo ancho de los hombros y con los desdos de los pies liegeramente apuntando hacia afuera. Coloca tus manos detras de tu cabeza o en tu cintura.Flexiona la cadera y la rodillas. Distribuyendo tu peso desde la punta de los dedos hasta los talones. Manten tu cabeza y tu espalda recta . Una vez que estas por debajo de la paralela regresa a la posicion  inicial extendiendo tus piernas. Realiza una serie de 15 repeticiones.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-balanceo-de-pierna-hacia-los-lados",
+    "id": "ex-conc-warm-quads-balanceo-de-pierna-hacia-los-lados",
     "nameEn": "Balanceo de pierna(hacia los lados)",
     "nameEs": "Balanceo de pierna(hacia los lados)",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "",
     "cuesEs": "De pie recto y sosteniendose de un objeto fijo.Balancedose sobre la pierna izquierda. Columpea la pierna pierna derecha hacia un costado lo mas alto posible y regresa lentamente a la posicion inicial. Completa repeticiones  con la pierna derecha. Luego cambia a la pierna izquierda.Reealiza una serie de 15 repeticiones con cada pierna.",
@@ -164,55 +164,55 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-side-ankle-walk",
+    "id": "ex-conc-warm-calves-side-ankle-walk",
     "nameEn": "Side ankle walk",
     "nameEs": "Caminata con el costado pie",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good postue, keeping your shoulders back.Invert your feet so that youre balancing on the outer edges of both feet.Step foward with your right leg and position your body weight on the outside of your right foor, wich will result in the arch of your right foot coming of the ground.Step foward with your left leg and repeat the process.Continue alternating legs up to 10 yards.",
     "cuesEs": "De pie recto con buena postura, manteniendo los hombros hacia taras.Coloca los pies de lado  de manera que te balances en el costado de ambos pies.Da un paso hacia adelante  con tu pierna derecha y coloca tu peso en el costado de tu pie derecho, que resultara en el arco de tu pie derecho viendo hacia el piso. Avanzar hacia adelante con tu pierna izquierda y repite le proceso. Continua alternando la piernas x hasta 8 mts.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-knee-to-chest-walk",
+    "id": "ex-conc-warm-chest-knee-to-chest-walk",
     "nameEn": "Knee to chest walk",
     "nameEs": "Caminata con rodilla hacia el pecho",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back.Lift your left knee and grab it with bith hands, pulling it high and close to your chest. At the same time,rise up high on your right toes,keeping and erect posture from your heel all the way up trought the top of your head.Hold this position for approximantle two seconds.Continue alternating legs up to 15 yards.",
     "cuesEs": "\\-De pie recto con buena postura, mantenniendo los hombros hacia atras.Elevar la rodilla izquierda y sostenerla con ambas manos, jalandola alto y cerca del pecho.Al mismo tiempo, levantate alto sobre los dedos de los pies,manteniendo la postura erecta  desde el talon a lo largo de todo el cuerpo hasta la cabeza.Manten esta posicion x aprocimadamente 2 segundos.Continua alternado la piernas por 12 mts.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-walking-quad-strech",
+    "id": "ex-conc-warm-quads-walking-quad-strech",
     "nameEn": "Walking quad strech",
     "nameEs": "Caminata con los cuadriceps estirados",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture , keeping your shoukders back.Bend your left knee and grab your left foot behind you with your left hand .At the same time , rise up onto the toes on your right foot. Hold this position for approximatley tow secods.Release your left foot, let the left leg step foward and repeat the process with your right leg. Continue alteranting up to 15 yards.",
     "cuesEs": "De pie recto con buena postura, manteniendo tus hombros hacia atras.Flexiona tu rodilla izquierda y agarra tu pie izquierdo manteniendolo detras de ti con tu mano izquierda.al mismo tiempo levantate sobre tus talones an tu talon derecho.Manten esta posicion x aproximadamente 2 segundos.Suelta tu pie izquierdo, permite que el pie izquierdo pise y que el derecho toma la posicion. Continua alternando por 12 mts.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-rodilla-hacia-el-hombro-caminat-lateral",
+    "id": "ex-conc-warm-shoulders-rodilla-hacia-el-hombro-caminat-lateral",
     "nameEn": "Rodilla hacia el hombro,Caminat Lateral",
     "nameEs": "Rodilla hacia el hombro,Caminat Lateral",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "bodyweight",
     "cuesEn": "-De pie con buena postura,manteniendo los hombros hacia atras. Extender  los brazos al nivel de los hombros rectos hacia los lados, las palmas viendo hacia enfrente . Flexionar tu cadera de lado izquierdo, mientras se levanta externamente  rotala  llevando tu rodilla hacia el brazo. Mientras tu pierna comienza a descender, realiza el mismo movimiento del lado derecho, continua alternando.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-caminata-con-una-pierna-opuesta",
+    "id": "ex-conc-warm-quads-caminata-con-una-pierna-opuesta",
     "nameEn": "Caminata con una pierna opuesta",
     "nameEs": "Caminata con una pierna opuesta",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "",
     "cuesEs": "-De pie recto con buena postura, manteniendo los hombros hacia atras.Dar un paso hacia adelante con la pierna derecha, manteniendo ligeramente flexionada la rodilla mientras extiendes el brazo derecho recto sobre la cabeza y lentamente extiendes tu pierna izquierda detras de ti.Al mismo tiempo extiende tu brazo izquierdo hacia un costado.Manteniendo la espina neutral y una mirada hacia adelante(opuesto a ver hacia el suelo)lentamente  flexiona la cintura y mueve tu mano izquierda adelante para toca tu dedo derecho. Manten esta posicion por aproximadamente 2 segundos, tu tal vez trates  de extender tu brazo derecho a un costado para el balance.Debes de sentir un estiramiento desde el gluteo hasta los musculos isquiotibilaes, lentamente  regresa el movimiento a la posicion inicial.",
@@ -263,121 +263,121 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-linear-walking-lunge",
+    "id": "ex-conc-warm-quads-linear-walking-lunge",
     "nameEn": "Linear walking lunge",
     "nameEs": "Linear walking lunge",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture,keepimg your shoulders back and your hands on your opposing elbows at shoulders height.Step foward with your right foot and bend your back leg until your knee is about 1 to 3 inches from the ground. Directly under your left hip, and your right knee is at 90-degree angle.Your right knee should be directly above your right ankle. Push off with your left leg to bring it forward into the next lunge.Continue alternating legs.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-straight-leg-walking-lunge",
+    "id": "ex-conc-warm-quads-straight-leg-walking-lunge",
     "nameEn": "Straight –leg walking lunge",
     "nameEs": "Pierna recta desplante",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back and your hands on your opposing elbows at shoulders height. Keeping your right leg straight , step your left leg forward and bend your knee until its at 90 degree angle. Your left knee should be directly above your left ankle.Push off with your right leg to bring it forward into the next lunge. Continue alternating legs.",
     "cuesEs": "De pie recto con Buena postura, manteniendo tus hombres atras y tu manos en tus codos opuestos, a la altura de los hombres. Manteniendo tu pierna derecha recta, da un paso con tu pierna izquierda y flexiona tu rodilla hasta que este en un angulo de 90º. Tu rodilla izquierda debe estar directamente sobre tu pie izquerdo. Empuja con tu pierna derecha para traer hacia adelante para el siguiente desplante. Continua alternando las piernas.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-rotationl-walking-lunge",
+    "id": "ex-conc-warm-quads-rotationl-walking-lunge",
     "nameEn": "Rotationl walking lunge",
     "nameEs": "Desplante con rotacion",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back and your hands on your opposing elbows at shoulder height. Step forward with your left foot and your back leg until your knee is about 1 to 3 inches from the ground, directly under your right hip, and your left knee is at 90º angle. Your left knee should be directly above your left ankle. As you lower your weight, Slowly rotate to the left, twisting from your waits over your left leg. Push off with your right leg to bring it forward into the next lunge, this time rotating to the right. Continue alternating legs.",
     "cuesEs": "De pie recto con buena postura, manteniendo tus hombros atrás y tu manos sobre los codos opuestos a la altura de los hombros. Dar un paso adelante con tu pie izquierdo y tu pierna trasera hasta que tu rodilla este entre 5 y 7 cm del suelo, directamente bajo tu muslo derecho, y tu rodilla izquierda este a 90º. Tu rodilla izquierda debe estar en línea con tu pie izquierdo. Mientras desciendes tu peso, lentamente  rota hacia la izquierda, girando desde tu cintura sobre tu pierna izquierda. Empuja con tu pierna izquierda para traer hacia adelante en el siguiente desplante, esta vez rotando hacia la derecha. Continua alternado la piernas.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-elbow-to-the-knee-lunge",
+    "id": "ex-conc-warm-quads-elbow-to-the-knee-lunge",
     "nameEn": "Elbow to the knee lunge",
     "nameEs": "Desplante codo hacia la rodilla",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back and your hands on your opposing elbows at shoulder height. Step forward with your right foot, keeping your back leg straight. Your right knee should be bent 90 degrees and be directly above your right ankle. As you lower your weight , keep your back straight and slowly push your right elbow against the inside of your right knee. Hold this position for approximately two seconds. Push off with your left leg to bring it forward into the next lunge .Continue alternating legs.",
     "cuesEs": "De pie recto con Buena postura, Manteniendo tus hombres atars y tus manos en los codos opuestos a la altura de los hombres. Dar un paso adelante con tu pie izquierdo, manteniendo tu espalda recta. Tu rodilla derecha debe estar flexionada a 90º y directamente sobre tu pie derecho. Mientras desciende tu peso, manten la espalda recta y lentamente empuja con tu codo derecho contra la parte interna de tu rodilla derecha. Manten esta posición por aproximadamente 2 segundos. Empuja con tu pierna izquierda para traer de regreso hacia adelante hacia el siguiente desplante. Continua alternado la piernas.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-knee-to-chest-hold-into-lunge",
+    "id": "ex-conc-warm-quads-knee-to-chest-hold-into-lunge",
     "nameEn": "Knee to chest hold into lunge",
     "nameEs": "Rodilla al pecho mantener hasta desplante:",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back. Lift your right knee and grab it with both hands , pulling it high and closet o your chest. At the same time, rise up high on your left toes, keeping an erect posture from your heel all the way up through the top of your head. Hold this position for approximately two seconds. Step foward with your right foot and bend your back leg until your knee is about 1 to 3 inches from the ground, directly under your left hip, and your right knee is at 90 degree angle. Your right knee should be directly above your right ankle.",
     "cuesEs": "De pie con Buena postura , manteniendo tus hombres atras. Levanta tu rodilla derecha y sostenla con ambas manos, jalando alto y cerca de tu pecho. Al mismo tiempo, levanta lo mas alto posible sobre tu pie izquierdo, manteniendo una postura recta desde tu talon hasta la cabeza. Manten esta posición por aproximadamente 2 segundos. Da un paso adelante con tu pie derecho y dobla tu pierna trasera hasta que tu rodilla este entre 5 y 7 cm del piso , directamente sobre tu muslo izquierdo, y tu rodilla derecha esta en un angulo de 90º.Tu rodilla derecha debe estar directamente sobre tu pie derecho.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-lateral-lunge",
+    "id": "ex-conc-warm-quads-lateral-lunge",
     "nameEn": "Lateral lunge",
     "nameEs": "Desplante lateral",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Assume an athletic stance.S tep to the right side with your right leg, keeping your foot facing foward. Slowly lower your weight back into your hips and drop your hips in line(parallel) with your right knee, which is bent approximately two seconds, making sure that your spine is erect and your shoulders are back with good posture. Bring your left foot in under your center and repeat this movement on theleft side.P erform a number of these on the left side, return to starting position, and then perform the same movement on the right side.",
     "cuesEs": "Asumir una posicion atletica. Dar un paso a la derecha con la pierna derecha, mateniendo el pie viendo hacia adelante. Lentamente desciende tu peso hacia tus muslos y deja caer tus muslos en línea(paralelos) a tu pierna derecha , que esta doblada aproximadamente por 2 segundos, asegurate que tu espían esta recta y tus hombros atrás con buena forma. Trae tu pie izquierdo debajo de tu centro y repite este movimiento en el lado izquierdo. Realiza un numero de estos moviemientos del lado izquierdo y luego del lado derecho.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-overhead-squat-progression",
+    "id": "ex-conc-warm-quads-overhead-squat-progression",
     "nameEn": "Overhead squat progression",
     "nameEs": "Progresion sentadilla con barra sobre cabeza",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "barbell",
     "cuesEn": "Holding a bar , stand with your feet shoulder width apart.Keeping your legs straight, lower the bar until it is directly over your shoelaces.Lower into a deep squat. Raise the bar overhead, straighten your back and look forward. Slowly stand upright, keeping your arms extended overhead.",
     "cuesEs": "Sosteniendo una barra, Con los pies separados a los ancho de los hombros. Manteniendo tus piernas rectas, baja la barra hasta que este directamente sobre tus agujetas. Bajando en un squat profundo. Levanta la barra por encima de la cabeza, endereznado tu espalda y viendo hacia adelante. Lentamente levantate manteniendo tus brazos extendidos con la barra sobre tu cabeza.",
     "mapsToLegacyId": "ex-013"
   },
   {
-    "id": "ex-conc-warm-full_body-sumo-squat-walk",
+    "id": "ex-conc-warm-quads-sumo-squat-walk",
     "nameEn": "Sumo Squat walk",
     "nameEs": "Sentadilla sumo caminata",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with your feet shoulder width apart, keeping your shoulders back. Place your hands on your opposing elbows at shoulder height and step to the side with your right leg, pointing your foot away from your body(to the right).as your right foot goes out ,Turn your left foot point away from your body(to  left). When both feet are pointing outwards, put all your weight back into your glutes and pretend that you’re sitting in a chair while maintaining an erect spine and keeping your shoulders back. Attempt to go as low as possible while maintaining good upper body posture and without ”breaking” at the core. Hold this position for approximately two seconds. Stand upright to return to starting position, rotate your body 180 degrees and perform the same movement. Repeat the process, working on increasing the depth of each sumo squat every time.",
     "cuesEs": "Recto con los pies separados a lo ancho de los hombres, manteniendo los hombres atras. Coloca tus manos en los codos opuestos a la altura de los hombros y da un paso hacia afuera con tu pierna derecha, colocando tu pie lejos del cuerpo(hacia la derecha). Mientras ambos pies apuntan hacia afuera, coloca todo tu peso en tus glúteos y pretende que te vas a sentar en una silla mientras mantienes la espina recta y tus hombros atrás. Trata de bajar lo mas posible mientras mantienes buena postura en el tronco superior y romper la postura de abdomen.Maten esta posición por aproximadamente 2 segundos, de pie para regresar a la posición inicial, Rota tu cuerpo 180 grados y realiza el mismo movimiento. Repite el proceso, trabajando en incrementar la profundidad de cada sentadilla sumo.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-caminata-sentadilla-baja",
+    "id": "ex-conc-warm-quads-caminata-sentadilla-baja",
     "nameEn": "Caminata sentadilla baja",
     "nameEs": "Caminata sentadilla baja",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "",
     "cuesEs": "Desciende hasta un posicion complete de sentadilla con tus muslos paralelos con el piso y tus rodillas ligeramente mas separadas que los hombros. Idealmente debes de poder descender mas halla del nivel de la altura de la rodilla mientras mantienes una fuerte activación en la zona abdominal y erector de la espina.Coloca tus manos en los codos opuestos a la altura de los hombros. Mientras mantienes la sentadilla baja y bajas el centro de gravedad, toma un pequeño paso enfrente de ti con tu pierna derecha. Repite con tu pierna izquerda. Continua alternando.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-sentadilla-figura-4",
+    "id": "ex-conc-warm-quads-sentadilla-figura-4",
     "nameEn": "Sentadilla figura 4",
     "nameEs": "Sentadilla figura 4",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "",
     "cuesEs": "- Recto con los pies separados a lo ancho de los hombros, manteniendo los hombros atras. Coloca tus manos en tus codos opuestos a la altura de los hombros, Levanta tu pierna derecha , externamente rota tu cadera y flexiona la rodilla de manera que puedas reposar tu tobillo derecho sobre tu muslo izquierdo. Lentamente desciendetu cadera izquierda a una posición de sentadilla en una pierna.Este ejercicio estira la cara externa de la cadera, los rotadores y el glúteo , mientras se estira la pierna izquierda y cadera.Regresa a la posición inicial y rota tu cuerpo 180º para realizar el movimiento del otro lado. Repite el proceso trabajando en incrementar la profundidad de cada figura 4 mientras mantienes una fuerte posición del tronco superior.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-glute-ham-bridge",
+    "id": "ex-conc-warm-glutes-glute-ham-bridge",
     "nameEn": "Glute ham bridge",
     "nameEs": "Puente gluetos –isquiotibiales",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "glutes",
     "equipment": "bodyweight",
     "cuesEn": "-Lie on your back with your arms along your sides. Bend your knees and place your feet on the floor close to your buttocks.Maintaining good posture throught your neck and back, hug your right knee to your chest.Press into your left foot and lift your hips until your body makes a nice line from knee to shoulders blades.Return to starting position and repeat to the other side.",
     "cuesEs": "-Recostado en tu espalda, con tus brazos a lo largo del cuerpo. Dobla tus rodillas y coloca tus pies en el suelo cerca del los gulteos. Manteniendo buena postura del cuello y espalda, abraza tu rodilla derecha hacia tu pecho. Aprieta tu hacia tu pie izquierdo y levanta tus caderas hasta que tu cuerpo fomr una línea limpia desde la rodilla hasta los hombros. Regresa hacia la posición inicial y repite del otro lado.",
@@ -395,55 +395,55 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-ankle-flips",
+    "id": "ex-conc-warm-calves-ankle-flips",
     "nameEn": "Ankle flips",
     "nameEs": "Volteretas de tobillo",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "-Stand tall with your feet shoulder-width apart, keeping your shoulders back.Keeping your left leg straight, take one step with your left leg,pointing your left foot to the sky.(dorsiflexion).Inmediatly and forcefully fire the foot down into the ground. As this foot makes ground contact, take a step with your right leg, pointing your foot to the sky.Continue the cycle while maintaining a strong core and great upper body posture.",
     "cuesEs": "\\- Recto con los pies separados a lo ancho de los hombros, manteniendo los hombros hacia atras. Manteniendo tu pierna izquierda recta, toma una paso on tu pierna izquierda, apountando con ti pie izquierdo hacia el cielo(dorsiflexion). Inmediatamente y rápidamente golpea el piso contra el suelo. Mientras el pie hace contacto con el suelo, toma una paso con tu pie derecho, apuntando tu pie hacia el cielo. Continua el ciclo mientras mantienes un fuerte posición abdomial y del tren superior.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-squats-jumps-lunge-jumps",
+    "id": "ex-conc-warm-quads-squats-jumps-lunge-jumps",
     "nameEn": "Squats jumps/ lunge jumps",
     "nameEs": "Sentadillas con salto/ desplante con salto",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "-Stand tall with your feet shoulder width apart, keeping your shoulders back. Step foward with your left leg into a lunge position with your front knee bent 90 degrees and in line with your ankle. Bend both arms approximately 90 degrees. From this lunge explode up vertically, thrusting your hips and arms up, while keeping a 90 degree angle at your elbows. In the air your back leg(right) will come foward to become your front leg when landing back into a lunge.As you land with your right leg in front, immediately explode straight back up as high as possible. Continue alternating legs.",
     "cuesEs": "- Recto con los pies separados a lo ancho de los hombros, manteniendo los hombros atrás. Dar un paso adelante con la pierna izquierda hacia una posición de desplante, con la rodilla flexionada a 90º en línea con el tobillo. Dobla ambos brazos aproximadamente 90º. Desde la posición de desplante explota verticalmente, aventando tus caderas y brazos hacia arriba, mientas mantienes una posición de 90 grados con tus codos. En el aire tu pierna(derecha) vendrá hacia enfrente, para quedar delante de ti cuando aterrizes en posición de desplante.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-counter-movement-squat-jumps",
+    "id": "ex-conc-warm-quads-counter-movement-squat-jumps",
     "nameEn": "Counter movement squat jumps",
     "nameEs": "Sentadilla con salto contra movimiento",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with your feet shoulder-width apart, keeping your shoulders back.Squat down until your knees are bent 90 to 135º; without any pause at the bottom of the movement, inmediatley reverse direction and explode up as high as possible in a straight vertical line, utilizing power transfer from the ground through the ankles, knee and hip joints(know as triple extension). Reach your arms high. Gently bend your knees as you land to allow for effective shock absorption; hold the landing for two seconds. This hold at the landing works on your ability to desacelerate , which is important in the prevention of injuries during training and helps limit the likelihood of injury during athletic competition. Return to starting position and repeat the movement.",
     "cuesEs": "Recto con los pies separados a los ancho de los hombros, manteniendo tus hombros hacia atras. Realiza una sentadilla hasta que tus rodillas flexionen de 90º a 135º sin pausa en el fondo del movimiento, inmediatamente regresa y explota hacia arriba lo mas alto posible en una manera vertical, utilizando la fuerza transferida del suelo atraves de los tobillo, rodilla y cadera(conocida como triple extensión).Que los brazos se levanten acompañando el movimiento. Suavemente flexiona tus rodilla mientras aterrizas para que permitas hacer una efecticva absorcion del impacto; sosten el aterrizaje x 2 segundos. Esto ayuda a tu habilidad para desacelerar, la cual es importante en la prevención de lesiones durante el entrenamiento y ayuda a reducir la probabilidad de lesión en una competición atlética. Regresa a la posición inicial y repite el movimiento.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-repeated-squat-jumps",
+    "id": "ex-conc-warm-quads-repeated-squat-jumps",
     "nameEn": "Repeated squat jumps",
     "nameEs": "Sentadilla con saltos repetida",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "- Assume an athletic stance. Squat down until your knees are bent 90 to 135 degrees; without any pause at the bottom of the movement, immediately reverse direction and explode up as high as possible in a straight vertical line, utilizing power transfer from the ground through the ankles knee and hip joints(triple extension).As you land immediately explode straight back up as high as possible.",
     "cuesEs": "- Adopta una posicion atlética. Realiza una sentadilla hasta que tus rodillas están dobladas de 90º a 135º; sin pausa en el fondo del movimiento, inmediatamente explota lo mas alto posible en una manera vertical, utilizando la potencia transferida del suelo atravez de los tobillos, rodillas y caderas( triple extensión). Mientras aterrizas inmediatamente salta otra vez lo mas alto posible",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-concentric-squat-jump",
+    "id": "ex-conc-warm-quads-concentric-squat-jump",
     "nameEn": "Concentric squat jump",
     "nameEs": "Sentadilla con Salto concentrica",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "-Stand tall with your feet shoulder width apart, keeping your shoulders back. Squat down until your knees are approximately 90 degrees and pause for three to five seconds while maintaining an erect spine and strong core position. Explode up as high as possible in a straight vertical line, utilizing power transfer from the ground through the ankles, knee and hip joints( knows as triple extension) reach your arms high. Gently bend your knees as you land to allow for effective shock absorption; hold the landing for two seconds. This hold at the landing works on your ability to decelerate which is important in the prevention of injuries during training and helps limit the likelihood of injury during athletic competition. Return to starting position and repeat sequence.",
     "cuesEs": "- Recto con tus pies separados a lo ancho de los hombros, manteniendo tus hombros atras. Realiza una sentadilla hasta que tus rodillas estén aproximadamente a 90º haz una pausa de 3 a 5 segundos mientras mantienes el erector spinal recto y una fuerte postura abdominal. Explota hacia arriba lo mas alto posible en una línea vertical, utilizando la potencia transferida del suelo atravez de los tobillos , rodillas y cadera( triple extensión) levanta tus brazos lo mas alto. Suavemente flexiona tus rodillas mientras aterrizas para permitir una efectiva absorción del impacto, sosten el aterrizaje por 2 segundos. Manten esta posición por 2 segundos. Este amortiguamiento durante el aterrizaje , trabaja en tu abilidad para desacelerar lo cual es importante en la prevención de lesiones durante el entrenamiento y ayuda a reducir la probabilidad de lesión durante la competición deportiva. Regresa a la posición inicial y repite la secuencia.",
@@ -516,11 +516,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-overhead-squat",
+    "id": "ex-conc-warm-quads-overhead-squat",
     "nameEn": "Overhead squat",
     "nameEs": "Sentadilla con barra sobre cabeza",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "barbell",
     "cuesEn": "Stand with your feet just wider tan shoulder width apart. Hold a broomstick or weighted bar at arms length overhead. Keeping your elbows straight, inhale slowly and bend your knees and lower your hips with a slight backward/ down path, with the goal of reaching at or below knee level. Hold the position at the bottom of the movement for a few seconds, focusing on a strong core and upright body position. From the bottom position  exhale and slowly stand upright while maintaining a strong core.",
     "cuesEs": "Parado con los pues ligermanete mas separados que los hombros. Sosten un palo o barra en tus brazos sobre la cabeza, manteniendo tus codos rectos, inalas y flexionas tus rodillas y bajas tus caderas con una ligera inclinación hacia atrás, con el objetivo de alcanzar o bajar por debajo del nivel de las rodillas. Manten esta posición al fondo del movimiento por unos segundos, concentrándose en mantener fuerte el abdomen y el tren superior. Desde la posición de abajo exala mientras te levantas, manteniendo el abdomen fuerte.",
@@ -560,11 +560,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-ankle-taps",
+    "id": "ex-conc-warm-calves-ankle-taps",
     "nameEn": "Ankle taps",
     "nameEs": "Ankle taps",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Stand tall with good posture, keeping your shoulders back. While maintaining an erect body position from your heels, through your head, pull the toe of your left foot to the sky(via ankle dorsiflexion) and lift your heel off the ground via slight hip flexion; do not bend your knee.Explosively push your foot down into the ground by contracting your gastoc-soleus complex(platarflexion).Repeat with your right leg",
     "cuesEs": "",
@@ -582,11 +582,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-warm-full_body-sentadilla-con-salto-y-sprint",
+    "id": "ex-conc-warm-quads-sentadilla-con-salto-y-sprint",
     "nameEn": "Sentadilla con salto y sprint",
     "nameEs": "Sentadilla con salto y sprint",
     "section": "warmup",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "",
     "cuesEs": "- Asume una posición atlética con el peso bien distribuido entre la pierna izquierda y derecha. Realiza un sentadilla con salto, doblando las caderas; cuando tus caderas esta en línea con tus pies( paralelos al suelo), explota hacia arriba. En lo alto del salto, concentrate en desacelerar el aterrizaje. Mientras aterrizas inmediatamente lleva tu pierna hacia adelante hacia una posición de aceleración y corre hacia adelante 10 mts.",
@@ -714,11 +714,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-remo-vertical",
+    "id": "ex-conc-stre-back-remo-vertical",
     "nameEn": "Remo vertical",
     "nameEs": "Remo vertical",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "barbell",
     "cuesEn": "",
     "cuesEs": "- Coloca tus manos entre 30 y 45 cm de la barra, Sostener la barra hacia abajo con los brazos extendidos. Dobla tus codos para jalar la barra hacia la barbilla. Manteniendo los codos hacia afuera y arriba. Lentamente baja la barra con control.",
@@ -736,11 +736,11 @@
     "mapsToLegacyId": "ex-009"
   },
   {
-    "id": "ex-conc-stre-full_body-bent-over-row",
+    "id": "ex-conc-stre-back-bent-over-row",
     "nameEn": "Bent over row",
     "nameEs": "Bent over row",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "barbell",
     "cuesEn": "- Bend over to grip the bar with  a flat back, knees slightly bent, and head up. Your arms are locked as you grip the bar. Bend the elbows to pull the bar up toward the lower part of your chest. Straigthen your arms to lower the bar with control until the bar touches the floor.",
     "cuesEs": "- Dobla hacia adelante para tomar la barra con la espalda recta, rodillas ligeramente dobladas y cabeza arriba. Tus brazos estan bloqueados mientras tomas la barra. Dobla los codos, para jalar la barra hacia arriba en la parte baja del pecho. Extiende tus brazos para bajar la barra con control hasta que toque el suelo.",
@@ -769,55 +769,55 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-dumbell-bent-over-fly",
+    "id": "ex-conc-stre-chest-dumbell-bent-over-fly",
     "nameEn": "Dumbell bent over fly",
     "nameEs": "Dumbell bent over fly",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "dumbbell",
     "cuesEn": "- Stand with your knees bent, back parallel, to the floor, and heap up. Hold a dumbbell in each hand, hanging them downward at arms length. Lift the dumbbells laterally until they are parallel to your shoulders. Slowly lower the weights with control to the starting position.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-dumbell-lunge",
+    "id": "ex-conc-stre-quads-dumbell-lunge",
     "nameEn": "Dumbell lunge",
     "nameEs": "Dumbell lunge",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "dumbbell",
     "cuesEn": "- Hold dumbbells in both hands at arms lenght, feet shoulder- width apart. Step forward into a deep lunge. Keep your head up, shoulders back, posture tall, toes pointed staright ahead, and body weight evenly distributed. Push off the front foot with control to return to the starting position.",
     "cuesEs": "- Sosten mancuernas con ambas manos con los brazos extendidos, pies separados a lo ancho de los hombros. Da un paso hacia un desplante profundo. Manten tu cabeza arriba. Hombros atrás y una postura recta, pies apuntando hacia adelante, y peso bien distribuido. Empuja el pie frontal con control y regresa a la posición inicial.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-dumbell-romanian-dead-lift",
+    "id": "ex-conc-stre-back-dumbell-romanian-dead-lift",
     "nameEn": "Dumbell Romanian dead lift",
     "nameEs": "Dumbell Romanian deadlift",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "dumbbell",
     "cuesEn": "-Stand with your feet shoulder-width apart, holding a dumbell in each hand; the dumbbells should hang at arms length in front of the body. Keep your head and chest up and your back staright. Bend at the waist until your torso is parallel to the floor, knees slightly bend. Lower the dumbbells, until they are mid shin. Sraigthen the torso with control to return to the starting position.",
     "cuesEs": "- Parado con los pies abiertos a los ancho de los hombros, sosteniendo una mancuerna en cada mano; las mancuernas deben sostenerse con los brazos extendidos delante del cuerpo. Manteniendo tu cabeza y pecho arriba y tu espalda recta. Dobla la cintura hasta que tu torso este paralelo al suelo, las rodillas ligeramente dobladas . baja las mancuernas hasta que estén a media espinilla. Endereza el torso control, hasta la posición inicial.",
     "mapsToLegacyId": "ex-032"
   },
   {
-    "id": "ex-conc-stre-full_body-dumbell-squat",
+    "id": "ex-conc-stre-quads-dumbell-squat",
     "nameEn": "Dumbell squat",
     "nameEs": "Dumbell squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "dumbbell",
     "cuesEn": "- Stand with your feet shoulder width apart and toes slightly turned out, holding dumbbells at arms lenght at your sides, resting the dumbbells, against your outer thighs, Flex at the hips and knees, evenly distributing your bodyweight from the balls of the feet to the heels. Keep your head and back straight.Once you are below parallel, straighten your legs to return to the starting position.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-dumbbell-side-lunge",
+    "id": "ex-conc-stre-quads-dumbbell-side-lunge",
     "nameEn": "Dumbbell side lunge",
     "nameEs": "Dumbbell side lunge",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "dumbbell",
     "cuesEn": "-Stand with your feet shoulder width apart. Hold a dumbbell in each hand in front of your body at arms legnht. Step to the right side as far as possible, flexing the knee. The left leg should stay straight. Keep the head, chest, and torso straight and the toes pointed straight ahead. Keep  the head, chest , and torso straight and the toes pointed straight ahead. Push off the right leg and straighten the left leg to return to the starting position.",
     "cuesEs": "- Parado con los pies separados a lo ancho de los hombros, sosten una mancuerna de cada lado  enfrente del cuerpo con los brazos extendidos. Da un paso a el lado derecho tan lejos como te sea posible. Flexionando la rodilla. La pierna izquierda debe permanecer recta. Manteniendo la cabeza, el pecho y el torso recto y los dedos apuntando hacia enfrente. Empuja con la pierna derecha y endereza con la pierna izquierda para regresar a la posición inicial.",
@@ -857,11 +857,11 @@
     "mapsToLegacyId": "ex-017"
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-one-arm-row",
+    "id": "ex-conc-stre-back-kettlebell-one-arm-row",
     "nameEn": "Kettlebell one arm row",
     "nameEs": "Kettlebell one arm row",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "kettlebell",
     "cuesEn": "- Dobla tu cintura, con tu pecho ligeramente alto y tu cabeza viendo al frente. Dobla las rodilla y sosten la kettlebell delante de ti con tus brazos extendidos en una mano. Coloca la otra mano en un banco. Flexiona el codo, manteniendo el brazo cerca al cuerpo, para levantar el peso a un costado del cuerpo. Bajar la kettlebell, hasta que el brazo este extendido.",
     "cuesEs": "",
@@ -879,11 +879,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-upright-row",
+    "id": "ex-conc-stre-back-kettlebell-upright-row",
     "nameEn": "Kettlebell upright row",
     "nameEs": "Kettlebell upright row",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "kettlebell",
     "cuesEn": "Hold a kettlebell in both hands, hanging in front of your body at arms length. Stand with your knees slightly bent and keep your head and chest up. Bend your elbows to pull the kettlebell up to your chin, keeping your elbows out and up. Slowly straighten your arms to lower the kettlebel with control.",
     "cuesEs": "- Sosteniendo una kettlebell en ambas manos, colgando frente a ti con los brazos extendidos, De pie con tus rodillas ligeramente dobladas y manteniendo la cabeza y el pecho arriba. Dobla tus codos para jalas la kettlebell hacia tu barbilla, manteniendo tus codos hacia afuera y altos. Lentamente extiende tus brazos para bajar la kettlebell con control.",
@@ -901,22 +901,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-military-press",
+    "id": "ex-conc-stre-shoulders-kettlebell-military-press",
     "nameEn": "Kettlebell military press",
     "nameEs": "Kettlebell military press",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "kettlebell",
     "cuesEn": "- Parado con tus pies separados a los ancho de los hombros y rodillas ligeramente dobladas. Tu tren superior esta vertical y la kettlebell esta descansando sobre tus hombros. Sube la kettlebel por encima de tu cabeza hasta que tus brazos queden bloqueados. Baja la kettlebell hacia los hombros con control.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-clean-and-squat",
+    "id": "ex-conc-stre-quads-kettlebell-clean-and-squat",
     "nameEn": "Kettlebell clean and squat",
     "nameEs": "Kettlebell clean ann squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "kettlebell",
     "cuesEn": "- Stand with your feet shoulder width apart. Squat down to the kettlebell, flexing at the hips and knees until you are below parallel. Keep your heels flat. Back straight, heap up, and arms locked. Straighten your legs and pull the kettlebell off the floor into a shrug. Continue pulling by bending the elbows, rotating the under the weight, and catching the kettlebell on your shoulders. Stand back up an return to the staring position.",
     "cuesEs": "- Parado con lo pies separados a los ancho de los hombros, de cuclillas por las kettlebell, Dobla las caderas y rodillas hasta que estes por debajo de  la paralela. Maten tus talones en el suelo. Espalda recta, cabeza arriba y brazos bloqueados. Extiende tus piernas y jala la kettlebell de suelo a un encogimiento de hombros. Continua jalando , doblando los codos rotando el peso y cachando las kettlebell en tus hombros. Regresa a la posición inicial.",
@@ -945,22 +945,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-deadlift",
+    "id": "ex-conc-stre-back-kettlebell-deadlift",
     "nameEn": "Kettlebell deadlift",
     "nameEs": "Kettlebell deadlift",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "kettlebell",
     "cuesEn": "- De cuclillas por la kettlebell,  agarrándolas con los brazos extentidos. Manteniendo tu espalda y pies planos y tu pecho recto. Empuja contra el suelo, levantando tus caderas y la kettlebell hasta que tus piernas queden bloqueadas y la kettlebell queden extendidas mientras te levantas. Dobla tus rodillas para regresar  a la posición inical. Manten tu pecho arriba hasta que la kettlebell toque el suelo.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-kettlebell-squat",
+    "id": "ex-conc-stre-quads-kettlebell-squat",
     "nameEn": "Kettlebell squat",
     "nameEs": "Kettlebell squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "kettlebell",
     "cuesEn": "- Parado con tus pies separados a lo ancho de los hombros los pies liegeramente viendo hacia afuera. Sosten dos kettlebells con los brazos extendidos a los lados de cuerpo. Dobla las caderas y rodillas, con el peso bien distribuido sobre las puntas de los pies y los talones. Manten tu cabeza y espalda recta. Una vez que estes en paralelo, endereza tus piernas y regresa a la posición inicial.",
     "cuesEs": "",
@@ -978,22 +978,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-chest-press",
+    "id": "ex-conc-stre-chest-medicine-ball-chest-press",
     "nameEn": "Medicine ball chest press",
     "nameEs": "Medicine ball chest press",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "med_ball",
     "cuesEn": "- Stand with your feet shoulder width apart, knees slightlty bent, baclk straight, and head up. Hold a medicine ball in your hands at chest level with your elbows bent. Press the medicine ball out in front of your body at arms length and bring back to the starting position with control.",
     "cuesEs": "- Parado con tus pies separados a los ancho de los hombros, rodillas ligeramente dobladas, espalda recta y cabeza arriba. Sosten un balón medicinal con tus manos al nivel del pecho con tus codos doblados. Empuja el balón medicinal al frente de tu cuerpo con lo brazos extendidos y traelo de vuelta a la posición inicial con control",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-standing-tricep-extension",
+    "id": "ex-conc-stre-triceps-medicine-ball-standing-tricep-extension",
     "nameEn": "Medicine ball standing tricep extension",
     "nameEs": "Medicine ball standing tricep extension",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "med_ball",
     "cuesEn": "",
     "cuesEs": "- Parado con tus pies separados a los ancho de los hombros. Rodillas ligeramente dobladas y espalda recta. Sosten un balón medicianl en tus manos y dobla tus brazos detrás de tu cabeza. Aprieta tu abdomen y extiende tus brazos por encima de la cabeza hasta una posición de bloqueo. Lentamente regresa a la posición inicial.",
@@ -1011,11 +1011,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-bicep-curl",
+    "id": "ex-conc-stre-biceps-medicine-ball-bicep-curl",
     "nameEn": "Medicine ball bicep curl",
     "nameEs": "Medicine ball bicep curl",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "med_ball",
     "cuesEn": "- Parado con tus pies separados a lo ancho de los hombros, rodillas liegeramente doblada, y espalda recat. Sosten un balón medicinal con los brazos extendidos apoyado sobre los muslos . Aprieta el abdomen, y dobla los codos, hacia el pecho. Lentamente regresa a la posición inicial.",
     "cuesEs": "",
@@ -1033,11 +1033,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-overhead-split-squat",
+    "id": "ex-conc-stre-quads-medicine-ball-overhead-split-squat",
     "nameEn": "Medicine ball overhead Split squat",
     "nameEs": "Medicine ball overhead split squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "med_ball",
     "cuesEn": "- Stand with the legs split; one leg is in front with the knee slightly bent, and the other leg is behind. Toes are pointed straight ahead. Hold the medicine ball overhead with the arms locked. Keep your chest up. Tighten your core  and lower the back knee until it touches the floor. Return to the starting position.",
     "cuesEs": "- Parado con las piernas separadas; Una pierna enfrente de ti con la rodilla ligeramente doblada, y la otra pierna esta atrás. Dedos apuntando hacia adelante. Sosteniendo un balón medicianl sorbre la cabeza  con los brazos bloqueados. Manten tu pecho arriba. Aprieta el abdomen y baja la pierna trasera hasta que toque el suelo. Regresa a la posición inicial.",
@@ -1055,22 +1055,22 @@
     "mapsToLegacyId": "ex-033"
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-lunge",
+    "id": "ex-conc-stre-quads-medicine-ball-lunge",
     "nameEn": "Medicine ball lunge",
     "nameEs": "Medicine ball lunge",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "med_ball",
     "cuesEn": "-Stand tall with your feet shoulder width apart. Hold the medicine ball at chest level. Step out with your right leg as far as possible, bending the knee and touching the floor with your left knee, and your toes pointed straight ahead. Return by pushing off the front foot, bringing it even with the left foot.",
     "cuesEs": "- Parado son tus pies separados a lo ancho de los hombros. Sosteniendo un balón medicinal a la altura del pecho, Dar un paso adelante con tu pie derecho lo mas lejos posible, doblando la rodilla y tocando el suelo con tu rodilla izquierda, y tus deods apuntando hacia adelante. Regresa empujando el pie frontal. Trayendo incluso el pie izquierdo.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-squat",
+    "id": "ex-conc-stre-quads-medicine-ball-squat",
     "nameEn": "Medicine ball squat",
     "nameEs": "Medicine ball squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "med_ball",
     "cuesEn": "-Stand with your feet shoulder width apart and toes slightly turned out. Hold a medicine ball straight out in front of you at arms length. Flex at the hips and knees, evenly distributing your body weight from the balls of your feet to the heels. Keep your head and back straight. Once you are below parallel, straighten your legs to return to the starting position.",
     "cuesEs": "",
@@ -1088,22 +1088,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-medicine-ball-lunge-rotation",
+    "id": "ex-conc-stre-quads-medicine-ball-lunge-rotation",
     "nameEn": "Medicine ball lunge rotation",
     "nameEs": "Medicine ball lunge rotation",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "med_ball",
     "cuesEn": "- Stand tall with your feet shoulder width apart. Hold the medicine ball at chest level. Step out with your left leg as far as possible, bending the knee, as you rotate the medicine ball to your left. Touch the floor with your right knee and keep the toes of your left foot pointed straight ahead. Push off the front foot, bringing it even with the back foot to return to the starting position.",
     "cuesEs": "- Parado con tus pies separados a los ancho de tus hombros. Sosten el balón medicinal a la altura del pecho. Da un paso con tu pierna izquierda tan lejos como te sea posible, doblando la rodilla, mientras rotas el balón medicinal hacia tu izquierda. Toca el piso con tu rodilla rodilla derecha y manten los dedos de tu pie izquierdo apuntando hacia adelante. Empuja con el pie delantero, trayendo incluso de vuelta el pie de atrás de vuelta a la posición inicial.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-band-upright-row",
+    "id": "ex-conc-stre-back-band-upright-row",
     "nameEn": "Band upright row",
     "nameEs": "Band upright row",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "band",
     "cuesEn": "- Place your feet inside the band and grab the top of the band at arms lenght. Keep your body straight and your core tight. Slowly pull the band up toward your chin while bending your elbows, keeping them pointed out and up. Control the band back to the starting position until arms are straight.",
     "cuesEs": "-Coloca tus pies dentro de la banda y agarra un extremo de la banda con los brazos extendidos. Manten tu cuerpo recto y tu abdomen apretado. Lentamente jala la banda hacia tu barbilla mientras doblas los codos, manteniéndolos apuntando hacia afuera y arriba. Controla la banda de vuelta a la posición inicial hasta que los brazos estén extendidos.",
@@ -1132,11 +1132,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-band-bicep-curl",
+    "id": "ex-conc-stre-biceps-band-bicep-curl",
     "nameEn": "Band bicep curl",
     "nameEs": "Band bicep curl",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "band",
     "cuesEn": "- De pie con tus rodillas ligeramente flexionadas. Coloca on extremo de la banda bajo tus pies y el otro extremo en tu mano derecha. Dobla tu codo, enroscando la banda al tope del pecho. Lentamente regresa a la posición inicial para completar una repetición. Cambia de lado",
     "cuesEs": "",
@@ -1154,22 +1154,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-band-squat",
+    "id": "ex-conc-stre-quads-band-squat",
     "nameEn": "Band squat",
     "nameEs": "Band squat",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "band",
     "cuesEn": "- Stand with your feet shoulder width apart and feet slightly turned out. Place one end of the band across your shoulders and the other end under your feet. Flex at the hips and knees, evenly distributing your body weight from the balls of your feet to the heels. Keep your head and back straight. Once you are below parallel, straighten your legs to return to the starting position.",
     "cuesEs": "- De pie con tus pies separados a lo anchode los hombres y pies ligeramente apuntando hacia afuera. Coloca un extremo de la banda atravez de tus hombros y el otro extremo bajo tus pies. Dobla las caderas y tobillos, con el peso bien distribuido desde las puntas de lo pies hasta los tobillos. Manten tu cabeza y espalda recta. Una vez que estes debajo de la paralela enderza tus piernas hasta regresar a la posición inicial.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-stre-full_body-band-lunge",
+    "id": "ex-conc-stre-quads-band-lunge",
     "nameEn": "Band lunge",
     "nameEs": "Band lunge",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "band",
     "cuesEn": "-Place one end of the band under your feet and the other end across your shoulders. Stand tall with your feet shoulders width apart. Step out with your right leg as far as possible, bending at the knees and touching the floor with your left knee, toes pointed straight ahead. Push off the front foot and bring it even with the left foot to return to the starting position.",
     "cuesEs": "- Coloca un extremo de la banda bajo tus pies y el otro extremo de la banda atravez de tus hombros. Parado con tus pies separados al ancho de tus hombros. Da un paso adelante con el pie derecho lo mas lejos posible, doblando las rodillas con tu pierna izquierda pulgares apuntando en línea recta. Empuja el pie delantero y traelo con tu pie izquierdo para regresar a la posición inicial.",
@@ -1198,22 +1198,22 @@
     "mapsToLegacyId": "ex-033"
   },
   {
-    "id": "ex-conc-stre-full_body-band-leg-curl",
+    "id": "ex-conc-stre-quads-band-leg-curl",
     "nameEn": "Band leg curl",
     "nameEs": "Band leg curl",
     "section": "strength",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "band",
     "cuesEn": "-Lie on your abdomen. Place on end of the band around your ankles and the other end around a power rack. Curl your legs up, pulling the bands as closely toward your buttocks as possible. Slowly lower the band to the starting position with control.",
     "cuesEs": "- Recostado sobre tu abdomen. Coloca  un extremo de la banda alrededor de tus tobillos y el otro alrededor de un power rack. Enrosca tu pierna hacia arriba, jalando la banda mientras jalas hacia tus nalgas. Lentamente baja la banda hacia la posición inicial con control.",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-foam-full_body-calf",
+    "id": "ex-conc-foam-calves-calf",
     "nameEn": "Calf",
     "nameEs": "Pantorrillas",
     "section": "foam",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "foam_roller",
     "cuesEn": "\\- Sit on the floor  with your legs straight. Place the foam roller under both calf muscles. Place your hands behind you for balance and support. Roll your legs forward over the foam roller, from the top of your calf to the bottom of your calf, to complete a repetition.",
     "cuesEs": "- Sentado en el suelo con tus piernas rectas. Coloca un foam roller bajo ambas pantorrillas. Coloca tus manos destras  de ti, para mantener el balance y soporte. Rueda tus piernas sobre el foam roller , desde el tope de tus pantorrillas hasta el fondo de las mismas. Completa varias repeticiones.",
@@ -1231,11 +1231,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-foam-full_body-it-band-left-and-right",
+    "id": "ex-conc-foam-quads-it-band-left-and-right",
     "nameEn": "It band left and right",
     "nameEs": "Banda iliotibial izquierda/derecha",
     "section": "foam",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "foam_roller",
     "cuesEn": "- Lie on your side of the floor with the roller under your right hip. Roll over the foam roller down to your knee and back up to complete a repetition. Switch  sides",
     "cuesEs": "- Recostado de lado sobre el suelo con un foam roller bajo tu cadera derecha. Rueda el foam roller desde tu rodilla y de vuelta a la cadera. Competa repeticiones y cambia de lado.",
@@ -1253,11 +1253,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-foam-full_body-lower-back",
+    "id": "ex-conc-foam-back-lower-back",
     "nameEn": "Lower back",
     "nameEs": "Espalda baja",
     "section": "foam",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "foam_roller",
     "cuesEn": "- Lie on your back with your knees bent and feet flat. Place the foam roller under your lower back. Roll up and down over the roller to complete a repetition.",
     "cuesEs": "- Recostado sobre tu espalda y rodillas ligeramente dobladas y pies planos. Coloca un foam roller bajo tu espalda baja. Rueda hacia arriba y abajo sobre el roller hasta completar varias repeticiónes.",
@@ -1275,65 +1275,14 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-foam-full_body-lat",
+    "id": "ex-conc-foam-back-lat",
     "nameEn": "Lat",
     "nameEs": "Dorsales",
     "section": "foam",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "foam_roller",
     "cuesEn": "-Lie on your side with your legs streched out. Place the foam roller under your arm on the lat. Roll to the top and bottom of the lat to complete a repetition.",
     "cuesEs": "- Acostado sobre el suelo con las piernas estiradas.- Coloca un foam roller bajo tu brazo sobre el dorsal. Rueda del tope al fonde del dorsal hasta completar una repetición. Squat down behind the bar or between the dumbbells Place the feet between hip- and shoulder- width apart. If lifting a bar , position the bar close to the shins and over the balls of the feet and grasp the bar with closed grip that is shoulder-width(or slightly wider) apart. If lifting dumbbells, stand directly between them and grasp the handles with a closed grip and a neutral arm or hand position. Position the arms outside the knees with the elbows extend.",
-    "mapsToLegacyId": null
-  },
-  {
-    "id": "ex-conc-foam-full_body-the-bak-is-flat-or-slightly-arched",
-    "nameEn": "The bak is flat or slightly arched",
-    "nameEs": "The bak is flat or slightly arched",
-    "section": "foam",
-    "muscleGroup": "full_body",
-    "equipment": "foam_roller",
-    "cuesEn": "",
-    "cuesEs": "",
-    "variations": [
-      "Squat down behind the bar or between the dumbbells",
-      "Place the feet between hip- and shoulder- width apart.",
-      "If lifting a bar , position the bar close to the shins and over the balls of the feet and grasp the bar with closed grip that is shoulder-width(or slightly wider) apart.",
-      "If lifting dumbbells, stand directly between them and grasp the handles with a closed grip and a neutral arm or hand position.",
-      "Position the arms outside the knees with the elbows extend."
-    ],
-    "mapsToLegacyId": null
-  },
-  {
-    "id": "ex-conc-foam-full_body-the-head-is-in-line-with-the-spine-or-slightly-h",
-    "nameEn": "The head is in line with the spine or slightly hyperextended",
-    "nameEs": "The head is in line with the spine or slightly hyperextended",
-    "section": "foam",
-    "muscleGroup": "full_body",
-    "equipment": "foam_roller",
-    "cuesEn": "",
-    "cuesEs": "",
-    "mapsToLegacyId": null
-  },
-  {
-    "id": "ex-conc-foam-full_body-the-shoulders-are-over-or-slightly-in-front-of-t",
-    "nameEn": "The shoulders are over or slightly in front of the bar",
-    "nameEs": "The shoulders are over or slightly in front of the bar",
-    "section": "foam",
-    "muscleGroup": "full_body",
-    "equipment": "foam_roller",
-    "cuesEn": "",
-    "cuesEs": "",
-    "mapsToLegacyId": null
-  },
-  {
-    "id": "ex-conc-foam-full_body-the-eyes-are-focused-straight-ahead-or-slightly-",
-    "nameEn": "The eyes are focused straight ahead or slightly upward",
-    "nameEs": "The eyes are focused straight ahead or slightly upward",
-    "section": "foam",
-    "muscleGroup": "full_body",
-    "equipment": "foam_roller",
-    "cuesEn": "Durante ejercicios que sometan a un estrés a la espalda baja(ejemplo. Sentadilla, sentadilla frontal, peso muerto. Durante series cercanas al máximo o cargas máximas.",
-    "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
@@ -2711,22 +2660,22 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-tricep-extension",
+    "id": "ex-conc-body-triceps-tricep-extension",
     "nameEn": "Tricep Extension",
     "nameEs": "Tricep Extension",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "bodyweight",
     "cuesEn": "Place your hands on the corner of a table or seat of a chair and back into proper position. Keep your body in a straight line with straight legs, straight arms, weight on the toes, and the abdominals and glutes braced, lower your body by bending the elbows. Raise the body by using the triceps to extend the elbows.",
     "cuesEs": "",
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-extension-de-tricep",
+    "id": "ex-conc-body-triceps-extension-de-tricep",
     "nameEn": "Extension de tricep",
     "nameEs": "Extension de tricep",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "bodyweight",
     "cuesEn": "Coloca tus manos en la esquina de una mesa o silla y la espalda en una posición apropiada. Manten tu cuerpo recto , en línea con las piernas rectas, brazos rectos, peso sobre los dedos, y abdominales y glúteos  asegurados, baja tu cuerpo doblando tus codos. Eleva tu cuerpo utilizando los tríceps para extender los codos.",
     "cuesEs": "",
@@ -2737,11 +2686,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-short-lever-inverted-curl",
+    "id": "ex-conc-body-biceps-short-lever-inverted-curl",
     "nameEn": "Short lever inverted curl",
     "nameEs": "Short lever inverted curl",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "bodyweight",
     "cuesEn": "lying on your back, set up under a sturdiy table or tall chair with your hands grasping the outer edges, palms facing each other. With your torso and legs in a straight line, neck in neutral position, knees braced, raise your body by bending the elbows.( When the neck is in neutral position, the head and neck remain in their natural position and are not tilted up or back). Lower to starting position under control, moving mostly at the elbows and not the shoulders.",
     "cuesEs": "",
@@ -2752,11 +2701,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-curl-de-palanca-corta",
+    "id": "ex-conc-body-biceps-curl-de-palanca-corta",
     "nameEn": "Curl de palanca corta",
     "nameEs": "Curl de palanca corta",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "bodyweight",
     "cuesEn": "Recostado sobre tu espalda, collocate sobre una mesa solida o una silla alta con tus manos sujetando los bordes, las palmas viéndose unas a otras. Con tu torso y la piernas en línea recta, cuello en posición neutral, rodillas aseguradas, eleva tu cuerpo doblando tus codos. ( Cuando tu cuello esta en posición neutral, la cabeza y el cuello, se mantienen en una posición natural y no se inclina hacia atrás. Baja a la posición inicial con control, moviendo los codos y no los hombros.",
     "cuesEs": "",
@@ -2767,11 +2716,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-biceps-chin-up",
+    "id": "ex-conc-body-biceps-biceps-chin-up",
     "nameEn": "Biceps chin up",
     "nameEs": "Biceps chin up",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "bodyweight",
     "cuesEn": "Begin in a full stretch position, hanging from a secure Rafter or a chin up bar with staright arms and a supinated grip, palms facing you. The toes will be off the ground and the knees can be bent if that’s more comfortable. Pull the body over the rafter or chin up bar to sternum height while keeping core stable. Lower the body under control making sure you come all the way down.",
     "cuesEs": "",
@@ -2782,11 +2731,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-dominadas-para-bicep",
+    "id": "ex-conc-body-biceps-dominadas-para-bicep",
     "nameEn": "Dominadas para bicep",
     "nameEs": "Dominadas para bicep",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "biceps",
     "equipment": "barbell",
     "cuesEn": "Comienza en una posicion de estiramiento completa, colgando de una viga segura o una barra para hacer dominadas con los brazos extendidos y un agarre supinado, palmas viendo hacia ti.  Los dedos se elevaran del suelo y las rodillas  pueden ser dobladas si es comfortante. Jala el cuerpo por encima de la barra o viga hasta la altura del sternon mientras mantienes el abdomen estable. Baja el cuerpo bajo control asegurándote que viene hacia abajo.",
     "cuesEs": "",
@@ -2797,11 +2746,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-narrow-tricep-push-up",
+    "id": "ex-conc-body-triceps-narrow-tricep-push-up",
     "nameEn": "Narrow tricep push up",
     "nameEs": "Narrow tricep push up",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "bodyweight",
     "cuesEn": "Lie face down with the hands positioned shoulder width apart and the elbows tucked into the body. With feet together and the core stable, press the body up. Lower the body until the chest touches the floor.",
     "cuesEs": "",
@@ -2812,11 +2761,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-lagartija-con-los-codos-juntos-para-tricep",
+    "id": "ex-conc-body-triceps-lagartija-con-los-codos-juntos-para-tricep",
     "nameEn": "Lagartija con los codos juntos para tricep",
     "nameEs": "Lagartija con los codos juntos para tricep",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "bodyweight",
     "cuesEn": "Recostado en el suelo con las manos posicionadas a la altura de los hombors y los codos pegados al cuerpo. Con los pies juntos y el abdomen estable, empuja el cuerpo hacia arriba. Baja el cuerpo hasta que el pecho toque el suelo.",
     "cuesEs": "",
@@ -2842,11 +2791,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-fondos-de-tricep",
+    "id": "ex-conc-body-triceps-fondos-de-tricep",
     "nameEn": "Fondos de tricep",
     "nameEs": "Fondos de tricep",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "triceps",
     "equipment": "bodyweight",
     "cuesEn": "coloca tres sillas de manera que puedas apoyar en una y tu cuerpo este centrado en los otros dos. ( Si tienes aceso a bancos de pesas, puedes hacer este ejercicio  usando dos bancos de pesas. Coloca los bancos paralelos . Coloca tus manos en el banco y tus talones en el otro de manera que tu cuerpo este perpendicular al banco). Con tus palmas en el extremo de ambas silla, dedos hacia adelante y tu torso viendo hacia arriba y piernas estiradas, baja el cuerpo con control hasta que sientas un estiramiento adecuado. No vallas muy abajo; esto puede ser peligroso. Los brazos paralelos al suelo es lo suficientemente porfundo. Empuja tu cuerpo de vuelta a la posición inicial.",
     "cuesEs": "",
@@ -2919,11 +2868,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-push-back",
+    "id": "ex-conc-body-back-push-back",
     "nameEn": "Push back",
     "nameEs": "Push back",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Stand with feet wider tan hip width and set up as your would in the bottom of a push-up position, but keep your hips up. Push up and back while crouching at the hips, keeping the hips higher than the shoulders. Return to starting position. The eccentric component, or the lifting part of the movement, when the muscles are shortening should be an exact reverse of the concentric component, or the lowering part of the movement, when the muscles are lengthening.",
     "cuesEs": "",
@@ -2934,11 +2883,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-empuje-de-espalda",
+    "id": "ex-conc-body-back-empuje-de-espalda",
     "nameEn": "Empuje de espalda",
     "nameEs": "Empuje de espalda",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Parado con los pues mas que parados que las caderas y colocandote como los harias en una posicion de lagartija, pero manteniedo tus caderas arriba. Empuja mientras y regresas al mismo tiempo  enconjes las caderas, manteniendo las caderas mas altas que los hombros Regresa a la posición inicial.  El componente exentrico, o la parte que se eleva del movimiento, cuando los musculos se acortan debe ser un exacto componente de reversa, o bajar parte del movimiento , cuando los musculos se extienden.",
     "cuesEs": "",
@@ -2979,11 +2928,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-rear-deltoid-raise",
+    "id": "ex-conc-body-shoulders-rear-deltoid-raise",
     "nameEn": "Rear Deltoid raise",
     "nameEs": "Rear Deltoid raise",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "bodyweight",
     "cuesEn": "From a standing position with a towel, wrapped around a pole, grab the ends of the towel and lean back into position. Keeping the body in a straight line, raise your body by bringing the arms out to the sides. Control the descent back to starting position.",
     "cuesEs": "",
@@ -2994,11 +2943,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-elevacion-hombro-posterior",
+    "id": "ex-conc-body-shoulders-elevacion-hombro-posterior",
     "nameEn": "Elevacion hombro posterior",
     "nameEs": "Elevacion hombro posterior",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "bodyweight",
     "cuesEn": "Desde una posición de pie con una toalla, enrollala alrededor de un tubo, sujeta los extremos de la toalla y dobla hacia la posición. Manteniendo el cuerpo en linea recta, eleva tu cuempor trayendo los brazos hacia los lados. Controla el descenso de vuelta a la posición inicial.",
     "cuesEs": "",
@@ -3219,11 +3168,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-chest-dip",
+    "id": "ex-conc-body-chest-chest-dip",
     "nameEn": "Chest dip",
     "nameEs": "Chest dip",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "bodyweight",
     "cuesEn": "Begin with the hands placed on the backs of two chairs or tables and the knees bent so the feet are off the ground. Instead of chairs or tables, use parallel bars or chest dip bars, if available. Keeping the forearms relatively vertical, lower the body until your feel a big stretch in the pecs. Slightly lean forward. Reverse the movement until the arms are locked out.",
     "cuesEs": "",
@@ -3234,11 +3183,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-fondos-de-pecho",
+    "id": "ex-conc-body-chest-fondos-de-pecho",
     "nameEn": "Fondos de pecho",
     "nameEs": "Fondos de pecho",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "bodyweight",
     "cuesEn": "Comienza con las manos colocadas en los respaldos de 2 sillas o mesas de manera que las rodillas estén dobladas de manera que los pies estén sin tocar el suelo. En vez de sillas o mesas puedes utilizar 2 barras paralelas si están disponibles. Manteniendo los antebrazos relativamente verticales, baja el cuerpo hasta que sientas un ligero estiramiento en lo pectorales, ligeramente inclínate hacia adelante, Regresa el movimiento hasta que los brazos estén bloqueados.",
     "cuesEs": "",
@@ -3249,11 +3198,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sliding-fly",
+    "id": "ex-conc-body-chest-sliding-fly",
     "nameEn": "Sliding fly",
     "nameEs": "Sliding fly",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "chest",
     "equipment": "bodyweight",
     "cuesEn": "Begin in a standard push up position with both hands on paper plates, flared out slightly. Instead of paper plates, you also could use commercially available sliding exercise discs or, on a slick floor , small hand towels. Lower  the body while sliding the arms out away from the body until the chest touches the floor. Push the body up to starting position.",
     "cuesEs": "",
@@ -3279,11 +3228,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-crunch",
+    "id": "ex-conc-body-core-crunch",
     "nameEn": "Crunch",
     "nameEs": "Crunch",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Lie supine with the knees bent, feet on the floor, and hands at the ears. Hold the ehad and neck in neutral position , not flexed or twisted. Flex the spine to 30º o trunk flexion with most of the motion occurring  in the thoracic spine, keeping the head and neck in proper position. Hold at the top briefly and then lower the runk slowly under  control.",
     "cuesEs": "",
@@ -3294,11 +3243,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-abdominal",
+    "id": "ex-conc-body-core-abdominal",
     "nameEn": "Abdominal",
     "nameEs": "Abdominal",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Recostado en forma supine con las rodillas dobladas. Pies en el suelo y ,amps en la orejas. Sostener la cabeza y cuello en posición neutral. No dobalada o girada. Dobla la espina a unos 30 grados de flexion de tronco con mas del movimiento ocurriendo en la espina torácica, manteniendo la cabeza y el cuello en posición apropiada. Sosten en la punta por un corto tiempo y luego baja el tronco lentamente con control.",
     "cuesEs": "",
@@ -3398,11 +3347,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-rodilla-doblada-extension-a-1-pierna",
+    "id": "ex-conc-body-quads-rodilla-doblada-extension-a-1-pierna",
     "nameEn": "Rodilla doblada extension a 1 pierna",
     "nameEs": "Rodilla doblada extension a 1 pierna",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Recostado supine en el suelo(boca arriba). Doblad ambas rodillas. Coloca los pies en el suelo y eleva una pierna al aire, manteniendo la cadera y rodilla flexionada a 90º Baja la pierna doblada al suelo. Mientras se aproxima al suelo estira la pierna mientras se sigue extendiendo baja la pierna justo antes de que haga contacto con el suelo. Manten tu spian dorsal en el suelo. Regresa el movimiento y de vuelta a la posición inicial.",
     "cuesEs": "",
@@ -3428,11 +3377,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-pierna-doble-bajando-con-rodillas-flexionadas",
+    "id": "ex-conc-body-quads-pierna-doble-bajando-con-rodillas-flexionadas",
     "nameEn": "Pierna doble bajando con rodillas flexionadas",
     "nameEs": "Pierna doble bajando con rodillas flexionadas",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Recostado supino con las palmas abajo y el cuello en posición neutral, con las caderas flexionadas a 90º, manteniendo la rodilla dobladas, lentamente baja ambos pies al suelo atravez de un movimiento excéntrico de las caderas. No permitas que la espalda baja repose en el suelo. Regresa el movimiento a la posición incial.",
     "cuesEs": "",
@@ -3473,11 +3422,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-front-plank",
+    "id": "ex-conc-body-core-front-plank",
     "nameEn": "Front plank",
     "nameEs": "Front plank",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Form a pillar or bridge by supporting your body in a prone position with only the feet and forearms touching the ground. Keeping the body in a straight line with the elbows directly beneath the down, forcefully contract the quads and glutes. Hold for a time. Depending on your fitness level, hold the position for 30 seconds to 3 minutes.",
     "cuesEs": "",
@@ -3503,11 +3452,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-partner-assited-oblique-raise",
+    "id": "ex-conc-body-core-partner-assited-oblique-raise",
     "nameEn": "Partner assited oblique raise",
     "nameEs": "Partner assited oblique raise",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Begin with a partner holding your feet, your lower body draped over a weight bench, small table, or loveseat in a side lying position , and your upper body suspended in the air with the hands at the ears and leg straight. Lower the torso toward the floor, limiting the bending in the lower spine while receiving a stretch in the upper hips. Avoid rotating during the movement. Raise the torso with a strong contraction in the gluteus medius and obliques",
     "cuesEs": "",
@@ -3533,11 +3482,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-rkc-plank",
+    "id": "ex-conc-body-core-rkc-plank",
     "nameEn": "RKC plank",
     "nameEs": "RKC plank",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Get into standard plank position on the forearms and toes. Squeeze the glutes as hard as possible to posteriorly tilt(tuck under) the pelvis. Hold the pelvic tuck throughout the duration of the set. Try to drive the elbows to the feet and the feet to the elbows as if trying to pike upward but keep the body in good alignment.",
     "cuesEs": "",
@@ -3548,11 +3497,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-side-plank",
+    "id": "ex-conc-body-core-side-plank",
     "nameEn": "Side Plank",
     "nameEs": "Side Plank",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Form a side pillar or bridge by supporting your body in a side lying position with just one foot and one forearm touching the ground. Stack the legs and place the hand of the upper arm on the hip. Keep the body in a straight line from head to foot with a neutral head and neck position. Squeeze the glutes and keep the forearm of the lower arm pointed straight ahead. Hold for a time. Depending on your exercises level, hold for a 15 to 60 seconds.",
     "cuesEs": "",
@@ -3608,11 +3557,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-oblique-hanging-leg-raise",
+    "id": "ex-conc-body-core-oblique-hanging-leg-raise",
     "nameEn": "Oblique hanging leg raise",
     "nameEs": "Oblique hanging leg raise",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "core",
     "equipment": "bodyweight",
     "cuesEn": "Hang from a chinup bar or sturdy Rafter with knees bendt and hands shoulder width apart, palms facing forward. Raise the knees by flexing at the hips. At the same time, pull your knees to one side by laterally flexing the spine Raise the knees to slightly over 90 degrees relative to the ground. Lower the legs to starting position the alternate to the other side.",
     "cuesEs": "",
@@ -3696,11 +3645,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-pullup",
+    "id": "ex-conc-body-back-pullup",
     "nameEn": "Pullup",
     "nameEs": "Pullup",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Place your hands over the top edge of a sturdy door with a pronated grip( palms facing away from the body) and position your body flush against the door. (To Keep the door from swinging, wedge a book underneath the door). Your boidy is flush against the door at the bottom, but will move away from the door as you rise sinde the elbows are pined against the door. If a standard chin up bar is available, that may be the preferred option. Raise your body as hih as you can while keeping a straight line from the shoulders to the knees. Lower to starting position and repeat.",
     "cuesEs": "",
@@ -3726,11 +3675,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-side-to-side-pull-up",
+    "id": "ex-conc-body-back-side-to-side-pull-up",
     "nameEn": "Side to side pull up",
     "nameEs": "Side to side pull up",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Hang from a chin up bar or Rafter with the hands pronated and slightly wider than shoulder with apart. The knees can bend slightly or remain relatively straight. Keeping the chest up and the core tight, pull the body up toward one side until the chin is over the rafter. Lower to starting position and repeat, alternating from side to side.",
     "cuesEs": "",
@@ -3756,11 +3705,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-towel-pull-up",
+    "id": "ex-conc-body-back-towel-pull-up",
     "nameEn": "Towel pull up",
     "nameEs": "Towel pull up",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Drape a towel over a chin up bar or Rafter. Grab the towel with both hands. From stretched position, raise the body while keeping the core in neutral and pulling until the hands meet the upper chest. Lower to starting position and repeat.",
     "cuesEs": "",
@@ -3786,11 +3735,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-modified-inverted-row",
+    "id": "ex-conc-body-back-modified-inverted-row",
     "nameEn": "Modified inverted row",
     "nameEs": "Modified inverted row",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Grasp the side of a sturdy table, keeping the knees bent at about 90-135 degrees and heels planted firmly on the ground. It’s a good idea to perform this exercise over a forgiving surface such as soft carpeting. Keeping the body in a straight line from the knees to the shoulders , pull your body up until your chest meets the table. Lower your body to starting position under control.",
     "cuesEs": "",
@@ -3801,11 +3750,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-remo-invertido-modificado",
+    "id": "ex-conc-body-back-remo-invertido-modificado",
     "nameEn": "Remo invertido modificado",
     "nameEs": "Remo invertido modificado",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Sujeta los lados de una mesa fuerte, manteniendo las rodillas dobladas a unos 90 a 135 º u los talones plantados firmemente en el suelo. Es una buena idea realizar este ejercicio sobre una superficie suave como una carpeta. Manteniendo  el cuerpo en liena recta desde las rodillas hasta el hombro, jala tu cuerpo hasta que el pecho toque la mesa. Bajando el cuerpo a la posición inicial con control.",
     "cuesEs": "",
@@ -3816,11 +3765,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-side-to-side-inverted-row",
+    "id": "ex-conc-body-back-side-to-side-inverted-row",
     "nameEn": "Side to side inverted row",
     "nameEs": "Side to side inverted row",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Begin suspended in a stretched position with the body in a straight line and the core tight with legs straight, heels against the ground, and plams facing forward. Raise the body to one side. Lower the body to the starting position and repeat alternating sides.",
     "cuesEs": "",
@@ -3831,11 +3780,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-remo-invertido-de-lado-a-lado",
+    "id": "ex-conc-body-back-remo-invertido-de-lado-a-lado",
     "nameEn": "Remo invertido de lado a lado",
     "nameEs": "Remo invertido de lado a lado",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "comieza suspendido en una posicion estirada con el cuerpo en linea recat y el centro tenso con las piernas rectas, talones sobre el suelo y palmas viendo hacia adelante. Eleva el cuerpo a un lado. Baja a la posición inicial y repite alternando lados.",
     "cuesEs": "",
@@ -3906,11 +3855,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sumo-squat",
+    "id": "ex-conc-body-quads-sumo-squat",
     "nameEn": "Sumo squat",
     "nameEs": "Sumo squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Take a very wide stance and flare the feet placing the arms in the mummy position across the upper body. Most people will gravitate toward a 45 degree flare but some prefer a straighter foot angle, depending on their hip anatomy. Squat by sitting back, keeping the trunk upright and knees forced outward throughout the movement. Descend until the thighs are parallel to the ground. Rise to a standing position.",
     "cuesEs": "",
@@ -3921,11 +3870,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-sumo",
+    "id": "ex-conc-body-quads-sentadilla-sumo",
     "nameEn": "Sentadilla sumo",
     "nameEs": "Sentadilla sumo",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Asume una postura muy abierta con los pies, colocando los brazos en posicion de momia atravez del tren superior. La mayoría de la gente se inclinara hacia adelante unos 45º pero algunos lo podrán hacer los los tobillos apoyados en el suelo, eso depende de la flexibilidad de tobillo. Realiza una sentadilla, manteniendo el tronco viendo hacia arriba y las rodillas viendo hacia afuera atravez del movimiento. Desciende hasta que tus muslos estén paralelos al suelo. Eleva a una posición de pie.",
     "cuesEs": "",
@@ -3936,11 +3885,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-wall-squat-isohold",
+    "id": "ex-conc-body-quads-wall-squat-isohold",
     "nameEn": "Wall squat isohold",
     "nameEs": "Wall squat isohold",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Lean your back against a wall with your feet in front of your, hands on the hips. Lower the body until the hips reach a 90 degree angle and the thighs are parallel to the ground. The knees are at 90 degree angle with the shins perpendicular to the ground and the feet flat on the ground. Hold for the desired amount of time: 30 seconds for beginners up to 120 seconds for advanced.",
     "cuesEs": "",
@@ -3951,11 +3900,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-en-pared-isometrico",
+    "id": "ex-conc-body-quads-sentadilla-en-pared-isometrico",
     "nameEn": "Sentadilla en pared isometrico",
     "nameEs": "Sentadilla en pared isometrico",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Reposa tu espalda sobre la pared con los pies enfrente de ti tus manos en tus caderas. Baja tu cuerpo hasta que alcanzes un angulo de 90º y los musmlos estén paralelos al suelo. Las rodillas estén dobladas a 90 º los las espinillas perpendiculares al suelo y los pies planos en el suelo. Aguanta por el tiempo deseado: 30 segundos para principiantes y mas de 120 para avanzados.",
     "cuesEs": "",
@@ -3966,11 +3915,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-box-squat",
+    "id": "ex-conc-body-quads-box-squat",
     "nameEn": "Box Squat",
     "nameEs": "Box Squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with your feet wider than shoulder width apart and the feet flared to your preference. Stand very close to the edge of a sturdy box, bench , chair , step , or stool. Initiate the movement by breaking at the hips and sitting back, keeping the chest up, the knees out so they track over the toes, and the shins perpendicular to the floor. Remember to push through the heels. Pause for a moment while sitting on the box and then rise, making sure to squeeze the glutes to lockout",
     "cuesEs": "",
@@ -3981,11 +3930,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-en-caja",
+    "id": "ex-conc-body-quads-sentadilla-en-caja",
     "nameEn": "Sentadilla en caja",
     "nameEs": "Sentadilla en caja",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "De pie con los pies mas separados que los hombros y los colocados a tu preferencia. Parado muy cerca del borde de una caja, banca silla, step. Inicia el movimiento  rompiendo las caderas y sentándote hacia atrás,  manteniedo el pecho arriba , las rodillas hacia afuera de manera que sigan sobre los dedos, y las espinillas perpendiculares al suelo. Recuerda empujar atravez de los taloens. Pausa un momento mientras te sientas en la caja y luego elevate, asegurándote que apritas los glúteos hasta el bloqueo.",
     "cuesEs": "",
@@ -3996,11 +3945,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-full-squat",
+    "id": "ex-conc-body-quads-full-squat",
     "nameEn": "Full squat",
     "nameEs": "Full squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with a narrow stance and feet flared. Most people find a 30 º foot flare most comfortable., but this depends on individual hip anatomy. Place the hands in a mummy position , crossed in front of the body. Initiate the movement by simultaneously breaking at the knees and hips and dropping straight down. Keep the weight on the whole foor, keep the chest up, and force the knees out of the bottom of the movement so that the knees track over the middle of the feet. Descend as deeply as possible while keeping a flat lower back. Rise to a standing position.",
     "cuesEs": "",
@@ -4011,11 +3960,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-complete",
+    "id": "ex-conc-body-quads-sentadilla-complete",
     "nameEn": "Sentadilla complete",
     "nameEs": "Sentadilla complete",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Parado con una posicion estrecha y pies separados a lo ancho de los hombros dependiendo de tu anatomía. Coloca las manos en posición de momia enfrente del cuerpo. Inicia el movimiento simultáneamente doblando las rodillas y caderas y llevadote hacia abajo. Manten el peso en suelo, manten el pecho arriba, y forza la rodillas hacia afuera de manera que las rodillas vallan hacia los pies. Desciende lo mas profundo posible mientras mantienes la espalda baja. Eleva a la posición de pie.",
     "cuesEs": "",
@@ -4026,11 +3975,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sissy-squat",
+    "id": "ex-conc-body-quads-sissy-squat",
     "nameEn": "Sissy Squat",
     "nameEs": "Sissy Squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Begin in a standing position with a narrow stance. Grasp something in front of your for balance. Descend by breaking at the knees and shifting them forward while leaning the torso back and rising onto the toes. Descend until the desired deph is reached and then rise to return to starting position.",
     "cuesEs": "",
@@ -4041,11 +3990,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-sissy",
+    "id": "ex-conc-body-quads-sentadilla-sissy",
     "nameEn": "Sentadilla Sissy",
     "nameEs": "Sentadilla Sissy",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Comienza parado en una posicion estrecha. Sujeta algo enfrente de ti para el balance. Desciende doblando las rodillas y moviéndolas hacia adelante mientras inclinas el torso hacia atars y elevas los talones. Desciende hasta la profundidad deseada y luego eleva para regresar a la posición inicial.",
     "cuesEs": "",
@@ -4056,11 +4005,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-single-leg-box-squat",
+    "id": "ex-conc-body-quads-single-leg-box-squat",
     "nameEn": "Single leg box squat",
     "nameEs": "Single leg box squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand in front of a turdy box, bench , chair, step, or stool, with the hands in front of the body. Standing on one leg, sit back and down onto the surface, keepimg the chest up and the spine rigid. The knee tracks over the midfoot as you push through the heel. Lift the arms for counterbalance. Pause on the box for a moment, then rise to return to starting position, making sure to squeeze the glutes.",
     "cuesEs": "",
@@ -4071,11 +4020,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-a-una-pierna",
+    "id": "ex-conc-body-quads-sentadilla-a-una-pierna",
     "nameEn": "Sentadilla a una pierna",
     "nameEs": "Sentadilla a una pierna",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "De pìe frente a una silla, caja, banco de pesas con las manos frente al cuerpo. Parado en una pierna, siéntate y baja hacia la superficie, manteniendo el pecho elevado y la espina rigida. La rodilla viaja atraves del  pie medio mientras empujas atravez del talon. Eleva tus brazos para un contrabalance. Pausa en la caja por un momento, luego eleva para regresar a la posición inicial, asegurándote de apretar los glúteos.",
     "cuesEs": "",
@@ -4086,11 +4035,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-skaters-squat",
+    "id": "ex-conc-body-quads-skaters-squat",
     "nameEn": "Skaters Squat",
     "nameEs": "Skaters Squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand on one foot and place the hands in front of the body. Sit back and down, breaking at the hips and knees while leaning forward at the trunk. Descend until the knee of the nonworking leg approaches or touches the ground. Stand up to return to starting position. Perform all the repetitions with the weaker leg first and then switch and repeat with the stronger leg.",
     "cuesEs": "",
@@ -4101,11 +4050,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-de-patinador",
+    "id": "ex-conc-body-quads-sentadilla-de-patinador",
     "nameEn": "Sentadilla de patinador",
     "nameEs": "Sentadilla de patinador",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Parado en un pie y colocando las manos enfrente del cuerpo. Sientate hacia atrás, rompiendo las caderas y rodillas mientras inclinas el cuerpo hacia adelante. Desciende hasta que la rodilla que no esta trabajando se acerque o toque el suelo. Parado para regresar a la posición inicial. Realiza las repeticiones con la pierna débil primero y luego cambia y repite con la pierna fuerte.",
     "cuesEs": "",
@@ -4116,11 +4065,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-pistol-squat",
+    "id": "ex-conc-body-quads-pistol-squat",
     "nameEn": "Pistol Squat",
     "nameEs": "Pistol Squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand on one leg. Sink down by breaking at the hips and knees simultaneously. Raise the arms, flex the hip of the nonworking leg, keep the chest up, and push through the heel. Descend until the desired depth is reached and then return to standing position.",
     "cuesEs": "",
@@ -4131,11 +4080,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-pistol",
+    "id": "ex-conc-body-quads-sentadilla-pistol",
     "nameEn": "Sentadilla pistol",
     "nameEs": "Sentadilla pistol",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Parado en una pierna Hundiendote rompiendo las caderas y rodillas simultáneamente. Eleva los brazos, flexionando la cadera de la pierna que no trabaja, manteniendo el pecho arriba y empujando atravez del talon. Desciende hasta la profundidad deseada se alcanze y luego regresa a la posición de pie.",
     "cuesEs": "",
@@ -4146,11 +4095,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-static-lunge",
+    "id": "ex-conc-body-quads-static-lunge",
     "nameEn": "Static lunge",
     "nameEs": "Static lunge",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Get a Split stance position that is wide enough that your front shin is vertical at the bottom of the lunge. Your hands are on the hips and feet pointed straight ahead. Keeping the torso upright , descend until the back knee approaches or touches the ground. Return to staring position",
     "cuesEs": "",
@@ -4176,11 +4125,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-reverse-lunge",
+    "id": "ex-conc-body-quads-reverse-lunge",
     "nameEn": "Reverse lunge",
     "nameEs": "Reverse lunge",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with feet pointed straight ahead and hands on the hips. Keeping most of the weight on the front leg, step back and lean forward to an approximately 30 degree trunk angle, sinking into the working hip and descending until the back knee approaches or touches the ground. Rise back to starting position.",
     "cuesEs": "",
@@ -4206,11 +4155,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-slinding-lunge",
+    "id": "ex-conc-body-quads-slinding-lunge",
     "nameEn": "Slinding lunge",
     "nameEs": "Slinding lunge",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand with feet pointed straight ahead about shoulder width apart with hands on the hip and one foot on a paper plate. You also may use a commercially available sliding exercise disc or, on a slick floor , a small towel. Keeping most of the weight on the foot that isn’t on the plate, slide the floot on the plate back and lean forward to an approximately 30 degree trunk angle, sinking into the working hip and descending until the back knee approaches or touches the ground. Rise to starting position.",
     "cuesEs": "",
@@ -4266,11 +4215,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-bulgarian-split-squat",
+    "id": "ex-conc-body-quads-bulgarian-split-squat",
     "nameEn": "Bulgarian Split Squat",
     "nameEs": "Bulgarian Split Squat",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Stand in front of a step, stair, couch, bed, table, stool or weight bench. Reach back with one foot, resting the top of the foot on the top of the surface. With an upright trunk or a slight forward lean , sink the knee of the rear leg down and slightly back while trying to keep most of the body weight on the front leg Descend until the back knee almost touches or touches  the ground. Rise to starting position.",
     "cuesEs": "",
@@ -4281,11 +4230,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sentadilla-divida-bulgara",
+    "id": "ex-conc-body-quads-sentadilla-divida-bulgara",
     "nameEn": "Sentadilla divida bulgara",
     "nameEs": "Sentadilla divida bulgara",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Parado de frente a un step, silla, sillon, cama, mesa, o banco de pesas.  Alacanza atrás con un pie, reposándo  la punta del pie sobre la superficie.. Con el tronco recto o ligeramente inclinado, hunde la rodilla de la pierna trasera atrás y ligeramente atrás mientras tratas de manter la mayor parte del peso corporal en la pierna frontal. Desciende hasta que la rodilla de atrás casi toque el suelo o toque el suelo. Elevate a la posición inicial.",
     "cuesEs": "",
@@ -4296,11 +4245,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-russian-leg-curl",
+    "id": "ex-conc-body-quads-russian-leg-curl",
     "nameEn": "Russian Leg curl",
     "nameEs": "Russian Leg curl",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Find a rail, beam or stable couch to wedge your feet under. Kneel on top of a pillow or folded towel to reduce pressure on the knees. With an upright trunk, lower the body under control while keeping the glutes tight, making sure not to bend forward too much at the hips or allow the pelvis to anteriorly rotate too much. At the bottom of the movement, catch yourself in a push-up position and spring back to starting position, using the shoulder and arm muscles for assistance but attempting to maximize the torque on the knee joint and trying to rely on the hamstrings for movement production.",
     "cuesEs": "",
@@ -4312,11 +4261,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-curl-de-pierna-russo",
+    "id": "ex-conc-body-quads-curl-de-pierna-russo",
     "nameEn": "Curl de pierna Russo",
     "nameEs": "Curl de pierna Russo",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Encuentra una viga o un sillon estable en el cual puedas meter tus pies abajo, arrodillate sobre una admohada o toalla doblada para reducer pression en las rodillas. Con el tronco recto, baja tu cuerpo  con control mientras mantienes los glúteos tensos, asegurándote de no doblar mucho hacia adelante las caderas o permitir a la pelvis rotar anteriormente. Al fondo del movimiento, atrápate tu mismo en una posición de lagartija y regresa a la posición inicial, usando el hombro y musculos del brazo para asistirte , pero intentando maximizar el toque de la articulación de la rodilla y tratando de enfocar el trabajo en los isquiotbiales para la producción de movimiento",
     "cuesEs": "",
@@ -4327,11 +4276,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-single-leg-romanian-deadlift",
+    "id": "ex-conc-body-back-single-leg-romanian-deadlift",
     "nameEn": "Single leg romanian deadlift",
     "nameEs": "Single leg romanian deadlift",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Stand on one foot. Squeeze the glute of the nongrounded leg to lock it into position as it travels back. Making sure the rear leg stays in line with the torso, bend over at the waist while shifting the weight  back and looking down to prevent cervical hyperextension. Keep the chest up. Keeping a strong low back arch, descend until your hamstring range of motion runs out. Reverse the motion back to starting position. Perform all  the repetitions on the weaker leg first and then switch and repeat with the stronger leg.",
     "cuesEs": "",
@@ -4342,11 +4291,11 @@
     "mapsToLegacyId": "ex-032"
   },
   {
-    "id": "ex-conc-body-full_body-peso-muerto-a-una-pierna-estilo-rumano",
+    "id": "ex-conc-body-quads-peso-muerto-a-una-pierna-estilo-rumano",
     "nameEn": "Peso muerto a una pierna estilo Rumano",
     "nameEs": "Peso muerto a una pierna estilo Rumano",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Parado en un pie. Aprieta el glúteo de la pierna que no esta en contact con el suelo para bloquearla mientras va hacia atrás. Asergurandote de que la pierna trasera se mantiene en línea con el torso, doblate x la cintura mientras intercambias el peso hacia atrás y miras abajo para prevenir un hyperextension cervical. Manten el pecho arriba. Manteniendo un arco fuerte en la espalda baja, desciende hasta que tus  isquitibiales se queden sin rango de movimiento. Regresa el movimiento a la posición inicial. Realiza todas la repeticiones con la piernas débil primero y luego cambia y repite con la pierna fuerte.",
     "cuesEs": "",
@@ -4357,11 +4306,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-partener-assisted-back-extension",
+    "id": "ex-conc-body-back-partener-assisted-back-extension",
     "nameEn": "Partener assisted back extensión",
     "nameEs": "Partener assisted back extensión",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "With a partner holding the backs of your ankles, drape your body over the end of a couch or sturdy table so that your legs are straight and secured. Make sure the neck is in neutral position and the hands are in the mummy position(crossed in front of the body). Bend at the hips and not the spine, getting a good stretch in the hamstrings. Raise the torso while squeezing the glutes to lockout.",
     "cuesEs": "",
@@ -4372,11 +4321,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-extension-de-espalda-con-asistencia-de-un-compan",
+    "id": "ex-conc-body-back-extension-de-espalda-con-asistencia-de-un-compan",
     "nameEn": "Extension de espalda con asistencia de un compañero",
     "nameEs": "Extension de espalda con asistencia de un compañero",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "back",
     "equipment": "bodyweight",
     "cuesEn": "Con la asistencia de un compañero sosteniéndote  la esplada por tus tobillos , cubre tu cuerpo sobre el final de un sillón o mesa estable, de manera que tus piernas están rectas y aseguradas. Asegura que tu cuello esta en una posición neutral y las manos están en posición de momia. ( cruzadas enfrente del cuerpo). Dobla por las caderas y no por la espina, obteniendo un buen estiramiento en los isquiotibiales. Eleva el torso mietras aprietas los glúteos hasta el bloque.",
     "cuesEs": "",
@@ -4402,11 +4351,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-sliding-leg-curl",
+    "id": "ex-conc-body-quads-sliding-leg-curl",
     "nameEn": "Sliding leg curl",
     "nameEs": "Sliding leg curl",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Lie on your back with palms down, placing your heels on two paper plates. You also may use commercially available sliding exercise discs or , on a slick floor, two small hand towels. Bridge upward in the hips while simultaneously bringing the heels toward the buttocks. Keep the hips high throughout the movement. Lower the body back to starting position.",
     "cuesEs": "",
@@ -4417,11 +4366,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-curl-de-pierna-deslizando",
+    "id": "ex-conc-body-quads-curl-de-pierna-deslizando",
     "nameEn": "Curl de pierna deslizando",
     "nameEs": "Curl de pierna deslizando",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Recostado en tu espalda con las palmas abajo, colocando tus talons  en dos hojas de papel. Tu tamien puedes utilizar discos comerciales de ejecicio o en un piso resbaloso o 2 toallas de mano. Realiza un puente  con las caderas mientras simultáneamente llevas los talones hacia las nalgas. Manteniendo los muslos alto atravez del movimiento, baja el cuerpo hacia la posición inicial.",
     "cuesEs": "",
@@ -4432,11 +4381,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-glute-bridge",
+    "id": "ex-conc-body-glutes-glute-bridge",
     "nameEn": "Glute bridge",
     "nameEs": "Glute bridge",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "glutes",
     "equipment": "bodyweight",
     "cuesEn": "Lie on your back with the knees bent at 90º and the palms flat on the ground. Pushing through the heels, raise the hips as high as possible using the gluteal muscles. Move solely around the hip joint and keep the lower back in a neutral position. Hold the bridge in the top position for a moment, then lower the hips to starting position.",
     "cuesEs": "",
@@ -4447,11 +4396,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-puente-con-el-gluteo",
+    "id": "ex-conc-body-glutes-puente-con-el-gluteo",
     "nameEn": "Puente con el gluteo",
     "nameEs": "Puente con el gluteo",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "glutes",
     "equipment": "bodyweight",
     "cuesEn": "Recostado sobre tu espalda con las rodillas dobladas a 90º y las palmas planas en el suelo. Empujando atraves de los talones, eleva las caderas los mas alto posible utilizando los musculos del glúteo. Mueve solamente  alrededor de la articulación de la rodilla y manten la espalda baja en una posición neutral. Manten el puente en la posición  de punta por un momento, y luego baja las caderas a la posición inicial.",
     "cuesEs": "",
@@ -4462,11 +4411,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-shoulder-elevated-hip-thrust",
+    "id": "ex-conc-body-shoulders-shoulder-elevated-hip-thrust",
     "nameEn": "Shoulder elevated hip thrust",
     "nameEs": "Shoulder elevated hip thrust",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "bodyweight",
     "cuesEn": "Facing upward , place your upper back on top of a couch, sturdy chair, or weight bench with your feet flat on the ground. Place hands on the ears and extend the hips by squeezing the glutes. Push through the heels and keep the lower back in a neutral position. Rise as high as possible through the hips and the lower your hips to starting position.",
     "cuesEs": "",
@@ -4492,11 +4441,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-shoulder-and-feet-elevated-hip-thrust",
+    "id": "ex-conc-body-shoulders-shoulder-and-feet-elevated-hip-thrust",
     "nameEn": "Shoulder and feet elevated hip thrust",
     "nameEs": "Shoulder and feet elevated hip thrust",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "shoulders",
     "equipment": "bodyweight",
     "cuesEn": "Facing upward, place your upper back on a small table, stool, or chair. The two surfaces should be roughly the same height. Extend the hips by squeezing the glutes. Push through the heels and keep the lower back neutral. Rise as high as possible through the hips and the lower the hips to starting position.",
     "cuesEs": "",
@@ -4612,11 +4561,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-elevated-calf-raise",
+    "id": "ex-conc-body-calves-elevated-calf-raise",
     "nameEn": "Elevated calf raise",
     "nameEs": "Elevated calf raise",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Begin with the toes on a platform or step and the body upright. While grasping something for balance, lower the body and feel a good stretch in the calves. Raise the body as high as possible on the toes, holding the top position for a second count . Repeat until de desired number of repetitions is completed.",
     "cuesEs": "",
@@ -4627,11 +4576,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-elevacion-de-pantorrilla",
+    "id": "ex-conc-body-calves-elevacion-de-pantorrilla",
     "nameEn": "Elevacion de pantorrilla",
     "nameEs": "Elevacion de pantorrilla",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Comienza con los dedos en una plataforma o step y el cuerpo elevado hacia arriba. Mientras sujetas algo para el balance, baja el cuerpo y siente el estiramiento en las pantorrillas. Eleva el cuerpo lo mas alto posible y lo dedos, sosteniendo la posición en la cima  x un segundo. Repite hasta que el deseado numero de repeticiones este completo.",
     "cuesEs": "",
@@ -4642,11 +4591,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-squat-calf-raise",
+    "id": "ex-conc-body-calves-squat-calf-raise",
     "nameEn": "Squat calf raise",
     "nameEs": "Squat calf raise",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Begin with your weight on your toes and sink into a parallel squat position so the knees are bent to about 90 º While grasping  something for balance and holding the hip and knees position steady, lower the body at the ankle and feel a good stretch at the ankle joint. Raise the body as high as possible onto the toes, holding the top position for a 1 second count. Repeat unitl the desired number of repetitions is completed.",
     "cuesEs": "",
@@ -4657,11 +4606,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-elevacion-de-pantorrilla-en-posicion-de-sentadil",
+    "id": "ex-conc-body-calves-elevacion-de-pantorrilla-en-posicion-de-sentadil",
     "nameEn": "Elevacion de pantorrilla en posicion de sentadilla",
     "nameEs": "Elevacion de pantorrilla en posicion de sentadilla",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "calves",
     "equipment": "bodyweight",
     "cuesEn": "Comienza con tu peso sobre tus dedos, y hundete hasta una posicion paralela de sentadilla de manera que las rodillas esten dobladas a unos 90º. Mientras te sujetas de algo para el balance y sosteniendo las caderas y rodillas en una posición firme, baja el cuerpo por el tobillo y siente el estiramiento en al articulación del tobillo. Eleva el cuerpo lo mas alto posible hacia los dedos, sosteniendo la posición pico por un segundo. Repite hasta que el deseado numero de repeticiones este completo.",
     "cuesEs": "",
@@ -4687,11 +4636,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-rebote-con-tobillo-y-pierna-tiesa",
+    "id": "ex-conc-body-quads-rebote-con-tobillo-y-pierna-tiesa",
     "nameEn": "Rebote con tobillo y pierna tiesa",
     "nameEs": "Rebote con tobillo y pierna tiesa",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "De pie con las manos en los costados o en las caderas y pies separadaos. Rebota recto arriba y abajo, manteniendo las rodilla y caderas relativamente rectas mientras tratas de hacer el trabajo solamente con los musculos de los tobillos para impulsar el cuerpo hacia arriba. Repite hasta el deseado numero de tiempo haya pasado o repeticiones haya sido alcanzado.",
     "cuesEs": "",
@@ -4747,11 +4696,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-towel-row-isohold-with-glute-march",
+    "id": "ex-conc-body-glutes-towel-row-isohold-with-glute-march",
     "nameEn": "Towel row isohold with glute march",
     "nameEs": "Towel row isohold with glute march",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "glutes",
     "equipment": "bodyweight",
     "cuesEn": "Drape a towel over a sturdy table or weight bench that is about waist height. With feet on the ground and knees bent, grasp the ends of the towel and row the body up. Holding the body in a isometric rowing position, lift  one leg off the ground by flexing at the hip and the straightening the leg. Raise the leg all the way and then lower it back down. Alternate to the other leg in a marching  fashion.",
     "cuesEs": "",
@@ -4762,11 +4711,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-remo-con-toalla-isometrico-y-marcha-de-gluteo",
+    "id": "ex-conc-body-glutes-remo-con-toalla-isometrico-y-marcha-de-gluteo",
     "nameEn": "Remo con toalla isometrico y marcha de gluteo",
     "nameEs": "Remo con toalla isometrico y marcha de gluteo",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "glutes",
     "equipment": "bodyweight",
     "cuesEn": "Envuelve una toalla sobre una mesa firme o banco de pesas que este a la altura de la cintura. Con los pues en el suelo y las rodillas dobladas, sujeta las puntas de la toalla y rema el cuerpo arriba. Sosteniendo el cuerpo en una posición isometrca de remo, eleva una pierna de suelo, flexionando la cadera y estirando la pierna. Eleva la pierna todo el camino y luego llevala de vuelta al suelo. Alterna con la otra pierna en una manera de marcha.",
     "cuesEs": "",
@@ -4792,11 +4741,11 @@
     "mapsToLegacyId": null
   },
   {
-    "id": "ex-conc-body-full_body-abdominal-con-sentadilla-con-salto",
+    "id": "ex-conc-body-quads-abdominal-con-sentadilla-con-salto",
     "nameEn": "Abdominal  con sentadilla con salto",
     "nameEs": "Abdominal  con sentadilla con salto",
     "section": "bodyweight",
-    "muscleGroup": "full_body",
+    "muscleGroup": "quads",
     "equipment": "bodyweight",
     "cuesEn": "Recostado sobre tu espalda con tus brazos sobre la cabeza, rodilla dobladas, y pies planos en el suelo. Si tu deseas, colocarte una almohada  bajo tu trasero. Columpea los brazos adelante mientras realizas un abdominal explosiva. Impulsa tu cuerpo potentemente de manera que puedas hacer una transición  hacia un squat profundo. Luego arquea la espalda y salta hacia el aire mientras alcanzas los brazos sobre la cabeza. Absorbe el aterrizaje suavemente, realiza una sentadilla y gentilmente ruedaa  el cuerpo hacia la posición inicial. Repite la deseada cantidad de repeticiones.",
     "cuesEs": "",

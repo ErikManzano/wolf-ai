@@ -175,11 +175,11 @@
 .wl-program-editor-split:not(.wl-program-editor-split--open) .wl-program-editor-split__dock,
 .wl-program-editor-split--dock .wl-program-editor-split__context.wl-program-editor-split__dock {
   display: flex !important;
-  flex: 0 0 36px !important;
+  flex: 0 0 40px !important;
   width: 100% !important;
   max-width: none !important;
-  height: 36px;
-  min-height: 36px;
+  height: 40px;
+  min-height: 40px;
   align-self: stretch;
   overflow: hidden;
   border-left: none;
@@ -219,8 +219,8 @@
 .wl-program-editor-split__dock-bar {
   display: flex;
   align-items: stretch;
-  flex: 0 0 36px;
-  height: 36px;
+  flex: 0 0 40px;
+  height: 40px;
   min-height: 0;
   padding: 0;
   border-bottom: none;
@@ -244,7 +244,8 @@
   gap: 8px;
   width: auto;
   flex: 1 1 auto;
-  height: 36px;
+  min-width: 0;
+  height: 40px;
   padding: 0 12px;
   border: none;
   border-radius: 10px 0 0 0;
@@ -346,6 +347,47 @@ button.wl-program-editor-split__dock-chevron:active {
 
 .wl-program-editor-split__dock-toggle .wl-program-editor-split__context-title {
   flex: 1 1 auto;
+}
+
+.wl-program-editor-split__dock-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: center;
+  flex: 0 0 auto;
+  height: 28px;
+  margin: 0 8px 0 auto;
+  padding: 0 10px 0 12px;
+  border: 1px solid color-mix(in srgb, var(--v2-accent, #f97316) 42%, var(--v2-border, #e7e5e4));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--v2-accent, #f97316) 12%, #fff);
+  color: var(--v2-accent, #f97316);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(28 25 23 / 8%);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+button.wl-program-editor-split__dock-collapse:hover {
+  background: var(--v2-accent, #f97316);
+  border-color: var(--v2-accent, #f97316);
+  color: #fff;
+}
+
+button.wl-program-editor-split__dock-collapse:active {
+  transform: scale(0.97);
+}
+
+.wl-program-editor-split__dock-collapse-label {
+  line-height: 1;
 }
 
 .wl-program-editor-split__dock .wl-program-editor-split__context-body {

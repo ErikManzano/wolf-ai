@@ -6,7 +6,9 @@ import {
   FAMILY_DISPLAY_LABEL,
   buildExerciseListNodes,
   familyCounts,
+  catalogSectionOf,
   filterExerciseDefinitions,
+  inferExerciseDiscipline,
   type ExerciseFamilyFilter,
   formatExerciseMetaLine,
   hasExerciseDefinitionChanged,
@@ -200,6 +202,57 @@ describe('exercise list meta', () => {
     const counts = familyCounts(defs);
     expect(counts[key]).toBe(1);
     expect(counts.snatch).toBe(2);
+  });
+
+  it('catalog grupo movements count as weightlifting section', () => {
+    const gm = stubDef({
+      id: 'ex-wl-g14-02',
+      displayName: 'Good Morning, Legs Straight',
+      family: 'accessory',
+      tags: ['grupo_14', 'accessory', 'strength', 'back'],
+      composition: {
+        kind: 'single',
+        family: 'accessory',
+        variation: 'classic',
+        startPosition: 'floor',
+        modifiers: [],
+        tempo: null,
+      },
+    });
+    expect(catalogSectionOf(gm)).toBe('weightlifting');
+    expect(inferExerciseDiscipline(gm)).toBe('weightlifting');
+    expect(
+      filterExerciseDefinitions([gm], {
+        search: '',
+        family: 'all',
+        origin: 'all',
+        discipline: 'all',
+        section: 'weightlifting',
+        catalogGrupo: 'grupo_14',
+      }).map((d) => d.id),
+    ).toEqual(['ex-wl-g14-02']);
+  });
+
+  it('separa halterofilia del documento de foam', () => {
+    const snatch = stubDef({ id: 'sn', displayName: 'Snatch' });
+    const foam = stubDef({
+      id: 'foam',
+      displayName: 'Thoracic foam',
+      family: 'accessory',
+      tags: ['concentrado', 'foam', 'muscle:back'],
+      composition: { kind: 'single', family: 'accessory', variation: 'classic', startPosition: 'floor', modifiers: [], tempo: null },
+    });
+    expect(catalogSectionOf(snatch)).toBe('weightlifting');
+    expect(catalogSectionOf(foam)).toBe('foam');
+    expect(
+      filterExerciseDefinitions([snatch, foam], {
+        search: '',
+        family: 'all',
+        origin: 'all',
+        discipline: 'all',
+        section: 'foam',
+      }).map((def) => def.id),
+    ).toEqual(['foam']);
   });
 
   it('reads load scale from legacy motor catalog', () => {

@@ -76,12 +76,15 @@ export function ProgramEditorContextLayout({
             {contextOpen ? (
               <button
                 type="button"
-                className="wl-program-editor-split__dock-chevron"
+                className="wl-program-editor-split__dock-collapse"
                 aria-expanded
                 aria-controls="wl-program-context-panel-body"
-                aria-label={isEs ? 'Ocultar panel de análisis' : 'Hide analysis panel'}
+                aria-label={isEs ? 'Plegar panel de análisis' : 'Collapse analysis panel'}
                 onClick={onToggleContext}
               >
+                <span className="wl-program-editor-split__dock-collapse-label">
+                  {isEs ? 'Plegar' : 'Collapse'}
+                </span>
                 <ChevronDown className="wl-program-editor-split__dock-chevron__icon" size={16} strokeWidth={2.25} aria-hidden />
               </button>
             ) : (

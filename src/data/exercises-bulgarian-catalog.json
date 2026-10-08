@@ -1402,29 +1402,9 @@
     "loadAnchor": "back_squat"
   },
   {
-    "id": "ex-wl-g10-04",
-    "name": "Bend Overs",
-    "nameEs": "Inclinaciones (bend over)",
-    "catalogGroup": "grupo_10",
-    "category": "accessory",
-    "subtype": "classic",
-    "startPosition": "floor",
-    "complexity": "single",
-    "goal": "strength",
-    "intensityRange": [
-      40,
-      60
-    ],
-    "tags": [
-      "grupo_10",
-      "accessory",
-      "classic",
-      "floor"
-    ]
-  },
-  {
     "id": "ex-wl-g11-01",
     "name": "Snatch Grip Pulley Pull",
+    "nameEs": "Jalón polea agarre snatch",
     "catalogGroup": "grupo_11",
     "category": "accessory",
     "subtype": "pull",
@@ -1446,6 +1426,7 @@
   {
     "id": "ex-wl-g11-02",
     "name": "Good Morning with Knee Flexed",
+    "nameEs": "Good morning rodillas flexionadas",
     "catalogGroup": "grupo_11",
     "category": "accessory",
     "subtype": "classic",
@@ -1453,7 +1434,7 @@
     "complexity": "single",
     "goal": "strength",
     "intensityRange": [
-      40,
+      20,
       60
     ],
     "tags": [
@@ -1461,11 +1442,13 @@
       "accessory",
       "classic",
       "floor"
-    ]
+    ],
+    "loadAnchor": "back_squat"
   },
   {
     "id": "ex-wl-g11-03",
     "name": "Good Morning Knees Flexed + Vertical Jump",
+    "nameEs": "Good morning flexión + salto vertical",
     "catalogGroup": "grupo_11",
     "category": "accessory",
     "subtype": "complex",
@@ -1480,6 +1463,27 @@
       "grupo_11",
       "accessory",
       "complex",
+      "floor"
+    ]
+  },
+  {
+    "id": "ex-wl-g11-04",
+    "name": "Bend Overs",
+    "nameEs": "Inclinaciones (bend over)",
+    "catalogGroup": "grupo_11",
+    "category": "accessory",
+    "subtype": "classic",
+    "startPosition": "floor",
+    "complexity": "single",
+    "goal": "strength",
+    "intensityRange": [
+      40,
+      60
+    ],
+    "tags": [
+      "grupo_11",
+      "accessory",
+      "classic",
       "floor"
     ]
   },
@@ -1781,6 +1785,7 @@
   {
     "id": "ex-wl-g14-01",
     "name": "Hyperextension",
+    "nameEs": "Hiperextensión",
     "catalogGroup": "grupo_14",
     "category": "accessory",
     "subtype": "classic",
@@ -1802,6 +1807,7 @@
   {
     "id": "ex-wl-g14-02",
     "name": "Good Morning, Legs Straight",
+    "nameEs": "Good morning piernas rectas",
     "catalogGroup": "grupo_14",
     "category": "accessory",
     "subtype": "classic",
@@ -1809,7 +1815,7 @@
     "complexity": "single",
     "goal": "strength",
     "intensityRange": [
-      40,
+      20,
       60
     ],
     "tags": [
@@ -1818,11 +1824,13 @@
       "accessory",
       "classic",
       "straight_legs"
-    ]
+    ],
+    "loadAnchor": "back_squat"
   },
   {
     "id": "ex-wl-g14-03",
     "name": "Good Morning Seated on Floor",
+    "nameEs": "Good morning sentado en el suelo",
     "catalogGroup": "grupo_14",
     "category": "accessory",
     "subtype": "classic",
@@ -1830,7 +1838,7 @@
     "complexity": "single",
     "goal": "strength",
     "intensityRange": [
-      35,
+      20,
       55
     ],
     "tags": [
@@ -1839,11 +1847,13 @@
       "accessory",
       "classic",
       "floor"
-    ]
+    ],
+    "loadAnchor": "back_squat"
   },
   {
     "id": "ex-wl-g14-04",
     "name": "Good Morning Seated on Bench",
+    "nameEs": "Good morning sentado en banco",
     "catalogGroup": "grupo_14",
     "category": "accessory",
     "subtype": "classic",
@@ -1851,7 +1861,7 @@
     "complexity": "single",
     "goal": "strength",
     "intensityRange": [
-      35,
+      20,
       55
     ],
     "tags": [
@@ -1860,7 +1870,8 @@
       "accessory",
       "classic",
       "floor"
-    ]
+    ],
+    "loadAnchor": "back_squat"
   },
   {
     "id": "ex-wl-g15-01",

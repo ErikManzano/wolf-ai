@@ -5,9 +5,11 @@ import type {
   ExerciseLifecycleStatus,
   ExerciseLoadAnchorCode,
   ExerciseTaxonomyBundle,
+  ExerciseVariationCode,
   MergedDefinitionView,
   TrainingObjectiveCode,
 } from '../../models/exercise';
+import { isSingleComposition } from '../../models/exercise';
 import type { Exercise, ExerciseCategory } from '../../models/training';
 import {
   definitionFamilyCode,
@@ -32,6 +34,8 @@ export interface SessionPickerOption {
   /** Familia WL para avatar y meta. */
   family: ExerciseFamilyCode;
   familyLabel: string;
+  /** Variación de composición WL (classic, power, hang, …). */
+  variation?: ExerciseVariationCode | null;
   objective: TrainingObjectiveCode;
   typeLabel: string;
   intensityRef: string;
@@ -317,6 +321,7 @@ export function mergedViewsToPickerOptions(
       const legacy = toLegacyExercise(def, taxonomy);
       const catalogGroup = def.tags.find((t) => /^grupo_\d+$/.test(t));
       const family = definitionFamilyCode(def);
+      const variation = isSingleComposition(def.composition) ? def.composition.variation : null;
       const typeLabel = pickerTypeLabel(taxonomy, def.objective, isEs);
       const augment = pickerSearchAugment(taxonomy, def);
       return {
@@ -331,6 +336,7 @@ export function mergedViewsToPickerOptions(
         catalogGroup,
         family,
         familyLabel: pickerFamilyLabel(family),
+        variation,
         objective: def.objective,
         typeLabel,
         intensityRef: pickerIntensityRefLabel(def.loadAnchor, isEs),

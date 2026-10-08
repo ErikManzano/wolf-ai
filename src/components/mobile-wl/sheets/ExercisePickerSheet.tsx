@@ -1,23 +1,42 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
-import type { ExerciseCategory } from '../../../models/training';
 import {
   catalogGroupLabel,
   fuzzySearchPickerOptions,
   pickerOptionsFromIds,
   type SessionPickerOption,
 } from '../../../services/exercise';
+import {
+  pickerCatalogGroup,
+  pickerCatalogGroupLabel,
+} from '../../session-editor/exerciseAutocompleteUtils';
 import { BottomSheet } from './BottomSheet';
 import '../mobile-wl.css';
 
-const GROUP_ORDER: ExerciseCategory[] = ['snatch', 'clean_jerk', 'squat', 'accessory'];
+const PICKER_SECTION_ORDER = [
+  'snatch',
+  'clean',
+  'jerk',
+  'pull',
+  'squat',
+  'press',
+  'foam',
+  'warmup',
+  'strength',
+  'bodyweight',
+  'accessory',
+] as const;
 
-const GROUP_LABELS: Record<ExerciseCategory, { es: string; en: string; short: string }> = {
-  snatch: { es: 'Arrancada', en: 'Snatch', short: 'SN' },
-  clean_jerk: { es: 'Cargada y envión', en: 'Clean & jerk', short: 'CJ' },
-  squat: { es: 'Sentadilla', en: 'Squat', short: 'SQ' },
-  accessory: { es: 'Accesorios', en: 'Accessory', short: 'AC' },
-};
+const SECTION_CHIPS: { id: 'all' | 'weightlifting' | 'foam' | 'warmup' | 'strength' | 'bodyweight'; es: string; en: string }[] = [
+  { id: 'all', es: 'Todos', en: 'All' },
+  { id: 'weightlifting', es: 'Halterofilia', en: 'Weightlifting' },
+  { id: 'foam', es: 'Foam', en: 'Foam' },
+  { id: 'warmup', es: 'Calentamiento', en: 'Warm-up' },
+  { id: 'strength', es: 'Fuerza', en: 'Strength' },
+  { id: 'bodyweight', es: 'Peso corporal', en: 'Bodyweight' },
+];
+
+const WL_GROUPS = new Set(['snatch', 'clean', 'jerk', 'pull', 'squat', 'press']);
 
 interface ExercisePickerSheetProps {
   open: boolean;
@@ -48,33 +67,52 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
   keepOpenOnSelect = true,
 }) => {
   const [query, setQuery] = useState('');
+  const [section, setSection] = useState<(typeof SECTION_CHIPS)[number]['id']>('all');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) return;
     setQuery('');
+    setSection('all');
   }, [open]);
 
+  const sectionOptions = useMemo(() => {
+    if (section === 'all') return options;
+    return options.filter((opt) => {
+      const group = pickerCatalogGroup(opt);
+      if (section === 'weightlifting') return WL_GROUPS.has(group);
+      return group === section;
+    });
+  }, [options, section]);
+
   const recentOptions = useMemo(
-    () => pickerOptionsFromIds(options, recentIds.filter((id) => id !== value), 8),
-    [options, recentIds, value],
+    () => pickerOptionsFromIds(sectionOptions, recentIds.filter((id) => id !== value), 8),
+    [sectionOptions, recentIds, value],
   );
 
   const filtered = useMemo(
     () =>
-      fuzzySearchPickerOptions(options, query, 48, {
+      fuzzySearchPickerOptions(sectionOptions, query, 48, {
         catalogGroup: catalogGroupFilter,
         exerciseIdsInGroup: pickerIdsInGroup,
         preferIds: recentIds,
       }),
-    [options, query, catalogGroupFilter, pickerIdsInGroup, recentIds],
+    [sectionOptions, query, catalogGroupFilter, pickerIdsInGroup, recentIds],
   );
 
   const grouped = useMemo(() => {
-    const buckets = new Map<ExerciseCategory, SessionPickerOption[]>();
-    for (const cat of GROUP_ORDER) buckets.set(cat, []);
-    for (const opt of filtered) buckets.get(opt.category)?.push(opt);
-    return GROUP_ORDER.map((cat) => ({ cat, items: buckets.get(cat) ?? [] })).filter((s) => s.items.length > 0);
+    const buckets = new Map<string, SessionPickerOption[]>();
+    for (const opt of filtered) {
+      const id = pickerCatalogGroup(opt);
+      const list = buckets.get(id) ?? [];
+      list.push(opt);
+      buckets.set(id, list);
+    }
+    const known = PICKER_SECTION_ORDER.filter((id) => buckets.has(id));
+    const extra = [...buckets.keys()].filter(
+      (id) => !PICKER_SECTION_ORDER.includes(id as (typeof PICKER_SECTION_ORDER)[number]),
+    );
+    return [...known, ...extra].map((id) => ({ id, items: buckets.get(id) ?? [] }));
   }, [filtered]);
 
   const pick = (id: string) => {
@@ -121,6 +159,20 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
           />
         </label>
 
+        <div className="mwl-picker-sections" role="group" aria-label={isEs ? 'Sección' : 'Section'}>
+          {SECTION_CHIPS.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              className={`mwl-picker-sections__btn${section === chip.id ? ' is-active' : ''}`}
+              aria-pressed={section === chip.id}
+              onClick={() => setSection(chip.id)}
+            >
+              {isEs ? chip.es : chip.en}
+            </button>
+          ))}
+        </div>
+
         <div className="mwl-picker-scroll" role="listbox" aria-label={sheetTitle}>
           {showRecents ? (
             <section className="mwl-picker-section">
@@ -163,17 +215,13 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
               </p>
             ) : (
               <div className="mwl-picker-list">
-                {grouped.map((section) => {
-                  const groupMeta = GROUP_LABELS[section.cat];
+                {grouped.map((group) => {
                   return (
-                    <section key={section.cat} className="mwl-picker-group">
+                    <section key={group.id} className="mwl-picker-group">
                       <h4 className="mwl-picker-group-label">
-                        <span className="mwl-picker-group-label__short" aria-hidden>
-                          {groupMeta.short}
-                        </span>
-                        <span>{isEs ? groupMeta.es : groupMeta.en}</span>
+                        <span>{pickerCatalogGroupLabel(group.id, isEs)}</span>
                       </h4>
-                      {section.items.map((o) => (
+                      {group.items.map((o) => (
                         <button
                           key={o.id}
                           type="button"
