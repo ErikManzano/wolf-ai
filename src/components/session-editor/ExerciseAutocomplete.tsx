@@ -581,7 +581,6 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
             variationFilter={variationFilter}
             onVariationChange={setVariationFilter}
             variationLabels={variationLabels}
-            quickFilter={quickFilter}
             onQuickFilterChange={setQuickFilter}
           />
         }

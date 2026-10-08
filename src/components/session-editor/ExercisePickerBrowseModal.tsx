@@ -321,7 +321,6 @@ export function ExercisePickerBrowseModal({
                 variationFilter={variationFilter}
                 onVariationChange={setVariationFilter}
                 variationLabels={variationLabels}
-                quickFilter={quickFilter}
                 onQuickFilterChange={setQuickFilter}
               />
             }

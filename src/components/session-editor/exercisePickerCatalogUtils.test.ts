@@ -17,7 +17,7 @@ function stubOption(partial: Partial<SessionPickerOption> & Pick<SessionPickerOp
     familyLabel: 'Accessory',
     objective: 'strength',
     typeLabel: 'Strength',
-    intensityRef: null,
+    intensityRef: '',
     loadAnchor: 'auto',
     isOfficial: true,
     ...partial,
