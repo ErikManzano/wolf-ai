@@ -40,20 +40,20 @@ export const WL_CATALOG_GROUP_LABELS: Record<
   },
   grupo_3: {
     titleEn: 'Grupo 3 — Power snatch',
-    titleEs: 'Grupo 3 — Power snatch',
+    titleEs: 'Grupo 3 — Arrancada en power',
     chipEn: 'G3 · Power snatch',
-    chipEs: 'G3 · Power snatch',
+    chipEs: 'G3 · Arrancada en power',
   },
   grupo_4: {
     titleEn: 'Grupo 4 — Snatch pull',
-    titleEs: 'Grupo 4 — Snatch pull',
+    titleEs: 'Grupo 4 — Tirón de snatch',
     chipEn: 'G4 · Snatch pull',
-    chipEs: 'G4 · Snatch pull',
+    chipEs: 'G4 · Tirón de snatch',
   },
   grupo_5: {
     titleEn: 'Grupo 5 — Classic clean & jerk',
     titleEs: 'Grupo 5 — C&J clásico',
-    chipEn: 'G5 · C&J clásico',
+    chipEn: 'G5 · Classic C&J',
     chipEs: 'G5 · C&J clásico',
   },
   grupo_6: {
@@ -64,9 +64,9 @@ export const WL_CATALOG_GROUP_LABELS: Record<
   },
   grupo_7: {
     titleEn: 'Grupo 7 — Power clean',
-    titleEs: 'Grupo 7 — Power clean',
+    titleEs: 'Grupo 7 — Cargada en power',
     chipEn: 'G7 · Power clean',
-    chipEs: 'G7 · Power clean',
+    chipEs: 'G7 · Cargada en power',
   },
   grupo_8: {
     titleEn: 'Grupo 8 — Jerk variations',
@@ -76,9 +76,9 @@ export const WL_CATALOG_GROUP_LABELS: Record<
   },
   grupo_9: {
     titleEn: 'Grupo 9 — Clean pull',
-    titleEs: 'Grupo 9 — Clean pull',
+    titleEs: 'Grupo 9 — Tirón de clean',
     chipEn: 'G9 · Clean pull',
-    chipEs: 'G9 · Clean pull',
+    chipEs: 'G9 · Tirón de clean',
   },
   grupo_10: {
     titleEn: 'Grupo 10 — Squats',
